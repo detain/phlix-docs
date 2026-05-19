@@ -78,5 +78,35 @@ These are consumed by `phpunit.xml` only and have no effect on production.
 | `DB_USER`     | `root`         | MySQL username used by integration tests. |
 | `DB_PASSWORD` | _empty_        | MySQL password used by integration tests. |
 
+## Server
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PHLEX_HTTP_PORT` | `32400` | HTTP port the server listens on. Overridden by `config/server.php` `server.port` at runtime. See `config/server.php`. |
+| `PHLEX_PUBLIC_URL` | _unset_ | Public URL used in Hub relay and DLNA announcements. Must be set if the server is behind a reverse proxy. See `Phlex\Server\Core\Application`. |
+| `PHLEX_LOG_LEVEL` | `info` | Minimum log level for application logs written to `.logs/app.log`. Valid values (in order of verbosity): `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`. See `config/logger.php`. |
+
+## Database
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PHLEX_DATABASE_HOST` | `127.0.0.1` | MySQL host; maps to `config/database.php` `connections.mysql.host`. |
+| `PHLEX_DATABASE_PORT` | `3306` | MySQL port; maps to `config/database.php` `connections.mysql.port`. |
+| `PHLEX_DATABASE_NAME` | `phlex` | Database name; maps to `config/database.php` `connections.mysql.database`. |
+| `PHLEX_DATABASE_USER` | `phlex` | Database username; maps to `config/database.php` `connections.mysql.username`. |
+| `PHLEX_DATABASE_PASSWORD` | _empty_ | Database password. Alias for the `DB_PASSWORD` env var consumed by `config/database.php`. Prefer setting `DB_PASSWORD` to avoid confusion. |
+
+## Transcoding / Hardware acceleration
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PHLEX_HWACCEL` | `none` | Preferred hardware acceleration. Valid values: `nvidia`, `vaapi`, `videotoolbox`, `qsv`, `amf`, `v4l2`, `none`. Overridden by `config/ffmpeg.php` `hwaccel.vendor_priority`. See `config/ffmpeg.php`. |
+
+## Timezone
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `TZ` | system TZ | PHP `date_default_timezone_set()` value. Controls timestamps in logs and EPG data. Set to your local timezone (e.g., `America/New_York`, `Europe/London`). |
+
 > The production database credentials live in `config/database.php`
 > (which reads `DB_PASSWORD` from the environment via `getenv('DB_PASSWORD')`).

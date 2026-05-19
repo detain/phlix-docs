@@ -1,0 +1,26 @@
+{
+  "name": "phlex-docs",
+  "version": "1.0.0",
+  "description": "Phlex Media Server documentation — end-user, developer, and hub-admin guides",
+  "scripts": {
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/detain/phlex-docs.git"
+  },
+  "keywords": ["phlex", "media-server", "documentation"],
+  "author": "",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/detain/phlex-docs/issues"
+  },
+  "homepage": "https://github.com/detain/phlex-docs#readme",
+  "type": "module",
+  "devDependencies": {
+    "vitepress": "^1.6.4",
+    "vue": "^3.5.34"
+  }
+}

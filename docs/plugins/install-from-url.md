@@ -1,99 +1,150 @@
-# Install a plugin from a URL
+**Phase:** N (End-User Documentation)
+**Step:** N.14
+**Since:** 0.18.0
 
-> **Status:** Step A.5 ships the "install from URL" flow. The
-> curated catalog (in-product list of trusted plugins) arrives with the
-> hub in Phase C — see [`install-from-catalog.md`](install-from-catalog.md).
+## TL;DR
 
-This is the lowest-friction install path for Phlex plugins today. You
-need:
+Install any public plugin by pasting its `plugin.json` URL into Phlex. Two prerequisites: an admin account on the server and the plugin's HTTPS URL. The plugin lands **disabled** after install — flip the toggle to enable it. For curated, signature-verified plugins in one click, use the [catalog](install-from-catalog.md) instead.
 
-1. The plugin's public `plugin.json` URL (HTTPS) — or a local
-   `file://` URL for testing.
-2. An admin account on the running Phlex server (the **first** user
-   that registered after Step A.5 was applied is auto-promoted to
-   admin; `users.is_admin = 1`).
-3. A logged-in browser session OR an access-token Bearer header.
+---
 
-## From the web UI
+## 1. Prerequisites
 
-1. Browse to `/admin/plugins`.
-2. Paste the `plugin.json` URL into **Install from URL**.
-3. Click **Install**.
+- **Admin account** on the Phlex server (`users.is_admin = 1`).
+- **Plugin's public `plugin.json` URL** — must be HTTPS (`http://` refused unless `PHLEX_PLUGINS_ALLOW_HTTP=1`).
+- **Optional:** signed plugins need their author key in the [trusted-key allowlist](trusted-plugin-list.md).
 
-The server downloads, validates, runs `composer install --no-dev`
-inside the plugin's directory, and stores the manifest in the
-`plugins` table. The plugin lands **disabled** by default — flip
-the toggle in the table to enable it.
+---
 
-### Try it with the reference plugin
+## 2. Install from the Web UI
 
-The first plugin you should install on a fresh server is the
-**reference plugin**, a tiny `metadata-provider` that returns
-`{"title": "Hello, World"}` for one well-known fixture path. It's
-unsigned by design and has no external dependencies, so it's safe to
-install on any environment.
+1. Browse to **Settings → Plugins** (or `/admin/plugins`).
+2. Locate **Install from URL** panel.
+3. Paste the plugin's `plugin.json` URL.
+4. Click **Install**.
+5. Wait for the server to download, validate, and stage the plugin.
+6. Find the plugin in the table — it lands **disabled** by default.
+7. Flip the toggle to enable it.
 
-Paste this URL into the **Install from URL** form and click
-**Install**:
+Screenshot placeholder: `[screenshot: admin/plugins table with phlex-plugin-example row, toggle off]`
 
-```
-https://raw.githubusercontent.com/detain/phlex-plugin-example/main/plugin.json
-```
+---
 
-After install, flip the toggle for `phlex-plugin-example` in the
-table to enable it. The plugin's source lives at
-[`detain/phlex-plugin-example`](https://github.com/detain/phlex-plugin-example);
-fork it as the starting point for your own plugin.
-
-## From the command line
-
-The same operations are reachable via the JSON API. Substitute your
-JWT for `$TOKEN`:
+## 3. Install from the Command Line
 
 ```bash
 TOKEN="…your admin bearer token…"
 
-# 1. Install
+# 1. Install from URL
 curl -sS -X POST https://phlex.example.com/api/v1/admin/plugins/install \
      -H "Authorization: Bearer $TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"url": "https://example.com/my-plugin/plugin.json"}'
 
 # 2. Enable
-curl -sS -X POST https://phlex.example.com/api/v1/admin/plugins/phlex-plugin-demo/enable \
+curl -sS -X POST https://phlex.example.com/api/v1/admin/plugins/my-plugin/enable \
      -H "Authorization: Bearer $TOKEN"
 
-# 3. List
+# 3. List installed plugins
 curl -sS https://phlex.example.com/api/v1/admin/plugins \
+     -H "Authorization: Bearer $TOKEN"
+
+# 4. Disable
+curl -sS -X POST https://phlex.example.com/api/v1/admin/plugins/my-plugin/disable \
+     -H "Authorization: Bearer $TOKEN"
+
+# 5. Uninstall
+curl -sS -X DELETE https://phlex.example.com/api/v1/admin/plugins/my-plugin \
      -H "Authorization: Bearer $TOKEN"
 ```
 
-## What can go wrong
+---
 
-| Symptom                                       | Cause                                                                                 |
-| --------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `401 Unauthorized` / `auth.required`          | No bearer token or token expired. Log in again.                                       |
-| `403 Forbidden` / `auth.not_admin`            | Your user does not have `users.is_admin = 1`. Ask the existing admin to promote you.  |
-| `400` / `plugin.url.required`                 | The form field was empty.                                                             |
-| `400` / `plugin.url.invalid_scheme`           | Use `https://` (or `file://` for local fixtures). `http://` is refused.               |
-| `422` / `plugin.install.failed` + `fields[]`  | The manifest failed schema validation. Inspect each `fields[].message`.               |
-| `422` / `plugin.enable.failed`                | Manifest installed cleanly but `onEnable()` raised. Check the plugins log channel.    |
-| `404` / `plugin.not_found`                    | You enabled/disabled/uninstalled a name that isn't installed. Check spelling.         |
+## 4. Reference Plugin Walkthrough
 
-## Security notes
+Try the install flow on a fresh server using the reference plugin:
 
-- **HTTPS only by default.** The controller refuses `http://` even
-  when the operator allowed it elsewhere via
-  `PHLEX_PLUGINS_ALLOW_HTTP=1`.
-- **Signatures are honoured.** If the manifest declares a `sha256:…`
-  signature, the install fails unless that signature appears in the
-  trusted-key allowlist (see [`trusted-plugin-list.md`](trusted-plugin-list.md)).
-  Unsigned plugins install with a warning in the `plugins` log
-  channel.
-- **CSRF is not required.** The API is Bearer-token authenticated.
-  Browsers do not auto-attach Authorization headers across origins,
-  so the request can't be forged from another site.
-- **Every install / enable / disable / uninstall is audit-logged.**
-  Entries land in the `AUTH` log channel with the actor user id and
-  the action name (`plugin.install.ui`, etc.). See
-  `docs/dev/architecture-server.md` for log paths.
+```
+https://raw.githubusercontent.com/detain/phlex-plugin-example/main/plugin.json
+```
+
+Steps: paste → Install → toggle Enable → confirm in the plugins table. The reference plugin (`phlex-plugin-example`) is a minimal `metadata-provider` that returns `{"title": "Hello, World"}` for a known fixture path — safe to install on any environment.
+
+---
+
+## 5. Plugin Settings
+
+After install, click **Settings** (wrench icon) next to any enabled plugin to open its per-plugin settings form. Settings are persisted in `plugins.settings_json`. Each plugin exposes its own fields (API keys, endpoint URLs, etc.) as declared in its `plugin.json` `settings` block.
+
+---
+
+## 6. What Can Go Wrong
+
+### Failure 1: Version Incompatibility
+
+**Symptom:** `422` / `plugin.install.failed` with `phlex_min_server_version` in `fields[]`.
+
+**Cause:** Running server is older than what the plugin requires.
+
+**Fix:** Upgrade phlex-server first, or choose a different plugin version.
+
+---
+
+### Failure 2: Signature Verification Failure
+
+**Symptom:** `422` / `plugin.signature.mismatch`.
+
+**Cause:** Downloaded tarball was corrupted in transit, or the plugin was tampered with.
+
+**Fix:** Re-download the plugin, or check with the plugin author that the signature is current.
+
+---
+
+### Failure 3: Plugin Requires Restart
+
+**Symptom:** Plugin listener never fires even after enable.
+
+**Cause:** Some plugins (`transcoder-hook`, `ui-theme`) register hooks only at server boot, not on enable.
+
+**Fix:** Restart phlex-server:
+
+```bash
+systemctl restart phlex
+# or
+php bin/phlex restart
+```
+
+---
+
+### Failure 4: ui-theme CSS Breaks Web Portal
+
+**Symptom:** Web portal blank or unstyled after enabling a `ui-theme`.
+
+**Cause:** Theme's CSS conflicts with current portal version.
+
+**Fix:** Disable via CLI:
+
+```bash
+curl -sS -X POST https://phlex.example.com/api/v1/admin/plugins/<name>/disable \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Then contact the plugin author.
+
+---
+
+## 7. Next Steps
+
+- [Browse the plugin catalog](install-from-catalog.md) — for curated, signature-verified plugins in one click
+- [Trusted plugin list](trusted-plugin-list.md) — add an author's signing key to the allowlist
+- [Plugin developer guide](developer-guide.md) — for plugin authors; understand what types exist and how to implement them
+- [Troubleshooting](developer-guide.md#faq--troubleshooting) — common plugin errors and `.logs/` exploration
+
+---
+
+## Security Notes
+
+- **HTTPS only by default.** The controller refuses `http://` even when `PHLEX_PLUGINS_ALLOW_HTTP=1` is set elsewhere.
+- **Signatures are honoured.** If the manifest declares a `sha256:…` signature, install fails unless that signature appears in the [trusted-key allowlist](trusted-plugin-list.md). Unsigned plugins install with a warning in the `plugins` log channel.
+- **CSRF is not required.** The API is Bearer-token authenticated. Browsers do not auto-attach Authorization headers across origins.
+- **Every install / enable / disable / uninstall is audit-logged.** Entries land in the `AUTH` log channel with the actor user id and action name. See `docs/dev/architecture-server.md` for log paths.

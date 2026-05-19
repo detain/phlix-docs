@@ -1,0 +1,216 @@
+# Hub-Admin: Capacity Planning
+
+## TL;DR
+
+Phlex Hub is lightweight by design — a single relay connection per enrolled server, with bandwidth math that's simple and predictable. Small deployments need only 2 vCPU / 4 GB RAM; large deployments scale to 8 vCPU / 16 GB RAM. Relay bandwidth is the primary cost driver: each concurrent remote stream uses 2–8 Mbps depending on quality settings. Use the tiered sizing guide below to pick the right hardware, then tune `HUB_MAX_RELAY_SESSIONS` and the per-session rate cap to match your user's actual demand.
+
+```bash
+# Required: tune these in your hub environment or config file
+HUB_RELAY_ENABLED=true
+HUB_MAX_RELAY_SESSIONS=100          # max concurrent relay sessions across all servers
+HUB_RELAY_RATE_LIMIT_PER_SESSION_Mbps=20   # max Mbps per individual relay session
+HUB_MAX_SERVERS=1000                 # max enrolled servers per hub instance
+HUB_MAX_USERS=10000                  # max hub users
+```
+
+---
+
+## Hardware Sizing Guide
+
+### Small (≤10 servers, ≤50 users)
+
+```bash
+# Suitable for home labs, small teams, or proof-of-concept
+2 vCPU
+4 GB RAM
+20 GB SSD
+~100 Mbps uplink (supports ~12 concurrent 8 Mbps relay streams)
+```
+
+- Relay session estimate: 2–8 Mbps per stream; 10–15 users watching remotely at once
+- Use case: personal use with family or small friend group
+
+### Medium (≤50 servers, ≤500 users)
+
+```bash
+# Suitable for a team or community of active users
+4 vCPU
+8 GB RAM
+50 GB SSD
+~500 Mbps uplink (supports ~60 concurrent 8 Mbps relay streams)
+```
+
+- Relay session estimate: supports 50–100 concurrent remote streams
+- Use case: office or club with shared media library; multiple simultaneous viewers
+
+### Large (≤200 servers, ≤5000 users)
+
+```bash
+# Suitable for organizations, communities, or high-traffic public hubs
+8 vCPU
+16 GB RAM
+100 GB NVMe
+~1 Gbps uplink (supports ~125 concurrent 8 Mbps relay streams)
+```
+
+- Relay session estimate: supports 200+ concurrent remote streams at full quality
+- Use case: large community or organization with power users and high concurrent viewership
+
+### Scaling Horizontally
+
+- If RAM pressure is the bottleneck (too many concurrent relay sessions), add a second hub instance behind a load balancer
+- Relay sessions are stateful (WS channels within a server's persistent connection) — sticky sessions are required
+- Coordinate session affinity via `HUB_MAX_SERVERS` per instance to split server enrollment evenly
+
+---
+
+## Relay Architecture
+
+### Connection Topology
+
+- Each enrolled server opens one persistent WSS connection to the hub (always-on, not per-session)
+- The hub multiplexes inbound client requests over that single WSS using HTTP-framed messages
+- Each relay session = one virtual WS channel within the server's persistent connection
+- Bandwidth at the hub = sum of all active relay session bitrates (not one connection per session)
+
+### Latency Overhead
+
+- Relay adds ~1–3 RTT overhead vs. a direct LAN connection
+- For geographically distant servers, deploy the hub in the region closest to the majority of users
+- WSS persistent connection eliminates connection setup latency per relay session
+
+### Bandwidth Math
+
+```bash
+# Quick relay bandwidth estimator
+# Replace with your expected concurrent streams and quality setting
+concurrent_streams=20
+stream_quality_mbps=6   # 2 (low) / 6 (medium) / 8 (high) / vary by library
+total_mbps=$((concurrent_streams * stream_quality_mbps))
+echo "Estimated hub uplink needed: ${total_mbps} Mbps"
+# Add 20% headroom for protocol overhead
+headroom_mbps=$((total_mbps * 120 / 100))
+echo "With headroom: ${headroom_mbps} Mbps"
+```
+
+### Direct LAN vs Relay
+
+- Streams on the same LAN go directly server → client (no hub involvement, no bandwidth cost)
+- Only remote streams (client not on LAN) traverse the hub relay
+- This means hub bandwidth cost scales with remote viewership, not total viewership
+
+---
+
+## Config Knobs
+
+| Variable | Default | Description |
+|---|---|---|
+| `HUB_RELAY_ENABLED` | `true` | Set to `false` to disable relay entirely (servers still enroll but no relay traffic flows) |
+| `HUB_MAX_RELAY_SESSIONS` | `100` | Max concurrent relay sessions across all enrolled servers |
+| `HUB_RELAY_RATE_LIMIT_PER_SESSION_Mbps` | `20` | Max Mbps allowed per individual relay session (throttling, not capping quality) |
+| `HUB_MAX_SERVERS` | `1000` | Max enrolled servers per hub instance |
+| `HUB_MAX_USERS` | `10000` | Max hub users |
+
+### Tuning `HUB_MAX_RELAY_SESSIONS`
+
+```bash
+# Monitor active relay sessions in the hub admin panel or via logs
+# If sessions hit the cap, users see connection failures or queueing
+# Increase HUB_MAX_RELAY_SESSIONS or scale horizontally to add a second hub
+
+# Example: split server enrollment across two hub instances
+# Hub-1: HUB_MAX_SERVERS=500
+# Hub-2: HUB_MAX_SERVERS=500
+```
+
+### Tuning Per-Session Rate Limit
+
+```bash
+# Default 20 Mbps supports 1080p high-quality streams comfortably
+# Lower to 8 Mbps for constrained uplinks or free-tier server owners
+# Raise to 50+ only if you have high-bandwidth servers and 4K HDR streams
+HUB_RELAY_RATE_LIMIT_PER_SESSION_Mbps=8   # budget uplink or free tier
+HUB_RELAY_RATE_LIMIT_PER_SESSION_Mbps=20  # default — 1080p high quality
+HUB_RELAY_RATE_LIMIT_PER_SESSION_Mbps=50  # 4K HDR streams
+```
+
+---
+
+## Fair-Use Policy
+
+### Anonymous / Unclaimed Servers
+
+- Anonymous users cannot use relay (must claim a server and accept Terms of Service)
+- Enforced via `HUB_RELAY_ENABLED=false` for unclaimed sessions at the hub layer
+
+### Free Tier
+
+```bash
+HUB_MAX_SERVERS=3              # max 3 enrolled servers
+HUB_MAX_USERS=5               # max 5 hub users
+HUB_MAX_RELAY_SESSIONS=2      # max 2 concurrent relay streams total
+HUB_RELAY_RATE_LIMIT_PER_SESSION_Mbps=2    # 2 Mbps cap (480p–720p)
+```
+
+- Relay abuse threshold: servers exceeding 100 GB/month relay traffic are flagged for review
+- Review action: hub admin contacts server owner; may suspend relay or upgrade to paid tier
+
+### Paid Tier
+
+```bash
+HUB_MAX_SERVERS=unlimited
+HUB_MAX_USERS=unlimited
+HUB_MAX_RELAY_SESSIONS=10     # max 10 concurrent relay streams
+HUB_RELAY_RATE_LIMIT_PER_SESSION_Mbps=20  # 20 Mbps cap (1080p high quality)
+```
+
+### Abuse Detection
+
+```bash
+# Hub operators: monitor relay traffic per enrolled server
+# Query the hub's session logs for servers with >100 GB/month
+# Flag in admin panel; trigger review workflow
+SELECT server_id, SUM(bytes_transferred) AS total_gb
+FROM relay_session_logs
+WHERE month = CURRENT_MONTH
+GROUP BY server_id
+HAVING total_gb > 100;
+```
+
+---
+
+## What Can Go Wrong
+
+### Hub OOM Under Load (too many concurrent relay sessions)
+
+**Symptom:** Hub process crashes; all relay sessions drop; servers show "relay unavailable".
+
+**Cause:** `HUB_MAX_RELAY_SESSIONS` set too high for available RAM; each WS channel consumes ~10–50 MB depending on stream bitrate and buffer size.
+
+**Fix:** Reduce `HUB_MAX_RELAY_SESSIONS`; if already conservative, add RAM or deploy a second hub instance with a load balancer in front; enable sticky sessions so server connections always route to the same hub.
+
+### Relay Latency High (geographic distance)
+
+**Symptom:** Remote playback is noticeably slower than LAN; 5–15 second startup delay; frequent buffering.
+
+**Cause:** Hub deployed far from most enrolled servers or their users; relay adds 1–3 RTT of overhead.
+
+**Fix:** Deploy a hub instance in the geographic region closest to the majority of servers and users; for globally distributed deployments, consider regional hub instances with a DNS-based routing layer.
+
+### Bandwidth Cap Hit (relay streams throttled)
+
+**Symptom:** Users on free or low-bandwidth plans see constant buffering; streams start then stall; hub logs show rate-limit drops.
+
+**Cause:** `HUB_RELAY_RATE_LIMIT_PER_SESSION_Mbps` set too low for the stream quality demanded by users; or uplink saturation at the server.
+
+**Fix:** Increase per-session rate limit if the server's uplink supports it; warn users that high-quality 4K streams require a higher rate cap; consider upgrading free-tier servers to paid tier if they consistently hit limits.
+
+---
+
+## Next Steps
+
+- [Hub claim and enrollment](hub-admin/enrollment.md) — enrolling your first server with the hub
+- [Relay tunnel deep-dive](hub-admin/relay-tunnel.md) — how the WSS relay actually works
+- [Hub admin panel reference](hub-admin/panel-reference.md) — configuring and monitoring the hub
+- [Hub sharing and access control](hub-share.md) — managing user access to your hub
+- [Troubleshooting](troubleshooting.md) — diagnose relay, bandwidth, and connection issues

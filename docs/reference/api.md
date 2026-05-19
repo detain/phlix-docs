@@ -1,5 +1,403 @@
 # Phlex Media Server API Reference
 
+**Phase:** N (End-User Documentation)
+**Step:** N.21
+**Since:** 0.18.0
+
+## Overview
+
+Phlex exposes a REST API at `/api/v1/` returning JSON. Authentication uses JWT Bearer tokens (except on `/api/v1/auth/*` endpoints, which are unauthenticated). If swagger-php is installed, the full OpenAPI 3.0 spec is auto-generated and available at `/api/v1/openapi.json`. An interactive Swagger UI explorer is at `/api/v1/docs`.
+
+## Auth Endpoints
+
+### POST /api/v1/auth/register
+
+Register a new user account.
+
+**Request body:**
+```json
+{
+  "email": "user@example.com",
+  "username": "username",
+  "password": "strongpassword123"
+}
+```
+
+**Response 201:**
+```json
+{
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "user@example.com",
+    "username": "username"
+  },
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ..."
+}
+```
+
+**Response 422:** Validation error (missing fields, weak password, email already in use)
+
+---
+
+### POST /api/v1/auth/login
+
+Authenticate and receive JWT tokens.
+
+**Request body:**
+```json
+{
+  "username": "user@example.com",
+  "password": "strongpassword123"
+}
+```
+
+**Response 200:**
+```json
+{
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "user@example.com",
+    "username": "username"
+  },
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ..."
+}
+```
+
+**Response 401:** Invalid credentials
+
+---
+
+### POST /api/v1/auth/refresh
+
+Refresh an expired access token using a valid refresh token.
+
+**Request body:**
+```json
+{
+  "refresh_token": "eyJ..."
+}
+```
+
+**Response 200:**
+```json
+{
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ..."
+}
+```
+
+**Response 401:** Refresh token expired or invalid
+
+---
+
+## Library Endpoints
+
+### GET /api/v1/libraries
+
+List all configured libraries.
+
+**Auth:** Required (Bearer token)
+
+**Response 200:**
+```json
+{
+  "libraries": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "name": "Movies",
+      "type": "movie",
+      "path": "/mnt/media/movies",
+      "item_count": 342
+    }
+  ]
+}
+```
+
+---
+
+### POST /api/v1/libraries
+
+Create a new library.
+
+**Auth:** Required (Bearer token)
+
+**Request body:**
+```json
+{
+  "name": "TV Shows",
+  "type": "series",
+  "path": "/mnt/media/tv"
+}
+```
+
+**Response 201:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440002",
+  "name": "TV Shows",
+  "type": "series",
+  "path": "/mnt/media/tv"
+}
+```
+
+**Response 400:** Missing required fields or invalid type
+
+## Media Endpoints
+
+### GET /api/v1/media/{id}
+
+Get a single media item by ID.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Media item UUID
+
+**Response 200:**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440003",
+  "name": "S01E01 - Pilot",
+  "type": "episode",
+  "path": "/mnt/media/tv/show/s01e01.mkv",
+  "duration": 2520,
+  "metadata": {
+    "title": "Pilot",
+    "year": 2020,
+    "summary": "The pilot episode..."
+  }
+}
+```
+
+**Response 404:** Media item not found
+
+## Playback Endpoints
+
+### GET /api/v1/playback/{id}/stream
+
+Get an HLS stream URL for a media item. Returns `404` if the item is not found, `403` if the user has no access.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Media item UUID
+
+**Response 200:**
+```json
+{
+  "stream_url": "/hls/550e8400-e29b-41d4-a716-446655440003/master.m3u8",
+  "expires_in": 3600
+}
+```
+
+**Response 404:** Media item not found
+
+---
+
+### POST /api/v1/playback/{id}/progress
+
+Report playback progress for resume-from-position support.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Media item UUID
+
+**Request body:**
+```json
+{
+  "position_ticks": 1234567,
+  "event": "progress"
+}
+```
+- `position_ticks` — Current position in ticks (1 tick = 100 nanoseconds; 1 second = 10,000,000 ticks)
+- `event` — One of: `start`, `progress`, `pause`, `complete`
+
+**Response 200:**
+```json
+{
+  "ok": true
+}
+```
+
+## Session Endpoints
+
+### GET /api/v1/sessions
+
+List all active playback sessions for the authenticated user.
+
+**Auth:** Required (Bearer token)
+
+**Response 200:**
+```json
+{
+  "sessions": [
+    {
+      "id": "sess-001",
+      "media_id": "550e8400-e29b-41d4-a716-446655440003",
+      "device_name": "Safari on macOS",
+      "started_at": "2026-05-19T10:00:00Z",
+      "position_ticks": 1234567
+    }
+  ]
+}
+```
+
+---
+
+### DELETE /api/v1/sessions/{id}
+
+Terminate a specific playback session (e.g., remote control of another device).
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Session ID
+
+**Response 204:** Session terminated
+
+**Response 404:** Session not found
+
+## Hub Endpoints
+
+### POST /api/v1/server-claims/new
+
+Request a new server claim token from the Hub. Used by the server to initiate the claim flow.
+
+**Auth:** Required (Bearer token)
+
+**Request body:**
+```json
+{
+  "hub_token": "claim-token-from-hub-ui"
+}
+```
+
+**Response 201:**
+```json
+{
+  "server_id": "550e8400-e29b-41d4-a716-446655440004",
+  "hub_url": "https://hub.phlex.example.com",
+  "enrolled": true
+}
+```
+
+**Response 401:** Invalid or expired hub token
+
+---
+
+### GET /api/v1/me/servers
+
+List all servers enrolled under the authenticated Hub account.
+
+**Auth:** Required (Bearer token)
+
+**Response 200:**
+```json
+{
+  "servers": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "name": "Home Server",
+      "version": "0.18.0",
+      "claimed": true,
+      "last_seen": "2026-05-19T09:00:00Z"
+    }
+  ]
+}
+```
+
+## Admin Endpoints
+
+### GET /api/v1/admin/users
+
+List all users on the server.
+
+**Auth:** Required (admin Bearer token or API key)
+
+**Response 200:**
+```json
+{
+  "users": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "email": "admin@example.com",
+      "username": "admin",
+      "role": "admin",
+      "created_at": "2026-01-01T00:00:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### POST /api/v1/admin/plugins
+
+Install a plugin from a `plugin.json` manifest URL.
+
+**Auth:** Required (admin Bearer token)
+
+**Request body:**
+```json
+{
+  "url": "https://example.com/plugin.json"
+}
+```
+
+**Response 201:**
+```json
+{
+  "name": "my-plugin",
+  "version": "1.0.0",
+  "enabled": false
+}
+```
+
+**Response 400:** Invalid plugin manifest or signature
+
+---
+
+### DELETE /api/v1/admin/plugins/{id}
+
+Uninstall a plugin by name.
+
+**Auth:** Required (admin Bearer token)
+
+**Parameters:**
+- `id` (path) — Plugin name
+
+**Response 204:** Plugin removed
+
+**Response 404:** Plugin not found
+
+## Error Codes
+
+All endpoints may return these standard error codes:
+
+| Code | Meaning |
+| --- | --- |
+| `400` | Bad request — malformed JSON or missing required fields |
+| `401` | Unauthorized — missing or invalid Bearer token |
+| `403` | Forbidden — valid token but insufficient permissions |
+| `404` | Not found — resource does not exist |
+| `422` | Validation error — request body fails validation |
+| `500` | Internal server error |
+
+Error response body:
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Email address is already in use"
+  }
+}
+```
+
+---
+
 ## Marker Endpoints
 
 ### GET /api/v1/media/{id}/markers

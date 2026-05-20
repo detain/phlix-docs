@@ -37,7 +37,7 @@ The sharing model is simple:
 
 ## 2. Granting Access via the Hub Dashboard
 
-1. Log into the hub at `https://hub.phlex.app` (or your self-hosted hub URL)
+1. Log into the hub at `https://hub.phlix.app` (or your self-hosted hub URL)
 2. Navigate to **Servers** → your server → **Sharing** tab
 3. Click **Share Library**
 4. Choose what to share (entire library, specific folders, or specific items)
@@ -57,25 +57,25 @@ You can restrict shared content to G-rated media for certain recipients. This us
 
 ```bash
 # Grant view-only access to a friend's account
-php bin/phlex share:grant --user friend@example.com --library "Movies" --permission view
+php bin/phlix share:grant --user friend@example.com --library "Movies" --permission view
 
 # Grant view+playback access
-php bin/phlex share:grant --user friend@example.com --library "Movies" --permission playback
+php bin/phlix share:grant --user friend@example.com --library "Movies" --permission playback
 
 # Grant view+playback+download access (full access — enables DLNA casting)
-php bin/phlex share:grant --user friend@example.com --library "Movies" --permission download
+php bin/phlix share:grant --user friend@example.com --library "Movies" --permission download
 
 # Share a specific folder instead of the whole library
-php bin/phlex share:grant --user friend@example.com --folder "Movies/Classics" --permission playback
+php bin/phlix share:grant --user friend@example.com --folder "Movies/Classics" --permission playback
 
 # Share a specific media item by its ID
-php bin/phlex share:grant --user friend@example.com --item "abc123-def456" --permission view
+php bin/phlix share:grant --user friend@example.com --item "abc123-def456" --permission view
 
 # List all active shares for a user
-php bin/phlex share:list --user friend@example.com
+php bin/phlix share:list --user friend@example.com
 
 # Revoke a friend's access to a library
-php bin/phlex share:revoke --user friend@example.com --library "Movies"
+php bin/phlix share:revoke --user friend@example.com --library "Movies"
 ```
 
 ---
@@ -127,7 +127,7 @@ grep "share_invite_sent" .logs/hub-audit.log | tail -20
 # Verify the email address — the most common cause is a typo
 ```
 
-**Fix:** Ask the recipient to check their spam/junk folder. If still not found, re-send the invite with a verified email address. For enterprise users, ask their mail admin to allow-list `noreply@phlex.app`.
+**Fix:** Ask the recipient to check their spam/junk folder. If still not found, re-send the invite with a verified email address. For enterprise users, ask their mail admin to allow-list `noreply@phlix.app`.
 
 ---
 
@@ -153,13 +153,13 @@ grep "share_invite_accepted" .logs/hub-audit.log | tail -10
 **Diagnosis:**
 ```bash
 # On the server, check library scan status:
-php bin/phlex library:status
+php bin/phlix library:status
 
 # Check if a scan is currently running:
-ps aux | grep -i "media_scanner\|phlex" | grep -v grep
+ps aux | grep -i "media_scanner\|phlix" | grep -v grep
 
 # Manually trigger a full library rescan:
-php bin/phlex library:scan --all
+php bin/phlix library:scan --all
 ```
 
 **Fix:** Library sharing requires the library scan to be complete. If a scan is still in progress, wait for it to finish. If no scan is running, trigger one manually. The friend should refresh the hub page after the scan completes and verify the library contents.
@@ -173,13 +173,13 @@ php bin/phlex library:scan --all
 **Diagnosis:**
 ```bash
 # Check the current permission level on the share:
-php bin/phlex share:list --user friend@example.com
+php bin/phlix share:list --user friend@example.com
 ```
 
 **Fix:** DLNA casting requires `View + Playback + Download` permission. Ask the library owner to upgrade your permission level:
 
 ```bash
-php bin/phlex share:grant --user friend@example.com --library "Movies" --permission download
+php bin/phlix share:grant --user friend@example.com --library "Movies" --permission download
 ```
 
 Or via the hub dashboard — change the share's permission to **"View + Playback + Download"**.

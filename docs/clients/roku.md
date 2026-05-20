@@ -5,35 +5,35 @@
 **Since:** 0.18.0
 
 > [!TIP]
-> The Phlex channel for Roku brings your media library to any Roku streaming device. Add the channel from the Roku Channel Store, open it, enter your server URL (or sign in with Hub), and start streaming. Works on all Roku models running OS 10 or later.
+> The Phlix channel for Roku brings your media library to any Roku streaming device. Add the channel from the Roku Channel Store, open it, enter your server URL (or sign in with Hub), and start streaming. Works on all Roku models running OS 10 or later.
 
 ## Install / Store Links
 
-- **Roku Channel Store:** Search for **Phlex** on your Roku device or at [channel.roku.com](https://channel.roku.com)
-- **Developer sideload (.ipk):** [github.com/detain/phlex-roku-client/releases](https://github.com/detain/phlex-roku-client/releases) — for beta testing and development devices only
+- **Roku Channel Store:** Search for **Phlix** on your Roku device or at [channel.roku.com](https://channel.roku.com)
+- **Developer sideload (.ipk):** [github.com/detain/phlix-roku-client/releases](https://github.com/detain/phlix-roku-client/releases) — for beta testing and development devices only
 
 ## Platform-Specific Install Steps
 
 ### Add the Official Channel (Recommended)
 
 1. From the Roku home screen, navigate to **Streaming Channels → Search Channels**.
-2. Type **Phlex** and select the Phlex channel from the results.
+2. Type **Phlix** and select the Phlix channel from the results.
 3. Click **Add Channel** and confirm. The channel appears on your home screen.
-4. Open **Phlex** from your channel list.
+4. Open **Phlix** from your channel list.
 
 ### Developer Sideload (Beta / Testing Only)
 
-1. Download the latest `.ipk` package from [github.com/detain/phlex-roku-client/releases](https://github.com/detain/phlex-roku-client/releases).
+1. Download the latest `.ipk` package from [github.com/detain/phlix-roku-client/releases](https://github.com/detain/phlix-roku-client/releases).
 2. Set up your Roku device for development at [developer.roku.com](https://developer.roku.com) — create a developer account and register your device.
 3. Use the **Roku Developer Application Loader (RDA)** to install:
    ```bash
-   rokudev install Phlex-1.0.0.ipk --device 192.168.1.x
+   rokudev install Phlix-1.0.0.ipk --device 192.168.1.x
    ```
 4. The channel appears in **My Channels** on the home screen.
 
 ### First Launch
 
-On first open, the Phlex channel shows a server URL entry screen:
+On first open, the Phlix channel shows a server URL entry screen:
 
 1. Enter your server's address:
    - **Local:** `http://192.168.1.100:32400` (replace with your server's LAN IP)
@@ -43,9 +43,9 @@ On first open, the Phlex channel shows a server URL entry screen:
 
 ## Hub Connection
 
-1. In the Phlex channel, go to **Settings** (gear icon).
+1. In the Phlix channel, go to **Settings** (gear icon).
 2. Select **Hub Login**.
-3. Enter your Hub URL (e.g., `https://hub.phlex.example.com`) and press **OK**.
+3. Enter your Hub URL (e.g., `https://hub.phlix.example.com`) and press **OK**.
 4. Enter your Hub username and password on the on-screen keyboard.
 5. After authentication, the Hub auto-populates your server URL if you have a server claimed. No manual entry required.
 
@@ -67,9 +67,9 @@ Hub login also enables remote playback when you are away from home — the Hub r
 
 ### Channel store version vs. dev channel version mismatch
 
-**Symptom:** The version of Phlex on the Channel Store behaves differently from the version you sideloaded for testing.
+**Symptom:** The version of Phlix on the Channel Store behaves differently from the version you sideloaded for testing.
 
-**Fix:** Report the discrepancy at [github.com/detain/phlex-roku-client/issues](https://github.com/detain/phlex-roku-client/issues). For production use, always rely on the Channel Store version — it has passed Roku's certification process. Dev sideloads are for beta testing only.
+**Fix:** Report the discrepancy at [github.com/detain/phlix-roku-client/issues](https://github.com/detain/phlix-roku-client/issues). For production use, always rely on the Channel Store version — it has passed Roku's certification process. Dev sideloads are for beta testing only.
 
 ## Next Steps
 

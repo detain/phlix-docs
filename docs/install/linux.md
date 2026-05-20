@@ -1,8 +1,8 @@
-# Install phlex-server on Linux
+# Install phlix-server on Linux
 
 ## TL;DR
 
-phlex-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide installs it on Linux (Ubuntu 22.04+, Debian 12+, or Fedora 40+) in roughly 15 minutes using system packages, Composer, and systemd.
+phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide installs it on Linux (Ubuntu 22.04+, Debian 12+, or Fedora 40+) in roughly 15 minutes using system packages, Composer, and systemd.
 
 **Minimum requirements:** 2 CPU / 4 GB RAM. A non-root sudo user is recommended.
 
@@ -11,12 +11,12 @@ phlex-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time 
 ```bash
 sudo apt update && sudo apt install -y php8.3-fpm php8.3-mysql php8.3-curl php8.3-gd \
   php8.3-zip php8.3-xml php8.3-mbstring php8.3-bcmath mariadb-server ffmpeg git curl unzip && \
-  sudo mkdir -p /opt/phlex && sudo chown $USER:$USER /opt/phlex && \
-  git clone https://github.com/detain/phlex-server.git /opt/phlex && cd /opt/phlex && \
+  sudo mkdir -p /opt/phlix && sudo chown $USER:$USER /opt/phlix && \
+  git clone https://github.com/detain/phlix-server.git /opt/phlix && cd /opt/phlix && \
   composer install --no-dev --optimize-autoloader && \
   cp .env.example .env && php scripts/run-migrations.php && \
-  sudo cp phlex.service /etc/systemd/system/ && sudo systemctl daemon-reload && \
-  sudo systemctl enable --now phlex && sudo ufw allow 32400/tcp comment 'Phlex HTTP'
+  sudo cp phlix.service /etc/systemd/system/ && sudo systemctl daemon-reload && \
+  sudo systemctl enable --now phlix && sudo ufw allow 32400/tcp comment 'Phlix HTTP'
 ```
 
 Then open `http://your-server-ip:32400` in your browser.
@@ -71,9 +71,9 @@ Install PHP 8.3 from source, MariaDB from distro packages, and FFmpeg from the j
 ```bash
 sudo mysql_secure_installation
 
-sudo mysql -u root -p -e "CREATE DATABASE phlex CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-sudo mysql -u root -p -e "CREATE USER 'phlex'@'localhost' IDENTIFIED BY 'your_strong_password';"
-sudo mysql -u root -p -e "GRANT ALL PRIVILEGES ON phlex.* TO 'phlex'@'localhost';"
+sudo mysql -u root -p -e "CREATE DATABASE phlix CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+sudo mysql -u root -p -e "CREATE USER 'phlix'@'localhost' IDENTIFIED BY 'your_strong_password';"
+sudo mysql -u root -p -e "GRANT ALL PRIVILEGES ON phlix.* TO 'phlix'@'localhost';"
 sudo mysql -u root -p -e "FLUSH PRIVILEGES;"
 ```
 
@@ -81,13 +81,13 @@ Replace `your_strong_password` with a real strong password.
 
 ---
 
-## 4. Clone phlex-server
+## 4. Clone phlix-server
 
 ```bash
-sudo mkdir -p /opt/phlex
-sudo chown $USER:$USER /opt/phlex
-git clone https://github.com/detain/phlex-server.git /opt/phlex
-cd /opt/phlex
+sudo mkdir -p /opt/phlix
+sudo chown $USER:$USER /opt/phlix
+git clone https://github.com/detain/phlix-server.git /opt/phlix
+cd /opt/phlix
 ```
 
 ---
@@ -111,8 +111,8 @@ Edit `.env` with your editor. Required settings:
 ```env
 APP_URL=http://your-server-ip:32400
 DB_HOST=localhost
-DB_DATABASE=phlex
-DB_USERNAME=phlex
+DB_DATABASE=phlix
+DB_USERNAME=phlix
 DB_PASSWORD=your_strong_password
 ```
 
@@ -128,19 +128,19 @@ php scripts/run-migrations.php
 
 ## 8. systemd service unit
 
-Save this as `/etc/systemd/system/phlex.service`:
+Save this as `/etc/systemd/system/phlix.service`:
 
 ```ini
 [Unit]
-Description=Phlex Media Server
+Description=Phlix Media Server
 After=network.target mariadb.service
 
 [Service]
 Type=simple
 User=www-data
 Group=www-data
-WorkingDirectory=/opt/phlex
-ExecStart=/usr/bin/php /opt/phlex/public/index.php
+WorkingDirectory=/opt/phlix
+ExecStart=/usr/bin/php /opt/phlix/public/index.php
 Restart=on-failure
 RestartSec=5
 StandardOutput=journal
@@ -153,10 +153,10 @@ WantedBy=multi-user.target
 Install and enable:
 
 ```bash
-sudo cp phlex.service /etc/systemd/system/
+sudo cp phlix.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable phlex
-sudo systemctl start phlex
+sudo systemctl enable phlix
+sudo systemctl start phlix
 ```
 
 ---
@@ -166,7 +166,7 @@ sudo systemctl start phlex
 ### UFW (Ubuntu/Debian)
 
 ```bash
-sudo ufw allow 32400/tcp comment 'Phlex HTTP'
+sudo ufw allow 32400/tcp comment 'Phlix HTTP'
 sudo ufw allow 1900/udp comment 'DLNA discovery (optional)'
 ```
 
@@ -183,11 +183,11 @@ sudo firewall-cmd --reload
 ## 10. Verify the install
 
 ```bash
-sudo systemctl status phlex
+sudo systemctl status phlix
 curl -I http://localhost:32400
 ```
 
-Expected: HTTP 200 from the phlex index page.
+Expected: HTTP 200 from the phlix index page.
 
 ---
 
@@ -212,15 +212,15 @@ Expected: HTTP 200 from the phlex index page.
 - **Fix (Fedora):** Enable RPM Fusion first, then `dnf install ffmpeg`
 - **Verify:** `ffmpeg -version`
 
-### Permission denied on /var/lib/phlex
+### Permission denied on /var/lib/phlix
 
-- **Symptom:** "Cannot create file /var/lib/phlex/..." in logs
-- **Fix:** `sudo chown -R www-data:www-data /var/lib/phlex && sudo chmod -R 755 /var/lib/phlex`
+- **Symptom:** "Cannot create file /var/lib/phlix/..." in logs
+- **Fix:** `sudo chown -R www-data:www-data /var/lib/phlix && sudo chmod -R 755 /var/lib/phlix`
 
 ### Port 32400 already in use
 
 - **Symptom:** `bind(): Address already in use`
-- **Fix:** `sudo ss -tlnp | grep 32400` to find the conflicting process, stop it or change phlex port via `APP_URL` env var
+- **Fix:** `sudo ss -tlnp | grep 32400` to find the conflicting process, stop it or change phlix port via `APP_URL` env var
 
 ---
 

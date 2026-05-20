@@ -4,13 +4,13 @@
 
 ## TL;DR
 
-The plugin catalog is a hub-hosted, browsable list of curated plugins — each signature-verified against the Phlex hub's published keys. Browse to **Settings → Plugins → Browse Catalog**, pick a plugin, click **Install**, and the verified plugin lands in one click. Catalog plugins carry SHA256 signatures and are moderated by the hub team, so you don't need to manage your own trusted-key allowlist for community plugins.
+The plugin catalog is a hub-hosted, browsable list of curated plugins — each signature-verified against the Phlix hub's published keys. Browse to **Settings → Plugins → Browse Catalog**, pick a plugin, click **Install**, and the verified plugin lands in one click. Catalog plugins carry SHA256 signatures and are moderated by the hub team, so you don't need to manage your own trusted-key allowlist for community plugins.
 
 ---
 
 ## 1. What Is the Plugin Catalog
 
-The catalog is a JSON endpoint served by the Phlex hub (`https://catalog.phlex.media/v1/plugins` or similar), listing every community plugin that has passed hub moderation and carries a valid signature from a registered author. Operators can browse by plugin type, search by name, and install in one click. The catalog replaces manual URL pasting for operators who prefer curated plugins.
+The catalog is a JSON endpoint served by the Phlix hub (`https://catalog.phlix.media/v1/plugins` or similar), listing every community plugin that has passed hub moderation and carries a valid signature from a registered author. Operators can browse by plugin type, search by name, and install in one click. The catalog replaces manual URL pasting for operators who prefer curated plugins.
 
 Plugin types available in the catalog: `metadata-provider`, `auth-provider`, `notifier`, `scrobbler`, `tuner`, `transcoder-hook`, `ui-theme`, `library-type`, `subtitle-provider`, `arr-integration`, `analytics-sink`.
 
@@ -21,7 +21,7 @@ Plugin types available in the catalog: `metadata-provider`, `auth-provider`, `no
 1. Browse to **Settings → Plugins** (or `/admin/plugins`).
 2. Click **Browse Catalog** (or navigate directly to `/admin/plugins/catalog`).
 3. Use the **type filter** dropdown to narrow by category (`metadata-provider`, `auth-provider`, `notifier`, `scrobbler`, `tuner`, `transcoder-hook`, `ui-theme`, etc.).
-4. Click a plugin card to expand its detail panel: description, author, version, `phlex_min_server_version`, signature status.
+4. Click a plugin card to expand its detail panel: description, author, version, `phlix_min_server_version`, signature status.
 5. Click **Install** on the chosen plugin.
 6. The plugin is downloaded, signature-verified, and staged automatically.
 7. It lands **disabled** in the plugins table — flip the toggle to enable.
@@ -71,11 +71,11 @@ Same as URL-installed plugins: **Settings → Plugins** → toggle **Disable** �
 
 ### Failure 1: Version Incompatibility
 
-**Symptom:** "This plugin requires phlex-server ≥ 1.2.0; you are running 1.1.4" shown in the catalog detail panel.
+**Symptom:** "This plugin requires phlix-server ≥ 1.2.0; you are running 1.1.4" shown in the catalog detail panel.
 
-**Cause:** Running server is older than the plugin's `phlex_min_server_version`.
+**Cause:** Running server is older than the plugin's `phlix_min_server_version`.
 
-**Fix:** Upgrade phlex-server before installing. The catalog shows compatibility info before you install — pay attention to the version badge.
+**Fix:** Upgrade phlix-server before installing. The catalog shows compatibility info before you install — pay attention to the version badge.
 
 ---
 
@@ -85,7 +85,7 @@ Same as URL-installed plugins: **Settings → Plugins** → toggle **Disable** �
 
 **Cause:** Plugin tarball was corrupted during download, or hub moderation was bypassed.
 
-**Fix:** Report to hub moderation at [github.com/detain/phlex-plugin-catalog](https://github.com/detain/phlex-plugin-catalog). Do not bypass the signature check manually.
+**Fix:** Report to hub moderation at [github.com/detain/phlix-plugin-catalog](https://github.com/detain/phlix-plugin-catalog). Do not bypass the signature check manually.
 
 ---
 
@@ -95,12 +95,12 @@ Same as URL-installed plugins: **Settings → Plugins** → toggle **Disable** �
 
 **Cause:** Plugin registers event listeners only at container boot, not on enable.
 
-**Fix:** Restart phlex-server:
+**Fix:** Restart phlix-server:
 
 ```bash
-systemctl restart phlex
+systemctl restart phlix
 # or
-php bin/phlex restart
+php bin/phlix restart
 ```
 
 The plugin auto-re-attaches on boot for enabled plugins.
@@ -116,11 +116,11 @@ The plugin auto-re-attaches on boot for enabled plugins.
 **Fix:** Disable immediately via CLI:
 
 ```bash
-curl -sS -X POST https://phlex.example.com/api/v1/admin/plugins/<name>/disable \
+curl -sS -X POST https://phlix.example.com/api/v1/admin/plugins/<name>/disable \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-Then contact the plugin author with your Phlex server version and portal DOM details.
+Then contact the plugin author with your Phlix server version and portal DOM details.
 
 ---
 
@@ -129,4 +129,4 @@ Then contact the plugin author with your Phlex server version and portal DOM det
 - [Install from URL](install-from-url.md) — for plugins not yet in the catalog, or for testing unreleased versions
 - [Trusted plugin list](trusted-plugin-list.md) — how the hub's signature allowlist works and how to request plugin listing
 - [Plugin developer guide](developer-guide.md) — for plugin authors; learn how to publish a plugin to the catalog
-- [Plugin catalog source](https://github.com/detain/phlex-plugin-catalog) — file an issue or PR to add or update a community plugin listing
+- [Plugin catalog source](https://github.com/detain/phlix-plugin-catalog) — file an issue or PR to add or update a community plugin listing

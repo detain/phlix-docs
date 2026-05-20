@@ -1,8 +1,8 @@
-# Install phlex-server on macOS
+# Install phlix-server on macOS
 
 ## TL;DR
 
-phlex-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide installs it on macOS 12+ (Monterey or later) in roughly 15 minutes using Homebrew or MacPorts.
+phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide installs it on macOS 12+ (Monterey or later) in roughly 15 minutes using Homebrew or MacPorts.
 
 **Minimum requirements:** macOS 12+ (Monterey or later), 2 CPU / 4 GB RAM, Homebrew or MacPorts.
 
@@ -11,8 +11,8 @@ phlex-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" && \\
   brew install php@8.3 mysql@8.0 ffmpeg git curl && \\
-  sudo mkdir -p /opt/phlex && sudo chown $USER /opt/phlex && \\
-  git clone https://github.com/detain/phlex-server.git /opt/phlex && cd /opt/phlex && \\
+  sudo mkdir -p /opt/phlix && sudo chown $USER /opt/phlix && \\
+  git clone https://github.com/detain/phlix-server.git /opt/phlix && cd /opt/phlix && \\
   composer install --no-dev --optimize-autoloader && \\
   cp .env.example .env && php scripts/run-migrations.php && \\
   brew services start mysql@8.0 && php public/index.php
@@ -102,22 +102,22 @@ brew services start mysql@8.0
 # Secure installation (first run)
 mysql_secure_installation
 
-# Create phlex database and user
-mysql -u root -p -e "CREATE DATABASE phlex CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-mysql -u root -p -e "CREATE USER 'phlex'@'localhost' IDENTIFIED BY 'your_strong_password';"
-mysql -u root -p -e "GRANT ALL PRIVILEGES ON phlex.* TO 'phlex'@'localhost';"
+# Create phlix database and user
+mysql -u root -p -e "CREATE DATABASE phlix CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -p -e "CREATE USER 'phlix'@'localhost' IDENTIFIED BY 'your_strong_password';"
+mysql -u root -p -e "GRANT ALL PRIVILEGES ON phlix.* TO 'phlix'@'localhost';"
 mysql -u root -p -e "FLUSH PRIVILEGES;"
 ```
 
 ---
 
-## 5. Clone phlex-server
+## 5. Clone phlix-server
 
 ```bash
-sudo mkdir -p /opt/phlex
-sudo chown $USER /opt/phlex
-git clone https://github.com/detain/phlex-server.git /opt/phlex
-cd /opt/phlex
+sudo mkdir -p /opt/phlix
+sudo chown $USER /opt/phlix
+git clone https://github.com/detain/phlix-server.git /opt/phlix
+cd /opt/phlix
 ```
 
 ---
@@ -139,8 +139,8 @@ cp .env.example .env
 #   DB_HOST=localhost
 #   DB_SOCKET=/opt/homebrew/var/mysql/mysql.sock   # Apple Silicon Homebrew
 #   DB_SOCKET=/usr/local/var/mysql/mysql.sock     # Intel Homebrew
-#   DB_DATABASE=phlex
-#   DB_USERNAME=phlex
+#   DB_DATABASE=phlix
+#   DB_USERNAME=phlix
 #   DB_PASSWORD=your_strong_password
 ```
 
@@ -159,14 +159,14 @@ php scripts/run-migrations.php
 ```bash
 php public/index.php
 # or to run in background:
-nohup php public/index.php > /opt/phlex/phlex.log 2>&1 &
+nohup php public/index.php > /opt/phlix/phlix.log 2>&1 &
 ```
 
 ---
 
 ## 10. Launchd plist for auto-start
 
-Create `~/Library/LaunchAgents/com.phlex.media-server.plist`:
+Create `~/Library/LaunchAgents/com.phlix.media-server.plist`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -174,11 +174,11 @@ Create `~/Library/LaunchAgents/com.phlex.media-server.plist`:
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.phlex.media-server</string>
+    <string>com.phlix.media-server</string>
     <key>ProgramArguments</key>
     <array>
         <string>/opt/homebrew/bin/php</string>
-        <string>/opt/phlex/public/index.php</string>
+        <string>/opt/phlix/public/index.php</string>
         <string>start</string>
     </array>
     <key>RunAtLoad</key>
@@ -186,14 +186,14 @@ Create `~/Library/LaunchAgents/com.phlex.media-server.plist`:
     <key>KeepAlive</key>
     <true/>
     <key>WorkingDirectory</key>
-    <string>/opt/phlex</string>
+    <string>/opt/phlix</string>
     <key>StandardOutPath</key>
-    <string>/opt/phlex/phlex.log</string>
+    <string>/opt/phlix/phlix.log</string>
     <key>StandardErrorPath</key>
-    <string>/opt/phlex/phlex.error.log</string>
+    <string>/opt/phlix/phlix.error.log</string>
     <key>EnvironmentVariables</key>
     <dict>
-        <key>PHLEX_ENV</key>
+        <key>PHLIX_ENV</key>
         <string>production</string>
     </dict>
 </dict>
@@ -204,13 +204,13 @@ Install and load:
 
 ```bash
 # Copy plist
-cp ~/Library/LaunchAgents/com.phlex.media-server.plist ~/Library/LaunchAgents/
+cp ~/Library/LaunchAgents/com.phlix.media-server.plist ~/Library/LaunchAgents/
 
 # Load (start immediately and on boot)
-launchctl load ~/Library/LaunchAgents/com.phlex.media-server.plist
+launchctl load ~/Library/LaunchAgents/com.phlix.media-server.plist
 
 # Verify
-launchctl list | grep phlex
+launchctl list | grep phlix
 ```
 
 ::: tip Intel vs Apple Silicon
@@ -226,12 +226,12 @@ The plist above uses Apple Silicon paths (`/opt/homebrew/bin/php`). For Intel, c
 1. System Settings → Privacy & Security → Firewall
 2. Turn on Firewall
 3. Click "Firewall Options..."
-4. Add `/opt/phlex/public/index.php` (or allow PHP to accept incoming connections)
+4. Add `/opt/phlix/public/index.php` (or allow PHP to accept incoming connections)
 
 ### pfctl CLI (advanced)
 
 ```bash
-# Add to /etc/pf.anchors/com.phlex
+# Add to /etc/pf.anchors/com.phlix
 # pass in proto tcp from any to any port 32400 keep state
 
 # Reload pfctl
@@ -247,10 +247,10 @@ sudo pfctl -f /etc/pf.conf -E
 ```bash
 # Check server is running
 curl -I http://localhost:32400
-# Expected: HTTP 200 from the phlex index
+# Expected: HTTP 200 from the phlix index
 
 # Check Launchd service
-launchctl list | grep phlex
+launchctl list | grep phlix
 ```
 
 ---
@@ -280,7 +280,7 @@ launchctl list | grep phlex
 ### Port 32400 already in use
 
 - **Symptom:** `bind(): Address already in use` or `Port 32400 in use`
-- **Fix:** `sudo lsof -i :32400` to find the conflicting process (e.g., another web server or AirPlay receiver). Stop it or change phlex port via `APP_URL` env var
+- **Fix:** `sudo lsof -i :32400` to find the conflicting process (e.g., another web server or AirPlay receiver). Stop it or change phlix port via `APP_URL` env var
 - **Verify after fix:** `curl -I http://localhost:32400`
 
 ---

@@ -5,11 +5,11 @@
 
 ## TL;DR
 
-A TV library organizes your episodic content by show, season, and episode — with chapter markers, resume positions, and episode artwork all tracked per-user. Drop episodes into a `Season 01/` folder structure, add the folder to Phlex, and Phlex matches episode info from TVDB, Fanart.tv, and TMDB.
+A TV library organizes your episodic content by show, season, and episode — with chapter markers, resume positions, and episode artwork all tracked per-user. Drop episodes into a `Season 01/` folder structure, add the folder to Phlix, and Phlix matches episode info from TVDB, Fanart.tv, and TMDB.
 
 ```bash
 # Structure: /TV/Show Name/Season 01/Show Name S01E01.ext
-# Add to Phlex: Libraries → Add Library → Type: TV Shows → point to /path/to/TV → Scan
+# Add to Phlix: Libraries → Add Library → Type: TV Shows → point to /path/to/TV → Scan
 ```
 
 Supported formats: `.mkv`, `.mp4`, `.ts`, and most common video containers.

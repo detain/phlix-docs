@@ -1,28 +1,28 @@
-# Contributing to Phlex
+# Contributing to Phlix
 
-Everything you need to contribute across all Phlex repositories — server, hub, clients, and plugins.
+Everything you need to contribute across all Phlix repositories — server, hub, clients, and plugins.
 
 ## TL;DR
 
 ```bash
 # Clone all repos
-git clone git@github.com:detain/phlex-server.git
-git clone git@github.com:detain/phlex-hub.git
-git clone git@github.com:detain/phlex-shared.git
-git clone git@github.com:detain/phlex-mobile-client.git
-git clone git@github.com:detain/phlex-tizen-client.git
-git clone git@github.com:detain/phlex-roku-client.git
-git clone git@github.com:detain/phlex-windows-client.git
+git clone git@github.com:detain/phlix-server.git
+git clone git@github.com:detain/phlix-hub.git
+git clone git@github.com:detain/phlix-shared.git
+git clone git@github.com:detain/phlix-mobile-client.git
+git clone git@github.com:detain/phlix-tizen-client.git
+git clone git@github.com:detain/phlix-roku-client.git
+git clone git@github.com:detain/phlix-windows-client.git
 
 # Server dev setup
-cd phlex-server && composer install && php scripts/run-migrations.php && php public/index.php
+cd phlix-server && composer install && php scripts/run-migrations.php && php public/index.php
 
 # Hub dev setup
-cd phlex-hub && composer install && php bin/hub.php
+cd phlix-hub && composer install && php bin/hub.php
 
 # Mobile/Windows clients
-cd phlex-mobile-client && npm install
-cd phlex-windows-client && npm install
+cd phlix-mobile-client && npm install
+cd phlix-windows-client && npm install
 ```
 
 Branch → commit → PR → squash-merge → delete. PSR-12, phpstan level 9, all PHPUnit tests must pass.
@@ -31,36 +31,36 @@ Branch → commit → PR → squash-merge → delete. PSR-12, phpstan level 9, a
 
 ## Cloning all repositories
 
-Phlex is split across seven repositories:
+Phlix is split across seven repositories:
 
 | Repository | Language / stack | What it runs |
 |-----------|-----------------|---------------|
-| [`phlex-server`](https://github.com/detain/phlex-server) | PHP 8.3+, Workerman 5 | Media server (HTTP, WS, HLS, DLNA, LiveTV) |
-| [`phlex-hub`](https://github.com/detain/phlex-hub) | PHP 8.3+, Workerman 5 | Hub orchestration (pairing, relay tunnel) |
-| [`phlex-shared`](https://github.com/detain/phlex-shared) | PHP 8.3+ | Shared types, DTOs, event classes |
-| [`phlex-mobile-client`](https://github.com/detain/phlex-mobile-client) | React Native | iOS + Android mobile app |
-| [`phlex-tizen-client`](https://github.com/detain/phlex-tizen-client) | JavaScript / Tizen | Samsung Tizen TV app |
-| [`phlex-roku-client`](https://github.com/detain/phlex-roku-client) | BrightScript | Roku channel |
-| [`phlex-windows-client`](https://github.com/detain/phlex-windows-client) | Electron | Windows desktop app |
+| [`phlix-server`](https://github.com/detain/phlix-server) | PHP 8.3+, Workerman 5 | Media server (HTTP, WS, HLS, DLNA, LiveTV) |
+| [`phlix-hub`](https://github.com/detain/phlix-hub) | PHP 8.3+, Workerman 5 | Hub orchestration (pairing, relay tunnel) |
+| [`phlix-shared`](https://github.com/detain/phlix-shared) | PHP 8.3+ | Shared types, DTOs, event classes |
+| [`phlix-mobile-client`](https://github.com/detain/phlix-mobile-client) | React Native | iOS + Android mobile app |
+| [`phlix-tizen-client`](https://github.com/detain/phlix-tizen-client) | JavaScript / Tizen | Samsung Tizen TV app |
+| [`phlix-roku-client`](https://github.com/detain/phlix-roku-client) | BrightScript | Roku channel |
+| [`phlix-windows-client`](https://github.com/detain/phlix-windows-client) | Electron | Windows desktop app |
 
 ```bash
-git clone git@github.com:detain/phlex-server.git
-git clone git@github.com:detain/phlex-hub.git
-git clone git@github.com:detain/phlex-shared.git
-git clone git@github.com:detain/phlex-mobile-client.git
-git clone git@github.com:detain/phlex-tizen-client.git
-git clone git@github.com:detain/phlex-roku-client.git
-git clone git@github.com:detain/phlex-windows-client.git
+git clone git@github.com:detain/phlix-server.git
+git clone git@github.com:detain/phlix-hub.git
+git clone git@github.com:detain/phlix-shared.git
+git clone git@github.com:detain/phlix-mobile-client.git
+git clone git@github.com:detain/phlix-tizen-client.git
+git clone git@github.com:detain/phlix-roku-client.git
+git clone git@github.com:detain/phlix-windows-client.git
 ```
 
 ---
 
 ## Development environment setup
 
-### phlex-server
+### phlix-server
 
 ```bash
-cd phlex-server
+cd phlix-server
 composer install
 php scripts/run-migrations.php   # creates all DB tables
 php public/index.php            # starts the server on 0.0.0.0:8080
@@ -68,39 +68,39 @@ php public/index.php            # starts the server on 0.0.0.0:8080
 
 The server uses `Workerman\MySQL\Connection` (never PDO or mysqli). All DB access goes through the connection pool. See [`docs/dev/architecture-server.md`](architecture-server.md) for the bootstrap path.
 
-### phlex-hub
+### phlix-hub
 
 ```bash
-cd phlex-hub
+cd phlix-hub
 composer install
 php bin/hub.php                 # starts the hub on 0.0.0.0:8800
 ```
 
 The hub holds server claim codes, runs heartbeat loops, multiplexes relay tunnels, and issues RS256 user-session JWTs. See [`docs/dev/architecture-hub.md`](architecture-hub.md) for internals.
 
-### Mobile client (phlex-mobile-client)
+### Mobile client (phlix-mobile-client)
 
 ```bash
-cd phlex-mobile-client
+cd phlix-mobile-client
 npm install          # or: yarn
 npx react-native start   # Metro bundler
 npx react-native run-android   # Android emulator
 npx react-native run-ios        # iOS simulator
 ```
 
-### Windows client (phlex-windows-client)
+### Windows client (phlix-windows-client)
 
 ```bash
-cd phlex-windows-client
+cd phlix-windows-client
 npm install          # or: yarn
 npm run dev        # starts Electron with hot reload
 ```
 
-### Tizen client (phlex-tizen-client)
+### Tizen client (phlix-tizen-client)
 
 Tizen builds require the Tizen Studio toolchain. Build commands are defined in the `.tizen` project file; refer to the repo's `README.md` for the full build instructions.
 
-### Roku client (phlex-roku-client)
+### Roku client (phlix-roku-client)
 
 Roku builds require the Roku SDK. Refer to the repo's `README.md` for the full build instructions.
 
@@ -227,7 +227,7 @@ $db->expects($this->once())
     ->with($this->stringContains('INSERT'), $this->anything());  // write assertion
 ```
 
-Test files live in `tests/unit/{Module}/{Class}Test.php` with namespace `Phlex\Tests\Unit\{Module}` and extend `PHPUnit\Framework\TestCase`.
+Test files live in `tests/unit/{Module}/{Class}Test.php` with namespace `Phlix\Tests\Unit\{Module}` and extend `PHPUnit\Framework\TestCase`.
 
 ### Code coverage
 
@@ -241,9 +241,9 @@ Coverage writes to `coverage.xml` and `coverage-report/` (configured in `phpunit
 
 ## Plugin contribution
 
-Plugins extend the Phlex feature set without modifying the core server. The plugin SDK lives in [`docs/dev/plugin-sdk.md`](plugin-sdk.md) — it covers the manifest schema, lifecycle (install → enable → disable → uninstall), container bindings plugins can use, and how to add a new plugin type.
+Plugins extend the Phlix feature set without modifying the core server. The plugin SDK lives in [`docs/dev/plugin-sdk.md`](plugin-sdk.md) — it covers the manifest schema, lifecycle (install → enable → disable → uninstall), container bindings plugins can use, and how to add a new plugin type.
 
-To list a plugin in the in-product catalog, submit a PR to [`detain/phlex-plugin-catalog`](https://github.com/detain/phlex-plugin-catalog) with the plugin's manifest and metadata.
+To list a plugin in the in-product catalog, submit a PR to [`detain/phlix-plugin-catalog`](https://github.com/detain/phlix-plugin-catalog) with the plugin's manifest and metadata.
 
 See [`docs/plugins/developer-guide.md`](../plugins/developer-guide.md) for the full author-facing guide.
 
@@ -277,15 +277,15 @@ Use `phpbrew`, `nvm` (with phpenv), or Docker to manage multiple PHP versions.
 **Fix:**
 ```bash
 # Verify MySQL is reachable
-mysql -h 127.0.0.1 -u phlex -p -e "SELECT 1"
+mysql -h 127.0.0.1 -u phlix -p -e "SELECT 1"
 
 # Drop and recreate (development only — NEVER do this in production):
-mysql -h 127.0.0.1 -u phlex -p -e "DROP DATABASE IF EXISTS phlex"
-mysql -h 127.0.0.1 -u phlex -p -e "CREATE DATABASE phlex"
+mysql -h 127.0.0.1 -u phlix -p -e "DROP DATABASE IF EXISTS phlix"
+mysql -h 127.0.0.1 -u phlix -p -e "CREATE DATABASE phlix"
 php scripts/run-migrations.php
 
 # Or run the SQL files directly for incremental fixes:
-mysql -h 127.0.0.1 -u phlex -p phlex < migrations/001_initial_schema.sql
+mysql -h 127.0.0.1 -u phlix -p phlix < migrations/001_initial_schema.sql
 ```
 
 Check `migrations/` for the current set of SQL files.

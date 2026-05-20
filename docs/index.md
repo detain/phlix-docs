@@ -2,12 +2,12 @@
 layout: home
 
 hero:
-  name: "Phlex"
+  name: "Phlix"
   text: "Media server for everyone"
   tagline: "Stream your movies, TV shows, music, photos, and more — self-hosted on your own hardware."
   actions:
     - theme: brand
-      text: Install Phlex
+      text: Install Phlix
       link: /install/linux
     - theme: alt
       text: Get Started
@@ -49,7 +49,7 @@ features:
 
   - icon: 🌐
     title: Hub Admin
-    details: "Deploy and manage a Phlex Hub — relay tuning, abuse handling, GDPR compliance, and federation policy"
+    details: "Deploy and manage a Phlix Hub — relay tuning, abuse handling, GDPR compliance, and federation policy"
     link: /hub-admin/install
     linkText: Hub admin docs
 ---

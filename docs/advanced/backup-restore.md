@@ -4,7 +4,7 @@
 
 ## TL;DR
 
-Phlex needs three things to survive a disaster: the **database** (users, watch history, library metadata), **config files** (JWT secret, DB credentials, server settings), and **metadata images** (posters, fanart). You do NOT need to back up the transcode cache, active job state, or scan cache — these are regenerated automatically. Back up regularly (daily is recommended), store off-site, and test restores quarterly.
+Phlix needs three things to survive a disaster: the **database** (users, watch history, library metadata), **config files** (JWT secret, DB credentials, server settings), and **metadata images** (posters, fanart). You do NOT need to back up the transcode cache, active job state, or scan cache — these are regenerated automatically. Back up regularly (daily is recommended), store off-site, and test restores quarterly.
 
 ---
 
@@ -12,17 +12,17 @@ Phlex needs three things to survive a disaster: the **database** (users, watch h
 
 ### 1. Database
 
-**What:** All Phlex data — users, watch history, media library metadata, playback state, sessions.
+**What:** All Phlix data — users, watch history, media library metadata, playback state, sessions.
 
 ```bash
-mysqldump -u phlex -p phlex_db > phlex-db-$(date +%Y%m%d).sql
+mysqldump -u phlix -p phlix_db > phlix-db-$(date +%Y%m%d).sql
 ```
 
 For MariaDB the command is identical. Verify the dump is valid:
 
 ```bash
 # Check the dump starts correctly
-head -5 phlex-db-20250601.sql
+head -5 phlix-db-20250601.sql
 
 # Should show: -- MySQL dump 10.x ... or -- MariaDB dump ...
 ```
@@ -32,7 +32,7 @@ head -5 phlex-db-20250601.sql
 **What:** `config/` directory — `server.php`, `database.php`, `ffmpeg.php`, `backups.php` (if present). These contain your JWT_SECRET, DB credentials, and all server settings.
 
 ```bash
-tar czf phlex-config-$(date +%Y%m%d).tar.gz -C /path/to/phlex config/
+tar czf phlix-config-$(date +%Y%m%d).tar.gz -C /path/to/phlix config/
 ```
 
 ### 3. Metadata Images
@@ -40,7 +40,7 @@ tar czf phlex-config-$(date +%Y%m%d).tar.gz -C /path/to/phlex config/
 **What:** `data/metadata/` — poster.jpg, fanart.jpg, and all artwork downloaded from TMDB/TVDB. These are not stored in the DB; they live on disk.
 
 ```bash
-tar czf phlex-metadata-images-$(date +%Y%m%d).tar.gz -C /path/to/phlex data/metadata/
+tar czf phlix-metadata-images-$(date +%Y%m%d).tar.gz -C /path/to/phlix data/metadata/
 ```
 
 These can be re-downloaded by re-scanning your library, but re-downloading from TMDB/TVDB takes significant time and may hit rate limits. A local backup is much faster to restore.
@@ -50,7 +50,7 @@ These can be re-downloaded by re-scanning your library, but re-downloading from 
 **What:** `data/plugins/` if you have custom plugins installed that store configuration on disk.
 
 ```bash
-tar czf phlex-plugins-$(date +%Y%m%d).tar.gz -C /path/to/phlex data/plugins/
+tar czf phlix-plugins-$(date +%Y%m%d).tar.gz -C /path/to/phlix data/plugins/
 ```
 
 ### 5. TLS Certificates
@@ -74,20 +74,20 @@ tar czf phlex-plugins-$(date +%Y%m%d).tar.gz -C /path/to/phlex data/plugins/
 
 ```bash
 # Database
-mysqldump -u phlex -p phlex_db > phlex-db-$(date +%Y%m%d).sql
+mysqldump -u phlix -p phlix_db > phlix-db-$(date +%Y%m%d).sql
 
 # Full tarball — everything that matters (excluding transcode and logs)
-tar czf phlex-backup-$(date +%Y%m%d).tar.gz \
-  -C /path/to/phlex \
+tar czf phlix-backup-$(date +%Y%m%d).tar.gz \
+  -C /path/to/phlix \
   config/ data/metadata/ data/plugins/ \
   --exclude='data/transcode/*' \
   --exclude='*.log'
 ```
 
-### 2.2 Built-in Phlex CLI
+### 2.2 Built-in Phlix CLI
 
 ```bash
-php bin/phlex backup:create --output /backups/phlex-$(date +%Y%m%d).tar.gz
+php bin/phlix backup:create --output /backups/phlix-$(date +%Y%m%d).tar.gz
 ```
 
 The built-in command packages the same paths as the manual tarball above but in a single invocation.
@@ -95,10 +95,10 @@ The built-in command packages the same paths as the manual tarball above but in 
 ### 2.3 Automated (Cron / systemd timer)
 
 ```bash
-# /etc/cron.d/phlex-backup — daily at 03:00
-0 3 * * * root /usr/bin/php /home/phlex/bin/phlex backup:create \
-  --output /backups/phlex-$(date +\%Y\%m\%d).tar.gz && \
-  /usr/bin/find /backups -name 'phlex-*.tar.gz' -mtime +7 -delete
+# /etc/cron.d/phlix-backup — daily at 03:00
+0 3 * * * root /usr/bin/php /home/phlix/bin/phlix backup:create \
+  --output /backups/phlix-$(date +\%Y\%m\%d).tar.gz && \
+  /usr/bin/find /backups -name 'phlix-*.tar.gz' -mtime +7 -delete
 ```
 
 This creates a daily backup and removes backups older than 7 days. Adjust `--mtime +7` to retain more or fewer days.
@@ -106,9 +106,9 @@ This creates a daily backup and removes backups older than 7 days. Adjust `--mti
 For systemd instead of cron:
 
 ```bash
-# /etc/systemd/system/phlex-backup.timer
+# /etc/systemd/system/phlix-backup.timer
 [Unit]
-Description=Daily Phlex backup
+Description=Daily Phlix backup
 
 [Timer]
 OnCalendar=daily
@@ -124,18 +124,18 @@ Wrap the tarball or point rsync/restic directly at the above paths:
 
 ```bash
 # Restic — backup to S3/B2/NAS
-restic -r s3:s3.amazonaws.com/bucket/phlex-backups \
-  backup /path/to/phlex/config /path/to/phlex/data/metadata
+restic -r s3:s3.amazonaws.com/bucket/phlix-backups \
+  backup /path/to/phlix/config /path/to/phlix/data/metadata
 
 # rsync to NAS
 rsync -avz --exclude='data/transcode' --exclude='*.log' \
-  /path/to/phlex/ backup-server:/backups/phlex/
+  /path/to/phlix/ backup-server:/backups/phlix/
 ```
 
 For off-site copies:
 
 ```bash
-rclone copy phlex-backup-$(date +%Y%m%d).tar.gz b2:my-bucket/phlex/
+rclone copy phlix-backup-$(date +%Y%m%d).tar.gz b2:my-bucket/phlix/
 ```
 
 ---
@@ -146,35 +146,35 @@ rclone copy phlex-backup-$(date +%Y%m%d).tar.gz b2:my-bucket/phlex/
 
 ### Step-by-step
 
-1. **Stop Phlex**
+1. **Stop Phlix**
 
 ```bash
-systemctl stop phlex
+systemctl stop phlix
 # or
-php bin/phlex stop
+php bin/phlix stop
 ```
 
 2. **Restore database**
 
 ```bash
-mysql -u phlex -p phlex_db < phlex-db-20250601.sql
+mysql -u phlix -p phlix_db < phlix-db-20250601.sql
 ```
 
 3. **Restore config and data**
 
 ```bash
-tar -xzf phlex-backup-20250601.tar.gz -C /
+tar -xzf phlix-backup-20250601.tar.gz -C /
 # Verify paths match your installation
-ls /path/to/phlex/config/
-ls /path/to/phlex/data/metadata/
+ls /path/to/phlix/config/
+ls /path/to/phlix/data/metadata/
 ```
 
-4. **Start Phlex**
+4. **Start Phlix**
 
 ```bash
-systemctl start phlex
+systemctl start phlix
 # or
-php bin/phlex start
+php bin/phlix start
 ```
 
 5. **Verify**
@@ -182,7 +182,7 @@ php bin/phlex start
 Log in, check your library items are visible, confirm watch history is present. If metadata images are missing, trigger a library rescan:
 
 ```bash
-php bin/phlex library:rescan --force
+php bin/phlix library:rescan --force
 ```
 
 ---
@@ -193,22 +193,22 @@ php bin/phlex library:rescan --force
 
 ```bash
 # Inside the container — backups land in the named volume
-docker compose exec phlex-server phlex backup:create \
-  --output /backups/phlex-$(date +%Y%m%d).tar.gz
+docker compose exec phlix-server phlix backup:create \
+  --output /backups/phlix-$(date +%Y%m%d).tar.gz
 
 # Copy the backup out of the container
-docker compose cp phlex-server:/backups/phlex-20250601.tar.gz ./phlex-backup-20250601.tar.gz
+docker compose cp phlix-server:/backups/phlix-20250601.tar.gz ./phlix-backup-20250601.tar.gz
 ```
 
 ### Backing up named volumes directly
 
 ```bash
-# Backup the named volumes directly (does not need Phlex running)
+# Backup the named volumes directly (does not need Phlix running)
 docker run --rm \
-  -v phlex_data:/data \
+  -v phlix_data:/data \
   -v $(pwd):/backup \
   alpine \
-  tar czf /backup/phlex_data.tar.gz -C /data .
+  tar czf /backup/phlix_data.tar.gz -C /data .
 ```
 
 ### Restoring Docker volumes
@@ -216,13 +216,13 @@ docker run --rm \
 ```bash
 # Restore
 docker run --rm \
-  -v phlex_data:/data \
+  -v phlix_data:/data \
   -v $(pwd):/backup \
   alpine \
-  tar xzf /backup/phlex_data.tar.gz -C /data
+  tar xzf /backup/phlix_data.tar.gz -C /data
 
-# Restart Phlex
-docker compose up -d phlex-server
+# Restart Phlix
+docker compose up -d phlix-server
 ```
 
 ---
@@ -236,7 +236,7 @@ docker compose up -d phlex-server
 **Fix:** Always verify checksums after backup:
 
 ```bash
-sha256sum phlex-backup-20250601.tar.gz
+sha256sum phlix-backup-20250601.tar.gz
 # Store the checksum alongside the backup or in a separate log
 ```
 
@@ -254,7 +254,7 @@ Test restores periodically (e.g., monthly) in a staging environment. A backup th
 
 ```bash
 # Verify JWT_SECRET is consistent between backup and running config
-grep JWT_SECRET /path/to/phlex/config/server.php
+grep JWT_SECRET /path/to/phlix/config/server.php
 ```
 
 ---
@@ -268,7 +268,7 @@ grep JWT_SECRET /path/to/phlex/config/server.php
 **Fix:** Force a full rescan after restore:
 
 ```bash
-php bin/phlex library:rescan --force
+php bin/phlix library:rescan --force
 
 # OR touch all media files to update mtime
 find /path/to/media -type f -exec touch {} \;
@@ -285,8 +285,8 @@ find /path/to/media -type f -exec touch {} \;
 **Fix:** Always exclude `data/transcode/*` from tar commands:
 
 ```bash
-tar czf phlex-backup-$(date +%Y%m%d).tar.gz \
-  -C /path/to/phlex \
+tar czf phlix-backup-$(date +%Y%m%d).tar.gz \
+  -C /path/to/phlix \
   config/ data/metadata/ data/plugins/ \
   --exclude='data/transcode/*' \
   --exclude='*.log'

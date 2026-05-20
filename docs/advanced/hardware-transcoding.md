@@ -4,7 +4,7 @@
 
 ## TL;DR
 
-Hardware transcoding offloads video encode/decode to your GPU, making 4K and HDR streams smooth without maxing out your CPU. Phlex supports four vendors: **NVIDIA** (NVENC), **Intel** (VAAPI/Quicksync), **AMD** (VAAPI/VCN), and **Apple Silicon** (VideoToolbox). Before this guide helps, you need the correct driver installed, the GPU visible as a device file, and `jellyfin-ffmpeg` in place of stock FFmpeg (stock distro FFmpeg lacks hardware support).
+Hardware transcoding offloads video encode/decode to your GPU, making 4K and HDR streams smooth without maxing out your CPU. Phlix supports four vendors: **NVIDIA** (NVENC), **Intel** (VAAPI/Quicksync), **AMD** (VAAPI/VCN), and **Apple Silicon** (VideoToolbox). Before this guide helps, you need the correct driver installed, the GPU visible as a device file, and `jellyfin-ffmpeg` in place of stock FFmpeg (stock distro FFmpeg lacks hardware support).
 
 ---
 
@@ -12,12 +12,12 @@ Hardware transcoding offloads video encode/decode to your GPU, making 4K and HDR
 
 | Vendor | APIs | Linux Check | Env Var |
 |--------|------|------------|---------|
-| NVIDIA | NVENC + CUDA | `nvidia-smi` | `PHLEX_HWACCEL=nvidia` |
-| Intel | VAAPI + Quicksync | `vainfo \| grep VAEntrypointEncSlice` | `PHLEX_HWACCEL=vaapi` |
-| AMD | VAAPI + VCN | `vainfo \| grep VAEntrypointEncSlice` | `PHLEX_HWACCEL=vaapi` |
-| Apple Silicon | VideoToolbox | `system_profiler SPHardwareRAIDTool \| grep -i VideoToolbox` | `PHLEX_HWACCEL=videotoolbox` |
+| NVIDIA | NVENC + CUDA | `nvidia-smi` | `PHLIX_HWACCEL=nvidia` |
+| Intel | VAAPI + Quicksync | `vainfo \| grep VAEntrypointEncSlice` | `PHLIX_HWACCEL=vaapi` |
+| AMD | VAAPI + VCN | `vainfo \| grep VAEntrypointEncSlice` | `PHLIX_HWACCEL=vaapi` |
+| Apple Silicon | VideoToolbox | `system_profiler SPHardwareRAIDTool \| grep -i VideoToolbox` | `PHLIX_HWACCEL=videotoolbox` |
 
-All four vendors use the same `PHLEX_HWACCEL` env var; the value tells Phlex which FFmpeg hardware acceleration flags to emit.
+All four vendors use the same `PHLIX_HWACCEL` env var; the value tells Phlix which FFmpeg hardware acceleration flags to emit.
 
 ---
 
@@ -51,7 +51,7 @@ If `ENCODERS` shows no hardware encoder, FFmpeg was built without hardware suppo
 [x] nvidia-driver installed (apt install nvidia-driver-535)
 [x] nvidia-container-runtime configured (for Docker/Podman)
 [x] jellyfin-ffmpeg installed — stock ffmpeg does NOT contain NVENC
-[x] PHLEX_HWACCEL=nvidia set in environment or config
+[x] PHLIX_HWACCEL=nvidia set in environment or config
 [x] Quality selector shows "Hardware (NVIDIA)" option
 ```
 
@@ -66,7 +66,7 @@ Docker note — add to `docker-compose.yml`:
 
 ```yaml
 services:
-  phlex:
+  phlix:
     runtime: nvidia
     environment:
       NVIDIA_VISIBLE_DEVICES: all
@@ -80,7 +80,7 @@ services:
 [x] vainfo confirms encode capability
 [x] User is in the video group (for /dev/dri access)
 [x] jellyfin-ffmpeg installed with VAAPI support
-[x] PHLEX_HWACCEL=vaapi set
+[x] PHLIX_HWACCEL=vaapi set
 [x] Quality selector shows "Hardware (Intel)" option
 ```
 
@@ -96,7 +96,7 @@ Add user to video group:
 
 ```bash
 sudo usermod -aG video $USER
-sudo systemctl restart phlex
+sudo systemctl restart phlix
 ```
 
 ### AMD (VAAPI + VCN)
@@ -106,7 +106,7 @@ sudo systemctl restart phlex
 [x] amdgpu-driver or rocm installed
 [x] VAAPI encode entrypoint visible via vainfo
 [x] jellyfin-ffmpeg compiled with AMD VAAPI support
-[x] PHLEX_HWACCEL=vaapi set (same env var as Intel)
+[x] PHLIX_HWACCEL=vaapi set (same env var as Intel)
 [x] Quality selector shows "Hardware (AMD)" option
 ```
 
@@ -123,8 +123,8 @@ Note: AMD VAAPI support in FFmpeg varies by driver version. Using `jellyfin-ffmp
 ```
 [x] macOS 12.3+ (VideoToolbox requires Monterey or later)
 [x] Hardware decode confirmed via Activity Monitor → GPU activity
-[x] Phlex running on macOS (not Linux containers)
-[x] PHLEX_HWACCEL=videotoolbox set
+[x] Phlix running on macOS (not Linux containers)
+[x] PHLIX_HWACCEL=videotoolbox set
 [x] Quality selector shows "Hardware (Apple)" option
 ```
 
@@ -138,28 +138,28 @@ system_profiler SPHardwareRAIDTool | grep -i VideoToolbox
 
 ## 4. Environment Variable Reference
 
-| Vendor | `PHLEX_HWACCEL` value | FFmpeg override |
+| Vendor | `PHLIX_HWACCEL` value | FFmpeg override |
 |--------|----------------------|-----------------|
 | NVIDIA | `nvidia` | `-hwaccel cuda` |
 | Intel | `vaapi` | `-hwaccel vaapi` |
 | AMD | `vaapi` | `-hwaccel vaapi` |
 | Apple Silicon | `videotoolbox` | (macOS only) |
 
-To set permanently, add to your Phlex startup environment or systemd service file:
+To set permanently, add to your Phlix startup environment or systemd service file:
 
 ```bash
-# /etc/systemd/system/phlex.service.d/hwaccel.conf
+# /etc/systemd/system/phlix.service.d/hwaccel.conf
 [Service]
-Environment="PHLEX_HWACCEL=nvidia"
+Environment="PHLIX_HWACCEL=nvidia"
 ```
 
-Then `sudo systemctl daemon-reload && sudo systemctl restart phlex`.
+Then `sudo systemctl daemon-reload && sudo systemctl restart phlix`.
 
 ---
 
 ## 5. HDR Tone-Mapping (NVIDIA)
 
-If you have HDR content and a display that doesn't support direct passthrough, tone-mapping is required. Phlex uses an OpenCL or CUDA filter:
+If you have HDR content and a display that doesn't support direct passthrough, tone-mapping is required. Phlix uses an OpenCL or CUDA filter:
 
 ```bash
 # With OpenCL tone-mapping (default for NVIDIA on jellyfin-ffmpeg)
@@ -213,19 +213,19 @@ php public/index.php hwaccel:probe
 
 **Symptom:** Transcode fails with `Cannot open shared VA display` or `/dev/dri/renderD128: Permission denied`. `dmesg` shows access denied to render node.
 
-**Cause:** User running Phlex is not in the `video` group.
+**Cause:** User running Phlix is not in the `video` group.
 
 **Fix:**
 ```bash
-# Add phlex user to video group
-sudo usermod -aG video phlex
+# Add phlix user to video group
+sudo usermod -aG video phlix
 
-# Restart Phlex to pick up new group membership
-sudo systemctl restart phlex
+# Restart Phlix to pick up new group membership
+sudo systemctl restart phlix
 
 # Verify
-groups phlex
-id phlex
+groups phlix
+id phlix
 ```
 
 If running in Docker, ensure the container is started with `--group-add video` or the appropriate `--device` mappings for VAAPI.
@@ -234,7 +234,7 @@ If running in Docker, ensure the container is started with `--group-add video` o
 
 ### Failure 3 — NVIDIA GPU Not Visible Inside Container
 
-**Symptom:** `nvidia-smi` works on the host but fails inside the Docker container. Transcode falls back to software even though `PHLEX_HWACCEL=nvidia` is set.
+**Symptom:** `nvidia-smi` works on the host but fails inside the Docker container. Transcode falls back to software even though `PHLIX_HWACCEL=nvidia` is set.
 
 **Cause:** `nvidia-container-runtime` is not configured in the Docker/Podman compose file.
 
@@ -243,7 +243,7 @@ Add `runtime: nvidia` to the compose service:
 
 ```yaml
 services:
-  phlex:
+  phlix:
     runtime: nvidia
     environment:
       NVIDIA_VISIBLE_DEVICES: all

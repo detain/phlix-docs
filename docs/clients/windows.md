@@ -5,25 +5,25 @@
 **Since:** 0.18.0
 
 > [!TIP]
-> The Phlex Windows app is a full-featured Electron desktop client with system tray integration and media key support. Download the installer, run it, enter your server URL, and start streaming. No admin privileges required for per-user installs.
+> The Phlix Windows app is a full-featured Electron desktop client with system tray integration and media key support. Download the installer, run it, enter your server URL, and start streaming. No admin privileges required for per-user installs.
 
 > [!NOTE]
-> Hub-mode support (connecting to a Phlex Hub and auto-discovering servers) is planned for a future release. Currently, the Windows app connects directly to a server URL. Hub connection features will be documented once the feature is released.
+> Hub-mode support (connecting to a Phlix Hub and auto-discovering servers) is planned for a future release. Currently, the Windows app connects directly to a server URL. Hub connection features will be documented once the feature is released.
 
 ## Install / Store Links
 
-- **Installer (.exe):** [github.com/detain/phlex-windows-client/releases](https://github.com/detain/phlex-windows-client/releases) — download the latest `.exe` installer
+- **Installer (.exe):** [github.com/detain/phlix-windows-client/releases](https://github.com/detain/phlix-windows-client/releases) — download the latest `.exe` installer
 - **System requirements:** Windows 10 (version 1903+) or Windows 11; 4 GB RAM; graphics acceleration recommended for smooth playback
 
 The installer handles the Visual C++ runtime dependency automatically. Auto-update is built in — the app checks for new releases on launch and prompts you to install.
 
 ## Platform-Specific Install Steps
 
-1. Download the latest `.exe` installer from the [releases page](https://github.com/detain/phlex-windows-client/releases).
+1. Download the latest `.exe` installer from the [releases page](https://github.com/detain/phlix-windows-client/releases).
 2. Run the installer:
-   - **Per-user install (recommended):** Defaults to `%LOCALAPPDATA%\Phlex` — no administrator privileges required.
+   - **Per-user install (recommended):** Defaults to `%LOCALAPPDATA%\Phlix` — no administrator privileges required.
    - **System-wide install:** Choose "Install for all users" and grant admin elevation when prompted.
-3. Launch **Phlex** from the **Start Menu** or the desktop shortcut.
+3. Launch **Phlix** from the **Start Menu** or the desktop shortcut.
 4. The system tray icon appears in the bottom-right corner — the app runs in the tray by default. Right-click for quick controls: **Open**, **Play/Pause**, **Next**, and **Quit**.
 
 ## Setup Steps
@@ -53,7 +53,7 @@ The URL and credentials are stored securely in the Windows Credential Manager.
 When hub-mode is available, you will be able to:
 
 1. Open **Settings → Hub → Enable Hub Connection**.
-2. Enter your Hub URL (e.g., `https://hub.phlex.example.com`).
+2. Enter your Hub URL (e.g., `https://hub.phlix.example.com`).
 3. Authenticate with your Hub credentials.
 4. Your server will be auto-discovered from your Hub account.
 
@@ -61,15 +61,15 @@ When hub-mode is available, you will be able to:
 
 ### App does not launch (missing VC++ runtime)
 
-**Symptom:** Phlex crashes immediately on launch, or a dialog appears stating "VCRUNTIME140.dll not found."
+**Symptom:** Phlix crashes immediately on launch, or a dialog appears stating "VCRUNTIME140.dll not found."
 
-**Fix:** Install the Visual C++ 2015–2022 Redistributable from [Microsoft's official page](https://aka.ms/vs/17/release/vc_redist.x64.exe). The link is also in the release notes on the [releases page](https://github.com/detain/phlex-windows-client/releases). Restart the app after installation.
+**Fix:** Install the Visual C++ 2015–2022 Redistributable from [Microsoft's official page](https://aka.ms/vs/17/release/vc_redist.x64.exe). The link is also in the release notes on the [releases page](https://github.com/detain/phlix-windows-client/releases). Restart the app after installation.
 
 ### Port 32400 blocked by firewall
 
 **Symptom:** The app shows "Connection refused" or "Server unreachable" when connecting to a local server, even though the server is running.
 
-**Fix:** Windows Defender Firewall is blocking the connection. Either add an inbound rule for `phlex-server.exe` in **Windows Defender Firewall → Allow an app**, or run the server once as Administrator to trigger the Windows firewall dialog. Ensure the rule allows TCP port 32400.
+**Fix:** Windows Defender Firewall is blocking the connection. Either add an inbound rule for `phlix-server.exe` in **Windows Defender Firewall → Allow an app**, or run the server once as Administrator to trigger the Windows firewall dialog. Ensure the rule allows TCP port 32400.
 
 ### Hub relay not working (network issue)
 

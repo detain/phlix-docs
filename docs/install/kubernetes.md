@@ -1,23 +1,23 @@
-# Install phlex-server on Kubernetes
+# Install phlix-server on Kubernetes
 
 ## TL;DR
 
-phlex-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide deploys it on Kubernetes via Helm in roughly 10 minutes.
+phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide deploys it on Kubernetes via Helm in roughly 10 minutes.
 
 **Minimum requirements:** Kubernetes 1.21+, Helm 3.8+, a `default` or named StorageClass, 2 CPU / 4 GB RAM per pod.
 
 **Quick one-liner:**
 
 ```bash
-helm repo add phlex https://charts.phlex.media && helm repo update
-helm install phlex phlex/phlex \
+helm repo add phlix https://charts.phlix.media && helm repo update
+helm install phlix phlix/phlix \
   --set config.database_password=SECRET \
   --set config.secret_key=YOUR_KEY \
   --set ingress.enabled=true \
-  --set ingress.hosts[0].host=phlex.example.com
+  --set ingress.hosts[0].host=phlix.example.com
 ```
 
-Then open `https://phlex.example.com` in your browser.
+Then open `https://phlix.example.com` in your browser.
 
 ::: tip Screenshots TBD
 This guide is text-first. Screenshots will be added in a follow-up.
@@ -41,9 +41,9 @@ This guide is text-first. Screenshots will be added in a follow-up.
 ## 2. Add the Helm repository
 
 ```bash
-helm repo add phlex https://charts.phlex.media
+helm repo add phlix https://charts.phlix.media
 helm repo update
-helm search repo phlex/phlex   # confirm latest chart version
+helm search repo phlix/phlix   # confirm latest chart version
 ```
 
 ---
@@ -54,7 +54,7 @@ helm search repo phlex/phlex   # confirm latest chart version
 replicaCount: 1
 
 image:
-  repository: ghcr.io/detain/phlex-server
+  repository: ghcr.io/detain/phlix-server
   pullPolicy: IfNotPresent
   tag: "latest"   # pin to a specific release tag in production
 
@@ -66,16 +66,16 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
     nginx.ingress.kubernetes.io/upstream-hdrs: "Upgrade"
-    nginx.ingress.kubernetes.io/websocket-services: "phlex-websocket"
+    nginx.ingress.kubernetes.io/websocket-services: "phlix-websocket"
   hosts:
-    - host: phlex.example.com
+    - host: phlix.example.com
       paths:
         - path: /
           pathType: Prefix
   tls:
-    - secretName: phlex-tls
+    - secretName: phlix-tls
       hosts:
-        - phlex.example.com
+        - phlix.example.com
 
 resources:
   requests:
@@ -103,8 +103,8 @@ persistence:
 config:
   database_host: "mysql.default.svc.cluster.local"
   database_port: 3306
-  database_name: phlex
-  database_user: phlex
+  database_name: phlix
+  database_user: phlix
   database_password: "REPLACE_WITH_STRONG_PASSWORD"
   secret_key: "REPLACE_WITH_32_CHAR_KEY"
   log_level: info
@@ -122,7 +122,7 @@ tolerations:
 Save as `values.yaml` and install with:
 
 ```bash
-helm install phlex phlex/phlex -f values.yaml
+helm install phlix phlix/phlix -f values.yaml
 ```
 
 ---
@@ -132,14 +132,14 @@ helm install phlex phlex/phlex -f values.yaml
 The Helm chart creates three PVCs automatically:
 
 ```bash
-kubectl get pvc | grep phlex
+kubectl get pvc | grep phlix
 ```
 
 | PVC name | Purpose | Default size | Access mode |
 |----------|---------|--------------|-------------|
-| `phlex-media` | Media files (read-only mount) | 100 Gi | ReadWriteOnce |
-| `phlex-data` | Application data (DB, watch history) | 10 Gi | ReadWriteOnce |
-| `phlex-config` | Config directory | 1 Gi | ReadWriteOnce |
+| `phlix-media` | Media files (read-only mount) | 100 Gi | ReadWriteOnce |
+| `phlix-data` | Application data (DB, watch history) | 10 Gi | ReadWriteOnce |
+| `phlix-config` | Config directory | 1 Gi | ReadWriteOnce |
 
 > **StorageClass:** If your cluster has no default StorageClass, you must set `persistence.media.storageClass` explicitly (e.g., `local-path`, `nfs`, `cephfs`). Using a StorageClass that supports `ReadWriteMany` (e.g., NFS) is required for the media PVC to be mounted read-only by multiple pods.
 
@@ -156,7 +156,7 @@ service:
     port: 80
 ```
 
-Access via Ingress at `https://phlex.example.com`.
+Access via Ingress at `https://phlix.example.com`.
 
 ### 5b. LoadBalancer
 
@@ -167,7 +167,7 @@ service:
     port: 80
 ```
 
-Exposes phlex directly on a cloud LB. For on-premises, MetalLB can provide this.
+Exposes phlix directly on a cloud LB. For on-premises, MetalLB can provide this.
 
 ### 5c. NodePort
 
@@ -196,7 +196,7 @@ ingress:
     # WebSocket proxying
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
     nginx.ingress.kubernetes.io/upstream-hdrs: "Upgrade"
-    nginx.ingress.kubernetes.io/websocket-services: "phlex-websocket"
+    nginx.ingress.kubernetes.io/websocket-services: "phlix-websocket"
     nginx.ingress.kubernetes.io/use-regex: "true"
 ```
 
@@ -207,7 +207,7 @@ ingress:
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.http-services: "phlex-http"
+    traefik.ingress.kubernetes.io/router.http-services: "phlix-http"
     traefik.ingress.kubernetes.io/router.headers.customrequestheaders: "Upgrade: websocket"
 ```
 
@@ -217,23 +217,23 @@ If using Traefik's `IngressRoute` CRD instead of plain Ingress, see the [Traefik
 
 ## 7. Environment variables
 
-The chart passes these to the pod automatically via `PHLEX_*` env vars:
+The chart passes these to the pod automatically via `PHLIX_*` env vars:
 
 | Env var | Description | Example |
 |---------|-------------|---------|
-| `PHLEX_DATABASE_HOST` | MySQL host | `mysql.default.svc.cluster.local` |
-| `PHLEX_DATABASE_PORT` | MySQL port | `3306` |
-| `PHLEX_DATABASE_NAME` | Database name | `phlex` |
-| `PHLEX_DATABASE_USER` | Database user | `phlex` |
-| `PHLEX_DATABASE_PASSWORD` | Database password | from Kubernetes Secret |
-| `PHLEX_SECRET_KEY` | JWT/signing key | from Kubernetes Secret |
-| `PHLEX_LOG_LEVEL` | Log verbosity | `info`, `debug` |
-| `PHLEX_HTTP_PORT` | Internal HTTP port | `80` |
+| `PHLIX_DATABASE_HOST` | MySQL host | `mysql.default.svc.cluster.local` |
+| `PHLIX_DATABASE_PORT` | MySQL port | `3306` |
+| `PHLIX_DATABASE_NAME` | Database name | `phlix` |
+| `PHLIX_DATABASE_USER` | Database user | `phlix` |
+| `PHLIX_DATABASE_PASSWORD` | Database password | from Kubernetes Secret |
+| `PHLIX_SECRET_KEY` | JWT/signing key | from Kubernetes Secret |
+| `PHLIX_LOG_LEVEL` | Log verbosity | `info`, `debug` |
+| `PHLIX_HTTP_PORT` | Internal HTTP port | `80` |
 
 Set passwords/keys via the chart's secrets mechanism (required):
 
 ```bash
-helm install phlex phlex/phlex \
+helm install phlix phlix/phlix \
   --set config.database_password=STRONG_PASSWORD \
   --set config.secret_key=YOUR_32_CHAR_SECRET
 ```
@@ -276,13 +276,13 @@ When a new chart or image version is released:
 helm repo update
 
 # Check what would change
-helm diff upgrade phlex phlex/phlex -f values.yaml
+helm diff upgrade phlix phlix/phlix -f values.yaml
 
 # Apply the upgrade
-helm upgrade phlex phlex/phlex -f values.yaml
+helm upgrade phlix phlix/phlix -f values.yaml
 
 # Roll back if needed
-helm rollback phlex
+helm rollback phlix
 ```
 
 For zero-downtime upgrades, the chart uses `RollingUpdate` strategy with `maxSurge: 1` and `maxUnavailable: 0`. Ensure `readinessProbe` is properly configured (it is by default).
@@ -290,7 +290,7 @@ For zero-downtime upgrades, the chart uses `RollingUpdate` strategy with `maxSur
 To update only the Docker image tag:
 
 ```bash
-helm upgrade phlex phlex/phlex --set image.tag=v1.2.3
+helm upgrade phlix phlix/phlix --set image.tag=v1.2.3
 ```
 
 ---
@@ -321,7 +321,7 @@ helm upgrade phlex phlex/phlex --set image.tag=v1.2.3
     requests:
       memory: 1Gi
   ```
-- **Verify:** `kubectl top pod phlex-xxxxxxxxx` (requires metrics-server) or check `kubectl describe pod` for `Last State: Terminated, Reason: OOMKilled`
+- **Verify:** `kubectl top pod phlix-xxxxxxxxx` (requires metrics-server) or check `kubectl describe pod` for `Last State: Terminated, Reason: OOMKilled`
 
 ### Ingress 502 — ingress controller not found or WebSocket misconfiguration
 
@@ -330,14 +330,14 @@ helm upgrade phlex phlex/phlex --set image.tag=v1.2.3
   - **Fix:** Install nginx-ingress: `helm install ingress-nginx ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace`
 - **Cause 2:** WebSocket annotations missing from Ingress (required for the WebSocket port 3473)
   - **Fix:** Ensure the ingress annotations include the WebSocket proxy directives listed in §6
-- **Verify:** `kubectl describe ingress phlex-xxxx` shows backend services correctly; check nginx-ingress logs: `kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx`
+- **Verify:** `kubectl describe ingress phlix-xxxx` shows backend services correctly; check nginx-ingress logs: `kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx`
 
 ---
 
 ## Next steps
 
-- [First-run wizard](/first-run) — complete the browser-based setup at `https://phlex.example.com`
+- [First-run wizard](/first-run) — complete the browser-based setup at `https://phlix.example.com`
 - [Linux install](/install/linux) — alternative install method on bare metal
 - [Docker install](/install/docker) — alternative install method using containers
 - [Hardware transcoding](/advanced/hardware-transcoding) — configure NVENC/VAAPI for GPU-accelerated transcoding on Kubernetes nodes
-- [Helm chart source (O.3)](https://github.com/detain/phlex-helm) — report chart issues or contributing improvements
+- [Helm chart source (O.3)](https://github.com/detain/phlix-helm) — report chart issues or contributing improvements

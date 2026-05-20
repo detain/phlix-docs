@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Phlex Hub is lightweight by design — a single relay connection per enrolled server, with bandwidth math that's simple and predictable. Small deployments need only 2 vCPU / 4 GB RAM; large deployments scale to 8 vCPU / 16 GB RAM. Relay bandwidth is the primary cost driver: each concurrent remote stream uses 2–8 Mbps depending on quality settings. Use the tiered sizing guide below to pick the right hardware, then tune `HUB_MAX_RELAY_SESSIONS` and the per-session rate cap to match your user's actual demand.
+Phlix Hub is lightweight by design — a single relay connection per enrolled server, with bandwidth math that's simple and predictable. Small deployments need only 2 vCPU / 4 GB RAM; large deployments scale to 8 vCPU / 16 GB RAM. Relay bandwidth is the primary cost driver: each concurrent remote stream uses 2–8 Mbps depending on quality settings. Use the tiered sizing guide below to pick the right hardware, then tune `HUB_MAX_RELAY_SESSIONS` and the per-session rate cap to match your user's actual demand.
 
 ```bash
 # Required: tune these in your hub environment or config file

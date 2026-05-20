@@ -22,7 +22,7 @@ Hub is stateless by design — JWT validation, session state, and relay state ar
 - Hub is stateless: all state lives in MariaDB (users, server registry, grants, audit logs) and Redis (relay session state)
 - Multiple hub instances share the same DB + Redis behind a load balancer
 - Each server maintains one persistent WSS connection; clients are routed to the same hub instance via sticky sessions (source IP hash)
-- Docker Swarm or Kubernetes for orchestration; `docker-compose up --scale phlex-hub=2` for simple HA
+- Docker Swarm or Kubernetes for orchestration; `docker-compose up --scale phlix-hub=2` for simple HA
 
 ### Deployment Topology
 
@@ -30,13 +30,13 @@ Hub is stateless by design — JWT validation, session state, and relay state ar
 # Minimal HA stack (docker-compose)
 # 2 hub instances + nginx load balancer + MariaDB primary + 1 read replica + Redis
 services:
-  phlex-hub:
-    image: phlex/hub:latest
+  phlix-hub:
+    image: phlix/hub:latest
     deploy:
       replicas: 2
     environment:
       HUB_DB_HOST: hub-db
-      HUB_DB_USER: phlex_hub
+      HUB_DB_USER: phlix_hub
       HUB_DB_NAME: hub_db
       HUB_REDIS_HOST: hub-redis
     depends_on:
@@ -50,14 +50,14 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - phlex-hub
+      - phlix-hub
 
   hub-db:
     image: mariadb:10.11
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: hub_db
-      MYSQL_USER: phlex_hub
+      MYSQL_USER: phlix_hub
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - hub-db-data:/var/lib/mysql
@@ -75,7 +75,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_DATABASE: hub_db
-      MYSQL_USER: phlex_hub
+      MYSQL_USER: phlix_hub
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_MASTER_HOST: hub-db
 ```
@@ -85,16 +85,16 @@ services:
 ```bash
 # nginx upstream with ip_hash for sticky sessions
 # Each server's WSS connection lands on the same hub instance
-upstream phlex_hub_backend {
+upstream phlix_hub_backend {
     ip_hash;
-    server phlex-hub-1:8443;
-    server phlex-hub-2:8443;
+    server phlix-hub-1:8443;
+    server phlix-hub-2:8443;
 }
 ```
 
 - Without sticky sessions, a server's WSS connection would be routed to different hub instances, breaking relay state
 - For Kubernetes: use an Ingress with `sessionAffinity: ClientIP`
-- For Docker Swarm: use `docker-compose up --scale phlex-hub=2` with a compatible reverse proxy
+- For Docker Swarm: use `docker-compose up --scale phlix-hub=2` with a compatible reverse proxy
 
 ---
 
@@ -104,7 +104,7 @@ upstream phlex_hub_backend {
 
 ```bash
 # Daily full backup
-mysqldump -h hub-db -u phlex_hub -p hub_db > hub-backup-$(date +%Y%m%d).sql
+mysqldump -h hub-db -u phlix_hub -p hub_db > hub-backup-$(date +%Y%m%d).sql
 
 # Verify the dump is valid before archiving
 grep -c "INSERT INTO" hub-backup-$(date +%Y%m%d).sql
@@ -120,7 +120,7 @@ SHOW VARIABLES LIKE 'log_bin';
 
 # If binlog is enabled, replay to a specific time:
 mysqlbinlog --stop-datetime="2025-06-01 12:00:00" /var/lib/mysql/mysql-bin.* | \
-  mysql -h hub-db -u phlex_hub -p hub_db
+  mysql -h hub-db -u phlix_hub -p hub_db
 ```
 
 ### Incremental Backup (every 4 hours)
@@ -131,7 +131,7 @@ cp /var/lib/mysql/mysql-bin.{n} /backup/binlog-incremental-$(date +%Y%m%d%H%M)/
 # Or use mysqlbinlog to dump the active binlog since last backup:
 mysqlbinlog --read-from-remote-server \
   --host=hub-db \
-  --user=phlex_hub \
+  --user=phlix_hub \
   --password \
   --stop-never \
   mysql-bin.000123 > hub-incremental-$(date +%Y%m%d%H%M).sql
@@ -160,30 +160,30 @@ Run this quarterly. Do NOT wait for a real disaster to discover your backups are
 
 ```bash
 # Stop all hub instances (avoid writes during restore)
-docker-compose stop phlex-hub
+docker-compose stop phlix-hub
 # Or for Kubernetes:
-kubectl scale deployment phlex-hub --replicas=0
+kubectl scale deployment phlix-hub --replicas=0
 ```
 
 ### Step 2 — Restore the Database
 
 ```bash
 # Restore from latest full backup
-mysql -h hub-db -u phlex_hub -p hub_db < hub-backup-20250601.sql
+mysql -h hub-db -u phlix_hub -p hub_db < hub-backup-20250601.sql
 
 # If point-in-time recovery is needed, replay binlog:
 mysqlbinlog --stop-datetime="2025-06-01 12:00:00" \
   /var/lib/mysql/mysql-bin.* | \
-  mysql -h hub-db -u phlex_hub -p hub_db
+  mysql -h hub-db -u phlix_hub -p hub_db
 ```
 
 ### Step 3 — Restart Hub Instances
 
 ```bash
 # Verify DB is accessible and schema is current
-docker-compose up -d phlex-hub
+docker-compose up -d phlix-hub
 # Or for Kubernetes:
-kubectl scale deployment phlex-hub --replicas=2
+kubectl scale deployment phlix-hub --replicas=2
 ```
 
 ### Step 4 — Verify

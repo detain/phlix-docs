@@ -1,8 +1,8 @@
-# Install phlex-server on Windows
+# Install phlix-server on Windows
 
 ## TL;DR
 
-phlex-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide installs it on Windows 10 21H2+ or Windows 11 in roughly 20 minutes.
+phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide installs it on Windows 10 21H2+ or Windows 11 in roughly 20 minutes.
 
 **Minimum requirements:** Windows 10 21H2+ or Windows 11, 2 CPU / 4 GB RAM.
 
@@ -73,11 +73,11 @@ C:\xampp\php\php.exe -v
 
 Expected: `PHP 8.3.x`
 
-### 2d. Clone phlex-server
+### 2d. Clone phlix-server
 
 ```cmd
-git clone https://github.com/detain/phlex-server.git C:\phlex
-cd C:\phlex
+git clone https://github.com/detain/phlix-server.git C:\phlix
+cd C:\phlix
 ```
 
 ### 2e. PHP dependencies (Composer)
@@ -103,8 +103,8 @@ Edit `.env`:
 ```env
 APP_URL=http://localhost:32400
 DB_HOST=localhost
-DB_DATABASE=phlex
-DB_USERNAME=phlex
+DB_DATABASE=phlix
+DB_USERNAME=phlix
 DB_PASSWORD=your_strong_password
 ```
 
@@ -117,9 +117,9 @@ C:\xampp\mysql\bin\mysql.exe -u root -p
 ```
 
 ```sql
-CREATE DATABASE phlex CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'phlex'@'localhost' IDENTIFIED BY 'your_strong_password';
-GRANT ALL PRIVILEGES ON phlex.* TO 'phlex'@'localhost';
+CREATE DATABASE phlix CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'phlix'@'localhost' IDENTIFIED BY 'your_strong_password';
+GRANT ALL PRIVILEGES ON phlix.* TO 'phlix'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
@@ -138,7 +138,7 @@ php public\index.php
 ### 2j. Firewall configuration
 
 ```powershell
-New-NetFirewallRule -DisplayName "Phlex HTTP" -Direction Inbound -Protocol TCP -LocalPort 32400 -Action Allow
+New-NetFirewallRule -DisplayName "Phlix HTTP" -Direction Inbound -Protocol TCP -LocalPort 32400 -Action Allow
 ```
 
 Or via Windows Defender Firewall UI: Inbound Rule → New Rule → Port → 32400 → Allow.
@@ -199,13 +199,13 @@ curl -sS https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
 ```
 
-### 3h. Clone phlex-server
+### 3h. Clone phlix-server
 
 ```bash
-sudo mkdir -p /opt/phlex
-sudo chown $USER:$USER /opt/phlex
-git clone https://github.com/detain/phlex-server.git /opt/phlex
-cd /opt/phlex
+sudo mkdir -p /opt/phlix
+sudo chown $USER:$USER /opt/phlix
+git clone https://github.com/detain/phlix-server.git /opt/phlix
+cd /opt/phlix
 ```
 
 ### 3i. PHP dependencies
@@ -226,8 +226,8 @@ Set:
 ```env
 APP_URL=http://localhost:32400
 DB_HOST=localhost
-DB_DATABASE=phlex
-DB_USERNAME=phlex
+DB_DATABASE=phlix
+DB_USERNAME=phlix
 DB_PASSWORD=your_strong_password
 ```
 
@@ -238,9 +238,9 @@ sudo mysql -u root -p
 ```
 
 ```sql
-CREATE DATABASE phlex CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'phlex'@'localhost' IDENTIFIED BY 'your_strong_password';
-GRANT ALL PRIVILEGES ON phlex.* TO 'phlex'@'localhost';
+CREATE DATABASE phlix CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'phlix'@'localhost' IDENTIFIED BY 'your_strong_password';
+GRANT ALL PRIVILEGES ON phlix.* TO 'phlix'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
@@ -253,13 +253,13 @@ php scripts/run-migrations.php
 ### 3m. Start the server
 
 ```bash
-php /opt/phlex/public/index.php
+php /opt/phlix/public/index.php
 ```
 
 ### 3n. Firewall configuration (from PowerShell on Windows host)
 
 ```powershell
-New-NetFirewallRule -DisplayName "Phlex HTTP" -Direction Inbound -Protocol TCP -LocalPort 32400 -Action Allow
+New-NetFirewallRule -DisplayName "Phlix HTTP" -Direction Inbound -Protocol TCP -LocalPort 32400 -Action Allow
 ```
 
 ### 3o. Access from Windows browser
@@ -278,13 +278,13 @@ Download and install URL Rewrite 2.1 from [iis.net](https://www.iis.net/download
 
 IIS Manager → Sites → Add Website:
 
-- Site name: `phlex`
-- Physical path: `C:\phlex\public`
-- Binding: Host: `phlex.local`, Port: `80`
+- Site name: `phlix`
+- Physical path: `C:\phlix\public`
+- Binding: Host: `phlix.local`, Port: `80`
 
 ### 4c. Configure reverse-proxy
 
-In `C:\phlex\public\web.config`:
+In `C:\phlix\public\web.config`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -308,7 +308,7 @@ In `C:\phlex\public\web.config`:
 ### 4d. Start Workerman
 
 ```cmd
-php C:\phlex\public\index.php
+php C:\phlix\public\index.php
 ```
 
 ---
@@ -321,7 +321,7 @@ Open your browser:
 http://localhost:32400
 ```
 
-Expected: phlex-server index page loads (HTTP 200).
+Expected: phlix-server index page loads (HTTP 200).
 
 ---
 
@@ -361,7 +361,7 @@ Expected: phlex-server index page loads (HTTP 200).
 ### Port 32400 already in use
 
 - **Symptom:** `bind(): Address already in use`
-- **Fix:** `netstat -ano | findstr :32400` to find the conflicting process; stop it or change phlex port via `APP_URL` env var
+- **Fix:** `netstat -ano | findstr :32400` to find the conflicting process; stop it or change phlix port via `APP_URL` env var
 
 ### XAMPP Apache won't start (port 80/443 conflict)
 

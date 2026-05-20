@@ -5,7 +5,7 @@
 **Since:** 0.18.0
 
 > [!TIP]
-> The Phlex web portal runs in any modern browser — no software to install. Navigate to your server's web address, sign in with your Hub account or enter a direct server URL, and start streaming immediately. Works on Chrome, Firefox, Safari, and Edge.
+> The Phlix web portal runs in any modern browser — no software to install. Navigate to your server's web address, sign in with your Hub account or enter a direct server URL, and start streaming immediately. Works on Chrome, Firefox, Safari, and Edge.
 
 ## Install / Store Links
 
@@ -33,12 +33,12 @@ http://192.168.1.100:32400/web
 ### Open the Web Portal
 
 1. Open your browser and navigate to your server's web URL.
-2. You land on the Phlex login screen.
+2. You land on the Phlix login screen.
 
 ### Sign In With Hub (Recommended for Multi-Server Users)
 
 1. On the login screen, click **Sign in with Hub**.
-2. Enter your Hub URL (e.g., `https://hub.phlex.example.com`) and press **Continue**.
+2. Enter your Hub URL (e.g., `https://hub.phlix.example.com`) and press **Continue**.
 3. Enter your Hub username and password, then click **Sign In**.
 4. If your Hub account has multiple servers linked, a picker appears — select the server you want to access.
 5. The portal loads your selected server's libraries.
@@ -75,7 +75,7 @@ Hub login is the recommended way to access your server remotely because the Hub 
 
 **Symptom:** The page loads and you can see the library, but playback never starts and the console shows "WebSocket connection error."
 
-**Fix:** Your network is blocking WebSocket connections (`ws://` or `wss://`). Try opening the portal from a different network. If you must use a restricted network, ask your network administrator to allow WebSocket traffic on port 443. As a workaround, use the Phlex mobile or desktop client.
+**Fix:** Your network is blocking WebSocket connections (`ws://` or `wss://`). Try opening the portal from a different network. If you must use a restricted network, ask your network administrator to allow WebSocket traffic on port 443. As a workaround, use the Phlix mobile or desktop client.
 
 ### SSL certificate invalid or self-signed
 

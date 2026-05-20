@@ -1,8 +1,8 @@
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({
-  title: 'Phlex',
-  description: 'Phlex Media Server documentation — end-user, developer, and hub-admin guides',
+  title: 'Phlix',
+  description: 'Phlix Media Server documentation — end-user, developer, and hub-admin guides',
   srcDir: 'docs',
   head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }]],
   themeConfig: {
@@ -200,11 +200,11 @@ export default defineConfig({
       ]
     },
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/detain/phlex-docs' }
+      { icon: 'github', link: 'https://github.com/detain/phlix-docs' }
     ],
     footer: {
       message: 'BSD-3-Clause',
-      copyright: 'Copyright 2026 Phlex contributors'
+      copyright: 'Copyright 2026 Phlix contributors'
     },
     darkModeSwitch: true,
     search: {

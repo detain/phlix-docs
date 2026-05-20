@@ -4,14 +4,14 @@
 
 ## TL;DR
 
-Install any public plugin by pasting its `plugin.json` URL into Phlex. Two prerequisites: an admin account on the server and the plugin's HTTPS URL. The plugin lands **disabled** after install — flip the toggle to enable it. For curated, signature-verified plugins in one click, use the [catalog](install-from-catalog.md) instead.
+Install any public plugin by pasting its `plugin.json` URL into Phlix. Two prerequisites: an admin account on the server and the plugin's HTTPS URL. The plugin lands **disabled** after install — flip the toggle to enable it. For curated, signature-verified plugins in one click, use the [catalog](install-from-catalog.md) instead.
 
 ---
 
 ## 1. Prerequisites
 
-- **Admin account** on the Phlex server (`users.is_admin = 1`).
-- **Plugin's public `plugin.json` URL** — must be HTTPS (`http://` refused unless `PHLEX_PLUGINS_ALLOW_HTTP=1`).
+- **Admin account** on the Phlix server (`users.is_admin = 1`).
+- **Plugin's public `plugin.json` URL** — must be HTTPS (`http://` refused unless `PHLIX_PLUGINS_ALLOW_HTTP=1`).
 - **Optional:** signed plugins need their author key in the [trusted-key allowlist](trusted-plugin-list.md).
 
 ---
@@ -26,7 +26,7 @@ Install any public plugin by pasting its `plugin.json` URL into Phlex. Two prere
 6. Find the plugin in the table — it lands **disabled** by default.
 7. Flip the toggle to enable it.
 
-Screenshot placeholder: `[screenshot: admin/plugins table with phlex-plugin-example row, toggle off]`
+Screenshot placeholder: `[screenshot: admin/plugins table with phlix-plugin-example row, toggle off]`
 
 ---
 
@@ -36,25 +36,25 @@ Screenshot placeholder: `[screenshot: admin/plugins table with phlex-plugin-exam
 TOKEN="…your admin bearer token…"
 
 # 1. Install from URL
-curl -sS -X POST https://phlex.example.com/api/v1/admin/plugins/install \
+curl -sS -X POST https://phlix.example.com/api/v1/admin/plugins/install \
      -H "Authorization: Bearer $TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"url": "https://example.com/my-plugin/plugin.json"}'
 
 # 2. Enable
-curl -sS -X POST https://phlex.example.com/api/v1/admin/plugins/my-plugin/enable \
+curl -sS -X POST https://phlix.example.com/api/v1/admin/plugins/my-plugin/enable \
      -H "Authorization: Bearer $TOKEN"
 
 # 3. List installed plugins
-curl -sS https://phlex.example.com/api/v1/admin/plugins \
+curl -sS https://phlix.example.com/api/v1/admin/plugins \
      -H "Authorization: Bearer $TOKEN"
 
 # 4. Disable
-curl -sS -X POST https://phlex.example.com/api/v1/admin/plugins/my-plugin/disable \
+curl -sS -X POST https://phlix.example.com/api/v1/admin/plugins/my-plugin/disable \
      -H "Authorization: Bearer $TOKEN"
 
 # 5. Uninstall
-curl -sS -X DELETE https://phlex.example.com/api/v1/admin/plugins/my-plugin \
+curl -sS -X DELETE https://phlix.example.com/api/v1/admin/plugins/my-plugin \
      -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -65,10 +65,10 @@ curl -sS -X DELETE https://phlex.example.com/api/v1/admin/plugins/my-plugin \
 Try the install flow on a fresh server using the reference plugin:
 
 ```
-https://raw.githubusercontent.com/detain/phlex-plugin-example/main/plugin.json
+https://raw.githubusercontent.com/detain/phlix-plugin-example/main/plugin.json
 ```
 
-Steps: paste → Install → toggle Enable → confirm in the plugins table. The reference plugin (`phlex-plugin-example`) is a minimal `metadata-provider` that returns `{"title": "Hello, World"}` for a known fixture path — safe to install on any environment.
+Steps: paste → Install → toggle Enable → confirm in the plugins table. The reference plugin (`phlix-plugin-example`) is a minimal `metadata-provider` that returns `{"title": "Hello, World"}` for a known fixture path — safe to install on any environment.
 
 ---
 
@@ -82,11 +82,11 @@ After install, click **Settings** (wrench icon) next to any enabled plugin to op
 
 ### Failure 1: Version Incompatibility
 
-**Symptom:** `422` / `plugin.install.failed` with `phlex_min_server_version` in `fields[]`.
+**Symptom:** `422` / `plugin.install.failed` with `phlix_min_server_version` in `fields[]`.
 
 **Cause:** Running server is older than what the plugin requires.
 
-**Fix:** Upgrade phlex-server first, or choose a different plugin version.
+**Fix:** Upgrade phlix-server first, or choose a different plugin version.
 
 ---
 
@@ -106,12 +106,12 @@ After install, click **Settings** (wrench icon) next to any enabled plugin to op
 
 **Cause:** Some plugins (`transcoder-hook`, `ui-theme`) register hooks only at server boot, not on enable.
 
-**Fix:** Restart phlex-server:
+**Fix:** Restart phlix-server:
 
 ```bash
-systemctl restart phlex
+systemctl restart phlix
 # or
-php bin/phlex restart
+php bin/phlix restart
 ```
 
 ---
@@ -125,7 +125,7 @@ php bin/phlex restart
 **Fix:** Disable via CLI:
 
 ```bash
-curl -sS -X POST https://phlex.example.com/api/v1/admin/plugins/<name>/disable \
+curl -sS -X POST https://phlix.example.com/api/v1/admin/plugins/<name>/disable \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -144,7 +144,7 @@ Then contact the plugin author.
 
 ## Security Notes
 
-- **HTTPS only by default.** The controller refuses `http://` even when `PHLEX_PLUGINS_ALLOW_HTTP=1` is set elsewhere.
+- **HTTPS only by default.** The controller refuses `http://` even when `PHLIX_PLUGINS_ALLOW_HTTP=1` is set elsewhere.
 - **Signatures are honoured.** If the manifest declares a `sha256:…` signature, install fails unless that signature appears in the [trusted-key allowlist](trusted-plugin-list.md). Unsigned plugins install with a warning in the `plugins` log channel.
 - **CSRF is not required.** The API is Bearer-token authenticated. Browsers do not auto-attach Authorization headers across origins.
 - **Every install / enable / disable / uninstall is audit-logged.** Entries land in the `AUTH` log channel with the actor user id and action name. See `docs/dev/architecture-server.md` for log paths.

@@ -1,17 +1,17 @@
-# Install phlex-server via Docker
+# Install phlix-server via Docker
 
 ## TL;DR
 
-phlex-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide deploys it via Docker in roughly 10 minutes using the official `detain/phlex-server` image and `docker-compose`.
+phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide deploys it via Docker in roughly 10 minutes using the official `detain/phlix-server` image and `docker-compose`.
 
 **Minimum requirements:** Docker 20.10+, docker-compose v2, 2 CPU / 4 GB RAM.
 
 **Quick one-liner:**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/detain/phlex-server/master/docker/examples/server-only/docker-compose.yml | \
-  PHLEX_DB_PASSWORD=$(openssl rand -hex 16) \
-  PHLEX_SECRET_KEY=$(openssl rand -hex 32) \
+curl -sSL https://raw.githubusercontent.com/detain/phlix-server/master/docker/examples/server-only/docker-compose.yml | \
+  PHLIX_DB_PASSWORD=$(openssl rand -hex 16) \
+  PHLIX_SECRET_KEY=$(openssl rand -hex 32) \
   docker-compose -f - up -d
 ```
 
@@ -19,9 +19,9 @@ curl -sSL https://raw.githubusercontent.com/detain/phlex-server/master/docker/ex
 
 | Image tag | Use case | Hardware |
 |-----------|----------|----------|
-| `detain/phlex-server:latest` | Generic x86_64, no HWaccel | Any 64-bit |
-| `detain/phlex-server:nvidia` | NVIDIA GPU transcoding | NVIDIA GPU with driver 525+ |
-| `detain/phlex-server:intel` | Intel Quick Sync Video | Intel CPUs with Quicksync (Gen 8+) |
+| `detain/phlix-server:latest` | Generic x86_64, no HWaccel | Any 64-bit |
+| `detain/phlix-server:nvidia` | NVIDIA GPU transcoding | NVIDIA GPU with driver 525+ |
+| `detain/phlix-server:intel` | Intel Quick Sync Video | Intel CPUs with Quicksync (Gen 8+) |
 
 ::: tip Screenshots TBD
 This guide is text-first. Screenshots will be added in a follow-up.
@@ -33,9 +33,9 @@ This guide is text-first. Screenshots will be added in a follow-up.
 
 | Image tag | Use case | Hardware |
 |-----------|----------|----------|
-| `detain/phlex-server:latest` | Generic x86_64, no HWaccel | Any 64-bit |
-| `detain/phlex-server:nvidia` | NVIDIA GPU transcoding | NVIDIA GPU with driver 525+ |
-| `detain/phlex-server:intel` | Intel Quick Sync Video | Intel CPUs with Quicksync (Gen 8+) |
+| `detain/phlix-server:latest` | Generic x86_64, no HWaccel | Any 64-bit |
+| `detain/phlix-server:nvidia` | NVIDIA GPU transcoding | NVIDIA GPU with driver 525+ |
+| `detain/phlix-server:intel` | Intel Quick Sync Video | Intel CPUs with Quicksync (Gen 8+) |
 
 ---
 
@@ -72,10 +72,10 @@ docker-compose --version
 ## 3. Quick-start (server-only)
 
 ```bash
-mkdir -p ~/phlex && cd ~/phlex
-curl -O https://raw.githubusercontent.com/detain/phlex-server/master/docker/examples/server-only/docker-compose.yml
+mkdir -p ~/phlix && cd ~/phlix
+curl -O https://raw.githubusercontent.com/detain/phlix-server/master/docker/examples/server-only/docker-compose.yml
 cp .env.example .env  # copy and edit
-# Edit .env: set PHLEX_DB_PASSWORD, PHLEX_SECRET_KEY, TZ, PLEX_UID, PLEX_GID
+# Edit .env: set PHLIX_DB_PASSWORD, PHLIX_SECRET_KEY, TZ, PLEX_UID, PLEX_GID
 docker-compose up -d
 ```
 
@@ -83,15 +83,15 @@ docker-compose up -d
 
 ```bash
 # Required
-PHLEX_DB_PASSWORD=change_me_generate_with_openssl    # openssl rand -hex 16
-PHLEX_SECRET_KEY=change_me_generate_with_openssl       # openssl rand -hex 32
+PHLIX_DB_PASSWORD=change_me_generate_with_openssl    # openssl rand -hex 16
+PHLIX_SECRET_KEY=change_me_generate_with_openssl       # openssl rand -hex 32
 
 # Optional — defaults shown
 TZ=UTC
 PLEX_UID=1000
 PLEX_GID=1000
-PHLEX_LOG_LEVEL=info
-PHLEX_PORT=32400
+PHLIX_LOG_LEVEL=info
+PHLIX_PORT=32400
 ```
 
 ---
@@ -100,10 +100,10 @@ PHLEX_PORT=32400
 
 | Host path | Container path | Purpose |
 |-----------|---------------|---------|
-| `phlex_config` (named volume) | `/var/phlex/config` | Application config |
-| `phlex_data` (named volume) | `/var/phlex/data` | Media database, caches |
-| `phlex_backups` (named volume) | `/var/phlex/backups` | Automatic backups |
-| `phlex_logs` (named volume) | `/var/phlex/logs` | Log files |
+| `phlix_config` (named volume) | `/var/phlix/config` | Application config |
+| `phlix_data` (named volume) | `/var/phlix/data` | Media database, caches |
+| `phlix_backups` (named volume) | `/var/phlix/backups` | Automatic backups |
+| `phlix_logs` (named volume) | `/var/phlix/logs` | Log files |
 | `/path/to/media` | `/media:ro` | Read-only media library mount |
 
 To bind-mount a host media directory, replace the volume entry in `docker-compose.yml`:
@@ -133,7 +133,7 @@ sudo systemctl restart docker
 Use the nvidia image and add runtime to compose:
 
 ```yaml
-image: ghcr.io/detain/phlex-server:nvidia
+image: ghcr.io/detain/phlix-server:nvidia
 # docker-compose.yml must include:
 deploy:
   resources:
@@ -147,7 +147,7 @@ deploy:
 ### Intel Quick Sync (intel image tag)
 
 ```yaml
-image: ghcr.io/detain/phlex-server:intel
+image: ghcr.io/detain/phlix-server:intel
 ```
 
 No special runtime needed; the container automatically detects Quicksync devices via `/dev/dri`.
@@ -174,25 +174,25 @@ sudo ss -tlnp | grep -E '32400|1900'
 
 ### 7a. Server-only (minimal)
 
-Single phlex-server + MySQL container, local access only. See `docker/examples/server-only/docker-compose.yml`:
+Single phlix-server + MySQL container, local access only. See `docker/examples/server-only/docker-compose.yml`:
 
 ```bash
-curl -O https://raw.githubusercontent.com/detain/phlex-server/master/docker/examples/server-only/docker-compose.yml
+curl -O https://raw.githubusercontent.com/detain/phlix-server/master/docker/examples/server-only/docker-compose.yml
 ```
 
 ### 7b. Server + Hub (remote access)
 
-Adds phlex-hub relay service for remote access behind NAT. See `docker/examples/server-hub/docker-compose.yml`.
+Adds phlix-hub relay service for remote access behind NAT. See `docker/examples/server-hub/docker-compose.yml`.
 
 ### 7c. Full-stack with Traefik (production)
 
 Traefik reverse proxy handling HTTPS, WebSocket relay, and Let's Encrypt certificates:
 
 ```bash
-mkdir -p ~/phlex/full-stack/traefik
-curl -O https://raw.githubusercontent.com/detain/phlex-server/master/docker/examples/full-stack/docker-compose.yml
-curl -O https://raw.githubusercontent.com/detain/phlex-server/master/docker/examples/full-stack/traefik/traefik.yml
-curl -O https://raw.githubusercontent.com/detain/phlex-server/master/docker/examples/full-stack/traefik/dynamic.yml
+mkdir -p ~/phlix/full-stack/traefik
+curl -O https://raw.githubusercontent.com/detain/phlix-server/master/docker/examples/full-stack/docker-compose.yml
+curl -O https://raw.githubusercontent.com/detain/phlix-server/master/docker/examples/full-stack/traefik/traefik.yml
+curl -O https://raw.githubusercontent.com/detain/phlix-server/master/docker/examples/full-stack/traefik/dynamic.yml
 ```
 
 ---
@@ -201,10 +201,10 @@ curl -O https://raw.githubusercontent.com/detain/phlex-server/master/docker/exam
 
 ```bash
 # Check container is running
-docker ps | grep phlex-server
+docker ps | grep phlix-server
 
 # Check logs
-docker-compose logs -f phlex-server
+docker-compose logs -f phlix-server
 
 # Test HTTP endpoint
 curl -I http://localhost:32400
@@ -227,14 +227,14 @@ open http://localhost:32400
 
 ### Volume permission errors
 
-- **Symptom:** `Permission denied` accessing `/var/phlex/config` or media files, or "cannot create file" errors in logs
+- **Symptom:** `Permission denied` accessing `/var/phlix/config` or media files, or "cannot create file" errors in logs
 - **Cause:** UID/GID mismatch between host user and container's `www-data` (UID 33 typically)
 - **Fix:** Set `PLEX_UID` and `PLEX_GID` in `.env` to match the host user that owns the media directories:
   ```bash
   PLEX_UID=$(id -u)
   PLEX_GID=$(id -g)
   ```
-- **Verify:** `docker-compose exec phlex-server id` shows correct UID/GID
+- **Verify:** `docker-compose exec phlix-server id` shows correct UID/GID
 
 ### Port already in use
 
@@ -245,7 +245,7 @@ open http://localhost:32400
   ports:
     - "32401:80"   # change host port 32401 instead of 32400
   ```
-- For DLNA port 1900/UDP: set `PHLEX_DLNA_PORT=0` to disable DLNA if another service uses it
+- For DLNA port 1900/UDP: set `PHLIX_DLNA_PORT=0` to disable DLNA if another service uses it
 
 ### NVIDIA runtime not configured
 

@@ -4,13 +4,13 @@
 
 ## TL;DR
 
-You can access your Phlex server from outside your home network without using the hub relay. Three methods are available: **Cloudflare Tunnel** (recommended — no open ports, free, reliable), **WireGuard VPN** (full traffic tunnel, higher security), and **Tailscale VPN** (simplest managed VPN, handles NAT traversal automatically). Port forwarding is documented as a last resort but has significant limitations (carrier-grade NAT, dynamic IPs, security exposure). The hub relay remains the easiest option — these alternatives give you full control but require more configuration.
+You can access your Phlix server from outside your home network without using the hub relay. Three methods are available: **Cloudflare Tunnel** (recommended — no open ports, free, reliable), **WireGuard VPN** (full traffic tunnel, higher security), and **Tailscale VPN** (simplest managed VPN, handles NAT traversal automatically). Port forwarding is documented as a last resort but has significant limitations (carrier-grade NAT, dynamic IPs, security exposure). The hub relay remains the easiest option — these alternatives give you full control but require more configuration.
 
 ---
 
 ## 1. Why Access Without the Hub?
 
-- **Privacy**: All traffic stays between you and your server; nothing routes through Phlex's relay infrastructure
+- **Privacy**: All traffic stays between you and your server; nothing routes through Phlix's relay infrastructure
 - **No third-party relay**: Removes the hub from the connection path entirely
 - **Avoid subscription fees**: Hub relay may have usage limits; self-hosted alternatives are free
 - **Lower latency**: Direct connection can be faster than relay for geographically close clients
@@ -41,7 +41,7 @@ This opens a browser window to authenticate with your Cloudflare account and aut
 ### Create a tunnel
 
 ```bash
-cloudflared tunnel create phlex
+cloudflared tunnel create phlix
 ```
 
 Save the tunnel credentials file (typically at `~/.cloudflared/<tunnel-id>.json`).
@@ -65,7 +65,7 @@ Replace `<your-tunnel-id>` with the ID from the create step and `server.yourdoma
 ### Run the tunnel
 
 ```bash
-cloudflared tunnel run phlex
+cloudflared tunnel run phlix
 ```
 
 For production, run as a systemd service:
@@ -77,7 +77,7 @@ cloudflared service install
 ### Route DNS
 
 ```bash
-cloudflared tunnel route dns phlex server.yourdomain.com
+cloudflared tunnel route dns phlix server.yourdomain.com
 ```
 
 This creates a CNAME record in Cloudflare pointing to your tunnel.
@@ -160,9 +160,9 @@ AllowedIPs = 0.0.0.0/0
 PersistentKeepalive = 25
 ```
 
-Import this config into the WireGuard app on the client. Connect before accessing Phlex.
+Import this config into the WireGuard app on the client. Connect before accessing Phlix.
 
-### Access Phlex
+### Access Phlix
 
 With the VPN active, access your server at `http://10.0.0.1:32400` (VPN tunnel address) or by LAN IP if on the same network.
 
@@ -186,19 +186,19 @@ tailscale up --accept-routes
 
 This opens a browser for authentication. After auth, your device joins your tailnet.
 
-### Access Phlex
+### Access Phlix
 
 Once connected, access your server at:
 
 ```
-https://phlexMachineName.tailcale.mesh:32400
+https://phlixMachineName.tailcale.mesh:32400
 ```
 
-Replace `phlexMachineName` with the hostname of your Phlex server (run `hostname` on the server to find it).
+Replace `phlixMachineName` with the hostname of your Phlix server (run `hostname` on the server to find it).
 
 ### Tailscale Funnel (public HTTP without port forwarding)
 
-To make Phlex publicly accessible via your tailnet without port forwarding:
+To make Phlix publicly accessible via your tailnet without port forwarding:
 
 ```bash
 # Enable Funnel on port 32400
@@ -208,7 +208,7 @@ tailscale funnel 32400
 tailscale funnel status
 ```
 
-Funnel exposes `https://phlexMachineName.tailcale.mesh:32400` to the public internet via Tailscale's relay — no router port forwarding needed.
+Funnel exposes `https://phlixMachineName.tailcale.mesh:32400` to the public internet via Tailscale's relay — no router port forwarding needed.
 
 ---
 
@@ -289,16 +289,16 @@ cloudflared tunnel ingress validate
 
 ```bash
 cloudflared tunnel login
-cloudflared tunnel run phlex
+cloudflared tunnel run phlix
 ```
 
 If credentials were revoked, recreate the tunnel:
 
 ```bash
-cloudflared tunnel delete phlex
-cloudflared tunnel create phlex
-cloudflared tunnel route dns phlex server.yourdomain.com
-cloudflared tunnel run phlex
+cloudflared tunnel delete phlix
+cloudflared tunnel create phlix
+cloudflared tunnel route dns phlix server.yourdomain.com
+cloudflared tunnel run phlix
 ```
 
 ---
@@ -334,7 +334,7 @@ Also verify the client has `PersistentKeepalive = 25` and that `AllowedIPs` incl
 
 ### Failure 3: Tailscale — Device Not Showing Up in Tailnet
 
-**Symptom:** Cannot reach server via `phlexMachineName.tailcale.mesh:32400`; device missing from Tailscale admin console.
+**Symptom:** Cannot reach server via `phlixMachineName.tailcale.mesh:32400`; device missing from Tailscale admin console.
 
 **Diagnosis:**
 
@@ -388,6 +388,6 @@ curl ifconfig.me
 ## 7. Next Steps
 
 - [Remote Access via the Hub](../hub/remote-access-via-hub.md) — the easiest remote access option using the hub relay
-- [Claim Your Server's Public Hostname](../hub/claim-server.md) — set up `*.phlex.media` subdomain for your server
+- [Claim Your Server's Public Hostname](../hub/claim-server.md) — set up `*.phlix.media` subdomain for your server
 - [Self-Host the Hub](../hub/self-host-the-hub.md) — run your own hub instance for full control
 - [Server Connectivity Checklist](server-connectivity.md) — verify your server is correctly configured for remote access

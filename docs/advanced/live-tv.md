@@ -4,7 +4,7 @@
 
 ## TL;DR
 
-Live TV lets you watch and record broadcast, cable, and IPTV channels through Phlex. You connect a tuner (HDHomeRun over the network, a USB DVB-T stick on Linux, or an IPTV M3U playlist), configure guide data (Schedules Direct or XMLTV), and you're ready to watch live TV or schedule recordings. Setup takes 10–30 minutes depending on tuner type and guide data source. Once configured, Live TV appears alongside your regular media library.
+Live TV lets you watch and record broadcast, cable, and IPTV channels through Phlix. You connect a tuner (HDHomeRun over the network, a USB DVB-T stick on Linux, or an IPTV M3U playlist), configure guide data (Schedules Direct or XMLTV), and you're ready to watch live TV or schedule recordings. Setup takes 10–30 minutes depending on tuner type and guide data source. Once configured, Live TV appears alongside your regular media library.
 
 ---
 
@@ -44,9 +44,9 @@ hdhomerun_config DEVICE_ID get /lineup/status
 
 You should see a list of channels with numbers and names. If the list is empty, the HDHomeRun may not have found antenna/cable channels — check your antenna placement or cable signal.
 
-4. In the Phlex web UI: go to **Settings → Live TV → Add Tuner → HDHomeRun**.
+4. In the Phlix web UI: go to **Settings → Live TV → Add Tuner → HDHomeRun**.
 5. The device IP is auto-detected if it is on the same LAN. Select it and confirm.
-6. Phlex scans and imports all detected channels.
+6. Phlix scans and imports all detected channels.
 
 ### Tuner status and concurrent streams
 
@@ -78,11 +78,11 @@ dmesg | grep -i dvb
 apt install librtlsdr0
 ```
 
-3. In Phlex: go to **Settings → Live TV → Add Tuner → DVB-T**.
-4. Phlex scans the available frequency range and imports discovered channels.
+3. In Phlix: go to **Settings → Live TV → Add Tuner → DVB-T**.
+4. Phlix scans the available frequency range and imports discovered channels.
 5. If no channels are found: check antenna placement, try outdoors, or use an amplified antenna.
 
-**Linux-only note:** DVB-T tuners require the server to be Linux. If your Phlex server runs in Docker on a NAS, USB passthrough must be correctly configured for the container to access the device.
+**Linux-only note:** DVB-T tuners require the server to be Linux. If your Phlix server runs in Docker on a NAS, USB passthrough must be correctly configured for the container to access the device.
 
 ---
 
@@ -95,18 +95,18 @@ When you have an IPTV subscription from an ISP or third-party provider, or when 
 ### Step-by-step
 
 1. Get the M3U playlist file from your IPTV provider (usually a `.m3u` or `.m3u8` URL or file).
-2. In Phlex: go to **Settings → Live TV → Add IPTV Tuner**.
+2. In Phlix: go to **Settings → Live TV → Add IPTV Tuner**.
 3. Upload the `.m3u` file or paste the M3U URL.
-4. Phlex imports the channel list from the playlist.
+4. Phlix imports the channel list from the playlist.
 5. Optional: upload XMLTV guide data (see §5 below).
 
-**M3U format:** Phlex reads `#EXTINF` lines for channel names and channel numbers. The order in the M3U determines the channel numbering unless overridden.
+**M3U format:** Phlix reads `#EXTINF` lines for channel names and channel numbers. The order in the M3U determines the channel numbering unless overridden.
 
 ---
 
 ## 5. Setting Up the Electronic Program Guide (EPG)
 
-Live TV is significantly more useful with guide data (EPG) showing program listings and schedules. Phlex supports two sources: **Schedules Direct** (recommended) and **XMLTV** (self-hosted).
+Live TV is significantly more useful with guide data (EPG) showing program listings and schedules. Phlix supports two sources: **Schedules Direct** (recommended) and **XMLTV** (self-hosted).
 
 ### 5a. Schedules Direct (Recommended)
 
@@ -116,11 +116,11 @@ Live TV is significantly more useful with guide data (EPG) showing program listi
 2. Log in and select your lineup (antenna channels by ZIP/postal code or your IPTV provider's channel lineup).
 3. Note your username and password for the next step.
 
-**In Phlex:**
+**In Phlix:**
 
 1. Go to **Settings → Live TV → EPG Source → Schedules Direct**.
 2. Enter your Schedules Direct username and password.
-3. Phlex connects and syncs your channel lineup.
+3. Phlix connects and syncs your channel lineup.
 4. Initial sync downloads ~14 days of guide data and may take a few minutes.
 5. Guide data refreshes automatically every night. To force an immediate refresh, click **Refresh Guide** in the Live TV settings.
 
@@ -133,9 +133,9 @@ If you prefer not to pay for Schedules Direct, you can use free XMLTV data from 
 **Step-by-step:**
 
 1. Download an XMLTV schedule for your region (e.g., from xmltv.org).
-2. In Phlex: go to **Settings → Live TV → EPG Source → XMLTV Import**.
+2. In Phlix: go to **Settings → Live TV → EPG Source → XMLTV Import**.
 3. Upload the `.xml` or `.xml.gz` file.
-4. Phlex parses and imports the guide data.
+4. Phlix parses and imports the guide data.
 5. Re-upload periodically (or script it) to keep the guide current.
 
 ---
@@ -146,7 +146,7 @@ Once your tuners and guide data are configured, you can schedule recordings.
 
 ### Series Rules
 
-When you record a show from the guide, Phlex asks whether to create a **series rule**:
+When you record a show from the guide, Phlix asks whether to create a **series rule**:
 
 | Option | What it does |
 |--------|-------------|
@@ -164,7 +164,7 @@ When two shows are scheduled to record at the same time:
 2. **One tuner busy, one free** — the free tuner records the higher-priority show; the other is marked as conflict.
 3. **Both tuners busy** — one show is recorded; the other is marked as conflict and you are notified.
 
-**Conflict resolution preference:** In **Settings → Live TV → DVR**, you can set whether Phlex prefers to keep existing recordings or prioritize new episodes when resolving conflicts.
+**Conflict resolution preference:** In **Settings → Live TV → DVR**, you can set whether Phlix prefers to keep existing recordings or prioritize new episodes when resolving conflicts.
 
 ### Storage
 
@@ -180,7 +180,7 @@ Storage usage is shown in **Settings → Live TV → Storage** with total / used
 
 ### Failure 1: HDHomeRun Not Discovered (UDP Port 65001 Blocked)
 
-**Symptom:** HDHomeRun tuner is connected to the network but does not appear in Phlex during setup.
+**Symptom:** HDHomeRun tuner is connected to the network but does not appear in Phlix during setup.
 
 **Diagnosis:**
 

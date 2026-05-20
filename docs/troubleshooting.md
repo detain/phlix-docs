@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-Phlex writes logs to `.logs/`. Most failures trace to file permissions, misconfigured settings, or a missing binary. Start every debugging session with `tail -f .logs/phlex.log` to see what is happening in real time. If playback fails, check that FFmpeg is installed and your GPU encoders are accessible. If the Hub won't connect, verify the JWKS URL is reachable and that your server can make outbound HTTPS connections.
+Phlix writes logs to `.logs/`. Most failures trace to file permissions, misconfigured settings, or a missing binary. Start every debugging session with `tail -f .logs/phlix.log` to see what is happening in real time. If playback fails, check that FFmpeg is installed and your GPU encoders are accessible. If the Hub won't connect, verify the JWKS URL is reachable and that your server can make outbound HTTPS connections.
 
 ## Shell Blocks
 
@@ -27,20 +27,20 @@ workerman.log                   # Workerman worker stdout (same dir as start com
 ### Log tailing commands
 
 ```bash
-tail -f .logs/phlex.log               # All channels combined
+tail -f .logs/phlix.log               # All channels combined
 tail -f .logs/auth.log                # AUTH channel only
 tail -f .logs/http.log                # HTTP channel only
 tail -f .logs/websocket.log           # WEBSOCKET channel only
-grep -i error .logs/phlex.log | tail -50   # Last 50 errors across all channels
-php bin/phlex log:tail --channel=auth  # Channel-specific tail with ANSI colors
+grep -i error .logs/phlix.log | tail -50   # Last 50 errors across all channels
+php bin/phlix log:tail --channel=auth  # Channel-specific tail with ANSI colors
 ```
 
 ### Server status checks
 
 ```bash
 curl -s http://localhost:32400/api/v1/system/status   # Is server responding?
-systemctl status phlex                                # systemd service status (Linux)
-ps aux | grep -E 'phlex|workerman' | grep -v grep     # Running processes
+systemctl status phlix                                # systemd service status (Linux)
+ps aux | grep -E 'phlix|workerman' | grep -v grep     # Running processes
 lsof -i :32400                                        # Is port 32400 bound?
 ```
 
@@ -48,7 +48,7 @@ lsof -i :32400                                        # Is port 32400 bound?
 
 ```bash
 chmod -R 755 /media               # Fix permissions on media directories
-lsof data/phlex.db                # Check SQLite locks (if using SQLite)
+lsof data/phlix.db                # Check SQLite locks (if using SQLite)
 php scripts/run-migrations.php    # Verify DB schema is up to date
 ```
 
@@ -57,29 +57,29 @@ php scripts/run-migrations.php    # Verify DB schema is up to date
 ```bash
 which ffmpeg                      # Is FFmpeg in PATH?
 ffmpeg -version                   # Version + available encoders/decoders
-php bin/phlex hwaccel:probe       # Probe HW acceleration (VAAPI, NVENC, QSV, VideoToolbox)
+php bin/phlix hwaccel:probe       # Probe HW acceleration (VAAPI, NVENC, QSV, VideoToolbox)
 iostat -x 1                       # Disk I/O bottleneck check (Linux)
 ```
 
 ### Hub connectivity checks
 
 ```bash
-curl -v https://hub.phlex.example.com                         # Network reachability + TLS handshake
-curl -v https://hub.phlex.example.com/.well-known/jwks.json  # JWKS endpoint reachable?
-env | grep -i PHLEX_HUB                                      # Verify Hub env vars are set
+curl -v https://hub.phlix.example.com                         # Network reachability + TLS handshake
+curl -v https://hub.phlix.example.com/.well-known/jwks.json  # JWKS endpoint reachable?
+env | grep -i PHLIX_HUB                                      # Verify Hub env vars are set
 ```
 
 ### Debug logging
 
 ```bash
-PHLEX_LOG_LEVEL=debug php public/index.php    # Start server with debug-level logging
+PHLIX_LOG_LEVEL=debug php public/index.php    # Start server with debug-level logging
 # Valid levels: debug, info, notice, warning, error, critical, alert, emergency
 ```
 
 ### Admin password reset
 
 ```bash
-php bin/phlex user:reset-password admin@example.com
+php bin/phlix user:reset-password admin@example.com
 ```
 
 ## What Can Go Wrong
@@ -88,7 +88,7 @@ php bin/phlex user:reset-password admin@example.com
 
 **Symptom:** Browser shows "Connection refused" or "Unable to connect" when accessing `http://server:32400`.
 
-**Cause 1 — Server not running:** The Phlex Workerman process is not started.
+**Cause 1 — Server not running:** The Phlix Workerman process is not started.
 
 **Fix:** Start the server in the foreground (for development):
 ```bash
@@ -96,7 +96,7 @@ php public/index.php
 ```
 For production, use systemd:
 ```bash
-systemctl start phlex
+systemctl start phlix
 ```
 
 **Cause 2 — Wrong port:** The `config/server.php` `http_port` value differs from the URL being accessed.
@@ -120,29 +120,29 @@ sudo firewall-cmd --add-port=32400/tcp
 
 **Symptom:** Media files exist on disk but do not appear in the library after triggering a rescan.
 
-**Cause 1 — Wrong permissions:** The Phlex worker process (running as `phlex` or `www-data`) cannot read the media directory.
+**Cause 1 — Wrong permissions:** The Phlix worker process (running as `phlix` or `www-data`) cannot read the media directory.
 
 **Fix:**
 ```bash
 chmod -R 755 /path/to/media
-chown -R phlex:phlex /path/to/media
+chown -R phlix:phlix /path/to/media
 ```
 
 **Cause 2 — File naming not recognized:** The filename does not match the `(Year)` or `S01E02` patterns the scanner expects.
 
 **Fix:** Rename files to match the conventions in [Movies library](../libraries/movies.md) or [TV library](../libraries/tv-shows.md). Check `.logs/media.log` for "unrecognized file" entries.
 
-**Cause 3 — Database locked:** MySQL/MariaDB lock contention, or a stale SQLite lock on `data/phlex.db`.
+**Cause 3 — Database locked:** MySQL/MariaDB lock contention, or a stale SQLite lock on `data/phlix.db`.
 
 **Fix:**
 ```bash
 # For SQLite
-lsof data/phlex.db
+lsof data/phlix.db
 
 # For MariaDB/MySQL — check for lock-waiting threads
 mysql -e "SHOW PROCESSLIST;"
 ```
-Restart the Phlex service to clear stale locks.
+Restart the Phlix service to clear stale locks.
 
 ---
 
@@ -167,7 +167,7 @@ If FFmpeg is installed to a non-standard path, set `ffmpeg_path` in `config/ffmp
 
 **Fix:** Probe for available hardware:
 ```bash
-php bin/phlex hwaccel:probe
+php bin/phlix hwaccel:probe
 ```
 Review the output for available adapters (VAAPI, NVENC, QSV, VideoToolbox). Set `hwaccel.enabled` in `config/ffmpeg.php` and ensure the correct device node is accessible (e.g., `/dev/dri/renderD128` for VAAPI on Linux).
 
@@ -185,11 +185,11 @@ Move transcode output to a faster volume (tmpfs, SSD) by setting `transcode_dir`
 
 **Symptom:** Server appears offline in the Hub admin UI, or the claim code fails to connect.
 
-**Cause 1 — Server cannot reach Hub URL:** Outbound HTTPS to `hub.phlex.example.com` is blocked by a corporate firewall or VPS egress filter.
+**Cause 1 — Server cannot reach Hub URL:** Outbound HTTPS to `hub.phlix.example.com` is blocked by a corporate firewall or VPS egress filter.
 
 **Fix:** Test connectivity from the server:
 ```bash
-curl -v https://hub.phlex.example.com
+curl -v https://hub.phlix.example.com
 ```
 If it times out or is rejected, check egress rules on your firewall or VPS panel. See [Remote access without Hub](../advanced/remote-access-without-hub.md) for alternatives such as a reverse tunnel or VPN.
 
@@ -197,11 +197,11 @@ If it times out or is rejected, check egress rules on your firewall or VPS panel
 
 **Fix:** Re-generate a fresh claim code in the server's admin UI under Hub → Generate Claim Code.
 
-**Cause 3 — JWT validation fails:** The server's JWKS URL (`PHLEX_HUB_JWKS_URL` env var) points to the wrong endpoint, or the Hub's signing key was rotated.
+**Cause 3 — JWT validation fails:** The server's JWKS URL (`PHLIX_HUB_JWKS_URL` env var) points to the wrong endpoint, or the Hub's signing key was rotated.
 
-**Fix:** Verify the `PHLEX_HUB_JWKS_URL` environment variable is set to:
+**Fix:** Verify the `PHLIX_HUB_JWKS_URL` environment variable is set to:
 ```
-https://hub.phlex.example.com/.well-known/jwks.json
+https://hub.phlix.example.com/.well-known/jwks.json
 ```
 If the Hub signing key was rotated, re-trigger the Hub handshake from the admin UI or restart the server to clear the JWKS cache.
 
@@ -209,23 +209,23 @@ If the Hub signing key was rotated, re-trigger the Hub handshake from the admin 
 
 ## FAQ
 
-**Q: Can I run Phlex in a subfolder instead of at the root domain?**
-A: Not natively. Phlex serves all routes relative to the root of the configured port. Running in a subfolder (e.g., `https://example.com/phlex/`) requires a reverse proxy (nginx, Caddy, or Apache) to rewrite the path before forwarding to Phlex. See [Reverse proxy](../advanced/reverse-proxy.md).
+**Q: Can I run Phlix in a subfolder instead of at the root domain?**
+A: Not natively. Phlix serves all routes relative to the root of the configured port. Running in a subfolder (e.g., `https://example.com/phlix/`) requires a reverse proxy (nginx, Caddy, or Apache) to rewrite the path before forwarding to Phlix. See [Reverse proxy](../advanced/reverse-proxy.md).
 
-**Q: How many concurrent streams can Phlex handle?**
+**Q: How many concurrent streams can Phlix handle?**
 A: It depends on your hardware and playback mode. Direct play (no transcoding) uses minimal CPU — a single-core server can serve 10 or more concurrent direct-play sessions. Transcoding is CPU-bound; a modern 8-core server typically handles 2–4 simultaneous 1080p transcode streams. 4K HEVC transcoding requires significantly more CPU. Enable hardware acceleration to improve throughput.
 
 **Q: How do I reset the admin password?**
 A: Use the CLI:
 ```bash
-php bin/phlex user:reset-password admin@example.com
+php bin/phlix user:reset-password admin@example.com
 ```
 You will be prompted to enter a new password interactively. Restart the server after resetting the password to clear existing sessions.
 
 **Q: How do I enable debug logging?**
-A: Set the `PHLEX_LOG_LEVEL` environment variable before starting the server:
+A: Set the `PHLIX_LOG_LEVEL` environment variable before starting the server:
 ```bash
-PHLEX_LOG_LEVEL=debug php public/index.php
+PHLIX_LOG_LEVEL=debug php public/index.php
 ```
 Valid levels (in order of verbosity): `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`. Restart the server for the change to take effect.
 
@@ -233,4 +233,4 @@ Valid levels (in order of verbosity): `debug`, `info`, `notice`, `warning`, `err
 A: (1) Check that the media directory has correct permissions (`chmod -R 755 /path/to/media`). (2) Trigger a manual rescan from the web UI (Library → Scan) or check `.logs/media.log` for scanner activity. (3) Verify your file naming matches the conventions in [Movies library](../libraries/movies.md) or [TV library](../libraries/tv-shows.md). If the scanner logs show "unrecognized file", rename the file to match the expected pattern.
 
 **Q: Where are the Workerman/FFmpeg logs?**
-A: Workerman stdout is written to `workerman.log` in the directory where you ran `php public/index.php`. FFmpeg transcode logs are in `.logs/transcode/`, one file per job. Phlex application logs are in `.logs/` split by channel (AUTH, HTTP, WEBSOCKET, MEDIA, SESSION, STREAMING).
+A: Workerman stdout is written to `workerman.log` in the directory where you ran `php public/index.php`. FFmpeg transcode logs are in `.logs/transcode/`, one file per job. Phlix application logs are in `.logs/` split by channel (AUTH, HTTP, WEBSOCKET, MEDIA, SESSION, STREAMING).

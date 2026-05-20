@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-A single Phlex Hub instance handles up to ~5000 users and ~200 servers — sufficient for the vast majority of deployments. Hub-to-hub federation (where two independent hub instances share users, servers, or libraries across trust boundaries) is intentionally not implemented in v1. Library sharing, server claiming, and relay all work within a single hub. Future federation (hub-to-hub API, cross-hub JWT auth, federated server metadata) is planned but not yet built. Operators needing multi-hub federation should track the roadmap; operators choosing a single-hub deployment get a fully functional system.
+A single Phlix Hub instance handles up to ~5000 users and ~200 servers — sufficient for the vast majority of deployments. Hub-to-hub federation (where two independent hub instances share users, servers, or libraries across trust boundaries) is intentionally not implemented in v1. Library sharing, server claiming, and relay all work within a single hub. Future federation (hub-to-hub API, cross-hub JWT auth, federated server metadata) is planned but not yet built. Operators needing multi-hub federation should track the roadmap; operators choosing a single-hub deployment get a fully functional system.
 
 ```bash
 # Federation API — future endpoints (NOT YET AVAILABLE in v1)
@@ -19,7 +19,7 @@ A single Phlex Hub instance handles up to ~5000 users and ~200 servers — suffi
 
 ### What v1 Delivers
 
-A single Phlex Hub instance handles:
+A single Phlix Hub instance handles:
 - Up to ~5000 user accounts
 - Up to ~200 claimed servers
 - Library sharing within the same hub instance
@@ -194,7 +194,7 @@ Servers must be re-claimed to the new hub:
 
 ```bash
 # On the server, claim to the new hub
-php bin/phlex hub:claim --hub https://eu-west.hub.example.com --token <new-hub-token>
+php bin/phlix hub:claim --hub https://eu-west.hub.example.com --token <new-hub-token>
 ```
 
 ### Step 5: Verify Library Access
@@ -233,7 +233,7 @@ After migration:
 **Fix:** If the server was claimed to the wrong hub unintentionally:
 1. Contact the hub operator of the hub that currently holds the claim
 2. Request that the hub operator release the server claim: `php bin/hub.php server:release <server-id>`
-3. Once released, claim the server to the correct hub: `php bin/phlex hub:claim --hub https://correct-hub.example.com`
+3. Once released, claim the server to the correct hub: `php bin/phlix hub:claim --hub https://correct-hub.example.com`
 
 Note: Releasing a server claim does not delete any media or data on the server — it only removes the relay association with the hub.
 

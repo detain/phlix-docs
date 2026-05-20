@@ -202,6 +202,6 @@ To add a new collection type (e.g., "Recently Added" auto-collection):
 
 ## Testing
 
-- **Unit tests**: `tests/unit/Collections/`
-- **Integration test**: `tests/integration/Collections/CollectionCrudTest.php`
+- **Unit tests**: `tests/Unit/Collections/`
+- **Integration test**: `tests/Integration/Collections/CollectionCrudTest.php`
 - Coverage target: `CollectionManager`, `CollectionRepository`, `CollectionItemRepository` ≥ 85%

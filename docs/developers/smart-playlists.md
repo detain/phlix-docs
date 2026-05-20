@@ -200,8 +200,8 @@ H.2 will introduce collections that can combine smart playlists and manual selec
 Run all playlist tests:
 
 ```bash
-./vendor/bin/phpunit --testsuite Unit tests/unit/Playlists/
-./vendor/bin/phpunit tests/integration/Playlists/
+./vendor/bin/phpunit --testsuite Unit tests/Unit/Playlists/
+./vendor/bin/phpunit tests/Integration/Playlists/
 ```
 
 Coverage target: ≥85% on `SmartPlaylistEngine`, `RuleNode`, `RuleOperators`, `SmartPlaylistRepository`.

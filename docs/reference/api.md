@@ -146,7 +146,7 @@ Create a new library.
 
 ## Media Endpoints
 
-### GET /api/v1/media/{id}
+### GET /api/v1/media/`{id}`
 
 Get a single media item by ID.
 
@@ -175,7 +175,7 @@ Get a single media item by ID.
 
 ## Playback Endpoints
 
-### GET /api/v1/playback/{id}/stream
+### GET /api/v1/playback/`{id}`/stream
 
 Get an HLS stream URL for a media item. Returns `404` if the item is not found, `403` if the user has no access.
 
@@ -196,7 +196,7 @@ Get an HLS stream URL for a media item. Returns `404` if the item is not found, 
 
 ---
 
-### POST /api/v1/playback/{id}/progress
+### POST /api/v1/playback/`{id}`/progress
 
 Report playback progress for resume-from-position support.
 
@@ -247,7 +247,7 @@ List all active playback sessions for the authenticated user.
 
 ---
 
-### DELETE /api/v1/sessions/{id}
+### DELETE /api/v1/sessions/`{id}`
 
 Terminate a specific playback session (e.g., remote control of another device).
 
@@ -360,7 +360,7 @@ Install a plugin from a `plugin.json` manifest URL.
 
 ---
 
-### DELETE /api/v1/admin/plugins/{id}
+### DELETE /api/v1/admin/plugins/`{id}`
 
 Uninstall a plugin by name.
 
@@ -400,7 +400,7 @@ Error response body:
 
 ## Marker Endpoints
 
-### GET /api/v1/media/{id}/markers
+### GET /api/v1/media/`{id}`/markers
 
 Returns all markers (intro, outro, chapters) for a media item.
 
@@ -434,7 +434,7 @@ Returns all markers (intro, outro, chapters) for a media item.
 
 ---
 
-### GET /api/v1/media/{id}/markers/intro
+### GET /api/v1/media/`{id}`/markers/intro
 
 Returns the intro marker for a media item.
 
@@ -454,7 +454,7 @@ Returns the intro marker for a media item.
 
 ---
 
-### GET /api/v1/media/{id}/markers/outro
+### GET /api/v1/media/`{id}`/markers/outro
 
 Returns the outro marker for a media item.
 
@@ -474,7 +474,7 @@ Returns the outro marker for a media item.
 
 ---
 
-### GET /api/v1/shows/{id}/markers/bulk
+### GET /api/v1/shows/`{id}`/markers/bulk
 
 Returns markers for all episodes of a show.
 
@@ -507,7 +507,7 @@ Returns markers for all episodes of a show.
 
 ## Playback Endpoints
 
-### GET /api/v1/media/{id}/playback
+### GET /api/v1/media/`{id}`/playback
 
 Returns playback information including stream URL and skip button markers.
 
@@ -618,7 +618,7 @@ Returns a navigation feed listing all book libraries.
 
 **Response 200:** OPDS Atom XML with navigation links to library acquisition feeds.
 
-### GET /opds/v1.2/libraries/{id}
+### GET /opds/v1.2/libraries/`{id}`
 
 Returns an acquisition feed listing all books in a library.
 
@@ -662,7 +662,7 @@ Returns a list of all books.
 }
 ```
 
-### GET /books/{id}
+### GET /books/`{id}`
 
 Returns a single book by ID.
 
@@ -684,7 +684,7 @@ Returns a single book by ID.
 
 **Response 404:** Book not found
 
-### GET /books/{id}/cover
+### GET /books/`{id}`/cover
 
 Returns the book's cover image.
 
@@ -692,7 +692,7 @@ Returns the book's cover image.
 
 **Response 404:** Cover not found or book not found
 
-### GET /books/{id}/download
+### GET /books/`{id}`/download
 
 Returns the book file for download.
 

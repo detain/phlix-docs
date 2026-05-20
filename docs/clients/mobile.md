@@ -5,29 +5,29 @@
 **Since:** 0.18.0
 
 > [!TIP]
-> The Phlex mobile app is available for both iOS and Android. Install it from your device's app store, open it, and enter your server URL or sign in with your Hub account. Minimum requirements: iOS 15+ or Android 10+.
+> The Phlix mobile app is available for both iOS and Android. Install it from your device's app store, open it, and enter your server URL or sign in with your Hub account. Minimum requirements: iOS 15+ or Android 10+.
 
 ## Install / Store Links
 
-- **Apple App Store:** [Phlex on the App Store](#) <!-- placeholder: pending App Store setup -->
-- **Google Play:** [Phlex on Google Play](#) <!-- placeholder: pending Play Store setup -->
-- **Direct APK download:** [github.com/detain/phlex-mobile-client/releases](https://github.com/detain/phlex-mobile-client/releases) — for Android devices outside the Play Store
+- **Apple App Store:** [Phlix on the App Store](#) <!-- placeholder: pending App Store setup -->
+- **Google Play:** [Phlix on Google Play](#) <!-- placeholder: pending Play Store setup -->
+- **Direct APK download:** [github.com/detain/phlix-mobile-client/releases](https://github.com/detain/phlix-mobile-client/releases) — for Android devices outside the Play Store
 
 ## Platform-Specific Install Steps
 
 ### iOS
 
 1. Open the **App Store** on your iPhone or iPad.
-2. Search for **Phlex** and tap **Get** to install.
-3. For beta testing, join the **TestFlight** program via the link on the [releases page](https://github.com/detain/phlex-mobile-client/releases).
-4. Open Phlex from your home screen after installation.
+2. Search for **Phlix** and tap **Get** to install.
+3. For beta testing, join the **TestFlight** program via the link on the [releases page](https://github.com/detain/phlix-mobile-client/releases).
+4. Open Phlix from your home screen after installation.
 
 ### Android
 
-1. Open **Google Play** and search for **Phlex**.
+1. Open **Google Play** and search for **Phlix**.
 2. Tap **Install** to download and install automatically.
 3. For sideloading (outside Play Store):
-   - Download the APK from [github.com/detain/phlex-mobile-client/releases](https://github.com/detain/phlex-mobile-client/releases).
+   - Download the APK from [github.com/detain/phlix-mobile-client/releases](https://github.com/detain/phlix-mobile-client/releases).
    - Enable **Install unknown apps** in your device's security settings before running the APK.
    - Open the APK and follow the on-screen prompts.
 
@@ -36,7 +36,7 @@
 On first launch, the app presents two options:
 
 - **Enter Server URL** — type your server's address directly (e.g., `http://192.168.1.100:32400` for local access or `https://your-domain.com` for remote access)
-- **Sign in with Hub** — authenticate via your Phlex Hub account, which auto-discovers all servers linked to your hub
+- **Sign in with Hub** — authenticate via your Phlix Hub account, which auto-discovers all servers linked to your hub
 
 Choose one and proceed. You can switch methods later in **Settings → Account**.
 
@@ -53,7 +53,7 @@ Once the app is running and connected to a server, you can link it to your Hub a
 
 1. Tap **Settings** (gear icon) in the top-right corner.
 2. Tap **Account → Sign in with Hub**.
-3. Enter the Hub URL (e.g., `https://hub.phlex.example.com`) and tap **Continue**.
+3. Enter the Hub URL (e.g., `https://hub.phlix.example.com`) and tap **Continue**.
 4. Enter your Hub username and password, then tap **Sign In**.
 5. If your Hub account manages multiple servers, a picker appears — select the server you want to use.
 
@@ -77,7 +77,7 @@ The Hub connection allows you to access all of your Hub-linked servers without m
 
 **Symptom:** Tapping "Sign in with Hub" and entering your credentials returns "Authentication failed."
 
-**Fix:** Verify your Hub username and password. Confirm the Hub URL is entered without a trailing slash (e.g., `https://hub.phlex.example.com` not `https://hub.phlex.example.com/`). If you have forgotten your Hub password, use the password reset flow on the Hub login page.
+**Fix:** Verify your Hub username and password. Confirm the Hub URL is entered without a trailing slash (e.g., `https://hub.phlix.example.com` not `https://hub.phlix.example.com/`). If you have forgotten your Hub password, use the password reset flow on the Hub login page.
 
 ## Next Steps
 

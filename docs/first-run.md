@@ -1,6 +1,6 @@
 ---
 title: First-Run Wizard
-description: Get your Phlex server running in minutes with the first-run setup wizard.
+description: Get your Phlix server running in minutes with the first-run setup wizard.
 ---
 
 **Phase:** N (End-User Documentation)
@@ -9,7 +9,7 @@ description: Get your Phlex server running in minutes with the first-run setup w
 
 ## TL;DR
 
-The first-run wizard starts automatically when you boot Phlex with no admin account configured. It walks you through creating your admin login, adding media library folders, choosing library types, setting language/timezone preferences, and enabling DLNA discovery — taking about five minutes from server boot to a ready-to-scan library.
+The first-run wizard starts automatically when you boot Phlix with no admin account configured. It walks you through creating your admin login, adding media library folders, choosing library types, setting language/timezone preferences, and enabling DLNA discovery — taking about five minutes from server boot to a ready-to-scan library.
 
 <!-- screenshots TBD — text-first -->
 
@@ -41,7 +41,7 @@ Click **Create Account** when the strength meter shows a strong rating. You can 
 
 ### Step 3 — Library Path Configuration
 
-Tell Phlex where your media files live. Click **Add Folder** and browse to each directory you want to include.
+Tell Phlix where your media files live. Click **Add Folder** and browse to each directory you want to include.
 
 Common examples:
 
@@ -69,13 +69,13 @@ For each folder you added, choose what kind of content it contains:
 - **Books** — E-books and PDFs
 - **Audiobooks** — Audio book files
 
-You can create multiple libraries (for example, one Movies library and one TV Shows library) or put everything in a single library. The type helps Phlex fetch the correct metadata and display posters, descriptions, and episode guides.
+You can create multiple libraries (for example, one Movies library and one TV Shows library) or put everything in a single library. The type helps Phlix fetch the correct metadata and display posters, descriptions, and episode guides.
 
 Click **Continue** when each folder has a type assigned.
 
 ### Step 5 — Library Scan Trigger
 
-Choose when Phlex should scan your libraries for media files:
+Choose when Phlix should scan your libraries for media files:
 
 - **Scan Now** — Triggers an immediate background scan. Large libraries may take several minutes. You can continue using the wizard while the scan runs.
 - **Scan Later** — Defers the scan to a scheduled time. You can trigger it manually from **Settings → Libraries** whenever you are ready.
@@ -86,9 +86,9 @@ Click **Continue**.
 
 ### Step 6 — Hub Connection
 
-Connect this server to a Phlex Hub for remote access and multi-server management. This step is optional.
+Connect this server to a Phlix Hub for remote access and multi-server management. This step is optional.
 
-- **Connect Now** — Enter your hub URL (e.g., `https://hub.phlex.example.com`) and authenticate with your hub credentials. See [Hub Claim Guide](./hub/claim-server.md) for the full claim flow.
+- **Connect Now** — Enter your hub URL (e.g., `https://hub.phlix.example.com`) and authenticate with your hub credentials. See [Hub Claim Guide](./hub/claim-server.md) for the full claim flow.
 - **Skip** — Defer hub connection. You can set up hub access later from **Settings → Hub**.
 
 Even when skipped, you can connect clients directly to the server over your LAN or configure your own remote access (reverse proxy, Tailscale VPN, etc.).
@@ -108,9 +108,9 @@ Click **Continue**.
 
 ### Step 8 — DLNA Server Toggle
 
-DLNA (Digital Living Network Alliance) enables other devices on your network — smart TVs, game consoles, media players — to discover and stream from your Phlex server without needing a dedicated client app.
+DLNA (Digital Living Network Alliance) enables other devices on your network — smart TVs, game consoles, media players — to discover and stream from your Phlix server without needing a dedicated client app.
 
-- **Enable DLNA** — Allows device discovery on your local network. Phlex will announce itself to any DLNA-compatible device.
+- **Enable DLNA** — Allows device discovery on your local network. Phlix will announce itself to any DLNA-compatible device.
 - **Disable DLNA** — Turns off network discovery. You can still access content through dedicated client apps.
 
 If you enable DLNA, the server will listen on port 1900 (UDP) for SSDP discovery requests and serve content over HTTP on the same port as the web portal.
@@ -119,7 +119,7 @@ Click **Continue**.
 
 ### Step 9 — Web Dashboard Ready
 
-The wizard is complete. You land on the Phlex web dashboard, which shows:
+The wizard is complete. You land on the Phlix web dashboard, which shows:
 
 - Your configured libraries on the home screen
 - Ongoing library scans in the top-right notification area
@@ -170,7 +170,7 @@ curl http://localhost:32400/api/v1/system/dlna
 
 **Symptom:** A folder shows a warning icon in step 3, or the scan completes with files missing or a "path not found" error.
 
-**Fix:** Verify the folder exists on the server's filesystem: `ls /media/movies`. If the folder exists but is owned by root, either change ownership (`sudo chown -R phlex:phlex /media/movies`) or grant read access to the phlex process user. If the path is a network mount (NFS, SMB), confirm the mount is still active and the phlex process has network access to the mount server. Correct the path in **Settings → Libraries** after the wizard completes.
+**Fix:** Verify the folder exists on the server's filesystem: `ls /media/movies`. If the folder exists but is owned by root, either change ownership (`sudo chown -R phlix:phlix /media/movies`) or grant read access to the phlix process user. If the path is a network mount (NFS, SMB), confirm the mount is still active and the phlix process has network access to the mount server. Correct the path in **Settings → Libraries** after the wizard completes.
 
 ### Initial scan hangs or times out
 

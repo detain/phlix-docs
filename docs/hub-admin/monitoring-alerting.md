@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Phlex Hub exposes Prometheus metrics at `/metrics` — servers enrolled, relay sessions active, API request counts and latencies, auth failures, and heartbeat rates. Point Grafana at that endpoint to see the Hub Overview, Relay Bandwidth, API Performance, and Auth Security dashboards. Set up five alert rules (servers offline, relay cap, brute force, API latency, disk usage) to get emailed before users notice problems. Structure all hub logs as JSON and ship them to Loki or your ELK stack, keeping an audit trail of logins, server claims, suspensions, and deletions.
+Phlix Hub exposes Prometheus metrics at `/metrics` — servers enrolled, relay sessions active, API request counts and latencies, auth failures, and heartbeat rates. Point Grafana at that endpoint to see the Hub Overview, Relay Bandwidth, API Performance, and Auth Security dashboards. Set up five alert rules (servers offline, relay cap, brute force, API latency, disk usage) to get emailed before users notice problems. Structure all hub logs as JSON and ship them to Loki or your ELK stack, keeping an audit trail of logins, server claims, suspensions, and deletions.
 
 ```bash
 # Verify hub is healthy
@@ -11,7 +11,7 @@ curl https://hub.example.com/api/v1/health
 
 # Verify Prometheus metrics endpoint (auth via basic auth or IP allowlist)
 curl -H "Authorization: Basic $(echo -n user:pass | base64)" \
-  https://hub.example.com/metrics | grep "^phlex_hub"
+  https://hub.example.com/metrics | grep "^phlix_hub"
 ```
 
 ---
@@ -22,14 +22,14 @@ curl -H "Authorization: Basic $(echo -n user:pass | base64)" \
 
 | Metric | Type | Labels | Description |
 |---|---|---|---|
-| `phlex_hub_servers_total` | gauge | — | Number of enrolled servers |
-| `phlex_hub_users_total` | gauge | — | Total hub users |
-| `phlex_hub_relay_sessions_active` | gauge | server_id | Current relay sessions |
-| `phlex_hub_relay_bandwidth_bytes_total` | counter | server_id | Total relay bytes transferred |
-| `phlex_hub_api_requests_total` | counter | method, route, status | API request count |
-| `phlex_hub_api_latency_seconds` | histogram | method, route | API latency histogram |
-| `phlex_hub_heartbeat_received_total` | counter | — | Heartbeats received from servers |
-| `phlex_hub_auth_failures_total` | counter | reason | Failed login attempts |
+| `phlix_hub_servers_total` | gauge | — | Number of enrolled servers |
+| `phlix_hub_users_total` | gauge | — | Total hub users |
+| `phlix_hub_relay_sessions_active` | gauge | server_id | Current relay sessions |
+| `phlix_hub_relay_bandwidth_bytes_total` | counter | server_id | Total relay bytes transferred |
+| `phlix_hub_api_requests_total` | counter | method, route, status | API request count |
+| `phlix_hub_api_latency_seconds` | histogram | method, route | API latency histogram |
+| `phlix_hub_heartbeat_received_total` | counter | — | Heartbeats received from servers |
+| `phlix_hub_auth_failures_total` | counter | reason | Failed login attempts |
 
 ### Enabling Basic Auth on `/metrics`
 
@@ -39,7 +39,7 @@ HUB_METRICS_BASIC_AUTH_USER=prometheus
 HUB_METRICS_BASIC_AUTH_PASSWORD=your_secure_password
 
 # Prometheus scrape config
-- job_name: phlex-hub
+- job_name: phlix-hub
   metrics_path: /metrics
   basic_auth:
     username: prometheus
@@ -54,28 +54,28 @@ HUB_METRICS_BASIC_AUTH_PASSWORD=your_secure_password
 
 Four dashboards ship with the hub. Import them from `contrib/grafana/` or the Grafana.com dashboard registry.
 
-### 1. Hub Overview (ID: `phlex-hub-overview`)
+### 1. Hub Overview (ID: `phlix-hub-overview`)
 
 - Servers online / offline count with percentage
 - Total hub users
 - Active relay sessions vs. `HUB_MAX_RELAY_SESSIONS` cap
 - Last heartbeat age per server (heatmap)
 
-### 2. Relay Bandwidth (ID: `phlex-hub-relay`)
+### 2. Relay Bandwidth (ID: `phlix-hub-relay`)
 
 - Aggregate relay bandwidth (bytes/sec) across all servers
 - Per-server relay bandwidth breakdown (top-10 bar chart)
 - Monthly relay bytes per enrolled server
 - Current vs. cap on `HUB_MAX_RELAY_SESSIONS`
 
-### 3. API Performance (ID: `phlex-hub-api`)
+### 3. API Performance (ID: `phlix-hub-api`)
 
 - Request rate per route and method (lines)
 - p50 / p95 / p99 latency per route (heatmap)
 - Error rate (4xx + 5xx) per route
 - Top 10 slowest API endpoints
 
-### 4. Auth Security (ID: `phlex-hub-auth`)
+### 4. Auth Security (ID: `phlix-hub-auth`)
 
 - Failed login attempts over time (with `reason` label: `invalid_password`, `invalid_totp`, `rate_limited`)
 - New hub users registered (counter)
@@ -87,7 +87,7 @@ Four dashboards ship with the hub. Import them from `contrib/grafana/` or the Gr
 ```bash
 # PromQL for API latency p95 per route
 histogram_quantile(0.95,
-  sum(rate(phlex_hub_api_latency_seconds_bucket[5m])) by (le, route)
+  sum(rate(phlix_hub_api_latency_seconds_bucket[5m])) by (le, route)
 )
 ```
 
@@ -103,9 +103,9 @@ Five alert rules to paste into Grafana Alerting, Prometheus Alertmanager, or you
 # Condition: > 20% of enrolled servers have not sent a heartbeat in 5 min
 - alert: HubServersOffline
   expr: |
-    (count(phlex_hub_heartbeat_received_total)
-     - count(phlex_hub_heartbeat_received_total offset 5m > 0))
-    / count(phlex_hub_heartbeat_received_total) > 0.20
+    (count(phlix_hub_heartbeat_received_total)
+     - count(phlix_hub_heartbeat_received_total offset 5m > 0))
+    / count(phlix_hub_heartbeat_received_total) > 0.20
   for: 5m
   labels:
     severity: critical
@@ -119,7 +119,7 @@ Five alert rules to paste into Grafana Alerting, Prometheus Alertmanager, or you
 ```bash
 # Condition: active relay sessions equal to HUB_MAX_RELAY_SESSIONS
 - alert: RelaySessionCapReached
-  expr: phlex_hub_relay_sessions_active >= HUB_MAX_RELAY_SESSIONS
+  expr: phlix_hub_relay_sessions_active >= HUB_MAX_RELAY_SESSIONS
   for: 1m
   labels:
     severity: warning
@@ -134,7 +134,7 @@ Five alert rules to paste into Grafana Alerting, Prometheus Alertmanager, or you
 # Condition: > 10 auth failures in 5 min
 - alert: BruteForceAttemptDetected
   expr: |
-    increase(phlex_hub_auth_failures_total[5m]) > 10
+    increase(phlix_hub_auth_failures_total[5m]) > 10
   for: 1m
   labels:
     severity: critical
@@ -149,7 +149,7 @@ Five alert rules to paste into Grafana Alerting, Prometheus Alertmanager, or you
 # Condition: p95 API latency > 2 seconds
 - alert: ApiLatencyDegraded
   expr: |
-    histogram_quantile(0.95, sum(rate(phlex_hub_api_latency_seconds_bucket[5m])) by (le))
+    histogram_quantile(0.95, sum(rate(phlix_hub_api_latency_seconds_bucket[5m])) by (le))
     > 2
   for: 5m
   labels:
@@ -233,11 +233,11 @@ client:
     password: $LOKI_PASSWORD
 
 scrape_configs:
-  - job_name: phlex-hub
+  - job_name: phlix-hub
     static_configs:
       - targets: ['localhost']
         labels:
-          service: phlex-hub
+          service: phlix-hub
           env: production
     relabel_configs:
       - source_labels: ['service']
@@ -253,10 +253,10 @@ filebeat.inputs:
     enabled: true
     json.keys_under_root: true
     fields:
-      service: phlex-hub
+      service: phlix-hub
       env: production
     paths:
-      - /var/log/phlex-hub/*.log
+      - /var/log/phlix-hub/*.log
 
 output.elasticsearch:
   hosts: ["https://elasticsearch.example.com:9200"]
@@ -307,7 +307,7 @@ For public hubs, configure an external monitor from:
 ```yaml
 # gatus.yaml
 services:
-  - name: phlex-hub
+  - name: phlix-hub
     url: https://hub.example.com/api/v1/health
     interval: 30s
     conditions:

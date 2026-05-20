@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-Phlex is privacy-first. No telemetry, no analytics, no third-party data sharing. Media stays on your hardware. Hub relay is end-to-end encrypted. The guide below explains exactly what is and is not collected, what the Hub can and cannot see, and how to harden your deployment.
+Phlix is privacy-first. No telemetry, no analytics, no third-party data sharing. Media stays on your hardware. Hub relay is end-to-end encrypted. The guide below explains exactly what is and is not collected, what the Hub can and cannot see, and how to harden your deployment.
 
 ```bash
 # Verify no unexpected external network calls (drop all egress except DNS/80/443)
@@ -65,7 +65,7 @@ iptables -A OUTPUT -j DROP
 
 ### 1. Change JWT_SECRET immediately
 
-Phlex ships with a default `JWT_SECRET` value (`default-secret-change-me`). Anyone who knows the default can forge valid JWTs and access the server.
+Phlix ships with a default `JWT_SECRET` value (`default-secret-change-me`). Anyone who knows the default can forge valid JWTs and access the server.
 
 ```bash
 # Generate a cryptographically secure secret
@@ -81,7 +81,7 @@ HTTP port 32400 transmits credentials in clear text when not behind TLS.
 
 ```bash
 # Example Caddyfile
-phlex.example.com {
+phlix.example.com {
   reverse_proxy localhost:32400
   tls admin@example.com
 }
@@ -91,14 +91,14 @@ Or with nginx and Let's Encrypt:
 
 ```bash
 # Obtain a certificate
-sudo certbot --nginx -d phlex.example.com
+sudo certbot --nginx -d phlix.example.com
 
 # nginx.conf snippet
 server {
     listen 443 ssl;
-    server_name phlex.example.com;
-    ssl_certificate /etc/letsencrypt/live/phlex.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/phlex.example.com/privkey.pem;
+    server_name phlix.example.com;
+    ssl_certificate /etc/letsencrypt/live/phlix.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/phlix.example.com/privkey.pem;
     location / {
         proxy_pass http://127.0.0.1:32400;
     }
@@ -111,7 +111,7 @@ Default: expose 32400 (HTTP API) + 1900 (DLNA, optional). Block everything else 
 
 ```bash
 # Allow only HTTP and optional DLNA
-ufw allow 32400/tcp comment "Phlex HTTP API"
+ufw allow 32400/tcp comment "Phlix HTTP API"
 ufw allow 1900/udp comment "DLNA discovery (optional)"
 ufw enable
 ```
@@ -136,7 +136,7 @@ DLNA discovery broadcasts on port 1900/UDP to the local network. If no DLNA/play
 The server validates Hub JWTs using the Hub's JWKS endpoint — no shared secret is required. The Hub cannot impersonate a server, and servers cannot impersonate each other via the Hub. Verify the JWKS URL in `config/hub.php`:
 
 ```php
-'hub_jwks_url' => getenv('PHLEX_HUB_JWKS_URL') ?: null,
+'hub_jwks_url' => getenv('PHLIX_HUB_JWKS_URL') ?: null,
 ```
 
 ## Remote Access Privacy

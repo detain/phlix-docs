@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Install a self-hosted Phlex Hub via Docker, docker-compose, Kubernetes Helm, or source. The hub requires a MySQL database, a JWT secret, and a public URL. TLS is handled automatically by Traefik/Caddy or configured manually. Create the first admin via the UI first-boot form, CLI, or an invite token.
+Install a self-hosted Phlix Hub via Docker, docker-compose, Kubernetes Helm, or source. The hub requires a MySQL database, a JWT secret, and a public URL. TLS is handled automatically by Traefik/Caddy or configured manually. Create the first admin via the UI first-boot form, CLI, or an invite token.
 
 ---
 
@@ -12,17 +12,17 @@ Install a self-hosted Phlex Hub via Docker, docker-compose, Kubernetes Helm, or 
 
 ```bash
 docker run -d \
-  --name phlex-hub \
+  --name phlix-hub \
   -p 8800:8800 \
   -e HUB_DATABASE_HOST=db \
   -e HUB_DATABASE_PORT=3306 \
-  -e HUB_DATABASE_NAME=phlex_hub \
-  -e HUB_DATABASE_USER=phlex \
+  -e HUB_DATABASE_NAME=phlix_hub \
+  -e HUB_DATABASE_USER=phlix \
   -e HUB_DATABASE_PASSWORD=secret \
   -e HUB_JWT_SECRET="$(openssl rand -hex 32)" \
-  -e HUB_JWT_ISSUER=phlex-hub \
+  -e HUB_JWT_ISSUER=phlix-hub \
   -e HUB_PUBLIC_URL=https://hub.example.com \
-  detain/phlex-hub
+  detain/phlix-hub
 ```
 
 ### Docker-compose
@@ -38,7 +38,7 @@ services:
       - "443:443"
 
   hub:
-    image: detain/phlex-hub
+    image: detain/phlix-hub
     environment:
       HUB_DATABASE_HOST: db
       HUB_JWT_SECRET: "${HUB_JWT_SECRET}"
@@ -47,7 +47,7 @@ services:
       - db
 
   server:
-    image: detain/phlex-server
+    image: detain/phlix-server
     environment:
       HUB_RELAY_ENABLED: "true"
       HUB_PUBLIC_URL: "https://hub.example.com"
@@ -58,8 +58,8 @@ services:
 ### Kubernetes (Helm)
 
 ```bash
-helm repo add phlex https://charts.phlex.io
-helm install phlex-hub phlex/phlex-hub \
+helm repo add phlix https://charts.phlix.io
+helm install phlix-hub phlix/phlix-hub \
   --set hub.publicUrl=https://hub.example.com \
   --set hub.jwtSecret=$HUB_JWT_SECRET
 ```
@@ -67,8 +67,8 @@ helm install phlex-hub phlex/phlex-hub \
 ### Source
 
 ```bash
-git clone https://github.com/detain/phlex-hub.git
-cd phlex-hub
+git clone https://github.com/detain/phlix-hub.git
+cd phlix-hub
 composer install
 php bin/hub.php admin:create admin@example.com
 php bin/hub.php start
@@ -158,11 +158,11 @@ Verify that pairing works end-to-end:
 |---|---|---|---|
 | `HUB_DATABASE_HOST` | Yes | `localhost` | MySQL host |
 | `HUB_DATABASE_PORT` | Yes | `3306` | MySQL port |
-| `HUB_DATABASE_NAME` | Yes | `phlex_hub` | Database name |
+| `HUB_DATABASE_NAME` | Yes | `phlix_hub` | Database name |
 | `HUB_DATABASE_USER` | Yes | — | Database user |
 | `HUB_DATABASE_PASSWORD` | Yes | — | Database password |
 | `HUB_JWT_SECRET` | Yes | dev default | JWT signing secret (min 32 bytes) |
-| `HUB_JWT_ISSUER` | No | `phlex-hub` | JWT issuer claim |
+| `HUB_JWT_ISSUER` | No | `phlix-hub` | JWT issuer claim |
 | `HUB_PUBLIC_URL` | Yes | — | Public URL of the hub (e.g. `https://hub.example.com`) |
 | `HUB_TLS_CERT` | No | — | Path to TLS cert (Traefik handles this if used) |
 | `HUB_TLS_KEY` | No | — | Path to TLS key |

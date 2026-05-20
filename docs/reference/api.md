@@ -1,4 +1,4 @@
-# Phlex Media Server API Reference
+# Phlix Media Server API Reference
 
 **Phase:** N (End-User Documentation)
 **Step:** N.21
@@ -6,7 +6,7 @@
 
 ## Overview
 
-Phlex exposes a REST API at `/api/v1/` returning JSON. Authentication uses JWT Bearer tokens (except on `/api/v1/auth/*` endpoints, which are unauthenticated). If swagger-php is installed, the full OpenAPI 3.0 spec is auto-generated and available at `/api/v1/openapi.json`. An interactive Swagger UI explorer is at `/api/v1/docs`.
+Phlix exposes a REST API at `/api/v1/` returning JSON. Authentication uses JWT Bearer tokens (except on `/api/v1/auth/*` endpoints, which are unauthenticated). If swagger-php is installed, the full OpenAPI 3.0 spec is auto-generated and available at `/api/v1/openapi.json`. An interactive Swagger UI explorer is at `/api/v1/docs`.
 
 ## Auth Endpoints
 
@@ -279,7 +279,7 @@ Request a new server claim token from the Hub. Used by the server to initiate th
 ```json
 {
   "server_id": "550e8400-e29b-41d4-a716-446655440004",
-  "hub_url": "https://hub.phlex.example.com",
+  "hub_url": "https://hub.phlix.example.com",
   "enrolled": true
 }
 ```
@@ -604,9 +604,9 @@ Returns the root OPDS catalog feed.
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:opds="http://opds-spec.org/2010/catalog">
-  <title>Phlex Library</title>
+  <title>Phlix Library</title>
   <updated>2024-01-15T10:30:00Z</updated>
-  <id>urn:phlex:library:root</id>
+  <id>urn:phlix:library:root</id>
   <link rel="self" href="http://localhost:8080/opds/v1.2" type="application/atom+xml;profile=opds-catalog"/>
   <link rel="alternate" href="http://localhost:8080/opds/v1.2/libraries" type="application/atom+xml;profile=opds-catalog;kind=navigation"/>
 </feed>

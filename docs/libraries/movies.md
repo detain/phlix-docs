@@ -5,7 +5,7 @@
 
 ## TL;DR
 
-A movies library turns your video collection into a browsable, searchable catalog with posters, synopses, and cast info pulled from online databases. Drop your video files into a folder, add that folder to Phlex as a Movies library, and Phlex handles the rest — matching titles, fetching artwork, and tracking your watch progress across devices.
+A movies library turns your video collection into a browsable, searchable catalog with posters, synopses, and cast info pulled from online databases. Drop your video files into a folder, add that folder to Phlix as a Movies library, and Phlix handles the rest — matching titles, fetching artwork, and tracking your watch progress across devices.
 
 ```bash
 # Add your movies folder, scan, and you're ready
@@ -23,7 +23,7 @@ A movies library turns your video collection into a browsable, searchable catalo
 | Windows Media | `.wmv` | May require transcoding on non-Windows clients |
 | MPEG Transport Stream | `.ts` | Used for broadcast recordings |
 
-Container format matters less than the codec inside. Phlex streams directly when your player supports the codec; transcoding falls back automatically when needed.
+Container format matters less than the codec inside. Phlix streams directly when your player supports the codec; transcoding falls back automatically when needed.
 
 ## 2. Naming Conventions
 
@@ -34,7 +34,7 @@ Avatar (2009).mkv
 The Matrix (1999).mp4
 ```
 
-- `Movie Name (Year).ext` — Phlex uses the year in parentheses as the primary identifier for metadata matching
+- `Movie Name (Year).ext` — Phlix uses the year in parentheses as the primary identifier for metadata matching
 - Year range accepted by the scanner: 1900 through 5 years in the future
 
 ### 2b. Folder-Based Naming
@@ -91,7 +91,7 @@ Place `movie.nfo` alongside the video file:
 </movie>
 ```
 
-- `tmdbid` is the primary lookup key — when present, Phlex fetches metadata directly from TMDB without title/year matching
+- `tmdbid` is the primary lookup key — when present, Phlix fetches metadata directly from TMDB without title/year matching
 - Local NFO always takes priority when `metadata_source` is set to `local` in the library configuration
 - The filename is **case-sensitive** on Linux: must be exactly `movie.nfo`, not `Movie.nfo` or `MOVIE.NFO`
 
@@ -121,7 +121,7 @@ Remote metadata is cached for 24 hours to avoid rate limiting. To refresh metada
 
 ## 5. Scanner Behavior
 
-### How Phlex Distinguishes Movies from TV Episodes
+### How Phlix Distinguishes Movies from TV Episodes
 
 | Pattern in Filename | Classification | Example |
 |--------------------|----------------|---------|
@@ -172,7 +172,7 @@ Each user profile has a rating filter set in **Settings → Profiles**: G / PG /
 
 ### NFO File Ignored
 
-**Symptom:** Custom poster, plot, or genre tags from your NFO are not appearing in Phlex.
+**Symptom:** Custom poster, plot, or genre tags from your NFO are not appearing in Phlix.
 
 **Cause:** NFO filename is not exactly `movie.nfo` (Linux is case-sensitive), or the NFO file contains malformed XML.
 

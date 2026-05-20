@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-This page is the single admin landing page for three pillars of Phlex server operation: environment variables (control startup), CLI commands (control ongoing operation), and config files (control runtime behaviour). For the complete tables of every variable or command, see [Environment variables](env-vars.md) and [CLI commands](cli.md).
+This page is the single admin landing page for three pillars of Phlix server operation: environment variables (control startup), CLI commands (control ongoing operation), and config files (control runtime behaviour). For the complete tables of every variable or command, see [Environment variables](env-vars.md) and [CLI commands](cli.md).
 
 ## Environment Variables
 
@@ -15,14 +15,14 @@ Environment variables are read at process startup. Most can be overridden by `co
 **Five operationally critical variables:**
 
 - `JWT_SECRET` — change this immediately in production; the default is insecure and only suitable for local dev.
-- `PHLEX_HTTP_PORT` — the port the server binds (default `32400`).
-- `PHLEX_DATABASE_HOST` / `PHLEX_DATABASE_PASSWORD` — MySQL connection; credentials live in the environment, not in config files.
+- `PHLIX_HTTP_PORT` — the port the server binds (default `32400`).
+- `PHLIX_DATABASE_HOST` / `PHLIX_DATABASE_PASSWORD` — MySQL connection; credentials live in the environment, not in config files.
 - `TZ` — timestamps in logs and EPG depend on a correct timezone; set to your local timezone.
-- `PHLEX_LOG_LEVEL` — `debug` is verbose; `error` is production-minimal.
+- `PHLIX_LOG_LEVEL` — `debug` is verbose; `error` is production-minimal.
 
 ## CLI Commands
 
-All commands run from the Phlex install directory. `php public/index.php` starts the server (blocking — use systemd or supervisord in production). `bin/phlex` is the management CLI for ongoing operations.
+All commands run from the Phlix install directory. `php public/index.php` starts the server (blocking — use systemd or supervisord in production). `bin/phlix` is the management CLI for ongoing operations.
 
 For hub pairing and port forwarding scripts, see [CLI commands](cli.md).
 
@@ -31,26 +31,26 @@ For hub pairing and port forwarding scripts, see [CLI commands](cli.md).
 | Command | Description |
 | --- | --- |
 | `php public/index.php` | Start the Workerman HTTP server. Run under systemd/supervisord, not directly in a shell session. |
-| `php bin/phlex status` | Show version, uptime, worker count, and health. |
-| `php bin/phlex migrate` | Run pending DB migrations. Idempotent — safe to run multiple times. |
+| `php bin/phlix status` | Show version, uptime, worker count, and health. |
+| `php bin/phlix migrate` | Run pending DB migrations. Idempotent — safe to run multiple times. |
 
 ### Operational
 
 | Command | Description |
 | --- | --- |
-| `php bin/phlex backup:create --output <path>` | Create a backup archive (DB + config + metadata). See [Backup & restore](../advanced/backup-restore.md). |
-| `php bin/phlex backup:restore --input <path>` | Restore from a backup archive. See [Backup & restore](../advanced/backup-restore.md). |
-| `php bin/phlex library:scan --library <id>` | Rescan a specific library by UUID. |
-| `php bin/phlex library:scan --all` | Rescan all libraries. |
-| `php bin/phlex user:reset-password <email>` | Interactively reset a user's password (prompts for new password). |
-| `php bin/phlex hwaccel:probe` | Print detected hardware acceleration (NVENC, VAAPI, VideoToolbox, QSV); exit 0 if found. |
-| `php bin/phlex log:tail --channel=<name>` | Tail rotating log for a channel. Channels: `auth`, `http`, `media`, `session`, `streaming`, `plugins`. |
-| `php bin/phlex plugin:install --url <url>` | Install from a `plugin.json` URL. Plugin lands disabled. |
-| `php bin/phlex plugin:enable <name>` | Enable an installed plugin. |
-| `php bin/phlex plugin:disable <name>` | Disable a plugin. |
-| `php bin/phlex plugin:uninstall <name>` | Remove plugin files and DB row. |
-| `php bin/phlex plugin:list` | List installed plugins with version and enabled state. |
-| `php bin/phlex hub:claim --code <code> --hub <url>` | Claim this server to a Hub using a claim code. |
+| `php bin/phlix backup:create --output <path>` | Create a backup archive (DB + config + metadata). See [Backup & restore](../advanced/backup-restore.md). |
+| `php bin/phlix backup:restore --input <path>` | Restore from a backup archive. See [Backup & restore](../advanced/backup-restore.md). |
+| `php bin/phlix library:scan --library <id>` | Rescan a specific library by UUID. |
+| `php bin/phlix library:scan --all` | Rescan all libraries. |
+| `php bin/phlix user:reset-password <email>` | Interactively reset a user's password (prompts for new password). |
+| `php bin/phlix hwaccel:probe` | Print detected hardware acceleration (NVENC, VAAPI, VideoToolbox, QSV); exit 0 if found. |
+| `php bin/phlix log:tail --channel=<name>` | Tail rotating log for a channel. Channels: `auth`, `http`, `media`, `session`, `streaming`, `plugins`. |
+| `php bin/phlix plugin:install --url <url>` | Install from a `plugin.json` URL. Plugin lands disabled. |
+| `php bin/phlix plugin:enable <name>` | Enable an installed plugin. |
+| `php bin/phlix plugin:disable <name>` | Disable a plugin. |
+| `php bin/phlix plugin:uninstall <name>` | Remove plugin files and DB row. |
+| `php bin/phlix plugin:list` | List installed plugins with version and enabled state. |
+| `php bin/phlix hub:claim --code <code> --hub <url>` | Claim this server to a Hub using a claim code. |
 
 ## Config Files
 
@@ -69,15 +69,15 @@ php -l config/logger.php
 ```php
 return [
     'server' => [
-        'name' => 'Phlex Media Server',
+        'name' => 'Phlix Media Server',
         'host' => '0.0.0.0',      // bind address (all interfaces)
-        'port' => 8096,            // HTTP port (overridden by PHLEX_HTTP_PORT env var)
+        'port' => 8096,            // HTTP port (overridden by PHLIX_HTTP_PORT env var)
         'context' => [],
     ],
     'worker' => [
         'count' => 'auto',       // 'auto' = CPU core count, or integer
         'stdout_file' => __DIR__ . '/../.logs/stdout.log',
-        'pid_file' => '/var/run/phlex/pid',
+        'pid_file' => '/var/run/phlix/pid',
     ],
     'process' => [
         'reloadable' => true,
@@ -87,7 +87,7 @@ return [
 ```
 
 - `server.host` — `0.0.0.0` = all interfaces; `127.0.0.1` = localhost only.
-- `server.port` — default `8096`. Use `PHLEX_HTTP_PORT` env var to override.
+- `server.port` — default `8096`. Use `PHLIX_HTTP_PORT` env var to override.
 - `worker.count` — Workerman process count. `auto` = CPU core count.
 - `worker.stdout_file` — Workerman master process stdout/stderr redirect.
 
@@ -98,11 +98,11 @@ return [
     'default' => 'mysql',
     'connections' => [
         'mysql' => [
-            'host' => '127.0.0.1',      // PHLEX_DATABASE_HOST
-            'port' => 3306,             // PHLEX_DATABASE_PORT
-            'database' => 'phlex',      // PHLEX_DATABASE_NAME
-            'username' => 'phlex',       // PHLEX_DATABASE_USER
-            'password' => getenv('DB_PASSWORD') ?: '',  // PHLEX_DATABASE_PASSWORD
+            'host' => '127.0.0.1',      // PHLIX_DATABASE_HOST
+            'port' => 3306,             // PHLIX_DATABASE_PORT
+            'database' => 'phlix',      // PHLIX_DATABASE_NAME
+            'username' => 'phlix',       // PHLIX_DATABASE_USER
+            'password' => getenv('DB_PASSWORD') ?: '',  // PHLIX_DATABASE_PASSWORD
             'charset' => 'utf8mb4',
             'pool_size' => 20,
             'timeout' => 5,
@@ -125,7 +125,7 @@ return [
             'type' => 'rotating_file',
             'path' => __DIR__ . '/../.logs/app.log',
             'max_files' => 30,
-            'level' => 'debug',   // overridden by PHLEX_LOG_LEVEL env var
+            'level' => 'debug',   // overridden by PHLIX_LOG_LEVEL env var
         ],
         'error' => [
             'type' => 'rotating_file',
@@ -163,28 +163,28 @@ return [
 ];
 ```
 
-- `vendor_priority` — ordered list; first available is used. Override with `PHLEX_HWACCEL` env var (e.g., `PHLEX_HWACCEL=vaapi`).
+- `vendor_priority` — ordered list; first available is used. Override with `PHLIX_HWACCEL` env var (e.g., `PHLIX_HWACCEL=vaapi`).
 - `max_concurrent_transcodes` — set to `1` on low-end NAS devices.
 
 ### config/hub.php
 
 ```php
 return [
-    'hub_url' => getenv('PHLEX_HUB_URL') ?: null,
-    'hub_jwks_url' => getenv('PHLEX_HUB_JWKS_URL') ?: null,
-    'heartbeat_interval' => (int)(getenv('PHLEX_HUB_HEARTBEAT_INTERVAL') ?: 60),
+    'hub_url' => getenv('PHLIX_HUB_URL') ?: null,
+    'hub_jwks_url' => getenv('PHLIX_HUB_JWKS_URL') ?: null,
+    'heartbeat_interval' => (int)(getenv('PHLIX_HUB_HEARTBEAT_INTERVAL') ?: 60),
     'enrollment_token_ttl' => 7 * 86400,
     'jwks_cache_ttl' => 900,
     'key_path' => __DIR__ . '/hub-server-key.pem',
-    'subdomain_auto_claim' => (bool)(getenv('PHLEX_SUBDOMAIN_AUTO_CLAIM') ?: true),
-    'tls_enabled' => (bool)(getenv('PHLEX_TLS_ENABLED') ?: true),
-    'domain' => getenv('PHLEX_DOMAIN') ?: 'phlex.media',
+    'subdomain_auto_claim' => (bool)(getenv('PHLIX_SUBDOMAIN_AUTO_CLAIM') ?: true),
+    'tls_enabled' => (bool)(getenv('PHLIX_TLS_ENABLED') ?: true),
+    'domain' => getenv('PHLIX_DOMAIN') ?: 'phlix.media',
 ];
 ```
 
 - `heartbeat_interval` — seconds between Hub heartbeats. Range: 30–3600.
 - `enrollment_token_ttl` — how long the Hub enrollment JWT is valid.
-- `subdomain_auto_claim` — automatically claim a `*.phlex.media` subdomain after enrollment.
+- `subdomain_auto_claim` — automatically claim a `*.phlix.media` subdomain after enrollment.
 
 ### Other config files
 
@@ -198,29 +198,29 @@ return [
 
 ### 1. Boolean env var treated as a string (truthy "0")
 
-**Symptom:** `PHLEX_PLUGINS_ALLOW_HTTP=0` is treated as truthy, or `PHLEX_CONTAINER_COMPILE=1` is ignored.
+**Symptom:** `PHLIX_PLUGINS_ALLOW_HTTP=0` is treated as truthy, or `PHLIX_CONTAINER_COMPILE=1` is ignored.
 
-**Cause:** In shell, `PHLEX_PLUGINS_ALLOW_HTTP=0` passes the string `"0"` to PHP's `getenv()`, which is truthy because it is a non-empty string. `(bool)getenv('VAR')` sees `"0"` as `true` — not `false`.
+**Cause:** In shell, `PHLIX_PLUGINS_ALLOW_HTTP=0` passes the string `"0"` to PHP's `getenv()`, which is truthy because it is a non-empty string. `(bool)getenv('VAR')` sees `"0"` as `true` — not `false`.
 
 **Fix:** Use the empty string to falsify:
 ```bash
 # WRONG — "0" is truthy in PHP
-PHLEX_PLUGINS_ALLOW_HTTP=0 php public/index.php
+PHLIX_PLUGINS_ALLOW_HTTP=0 php public/index.php
 
 # CORRECT — empty string is falsy
-PHLEX_PLUGINS_ALLOW_HTTP="" php public/index.php
+PHLIX_PLUGINS_ALLOW_HTTP="" php public/index.php
 ```
 
 ### 2. CLI not found / PHP not on PATH
 
-**Symptom:** `php bin/phlex: command not found` when running `php bin/phlex hwaccel:probe`.
+**Symptom:** `php bin/phlix: command not found` when running `php bin/phlix hwaccel:probe`.
 
-**Cause:** PHP is installed in a non-standard location (`/usr/local/bin/php`, `/opt/php83/bin/php`) or `bin/phlex` is not on the system `PATH`.
+**Cause:** PHP is installed in a non-standard location (`/usr/local/bin/php`, `/opt/php83/bin/php`) or `bin/phlix` is not on the system `PATH`.
 
 **Fix:** Use the full path to PHP:
 ```bash
 which php
-/usr/local/bin/php bin/phlex hwaccel:probe
+/usr/local/bin/php bin/phlix hwaccel:probe
 ```
 Or add to `PATH` permanently in `~/.bashrc` or `/etc/environment`.
 

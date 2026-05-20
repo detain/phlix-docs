@@ -270,7 +270,7 @@ The driver handles common error cases:
 Run the IPTV tuner tests:
 
 ```bash
-./vendor/bin/phpunit tests/unit/LiveTv/Tuners/Iptv/
+./vendor/bin/phpunit tests/Unit/LiveTv/Tuners/Iptv/
 ```
 
 ## See Also

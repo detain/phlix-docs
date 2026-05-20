@@ -227,7 +227,7 @@ $db->expects($this->once())
     ->with($this->stringContains('INSERT'), $this->anything());  // write assertion
 ```
 
-Test files live in `tests/unit/{Module}/{Class}Test.php` with namespace `Phlix\Tests\Unit\{Module}` and extend `PHPUnit\Framework\TestCase`.
+Test files live in `tests/Unit/{Module}/{Class}Test.php` with namespace `Phlix\Tests\Unit\{Module}` and extend `PHPUnit\Framework\TestCase`.
 
 ### Code coverage
 

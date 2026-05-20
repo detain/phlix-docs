@@ -3,10 +3,9 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'Phlix',
   description: 'Phlix Media Server documentation — end-user, developer, and hub-admin guides',
-  srcDir: 'docs',
-  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }]],
+  base: '/phlix-docs/',
+  head: [['link', { rel: 'icon', type: 'image/svg+xml', href: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><text y=%2224%22 font-size=%2224%22>📺</text></svg>' }]],
   themeConfig: {
-    logo: '/logo.svg',
     nav: [
       { text: 'Install', link: '/install/linux' },
       { text: 'Get Started', link: '/first-run' },
@@ -216,5 +215,7 @@ export default defineConfig({
       light: 'github-light',
       dark: 'github-dark'
     }
-  }
+  },
+  cleanUrls: false,
+  ignoreDeadLinks: true
 })

@@ -180,7 +180,7 @@ All socket operations are wrapped in try-catch blocks:
 Run unit tests:
 
 ```bash
-./vendor/bin/phpunit tests/unit/Discovery/
+./vendor/bin/phpunit tests/Unit/Discovery/
 ```
 
 Coverage targets:

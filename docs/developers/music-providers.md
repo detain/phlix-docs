@@ -88,7 +88,7 @@ To add a new music metadata provider:
 1. Create `src/Media/Metadata/Provider/YourProvider.php` implementing `MetadataProviderInterface`
 2. Add provider registration in `MetadataManager::registerProvider()`
 3. Add configuration keys to `config/music_providers.php`
-4. Add unit tests in `tests/unit/Media/Metadata/Provider/`
+4. Add unit tests in `tests/Unit/Media/Metadata/Provider/`
 5. Update this document
 
 ## Provider Priority

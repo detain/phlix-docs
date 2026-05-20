@@ -210,10 +210,10 @@ The hub proxies the HLS stream over its WSS tunnel to the remote client, which p
 
 ```bash
 # Run all relay tests
-./vendor/bin/phpunit tests/unit/LiveTv/Relay/
+./vendor/bin/phpunit tests/Unit/LiveTv/Relay/
 
 # Run specific test class
-./vendor/bin/phpunit tests/unit/LiveTv/Relay/HlsRelaySessionTest.php
+./vendor/bin/phpunit tests/Unit/LiveTv/Relay/HlsRelaySessionTest.php
 
 # Coverage report for relay classes
 ./vendor/bin/phpunit --coverage-text 2>/dev/null | grep -E 'HlsRelay'

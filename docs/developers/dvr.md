@@ -211,7 +211,7 @@ DELETE /api/v1/dvr/recordings/{id}    - Cancel/delete recording
 Run the DVR unit tests:
 
 ```bash
-./vendor/bin/phpunit tests/unit/LiveTv/Recording/
+./vendor/bin/phpunit tests/Unit/LiveTv/Recording/
 ```
 
 Coverage targets:

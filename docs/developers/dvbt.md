@@ -297,7 +297,7 @@ The driver handles common error cases:
 Run the DVB-T tuner tests:
 
 ```bash
-./vendor/bin/phpunit tests/unit/LiveTv/Tuners/Dvbt/
+./vendor/bin/phpunit tests/Unit/LiveTv/Tuners/Dvbt/
 ```
 
 ## See Also

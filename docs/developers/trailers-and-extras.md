@@ -238,13 +238,13 @@ php scripts/run-migrations.php
 Run unit tests:
 
 ```bash
-./vendor/bin/phpunit tests/unit/Media/Extras/
+./vendor/bin/phpunit tests/Unit/Media/Extras/
 ```
 
 Run integration tests:
 
 ```bash
-./vendor/bin/phpunit tests/integration/Media/Extras/
+./vendor/bin/phpunit tests/Integration/Media/Extras/
 ```
 
 ## See Also

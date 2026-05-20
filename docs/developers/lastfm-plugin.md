@@ -277,7 +277,7 @@ easily mockable in tests.
 
 ## 8. Testing
 
-Unit tests are in `tests/unit/Plugins/Lastfm/`:
+Unit tests are in `tests/Unit/Plugins/Lastfm/`:
 
 - `LastfmApiClientTest` — tests value object immutability, exception
   classes, and API client construction.
@@ -287,5 +287,5 @@ Unit tests are in `tests/unit/Plugins/Lastfm/`:
 Run with:
 
 ```bash
-./vendor/bin/phpunit tests/unit/Plugins/Lastfm/
+./vendor/bin/phpunit tests/Unit/Plugins/Lastfm/
 ```

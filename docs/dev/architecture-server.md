@@ -63,7 +63,7 @@ the factory.
 3. For classes that need configuration values, use `factory(static fn () => ...)`
    and read from `$appConfig`.
 4. Update the matching unit test in
-   `tests/unit/Common/Container/Providers/` so the binding stays exercised
+   `tests/Unit/Common/Container/Providers/` so the binding stays exercised
    (coverage target ≥ 85 % on `src/Common/Container/**`).
 
 ### Compiled containers (production)
@@ -180,7 +180,7 @@ Full twelve-event catalog → [`docs/dev/event-reference.md`](event-reference.md
 ```bash
 ./vendor/bin/phpunit                        # unit + integration suites
 ./vendor/bin/phpunit --testsuite Unit       # unit tests only
-./vendor/bin/phpunit tests/unit/Auth/JwtHandlerTest.php --testdox
+./vendor/bin/phpunit tests/Unit/Auth/JwtHandlerTest.php --testdox
 ./vendor/bin/phpunit --coverage-text         # coverage → coverage.xml + coverage-report/
 ```
 
@@ -202,7 +202,7 @@ $db->expects($this->once())
 
 | Convention | Value |
 |-----------|-------|
-| Location | `tests/unit/{Module}/{Class}Test.php` |
+| Location | `tests/Unit/{Module}/{Class}Test.php` |
 | Namespace | `Phlix\Tests\Unit\{Module}` |
 | Base class | `PHPUnit\Framework\TestCase` |
 | BDD-style output | `./vendor/bin/phpunit --testdox` |

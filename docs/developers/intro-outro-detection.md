@@ -105,6 +105,25 @@ Detection results are stored in `media_items.metadata_json`:
 - `MarkerCandidateStore` - File-based job queue
 - `BackgroundDetectorWorker` - Queue consumer loop
 - `MarkerCandidateRepository` - Persists candidates to database
+- `Detection\StoredMarkers` - Read-side DTO hydrating `intro_candidate` / `outro_candidate` from `metadata_json`
+
+## Type contract for `start_seconds` / `end_seconds`
+
+Across the marker subsystem these fields are **always `int`**:
+
+| Site | Type |
+| --- | --- |
+| `media_items.metadata_json` schema | JSON numbers (decoded by PHP as `int`) |
+| `intro_marker_candidates` / `outro_marker_candidates` DB columns | `INT UNSIGNED` |
+| `IntroMarkerCandidate`, `OutroMarkerCandidate`, `IntroMarker`, `OutroMarker` properties | `int` / `readonly int` |
+| `Detection\StoredMarkers::$introStart`, `$introEnd`, `$outroStart`, `$outroEnd` | `?int` |
+
+Validation in `StoredMarkers::fromMetadata()` MUST use `is_int()` —
+not `is_string()`. A historical `is_string()` check meant
+`hasIntro()` / `hasOutro()` returned `false` for every real row,
+silently disabling all skip-button playback hints. If you add a new
+marker field, mirror the existing pattern (int everywhere, `is_int()`
+on read).
 
 ## Testing
 

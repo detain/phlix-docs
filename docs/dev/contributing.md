@@ -239,6 +239,107 @@ Coverage writes to `coverage.xml` and `coverage-report/` (configured in `phpunit
 
 ---
 
+## CI / GitHub Actions policy
+
+All Phlix repositories share a single rule for GitHub Actions:
+
+> **Pin action `uses:` references to a single major (`@vN`), never to a
+> minor or to `@main`. The major must be a Node-current build.**
+
+As of 2026-05, that means Node 24 for every JavaScript-runtime action.
+Concretely, the repos use:
+
+| Action | Pin |
+| --- | --- |
+| `actions/checkout` | `@v6` |
+| `actions/setup-node` | `@v6` |
+| `actions/setup-python` | `@v6` |
+| `actions/cache` | `@v5` |
+| `actions/upload-artifact`, `download-artifact` | `@v5` |
+| `docker/build-push-action` | `@v7` |
+| `docker/setup-buildx-action`, `setup-qemu-action`, `metadata-action`, `login-action` | `@v4` / `@v6` (Node-24 majors) |
+| `codecov/codecov-action` | `@v6` |
+
+The repo-wide opt-in `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` env shim
+has been removed — the action majors now run on Node 24 natively, so
+the shim was redundant and is gone. Do not re-introduce it.
+
+**When a new action major lands:** bump every workflow across every
+phlix repo in lock-step. We deliberately do not pin minors (e.g.
+`@v6.1`) because dependabot churn vastly outweighs the supply-chain
+risk for these first-party Actions vendors, and partial bumps cause
+hard-to-debug behavior drift between repos.
+
+---
+
+## Code coverage / Codecov
+
+All repos upload coverage to Codecov. Each repo's `phpunit.yml`
+workflow reads `CODECOV_TOKEN` from secrets — guarded by an
+`if: env.CODECOV_TOKEN != ''` step-level condition, **not**
+`secrets.CODECOV_TOKEN != ''`, because the `secrets` context is
+unavailable inside `step.if` expressions (GitHub Actions limitation).
+Use `env.CODECOV_TOKEN` after exporting the secret into the step's
+`env:` block.
+
+The token is provisioned by the idempotent helper script
+`set-codecov-token.sh` (kept in the local `phlix` parent directory,
+not committed to any repo). It seeds the token as:
+
+- An **organization secret** on the `interserver`, `myadmin-plugins`,
+  `provirted`, `lamtard`, and `sugarcraft` orgs.
+- A **per-repo secret** on 85 personal `detain/*` repos plus 24
+  private `interserver/*` repos that cannot inherit the org secret.
+
+The script is safe to re-run; it diffs existing secrets and only
+writes when the token differs. New repos can be picked up by adding
+them to the script's repo list and re-running.
+
+### Codecov upload is non-blocking
+
+The Codecov step uses `fail_ci_if_error: false`. The token being valid
+is **not** enough — each repo must also be `activated: true` in the
+Codecov account at <https://app.codecov.io>, which requires the account
+owner to click "Sync" / "Setup repo" in the UI. Until that happens, the
+upload step returns `"Repository not found"` with exit 1 on every push,
+and we deliberately let CI ignore it rather than block unrelated PRs on
+a one-shot UI action.
+
+There is **no programmatic activation path**. The Codecov v2 REST API
+returns 404 or 405 for `PATCH`, `PUT`, and `POST` against
+`/api/v2/{service}/{owner}/repos/{repo}/` — there is no `/activate`
+endpoint and no `activated` field on the repo PATCH body. Do not spend
+time trying to script this; just log in to Codecov once per account
+sync.
+
+When you activate a repo, no workflow change is required: the same
+upload step starts succeeding on the next run.
+
+### Coverage threshold parses Clover, not Cobertura
+
+The "Check minimum coverage threshold" step in each repo's `phpunit.yml`
+reads PHPUnit's `--coverage-clover` output. Clover writes:
+
+```xml
+<coverage>
+  <project>
+    <metrics statements="..." coveredstatements="..." .../>
+```
+
+and the workflow computes the percentage as
+`coveredstatements * 100 / statements`. Cobertura's `@line-rate`
+attribute does **not** exist on PHPUnit's Clover XML — if a future
+edit tries to read it with `xmllint --xpath "string(.../@line-rate)"`
+it returns the empty string, bash coerces to `0`, and CI hard-fails
+"Coverage 0% is below minimum N%" while PHPUnit itself reports the real
+number. Stick with `@statements` / `@coveredstatements`.
+
+The minimum is set per-repo (currently 40 in `phlix-server`, intentionally
+just below actual coverage so small regressions trip the check). Raise it
+as coverage improves; never raise it above current coverage.
+
+---
+
 ## Plugin contribution
 
 Plugins extend the Phlix feature set without modifying the core server. The plugin SDK lives in [`docs/dev/plugin-sdk.md`](plugin-sdk.md) — it covers the manifest schema, lifecycle (install → enable → disable → uninstall), container bindings plugins can use, and how to add a new plugin type.

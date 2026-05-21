@@ -168,6 +168,33 @@ Run `composer install --no-dev` to install dependencies into the plugin's `vendo
 
 Users can select their preferred theme in their profile settings. The theme is stored per-profile in `user_profiles.active_theme_id`.
 
+## How theme assets are injected (server internals)
+
+Theme CSS and JS are **not** rendered by Smarty. The portal layout
+template `public/templates/layouts/base.tpl` contains two literal string
+markers in `{literal}…{/literal}` blocks:
+
+```smarty
+{literal}{$theme_css|raw}{/literal}
+…
+{literal}{$theme_js|raw}{/literal}
+```
+
+After Smarty renders the page, `Phlix\Theming\ThemeMiddleware` runs
+`str_replace()` over the response body to swap those exact literal
+strings for the resolved `<link>` / `<script>` tags of the active theme.
+
+> [!WARNING]
+> Do **not** "fix" the markers to look like real Smarty syntax.
+> `|raw` is a Twig modifier; Smarty has no equivalent. Without
+> `{literal}…{/literal}`, Smarty either errors or substitutes an
+> empty string, and ThemeMiddleware can no longer find the marker —
+> the theme silently fails to load.
+>
+> If you ever rename or move these markers, update both the template
+> **and** the `str_replace()` calls in
+> `src/Theming/ThemeMiddleware.php` in the same change.
+
 ## See Also
 
 - [Developer Guide](../plugins/developer-guide.md) — Full plugin development guide

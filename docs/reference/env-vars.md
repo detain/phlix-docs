@@ -42,6 +42,23 @@ that consumes it.
 | `PHLIX_TLS_ENABLED`            | `1`     | When truthy enables TLS/HTTPS for the server's public hostname. Requires a subdomain to be allocated. See `config/hub.php`. |
 | `PHLIX_DOMAIN`                 | `phlix.media` | The base domain for server subdomains (e.g. `abc12345.phlix.media`). See `config/hub.php`. |
 
+## Hub / Arr Integration
+
+Controls Radarr (movies) and Sonarr (series) connectivity for the Hub's media-request system. The hub uses these to push approved requests into the appropriate Arr instance. Both instances must be reachable from the Hub host and have API v3 enabled.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `HUB_RADARR_URL` | `http://localhost:7878` | Base URL of the Radarr instance (API v3). |
+| `HUB_RADARR_API_KEY` | _empty_ | Radarr API key. Generate in Radarr → Settings → General → Security → API Key. |
+| `HUB_RADARR_ENABLED` | `0` | When truthy (`1`, `true`, `yes`, `on`) enables Radarr integration. When falsy, movie approvals fail with `approve_failed`. |
+| `HUB_SONARR_URL` | `http://localhost:8989` | Base URL of the Sonarr instance (API v3). |
+| `HUB_SONARR_API_KEY` | _empty_ | Sonarr API key. Generate in Sonarr → Settings → General → Security → API Key. |
+| `HUB_SONARR_ENABLED` | `0` | When truthy (`1`, `true`, `yes`, `on`) enables Sonarr integration. When falsy, series approvals fail with `approve_failed`. |
+
+> **Tip:** Both Arr instances must have at least one quality profile and root folder configured before requests can be approved. The hub uses the first available profile and root folder automatically.
+
+See [`docs/hub/requests.md`](../hub/requests.md) for the full media-request workflow.
+
 ## Relay tunnel
 
 | Variable                       | Default                            | Description |

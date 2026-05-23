@@ -1208,30 +1208,57 @@ Returns an HTML player page for the audiobook.
 
 ### GET /api/v1/audiobooks/`{id}`/stream
 
-Get audiobook stream URL with chapter resume support.
+Stream audiobook file directly as raw bytes. Supports HTTP Range requests for seeking and resume.
 
 **Auth:** Required (Bearer token)
 
 **Parameters:**
 - `id` (path) — Audiobook ID
-- `chapter` (query, optional) — Chapter index to resume from (0-based)
-- `offset` (query, optional) — Offset in milliseconds within the chapter
+
+**Request headers (optional):**
+- `Range` — Byte range request (e.g., `bytes=1000-5000`). Returns 206 Partial Content.
 
 **Response 200:**
-```json
-{
-  "stream_url": "/audiobooks/550e8400-e29b-41d4-a716-446655440001/stream?token=xxx",
-  "expires_in": 3600
-}
-```
+- **Content-Type:** Detected from file extension (`audio/mp4`, `audio/mpeg`, `audio/aac`, etc.)
+- **Accept-Ranges:** `bytes`
+- **Content-Length:** Total file size in bytes
+
+**Response 206 (Partial Content):**
+- **Content-Type:** Detected from file extension
+- **Content-Range:** `bytes {start}-{end}/{total}`
+- **Content-Length:** Bytes served in this range
+
+**Response 403:** Path validation failed (invalid path traversal attempt)
 
 **Response 404:** Audiobook not found
 
+**Example range request:**
+```
+GET /api/v1/audiobooks/550e8400-e29b-41d4-a716-446655440001/stream
+Range: bytes=1000-5000
+```
+
+**Example response headers (200):**
+```
+Accept-Ranges: bytes
+Content-Length: 36000000
+Content-Type: audio/mp4
+```
+
+**Example response headers (206):**
+```
+Accept-Ranges: bytes
+Content-Range: bytes 1000-5000/36000000
+Content-Length: 4001
+Content-Type: audio/mp4
+```
+
 **Notes:**
-- Stream URLs expire after 1 hour
-- Clients should include chapter and offset parameters for resume support
-- M4B and M4A formats support chapter metadata extraction
-- MP3 chapter support is limited
+- Returns raw audio bytes, not base64-encoded data
+- Supports M4B, M4A, MP3, AAC, OGG, FLAC, WAV formats
+- MIME type detected from file extension
+- Path validation prevents directory traversal attacks
+- Clients should send `Range` header for seeking/resume support
 
 ---
 

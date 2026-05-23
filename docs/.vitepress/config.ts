@@ -13,6 +13,7 @@ export default defineConfig({
       { text: 'Clients', link: '/clients/overview' },
       { text: 'Advanced', link: '/advanced/hardware-transcoding' },
       { text: 'Developers', link: '/dev/architecture-server' },
+      { text: 'Admin', link: '/admin/webhooks' },
       { text: 'Hub Admin', link: '/hub-admin/install' },
     ],
     sidebar: {
@@ -78,6 +79,17 @@ export default defineConfig({
         {
           text: 'Privacy & Security',
           link: '/privacy-security'
+        }
+      ],
+      '/admin/': [
+        {
+          text: 'Server Admin',
+          items: [
+            { text: 'Webhooks', link: '/admin/webhooks' },
+            { text: 'Stats', link: '/admin/stats' },
+            { text: 'Dashboard', link: '/admin/dashboard' },
+            { text: 'Backup', link: '/admin/backup' },
+          ]
         }
       ],
       '/troubleshooting': [

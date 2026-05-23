@@ -243,9 +243,9 @@ Terminate a specific playback session (e.g., remote control of another device).
 
 ### POST /api/v1/server-claims/new
 
-Request a new server claim token from the Hub. Used by the server to initiate the claim flow.
+Request a new server claim token from the Hub. Used by the server to initiate the claim flow. This is an unauthenticated bootstrap endpoint — the server proves possession of its Ed25519 keypair, there is no prior session.
 
-**Auth:** Required (Bearer token)
+**Auth:** None (Ed25519 keypair bootstrap)
 
 **Request body:**
 ```json

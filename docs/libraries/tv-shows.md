@@ -215,4 +215,4 @@ Each user profile has a rating filter set in **Settings → Profiles**: G / PG /
 
 - [Movies library setup](movies.md) — film organization, NFO metadata, extras handling
 - [Music library setup](music.md) — album art, FLAC/MP3 tagging, compiled albums
-- [DLNA / Play To](../users/dlna.md) — stream TV episodes to DLNA-compatible TVs and speakers
+- [DLNA / Play To](../clients/dlna.md) — stream TV episodes to DLNA-compatible TVs and speakers

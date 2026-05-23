@@ -202,4 +202,4 @@ Each user profile has a rating filter set in **Settings → Profiles**: G / PG /
 
 - [TV Shows library setup](tv-shows.md) — organize episodes by season with S01E01 naming
 - [Music library setup](music.md) — album art, FLAC/MP3 tagging, compiled albums
-- [DLNA / Play To](../users/dlna.md) — stream movies to DLNA-compatible TVs and speakers
+- [DLNA / Play To](../clients/dlna.md) — stream movies to DLNA-compatible TVs and speakers

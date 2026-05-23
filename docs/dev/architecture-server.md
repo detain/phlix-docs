@@ -108,6 +108,9 @@ package for its framework-neutral pieces:
 - `Phlix\Shared\Auth\JwtClaims` — value object capturing the Phlix JWT shape.
 - `Phlix\Shared\Hub\*` — placeholder DTOs for the hub claim/heartbeat
   protocol (Phase C).
+- `Phlix\Shared\Arr\*` — Sonarr / Radarr / Prowlarr / Bazarr API clients
+  (exception to the zero-I/O policy). Full developer guide →
+  [`arr-clients.md`](arr-clients.md).
 
 `phlix-server` keeps the host-side runtime (PSR-14 dispatcher wiring,
 JSON-Schema validator, plugin loader, JWT signing, HTTP/WS layer). The
@@ -130,6 +133,8 @@ They are removed in 0.12.0.
   container
 - [`detain/phlix-shared`](https://github.com/detain/phlix-shared) –
   the shared Composer package consumed since 0.11.0.
+- [`arr-clients.md`](arr-clients.md) – Sonarr / Radarr / Prowlarr / Bazarr
+  client classes, configuration, and error handling.
 
 ---
 

@@ -20,37 +20,33 @@ Environment variables are read at process startup. Most can be overridden by `co
 - `TZ` — timestamps in logs and EPG depend on a correct timezone; set to your local timezone.
 - `PHLIX_LOG_LEVEL` — `debug` is verbose; `error` is production-minimal.
 
-## CLI Commands
+## CLI Scripts
 
-All commands run from the Phlix install directory. `php public/index.php` starts the server (blocking — use systemd or supervisord in production). `bin/phlix` is the management CLI for ongoing operations.
+All scripts run from the Phlix Server install directory (`phlix-server/`). `php public/index.php` starts the Workerman HTTP server (blocking — use systemd or supervisord in production).
 
-For hub pairing and port forwarding scripts, see [CLI commands](cli.md).
+For hub pairing and port forwarding, see [CLI commands](cli.md).
 
 ### Server lifecycle
 
 | Command | Description |
 | --- | --- |
 | `php public/index.php` | Start the Workerman HTTP server. Run under systemd/supervisord, not directly in a shell session. |
-| `php bin/phlix status` | Show version, uptime, worker count, and health. |
-| `php bin/phlix migrate` | Run pending DB migrations. Idempotent — safe to run multiple times. |
+| `php scripts/run-migrations.php` | Run pending DB migrations. Idempotent — safe to run multiple times. |
 
 ### Operational
 
 | Command | Description |
 | --- | --- |
-| `php bin/phlix backup:create --output <path>` | Create a backup archive (DB + config + metadata). See [Backup & restore](../advanced/backup-restore.md). |
-| `php bin/phlix backup:restore --input <path>` | Restore from a backup archive. See [Backup & restore](../advanced/backup-restore.md). |
-| `php bin/phlix library:scan --library <id>` | Rescan a specific library by UUID. |
-| `php bin/phlix library:scan --all` | Rescan all libraries. |
-| `php bin/phlix user:reset-password <email>` | Interactively reset a user's password (prompts for new password). |
-| `php bin/phlix hwaccel:probe` | Print detected hardware acceleration (NVENC, VAAPI, VideoToolbox, QSV); exit 0 if found. |
-| `php bin/phlix log:tail --channel=<name>` | Tail rotating log for a channel. Channels: `auth`, `http`, `media`, `session`, `streaming`, `plugins`. |
-| `php bin/phlix plugin:install --url <url>` | Install from a `plugin.json` URL. Plugin lands disabled. |
-| `php bin/phlix plugin:enable <name>` | Enable an installed plugin. |
-| `php bin/phlix plugin:disable <name>` | Disable a plugin. |
-| `php bin/phlix plugin:uninstall <name>` | Remove plugin files and DB row. |
-| `php bin/phlix plugin:list` | List installed plugins with version and enabled state. |
-| `php bin/phlix hub:claim --code <code> --hub <url>` | Claim this server to a Hub using a claim code. |
+| `php scripts/run-marker-detection-worker.php` | Run the intro/outro marker detection background worker. Processes jobs from a queue directory. Press Ctrl+C to stop. |
+| `./scripts/compatibility-check.sh` | Check server/hub major version compatibility. Exits 0 if compatible, 1 if not. Requires `PHLIX_HUB_URL` set. |
+| `php scripts/claim-subdomain.php` | Claim a `*.phlix.media` subdomain for the enrolled server after pairing. Provisions TLS certificates automatically. |
+
+### Release / Build
+
+| Command | Description |
+| --- | --- |
+| `./scripts/release.sh [patch\|minor\|major] [--dry-run]` | Bump version in `composer.json`, update Helm chart, create git commit and tag. Use `--dry-run` to preview without making changes. |
+| `./scripts/docker-release.sh [VERSION] [--dry-run]` | Build and push Docker images (`phlix-server`, `nvidia-*`, `intel-*` variants) to the registry. Defaults to `latest` tag if no version specified. |
 
 ## Config Files
 
@@ -211,16 +207,16 @@ PHLIX_PLUGINS_ALLOW_HTTP=0 php public/index.php
 PHLIX_PLUGINS_ALLOW_HTTP="" php public/index.php
 ```
 
-### 2. CLI not found / PHP not on PATH
+### 2. PHP not on PATH
 
-**Symptom:** `php bin/phlix: command not found` when running `php bin/phlix hwaccel:probe`.
+**Symptom:** `php: command not found` when running `php scripts/run-migrations.php`.
 
-**Cause:** PHP is installed in a non-standard location (`/usr/local/bin/php`, `/opt/php83/bin/php`) or `bin/phlix` is not on the system `PATH`.
+**Cause:** PHP is installed in a non-standard location (`/usr/local/bin/php`, `/opt/php83/bin/php`) or not on the system `PATH`.
 
 **Fix:** Use the full path to PHP:
 ```bash
 which php
-/usr/local/bin/php bin/phlix hwaccel:probe
+/usr/local/bin/php scripts/run-migrations.php
 ```
 Or add to `PATH` permanently in `~/.bashrc` or `/etc/environment`.
 

@@ -647,9 +647,11 @@ Use `MarkerService.promoteCandidates()` to migrate candidates to formal columns.
 
 OPDS 1.2 compliant feeds for third-party OPDS client integration.
 
-### GET /opds/v1.2
+### GET /api/v1/opds/v1.2
 
 Returns the root OPDS catalog feed.
+
+**Auth:** Required (Bearer token)
 
 **Response 200:**
 ```xml
@@ -658,20 +660,28 @@ Returns the root OPDS catalog feed.
   <title>Phlix Library</title>
   <updated>2024-01-15T10:30:00Z</updated>
   <id>urn:phlix:library:root</id>
-  <link rel="self" href="http://localhost:8080/opds/v1.2" type="application/atom+xml;profile=opds-catalog"/>
-  <link rel="alternate" href="http://localhost:8080/opds/v1.2/libraries" type="application/atom+xml;profile=opds-catalog;kind=navigation"/>
+  <link rel="self" href="http://localhost:8080/api/v1/opds/v1.2" type="application/atom+xml;profile=opds-catalog"/>
+  <link rel="alternate" href="http://localhost:8080/api/v1/opds/v1.2/libraries" type="application/atom+xml;profile=opds-catalog;kind=navigation"/>
 </feed>
 ```
 
-### GET /opds/v1.2/libraries
+---
+
+### GET /api/v1/opds/v1.2/libraries
 
 Returns a navigation feed listing all book libraries.
 
+**Auth:** Required (Bearer token)
+
 **Response 200:** OPDS Atom XML with navigation links to library acquisition feeds.
 
-### GET /opds/v1.2/libraries/`{id}`
+---
+
+### GET /api/v1/opds/v1.2/libraries/`{id}`
 
 Returns an acquisition feed listing all books in a library.
+
+**Auth:** Required (Bearer token)
 
 **Parameters:**
 - `id` (path) — Library ID
@@ -684,9 +694,11 @@ Returns an acquisition feed listing all books in a library.
 
 ## Book Endpoints
 
-### GET /books
+### GET /api/v1/books
 
 Returns a list of all books.
+
+**Auth:** Required (Bearer token)
 
 **Query parameters:**
 - `library_id` (optional) — Filter by library
@@ -713,9 +725,13 @@ Returns a list of all books.
 }
 ```
 
-### GET /books/`{id}`
+---
+
+### GET /api/v1/books/`{id}`
 
 Returns a single book by ID.
+
+**Auth:** Required (Bearer token)
 
 **Parameters:**
 - `id` (path) — Book ID
@@ -735,17 +751,46 @@ Returns a single book by ID.
 
 **Response 404:** Book not found
 
-### GET /books/`{id}`/cover
+---
+
+### GET /api/v1/books/`{id}`/cover
 
 Returns the book's cover image.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Book ID
 
 **Response 200:** JPEG/PNG image with appropriate Content-Type header.
 
 **Response 404:** Cover not found or book not found
 
-### GET /books/`{id}`/download
+---
+
+### GET /api/v1/books/`{id}`/read
+
+Returns an HTML reader page for the book.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Book ID
+
+**Response 200:** HTML page with embedded book reader.
+
+**Response 404:** Book not found
+
+---
+
+### GET /api/v1/books/`{id}`/download
 
 Returns the book file for download.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Book ID
 
 **Response 200:** Book file with Content-Disposition: attachment header.
 - EPUB: `application/epub+zip`
@@ -753,3 +798,650 @@ Returns the book file for download.
 - CBZ: `application/vnd.comicbook+zip`
 
 **Response 404:** File not found
+
+---
+
+## Music Endpoints
+
+Music library browsing with ID3v2/MP4/Vorbis tag harvesting and MusicBrainz metadata enrichment.
+
+### GET /api/v1/music/artists
+
+List all music artists.
+
+**Auth:** Required (Bearer token)
+
+**Query parameters:**
+- `limit` (optional) — Maximum items (default: 50)
+- `offset` (optional) — Pagination offset (default: 0)
+
+**Response 200:**
+```json
+{
+  "artists": [
+    {
+      "mbid": "550e8400-e29b-41d4-a716-446655440001",
+      "name": "Artist Name",
+      "album_count": 5,
+      "track_count": 42
+    }
+  ],
+  "limit": 50,
+  "offset": 0
+}
+```
+
+---
+
+### GET /api/v1/music/artists/`{mbid}`
+
+Get artist details with albums.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `mbid` (path) — MusicBrainz ID for the artist
+
+**Response 200:**
+```json
+{
+  "artist": {
+    "mbid": "550e8400-e29b-41d4-a716-446655440001",
+    "name": "Artist Name",
+    "sort_name": "Artist Name",
+    "albums": [
+      {
+        "mbid": "550e8400-e29b-41d4-a716-446655440002",
+        "name": "Album Name",
+        "year": 2024,
+        "track_count": 10
+      }
+    ]
+  }
+}
+```
+
+**Response 404:** Artist not found
+
+---
+
+### GET /api/v1/music/albums
+
+List all music albums.
+
+**Auth:** Required (Bearer token)
+
+**Query parameters:**
+- `artist_mbid` (optional) — Filter by artist MusicBrainz ID
+- `limit` (optional) — Maximum items (default: 50)
+- `offset` (optional) — Pagination offset (default: 0)
+
+**Response 200:**
+```json
+{
+  "albums": [
+    {
+      "mbid": "550e8400-e29b-41d4-a716-446655440002",
+      "name": "Album Name",
+      "artist_mbid": "550e8400-e29b-41d4-a716-446655440001",
+      "artist_name": "Artist Name",
+      "year": 2024,
+      "track_count": 10
+    }
+  ],
+  "limit": 50,
+  "offset": 0
+}
+```
+
+---
+
+### GET /api/v1/music/albums/`{mbid}`
+
+Get album details with track listing.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `mbid` (path) — MusicBrainz ID for the album
+
+**Response 200:**
+```json
+{
+  "album": {
+    "mbid": "550e8400-e29b-41d4-a716-446655440002",
+    "name": "Album Name",
+    "artist_mbid": "550e8400-e29b-41d4-a716-446655440001",
+    "artist_name": "Artist Name",
+    "year": 2024,
+    "genre": "Rock",
+    "tracks": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440003",
+        "title": "Track Title",
+        "track_number": 1,
+        "duration_secs": 245,
+        "path": "/mnt/media/music/Artist/Album/01 - Track Title.flac"
+      }
+    ]
+  }
+}
+```
+
+**Response 404:** Album not found
+
+---
+
+### GET /api/v1/music/tracks
+
+List all music tracks (paginated).
+
+**Auth:** Required (Bearer token)
+
+**Query parameters:**
+- `album_mbid` (optional) — Filter by album MusicBrainz ID
+- `artist_mbid` (optional) — Filter by artist MusicBrainz ID
+- `limit` (optional) — Maximum items (default: 50)
+- `offset` (optional) — Pagination offset (default: 0)
+
+**Response 200:**
+```json
+{
+  "tracks": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "title": "Track Title",
+      "artist_name": "Artist Name",
+      "album_name": "Album Name",
+      "track_number": 1,
+      "duration_secs": 245
+    }
+  ],
+  "limit": 50,
+  "offset": 0
+}
+```
+
+---
+
+### GET /api/v1/music/tracks/`{id}`
+
+Get single track details.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Track ID
+
+**Response 200:**
+```json
+{
+  "track": {
+    "id": "550e8400-e29b-41d4-a716-446655440003",
+    "title": "Track Title",
+    "artist_name": "Artist Name",
+    "album_name": "Album Name",
+    "track_number": 1,
+    "disc_number": 1,
+    "duration_secs": 245,
+    "bitrate": 1411,
+    "sample_rate": 44100,
+    "channels": 2,
+    "path": "/mnt/media/music/Artist/Album/01 - Track Title.flac",
+    "metadata": {
+      "title": "Track Title",
+      "artist": "Artist Name",
+      "album": "Album Name",
+      "year": 2024,
+      "genre": "Rock"
+    }
+  }
+}
+```
+
+**Response 404:** Track not found
+
+---
+
+### GET /api/v1/music/now-playing
+
+Get current playback state.
+
+**Auth:** Required (Bearer token)
+
+**Response 200:**
+```json
+{
+  "now_playing": {
+    "track_id": "550e8400-e29b-41d4-a716-446655440003",
+    "title": "Track Title",
+    "artist_name": "Artist Name",
+    "album_name": "Album Name",
+    "position_secs": 120,
+    "duration_secs": 245,
+    "playing": true
+  }
+}
+```
+
+**Notes:**
+- Returns `now_playing: null` when nothing is playing
+- `position_secs` indicates current playback position
+- `playing` is `true` for playing, `false` for paused
+
+---
+
+## Audiobook Endpoints
+
+Chapter-aware audiobook playback with per-user progress tracking.
+
+### GET /api/v1/audiobooks
+
+List all audiobooks.
+
+**Auth:** Required (Bearer token)
+
+**Query parameters:**
+- `library_id` (optional) — Filter by library
+- `limit` (optional) — Maximum items (default: 50)
+- `offset` (optional) — Pagination offset (default: 0)
+
+**Response 200:**
+```json
+{
+  "audiobooks": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "name": "Audiobook Title",
+      "author": "Author Name",
+      "narrator": "Narrator Name",
+      "duration_secs": 36000,
+      "chapter_count": 25,
+      "progress_percent": 45.5
+    }
+  ],
+  "limit": 50,
+  "offset": 0
+}
+```
+
+---
+
+### GET /api/v1/audiobooks/`{id}`
+
+Get audiobook with chapters.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Audiobook ID
+
+**Response 200:**
+```json
+{
+  "audiobook": {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "name": "Audiobook Title",
+    "author": "Author Name",
+    "narrator": "Narrator Name",
+    "duration_secs": 36000,
+    "chapters": [
+      {
+        "index": 0,
+        "title": "Chapter 1: The Beginning",
+        "start_ms": 0,
+        "end_ms": 1440000
+      }
+    ]
+  }
+}
+```
+
+**Response 404:** Audiobook not found
+
+---
+
+### GET /api/v1/audiobooks/`{id}`/chapters
+
+Get chapter list for an audiobook.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Audiobook ID
+
+**Response 200:**
+```json
+{
+  "audiobook_id": "550e8400-e29b-41d4-a716-446655440001",
+  "chapters": [
+    {
+      "index": 0,
+      "title": "Chapter 1: The Beginning",
+      "start_ms": 0,
+      "end_ms": 1440000
+    },
+    {
+      "index": 1,
+      "title": "Chapter 2: The Journey",
+      "start_ms": 1440000,
+      "end_ms": 2880000
+    }
+  ]
+}
+```
+
+---
+
+### GET /api/v1/audiobooks/`{id}`/progress
+
+Get authenticated user's progress for an audiobook.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Audiobook ID
+
+**Response 200:**
+```json
+{
+  "audiobook_id": "550e8400-e29b-41d4-a716-446655440001",
+  "user_id": "550e8400-e29b-41d4-a716-446655440000",
+  "position_ms": 1800000,
+  "current_chapter_index": 1,
+  "completed_chapters": [0],
+  "percent_complete": 5.0,
+  "last_played_at": 1747645200
+}
+```
+
+**Response 404:** No progress found for this user/audiobook combination
+
+---
+
+### POST /api/v1/audiobooks/`{id}`/progress
+
+Save playback progress for the authenticated user.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Audiobook ID
+
+**Request body:**
+```json
+{
+  "position_ms": 1800000,
+  "current_chapter_index": 1
+}
+```
+
+**Response 200:**
+```json
+{
+  "ok": true,
+  "percent_complete": 5.0
+}
+```
+
+**Notes:**
+- Progress is saved every 10 seconds during playback
+- `position_ms` is the current position within the chapter (milliseconds)
+- `current_chapter_index` is 0-based
+
+---
+
+### GET /api/v1/audiobooks/`{id}`/read
+
+Returns an HTML player page for the audiobook.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Audiobook ID
+
+**Response 200:** HTML page with embedded audiobook player.
+
+**Response 404:** Audiobook not found
+
+---
+
+### GET /api/v1/audiobooks/`{id}`/stream
+
+Get audiobook stream URL with chapter resume support.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Audiobook ID
+- `chapter` (query, optional) — Chapter index to resume from (0-based)
+- `offset` (query, optional) — Offset in milliseconds within the chapter
+
+**Response 200:**
+```json
+{
+  "stream_url": "/audiobooks/550e8400-e29b-41d4-a716-446655440001/stream?token=xxx",
+  "expires_in": 3600
+}
+```
+
+**Response 404:** Audiobook not found
+
+**Notes:**
+- Stream URLs expire after 1 hour
+- Clients should include chapter and offset parameters for resume support
+- M4B and M4A formats support chapter metadata extraction
+- MP3 chapter support is limited
+
+---
+
+## Photo Endpoints
+
+Photo browsing with EXIF metadata extraction, album organization, and slideshow functionality.
+
+### GET /api/v1/photo/albums
+
+List all photo albums (grouped by date taken).
+
+**Auth:** Required (Bearer token)
+
+**Query parameters:**
+- `limit` (optional) — Maximum items (default: 50)
+- `offset` (optional) — Pagination offset (default: 0)
+
+**Response 200:**
+```json
+{
+  "albums": [
+    {
+      "id": "album-2024-05-15",
+      "date": "2024-05-15",
+      "photo_count": 42,
+      "cover_photo": {
+        "id": "550e8400-e29b-41d4-a716-446655440001",
+        "thumbnail_url": "/api/v1/photo/photos/550e8400-e29b-41d4-a716-446655440001/thumbnail?w=300&h=300&fit=cover"
+      }
+    }
+  ],
+  "limit": 50,
+  "offset": 0
+}
+```
+
+---
+
+### GET /api/v1/photo/albums/`{id}`
+
+Get specific album with photos.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Album ID (date string in YYYY-MM-DD format)
+
+**Response 200:**
+```json
+{
+  "album": {
+    "id": "album-2024-05-15",
+    "date": "2024-05-15",
+    "photos": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440001",
+        "name": "IMG_0001.jpg",
+        "width": 4032,
+        "height": 3024,
+        "date_taken_unix": 1715784000,
+        "thumbnail_url": "/api/v1/photo/photos/550e8400-e29b-41d4-a716-446655440001/thumbnail?w=300&h=300&fit=cover"
+      }
+    ]
+  }
+}
+```
+
+**Response 404:** Album not found
+
+---
+
+### GET /api/v1/photo/photos
+
+List all photos.
+
+**Auth:** Required (Bearer token)
+
+**Query parameters:**
+- `album_id` (optional) — Filter by album
+- `limit` (optional) — Maximum items (default: 50)
+- `offset` (optional) — Pagination offset (default: 0)
+
+**Response 200:**
+```json
+{
+  "photos": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "name": "IMG_0001.jpg",
+      "width": 4032,
+      "height": 3024,
+      "date_taken_unix": 1715784000,
+      "thumbnail_url": "/api/v1/photo/photos/550e8400-e29b-41d4-a716-446655440001/thumbnail?w=300&h=300&fit=cover"
+    }
+  ],
+  "limit": 50,
+  "offset": 0
+}
+```
+
+---
+
+### GET /api/v1/photo/photos/`{id}`
+
+Get photo with full EXIF data.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Photo ID
+
+**Response 200:**
+```json
+{
+  "photo": {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "name": "IMG_0001.jpg",
+    "path": "/mnt/media/photos/2024-05-15/IMG_0001.jpg",
+    "width": 4032,
+    "height": 3024,
+    "date_taken_unix": 1715784000,
+    "exif": {
+      "camera_make": "Apple",
+      "camera_model": "iPhone 15 Pro",
+      "lens": "iPhone 15 Pro back camera 6.765mm f/1.78",
+      "aperture": "f/1.78",
+      "iso": 100,
+      "shutter_speed": "1/1234",
+      "focal_length": "6.765mm",
+      "gps_lat": 37.7749,
+      "gps_lng": -122.4194,
+      "gps_alt": 10.5
+    }
+  }
+}
+```
+
+**Response 404:** Photo not found
+
+---
+
+### GET /api/v1/photo/photos/`{id}`/thumbnail
+
+Get resized thumbnail.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Photo ID
+- `w` (query, optional) — Width in pixels (default: 300)
+- `h` (query, optional) — Height in pixels (default: 300)
+- `fit` (query, optional) — Fit mode: `cover` (crop to fill, default) or `contain` (letterbox)
+
+**Response 200:** JPEG image with appropriate Content-Type header.
+
+**Response 404:** Photo not found
+
+**Notes:**
+- Thumbnails are generated on-demand using PHP's GD library
+- Served with `Cache-Control: public, max-age=86400` (1 day)
+
+---
+
+### GET /api/v1/photo/photos/`{id}`/full
+
+Get full-resolution photo.
+
+**Auth:** Required (Bearer token)
+
+**Parameters:**
+- `id` (path) — Photo ID
+
+**Response 200:** Original image file (JPEG/PNG/TIFF/WebP/HEIC) with appropriate Content-Type header.
+
+**Response 404:** Photo not found
+
+**Notes:**
+- Served with `Cache-Control: public, max-age=31536000` (1 year)
+- HEIC/HEIF format requires ImageMagick extension; returns 500 if unavailable
+
+---
+
+### GET /api/v1/photo/slideshow
+
+Get slideshow data for an album.
+
+**Auth:** Required (Bearer token)
+
+**Query parameters:**
+- `album_id` (optional) — Album ID; if omitted, uses most recent album
+- `interval` (query, optional) — Seconds between slides (default: 5)
+
+**Response 200:**
+```json
+{
+  "slideshow": {
+    "album_id": "album-2024-05-15",
+    "interval": 5,
+    "photos": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440001",
+        "full_url": "/api/v1/photo/photos/550e8400-e29b-41d4-a716-446655440001/full",
+        "thumbnail_url": "/api/v1/photo/photos/550e8400-e29b-41d4-a716-446655440001/thumbnail?w=300&h=300",
+        "caption": "Apple iPhone 15 Pro - 2024-05-15"
+      }
+    ]
+  }
+}
+```
+
+**Notes:**
+- Returns photos in chronological order
+- Caption shows camera info and date taken

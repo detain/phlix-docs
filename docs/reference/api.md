@@ -175,27 +175,6 @@ Get a single media item by ID.
 
 ## Playback Endpoints
 
-### GET /api/v1/playback/`{id}`/stream
-
-Get an HLS stream URL for a media item. Returns `404` if the item is not found, `403` if the user has no access.
-
-**Auth:** Required (Bearer token)
-
-**Parameters:**
-- `id` (path) — Media item UUID
-
-**Response 200:**
-```json
-{
-  "stream_url": "/hls/550e8400-e29b-41d4-a716-446655440003/master.m3u8",
-  "expires_in": 3600
-}
-```
-
-**Response 404:** Media item not found
-
----
-
 ### POST /api/v1/playback/`{id}`/progress
 
 Report playback progress for resume-from-position support.
@@ -647,7 +626,7 @@ Use `MarkerService.promoteCandidates()` to migrate candidates to formal columns.
 
 OPDS 1.2 compliant feeds for third-party OPDS client integration.
 
-### GET /api/v1/opds/v1.2
+### GET /opds/v1.2
 
 Returns the root OPDS catalog feed.
 
@@ -660,14 +639,14 @@ Returns the root OPDS catalog feed.
   <title>Phlix Library</title>
   <updated>2024-01-15T10:30:00Z</updated>
   <id>urn:phlix:library:root</id>
-  <link rel="self" href="http://localhost:8080/api/v1/opds/v1.2" type="application/atom+xml;profile=opds-catalog"/>
-  <link rel="alternate" href="http://localhost:8080/api/v1/opds/v1.2/libraries" type="application/atom+xml;profile=opds-catalog;kind=navigation"/>
+  <link rel="self" href="http://localhost:8080/opds/v1.2" type="application/atom+xml;profile=opds-catalog"/>
+  <link rel="alternate" href="http://localhost:8080/opds/v1.2/libraries" type="application/atom+xml;profile=opds-catalog;kind=navigation"/>
 </feed>
 ```
 
 ---
 
-### GET /api/v1/opds/v1.2/libraries
+### GET /opds/v1.2/libraries
 
 Returns a navigation feed listing all book libraries.
 
@@ -677,7 +656,7 @@ Returns a navigation feed listing all book libraries.
 
 ---
 
-### GET /api/v1/opds/v1.2/libraries/`{id}`
+### GET /opds/v1.2/libraries/`{id}`
 
 Returns an acquisition feed listing all books in a library.
 

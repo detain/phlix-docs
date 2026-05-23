@@ -284,6 +284,4 @@ Driver version 525+ recommended for good tone-map performance.
 ## 7. Next Steps
 
 - [HDR Tone-Mapping Guide](live-tv.md) — deeper dive on tone-mapping HDR content via the Live TV pipeline
-- [Quality Selector](../libraries/playback-quality.md) — configure which quality profiles are available to users
-- [FFmpeg Transcoding Tuning](../advanced/transcoding-tuning.md) — CRF values, bitrate caps, and encoding speed trade-offs
-- [Troubleshooting](../advanced/troubleshooting.md) — if hardware acceleration still doesn't activate after these steps
+- [Troubleshooting](../troubleshooting.md) — if hardware acceleration still doesn't activate after these steps

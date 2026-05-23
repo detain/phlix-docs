@@ -54,8 +54,17 @@ See [docs/reference/skip-button-protocol.md](../reference/skip-button-protocol.m
 
 ## Timeline
 
-- **Phase F.4** (current): Server implements skip button protocol
-- **Phase M** (upcoming): Client teams implement UI using this protocol
+- **Phase F.4** (current): Server exposes skip button markers via `GET /api/v1/media/{id}/markers`
+- **Phase M**: Client teams implement UI using this protocol
+
+### Per-Client Status
+
+| Client | Status | Notes |
+|--------|--------|-------|
+| **Roku** | ✅ Shipped | `source/player/SkipButton.brs` fully implemented |
+| **Android** | — | Pending |
+| **iOS** | — | Pending |
+| **Windows** | — | Pending |
 
 ## Questions?
 

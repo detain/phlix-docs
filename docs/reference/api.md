@@ -294,20 +294,71 @@ List all servers enrolled under the authenticated Hub account.
 
 **Auth:** Required (Bearer token)
 
-**Response 200:**
+**Response 200:** Each entry is the `ServerInfoDto` payload from `phlix-shared`.
+
 ```json
 {
   "servers": [
     {
-      "id": "550e8400-e29b-41d4-a716-446655440004",
-      "name": "Home Server",
+      "serverId": "550e8400-e29b-41d4-a716-446655440004",
+      "userId": "550e8400-e29b-41d4-a716-446655440000",
+      "serverName": "Home Server",
       "version": "0.18.0",
-      "claimed": true,
-      "last_seen": "2026-05-19T09:00:00Z"
+      "lastSeenAt": 1747645200,
+      "status": "online",
+      "hostnameCandidates": ["https://192.168.1.100:32400"],
+      "relayActive": true
     }
   ]
 }
 ```
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `serverId` | string (UUID) | Hub-minted ID. |
+| `userId` | string (UUID) | Owner. |
+| `serverName` | string | From the original claim. |
+| `version` | string | Server semver, refreshed by heartbeat. |
+| `lastSeenAt` | int \| null | UNIX seconds; null when the server has never checked in. |
+| `status` | string | One of `online`, `offline`, `claiming`, `disabled`. |
+| `hostnameCandidates` | string[] | Last-known reachable hostnames. |
+| `relayActive` | bool | `true` when a WSS reverse tunnel (entry in `relay_sessions` with `closed_at IS NULL`) is currently open. |
+
+---
+
+### GET /api/v1/me/servers/`{id}`/access-info
+
+Return the best client-access URL for a single server, plus relay state.
+
+**Auth:** Required (Bearer token)
+
+**Response 200:**
+```json
+{
+  "server_id": "550e8400-e29b-41d4-a716-446655440004",
+  "direct_url": "https://192.168.1.100:32400",
+  "relay_url": null,
+  "relay_active": true
+}
+```
+
+`direct_url` is the first non-empty entry from `hostnameCandidates`. `relay_url` is reserved for the relay-URL form (`https://{subdomain}.phlix.media`) once the relay is fully wired; until then it is `null` and clients should fall back to `direct_url` or initiate a relay tunnel via the `/relay/{server_id}` WebSocket endpoint.
+
+**Response 403:** `{"error":"Forbidden","code":"server.not_owned"}` — token does not own this server.
+
+**Response 404:** `{"error":"Not Found","code":"server.not_found"}` — no such server.
+
+---
+
+### DELETE /api/v1/me/servers/`{id}`
+
+Unbind a claimed server from the authenticated Hub account. Returns 204 on success. Does not uninstall the server software.
+
+**Auth:** Required (Bearer token)
+
+**Response 204:** Empty body.
+
+**Response 403/404:** Same `code` values as `/access-info`.
 
 ## Admin Endpoints
 

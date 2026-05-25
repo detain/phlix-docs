@@ -378,8 +378,8 @@ openssl s_client -connect hub.example.com:443 \
 
 ## Next Steps
 
-- [Hub claim and enrollment](hub-admin/enrollment.md) — enrolling your first server with the hub
-- [Hub admin panel reference](hub-admin/panel-reference.md) — full reference for the hub admin UI
-- [Relay tunnel deep-dive](hub-admin/relay-tunnel.md) — how the WSS relay works
-- [Troubleshooting](troubleshooting.md) — diagnose metrics gaps, alert firing, and dashboard issues
-- [Hub capacity planning](hub-admin/capacity-planning.md) — sizing hub hardware based on server and user count
+- [Hub claim and first boot](first-boot.md) — enrolling your first server with the hub
+- [Hub-admin install & first boot](install.md) — hub setup and admin account creation
+- [Relay tunnel deep-dive](relay-tuning.md) — how the WSS relay works
+- [Troubleshooting](../troubleshooting.md) — diagnose metrics gaps, alert firing, and dashboard issues
+- [Hub capacity planning](capacity-planning.md) — sizing hub hardware based on server and user count

@@ -175,14 +175,14 @@ Get a single media item by ID.
 
 ## Playback Endpoints
 
-### POST /api/v1/playback/`{id}`/progress
+### POST /api/v1/sessions/`{id}`/progress
 
 Report playback progress for resume-from-position support.
 
 **Auth:** Required (Bearer token)
 
 **Parameters:**
-- `id` (path) — Media item UUID
+- `id` (path) — Session ID
 
 **Request body:**
 ```json
@@ -203,7 +203,7 @@ Report playback progress for resume-from-position support.
 
 ## Session Endpoints
 
-### GET /api/v1/sessions
+### GET /api/v1/me/sessions
 
 List all active playback sessions for the authenticated user.
 
@@ -537,7 +537,7 @@ Returns markers for all episodes of a show.
 
 ## Playback Endpoints
 
-### GET /api/v1/media/`{id}`/playback
+### GET /api/v1/media/`{id}`/playback-info
 
 Returns playback information including stream URL and skip button markers.
 

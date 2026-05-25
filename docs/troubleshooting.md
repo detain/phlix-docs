@@ -32,7 +32,7 @@ tail -f .logs/auth.log                # AUTH channel only
 tail -f .logs/http.log                # HTTP channel only
 tail -f .logs/websocket.log           # WEBSOCKET channel only
 grep -i error .logs/phlix.log | tail -50   # Last 50 errors across all channels
-php bin/phlix log:tail --channel=auth  # Channel-specific tail with ANSI colors
+tail -f .logs/auth.log                # Channel-specific tail (one file per channel)
 ```
 
 ### Server status checks
@@ -57,7 +57,8 @@ php scripts/run-migrations.php    # Verify DB schema is up to date
 ```bash
 which ffmpeg                      # Is FFmpeg in PATH?
 ffmpeg -version                   # Version + available encoders/decoders
-php bin/phlix hwaccel:probe       # Probe HW acceleration (VAAPI, NVENC, QSV, VideoToolbox)
+ffmpeg -hwaccels                  # List HW acceleration methods (VAAPI, NVENC/cuda, QSV, VideoToolbox)
+ls -l /dev/dri/                   # VAAPI/QSV render nodes present? (Linux)
 iostat -x 1                       # Disk I/O bottleneck check (Linux)
 ```
 
@@ -78,9 +79,22 @@ PHLIX_LOG_LEVEL=debug php public/index.php    # Start server with debug-level lo
 
 ### Admin password reset
 
+There is no CLI command or self-service password-reset flow yet. To reset a
+password, update the user's Argon2ID hash directly in the database. Generate a
+new hash with PHP, then write it to the `users` table:
+
 ```bash
-php bin/phlix user:reset-password admin@example.com
+# Generate an Argon2ID hash for the new password
+php -r 'echo password_hash("new-password-here", PASSWORD_ARGON2ID), "\n";'
 ```
+
+```sql
+-- Then update the row (use the hash printed above)
+UPDATE users SET password_hash = '<hash-from-above>' WHERE email = 'admin@example.com';
+```
+
+Phlix hashes passwords with `PASSWORD_ARGON2ID`, so any replacement hash must use
+the same algorithm.
 
 ## What Can Go Wrong
 
@@ -130,7 +144,7 @@ chown -R phlix:phlix /path/to/media
 
 **Cause 2 — File naming not recognized:** The filename does not match the `(Year)` or `S01E02` patterns the scanner expects.
 
-**Fix:** Rename files to match the conventions in [Movies library](../libraries/movies.md) or [TV library](../libraries/tv-shows.md). Check `.logs/media.log` for "unrecognized file" entries.
+**Fix:** Rename files to match the conventions in [Movies library](libraries/movies.md) or [TV library](libraries/tv-shows.md). Check `.logs/media.log` for "unrecognized file" entries.
 
 **Cause 3 — Database locked:** MySQL/MariaDB lock contention, or a stale SQLite lock on `data/phlix.db`.
 
@@ -165,9 +179,11 @@ If FFmpeg is installed to a non-standard path, set `ffmpeg_path` in `config/ffmp
 
 **Cause 2 — Hardware acceleration not working:** GPU encode/decode is unavailable and software transcode is too slow.
 
-**Fix:** Probe for available hardware:
+**Fix:** Probe for available hardware with FFmpeg directly:
 ```bash
-php bin/phlix hwaccel:probe
+ffmpeg -hwaccels            # methods FFmpeg was built with
+ffmpeg -encoders | grep -E 'nvenc|vaapi|qsv|videotoolbox'   # available HW encoders
+ls -l /dev/dri/             # VAAPI/QSV render nodes (Linux)
 ```
 Review the output for available adapters (VAAPI, NVENC, QSV, VideoToolbox). Set `hwaccel.enabled` in `config/ffmpeg.php` and ensure the correct device node is accessible (e.g., `/dev/dri/renderD128` for VAAPI on Linux).
 
@@ -191,7 +207,7 @@ Move transcode output to a faster volume (tmpfs, SSD) by setting `transcode_dir`
 ```bash
 curl -v https://hub.phlix.example.com
 ```
-If it times out or is rejected, check egress rules on your firewall or VPS panel. See [Remote access without Hub](../advanced/remote-access-without-hub.md) for alternatives such as a reverse tunnel or VPN.
+If it times out or is rejected, check egress rules on your firewall or VPS panel. See [Remote access without Hub](advanced/remote-access-without-hub.md) for alternatives such as a reverse tunnel or VPN.
 
 **Cause 2 — Claim code expired:** Claim codes are single-use and valid for 15 minutes after generation.
 
@@ -210,17 +226,20 @@ If the Hub signing key was rotated, re-trigger the Hub handshake from the admin 
 ## FAQ
 
 **Q: Can I run Phlix in a subfolder instead of at the root domain?**
-A: Not natively. Phlix serves all routes relative to the root of the configured port. Running in a subfolder (e.g., `https://example.com/phlix/`) requires a reverse proxy (nginx, Caddy, or Apache) to rewrite the path before forwarding to Phlix. See [Reverse proxy](../advanced/reverse-proxy.md).
+A: Not natively. Phlix serves all routes relative to the root of the configured port. Running in a subfolder (e.g., `https://example.com/phlix/`) requires a reverse proxy (nginx, Caddy, or Apache) to rewrite the path before forwarding to Phlix. See [Reverse proxy](advanced/reverse-proxy.md).
 
 **Q: How many concurrent streams can Phlix handle?**
 A: It depends on your hardware and playback mode. Direct play (no transcoding) uses minimal CPU — a single-core server can serve 10 or more concurrent direct-play sessions. Transcoding is CPU-bound; a modern 8-core server typically handles 2–4 simultaneous 1080p transcode streams. 4K HEVC transcoding requires significantly more CPU. Enable hardware acceleration to improve throughput.
 
 **Q: How do I reset the admin password?**
-A: Use the CLI:
+A: There is no CLI or self-service reset yet. Generate an Argon2ID hash and write
+it directly to the `users` table (see [Admin password reset](#admin-password-reset)
+above):
 ```bash
-php bin/phlix user:reset-password admin@example.com
+php -r 'echo password_hash("new-password-here", PASSWORD_ARGON2ID), "\n";'
+# then: UPDATE users SET password_hash = '<hash>' WHERE email = 'admin@example.com';
 ```
-You will be prompted to enter a new password interactively. Restart the server after resetting the password to clear existing sessions.
+Restart the server after resetting the password to clear existing sessions.
 
 **Q: How do I enable debug logging?**
 A: Set the `PHLIX_LOG_LEVEL` environment variable before starting the server:
@@ -230,7 +249,7 @@ PHLIX_LOG_LEVEL=debug php public/index.php
 Valid levels (in order of verbosity): `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`. Restart the server for the change to take effect.
 
 **Q: My media is not being found after adding new files. What do I do?**
-A: (1) Check that the media directory has correct permissions (`chmod -R 755 /path/to/media`). (2) Trigger a manual rescan from the web UI (Library → Scan) or check `.logs/media.log` for scanner activity. (3) Verify your file naming matches the conventions in [Movies library](../libraries/movies.md) or [TV library](../libraries/tv-shows.md). If the scanner logs show "unrecognized file", rename the file to match the expected pattern.
+A: (1) Check that the media directory has correct permissions (`chmod -R 755 /path/to/media`). (2) Trigger a manual rescan from the web UI (Library → Scan) or check `.logs/media.log` for scanner activity. (3) Verify your file naming matches the conventions in [Movies library](libraries/movies.md) or [TV library](libraries/tv-shows.md). If the scanner logs show "unrecognized file", rename the file to match the expected pattern.
 
 **Q: Where are the Workerman/FFmpeg logs?**
 A: Workerman stdout is written to `workerman.log` in the directory where you ran `php public/index.php`. FFmpeg transcode logs are in `.logs/transcode/`, one file per job. Phlix application logs are in `.logs/` split by channel (AUTH, HTTP, WEBSOCKET, MEDIA, SESSION, STREAMING).

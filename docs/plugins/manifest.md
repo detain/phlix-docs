@@ -150,5 +150,5 @@ for top-level keys that the schema does not allow.
   plugin authoring guide (stub; expanded in A.7).
 - [`docs/dev/event-reference.md`](../dev/event-reference.md) — canonical
   alias → FQCN table for `events`.
-- [`PHLIX_EXPANSION_PLAN.md`](../../PHLIX_EXPANSION_PLAN.md) §5 — the
+- `PHLIX_EXPANSION_PLAN.md` §5 (internal planning doc, not published here) — the
   master plan that defines the manifest fields and the eleven types.

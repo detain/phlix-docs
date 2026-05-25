@@ -56,6 +56,14 @@ Each HDHomeRun model specifies a maximum number of simultaneous streams (commonl
 
 ## 3. Setting Up a USB DVB-T Tuner (Linux)
 
+> [!WARNING]
+> **Experimental / not yet functional.** USB DVB-T tuner support is a stub in
+> the current build: frequency scanning returns no channels (the signal engine's
+> tune step is a placeholder). The steps below describe the intended workflow but
+> will not import channels today. For working Live TV, use an **HDHomeRun** tuner
+> (§2) or **IPTV / M3U** (§4), or import channels manually. DVB-T USB scanning is
+> tracked on the roadmap.
+
 ### Requirements
 
 - Linux server with a kernel supporting DVB-T/T2 (most modern kernels)
@@ -79,8 +87,8 @@ apt install librtlsdr0
 ```
 
 3. In Phlix: go to **Settings → Live TV → Add Tuner → DVB-T**.
-4. Phlix scans the available frequency range and imports discovered channels.
-5. If no channels are found: check antenna placement, try outdoors, or use an amplified antenna.
+4. *(When implemented)* Phlix would scan the available frequency range and import discovered channels. In the current build the scan returns no channels — this path is not yet functional (see the warning above).
+5. Until DVB-T scanning lands, use an HDHomeRun tuner or IPTV/M3U, or add channels manually.
 
 **Linux-only note:** DVB-T tuners require the server to be Linux. If your Phlix server runs in Docker on a NAS, USB passthrough must be correctly configured for the container to access the device.
 
@@ -256,4 +264,4 @@ curl http://localhost:32400/api/v1/livetv/tuners
 - [Live TV Comskip](live-tv-comskip.md) — configure automatic commercial detection and skipping in recordings
 - [DLNA / Play To](../clients/dlna.md) — stream live TV or recordings to DLNA-enabled devices
 - [Remote Access / Hub](../hub/remote-access.md) — access Live TV from outside your home network
-- [Recording Rules](live-tv-recordings.md) — managing and editing scheduled recordings
+- [Recording Rules](../developers/dvr.md) — managing and editing scheduled recordings

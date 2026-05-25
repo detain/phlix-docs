@@ -30,7 +30,7 @@ that consumes it.
 | ------------- | ----------------------------- | ----------- |
 | `JWT_SECRET`  | `default-secret-change-me`    | HMAC secret used to sign / verify JWT access and refresh tokens. The default is intentionally insecure so a missing env var fails closed in production deployments. Read by `Phlix\Common\Container\Providers\AuthServicesProvider`. |
 
-## Hub / Pairing
+## Hub / Pairing (phlix-server)
 
 | Variable                        | Default | Description |
 | ------------------------------- | ------- | ----------- |
@@ -41,6 +41,45 @@ that consumes it.
 | `PHLIX_SUBDOMAIN_AUTO_CLAIM`    | `1`     | When truthy (`1`, `true`, `yes`, `on`) automatically claims a *.phlix.media subdomain from the hub after enrollment. See `Phlix\Hub\SubdomainClient` and `config/hub.php`. |
 | `PHLIX_TLS_ENABLED`            | `1`     | When truthy enables TLS/HTTPS for the server's public hostname. Requires a subdomain to be allocated. See `config/hub.php`. |
 | `PHLIX_DOMAIN`                 | `phlix.media` | The base domain for server subdomains (e.g. `abc12345.phlix.media`). See `config/hub.php`. |
+
+## Hub / Server (phlix-hub)
+
+These environment variables apply when running `phlix-hub` itself (not when the server connects to a hub).
+
+### HTTP worker (`config/server.php`)
+
+| Variable             | Default                       | Description                                                                  |
+| -------------------- | ----------------------------- | ---------------------------------------------------------------------------- |
+| `HUB_HOST`           | `0.0.0.0`                     | Bind address for the Workerman HTTP worker.                                  |
+| `HUB_PORT`           | `8800`                        | TCP port the worker listens on.                                              |
+| `HUB_WORKERS`        | `2`                           | Number of worker processes Workerman should fork.                            |
+| `HUB_WORKERMAN_LOG`  | `<repo>/.logs/workerman.log`  | Path Workerman writes its master-log to. Directory must exist or be writable. |
+
+### Database (`config/database.php`)
+
+| Variable          | Default       | Description                                       |
+| ----------------- | ------------- | ------------------------------------------------- |
+| `HUB_DB_HOST`     | `127.0.0.1`   | MySQL host the hub connects to.                   |
+| `HUB_DB_PORT`     | `3306`        | MySQL port.                                       |
+| `HUB_DB_USER`     | `phlix_hub`   | MySQL username.                                   |
+| `HUB_DB_PASSWORD` | `phlix_hub`   | MySQL password. **Override in any non-dev env.**  |
+| `HUB_DB_NAME`     | `phlix_hub`   | Database name.                                    |
+
+### Auth (`config/auth.php`)
+
+| Variable               | Default   | Description                                                                                                                                  |
+| ---------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `HUB_JWT_SECRET`       | (dev fallback) | HMAC-SHA256 secret for issuing JWTs. **Required in production** — must be ≥32 bytes. Falls back to a random per-process secret in dev. |
+| `HUB_JWT_ACCESS_TTL`   | `3600`    | Access-token lifetime in seconds (default 1 hour).                                                                                           |
+| `HUB_JWT_REFRESH_TTL`  | `604800`  | Refresh-token lifetime in seconds (default 7 days).                                                                                          |
+
+> When `HUB_JWT_SECRET` is unset, the hub generates a random secret at container-build time. Tokens issued with that secret are valid only for the lifetime of the current PHP process — restarting the worker invalidates every existing session. Always set this var explicitly in production.
+
+### Container caching
+
+| Variable                       | Default | Description                                                                                                                       |
+| ------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `PHLIX_HUB_CONTAINER_COMPILE`  | unset   | When truthy (`1`, `true`, `yes`, `on`), PHP-DI writes compiled definitions to `var/cache/container/` for faster cold-start. Off for dev. |
 
 ## Hub / Arr Integration
 

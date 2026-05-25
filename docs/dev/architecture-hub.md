@@ -454,7 +454,7 @@ ss -tnp | grep ":8800"
 
 ## Next steps
 
-- [`docs/dev/schema.md`](schema.md) — complete hub DB schema with ER diagram, table columns, indexes, and FK relationships
+- [`docs/dev/schema-hub.md`](schema-hub.md) — complete hub DB schema with ER diagram, table columns, indexes, and FK relationships
 - [`docs/dev/pairing-protocol.md`](pairing-protocol.md) — full protocol specification with sequence diagrams
 - [`docs/dev/relay-protocol.md`](relay-protocol.md) — deep dive on tunnel establishment, message framing, and reconnection logic
 - [`docs/dev/architecture-server.md`](architecture-server.md) — server-side architecture (library scanning, transcoding, streaming, DLNA, Live TV)

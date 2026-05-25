@@ -301,7 +301,7 @@ php bin/hub.php relay:status
 
 ## Next Steps
 
-- [Hub-admin capacity planning](hub-admin/capacity-planning.md) — sizing hub hardware for your user base
-- [Hub claim and setup](hub-claim.md) — understanding server claiming and hub identity
-- [Hub relay tunnel](hub-admin/relay-tunnel.md) — how the WSS relay actually works under the hood
-- [Hub-admin overview](hub-admin/overview.md) — hub dashboard and admin CLI reference
+- [Hub-admin capacity planning](capacity-planning.md) — sizing hub hardware for your user base
+- [Hub claim and setup](../hub/claim-server.md) — understanding server claiming and hub identity
+- [Hub relay tunnel](relay-tuning.md) — how the WSS relay actually works under the hood
+- [Hub-admin install & first boot](install.md) — hub setup and admin account creation

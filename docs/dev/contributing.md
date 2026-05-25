@@ -429,6 +429,5 @@ The required variables are documented in [`docs/reference/env-vars.md`](../refer
 ## Next steps
 
 - [`docs/dev/plugin-sdk.md`](plugin-sdk.md) — Plugin SDK internals (manifest schema, lifecycle, container bindings, events). Start here for plugin development.
-- [`docs/dev/workflow.md`](workflow.md) — Day-to-day developer workflow (debugging, hot reload, logging).
 - [`docs/dev/architecture-hub.md`](architecture-hub.md) — Hub internals (pairing protocol, relay tunnel, namespace map).
 - [`docs/dev/architecture-server.md`](architecture-server.md) — Server bootstrap, container, request lifecycle.

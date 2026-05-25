@@ -196,6 +196,6 @@ php bin/hub.php audit:list --action=ban
 
 ## Next Steps
 
-- [Hub claim and setup](hub-claim.md) — understanding server claiming and hub identity
-- [Hub shared libraries](hub-shared-libraries.md) — how shared libraries work between server and hub
-- [Hub-admin overview](hub-admin/overview.md) — hub dashboard and admin CLI reference
+- [Hub claim and setup](../hub/claim-server.md) — understanding server claiming and hub identity
+- [Hub shared libraries](../hub/share-with-friends.md) — how shared libraries work between server and hub
+- [Hub-admin install & first boot](install.md) — hub setup and admin account creation

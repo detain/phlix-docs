@@ -84,24 +84,35 @@ tar czf phlix-backup-$(date +%Y%m%d).tar.gz \
   --exclude='*.log'
 ```
 
-### 2.2 Built-in Phlix CLI
+### 2.2 Built-in Backup Manager
 
-```bash
-php bin/phlix backup:create --output /backups/phlix-$(date +%Y%m%d).tar.gz
-```
+Phlix ships a `BackupManager` (`src/Admin/BackupManager.php`) that packages the
+MySQL dump, `config/*.php`, the `data/` directory, and SSL certificates into a
+single `tar.gz`, with optional S3 upload and retention cleanup. There is **no
+admin CLI command for this yet** — backups are driven by configuration: set
+`auto_backup_interval_days` and `retention_count` in `config/backup.php` and the
+server creates and prunes backups automatically. See [Backup](../admin/backup.md)
+for the full configuration reference (local path, S3 credentials, retention).
 
-The built-in command packages the same paths as the manual tarball above but in a single invocation.
+For an on-demand backup without the manager, use the manual tarball shown in
+§2.1 above.
 
 ### 2.3 Automated (Cron / systemd timer)
 
+If you prefer OS-level scheduling over the built-in interval, run the manual
+backup from cron:
+
 ```bash
 # /etc/cron.d/phlix-backup — daily at 03:00
-0 3 * * * root /usr/bin/php /home/phlix/bin/phlix backup:create \
-  --output /backups/phlix-$(date +\%Y\%m\%d).tar.gz && \
-  /usr/bin/find /backups -name 'phlix-*.tar.gz' -mtime +7 -delete
+0 3 * * * root /usr/bin/mysqldump -u phlix -pYOURPASS phlix_db \
+  > /backups/phlix-db-$(date +\%Y\%m\%d).sql && \
+  /usr/bin/tar czf /backups/phlix-$(date +\%Y\%m\%d).tar.gz \
+  -C /path/to/phlix config/ data/metadata/ data/plugins/ \
+  --exclude='data/transcode/*' --exclude='*.log' && \
+  /usr/bin/find /backups -name 'phlix-*' -mtime +7 -delete
 ```
 
-This creates a daily backup and removes backups older than 7 days. Adjust `--mtime +7` to retain more or fewer days.
+This creates a daily backup and removes backups older than 7 days. Adjust `-mtime +7` to retain more or fewer days.
 
 For systemd instead of cron:
 
@@ -150,8 +161,7 @@ rclone copy phlix-backup-$(date +%Y%m%d).tar.gz b2:my-bucket/phlix/
 
 ```bash
 systemctl stop phlix
-# or
-php bin/phlix stop
+# or, if running in the foreground, stop the `php public/index.php` process (Ctrl+C)
 ```
 
 2. **Restore database**
@@ -173,16 +183,17 @@ ls /path/to/phlix/data/metadata/
 
 ```bash
 systemctl start phlix
-# or
-php bin/phlix start
+# or, for development, run in the foreground:
+php public/index.php
 ```
 
 5. **Verify**
 
-Log in, check your library items are visible, confirm watch history is present. If metadata images are missing, trigger a library rescan:
+Log in, check your library items are visible, confirm watch history is present. If metadata images are missing, trigger a full library rescan from the admin UI, or via the API:
 
 ```bash
-php bin/phlix library:rescan --force
+curl -X POST http://localhost:32400/api/v1/libraries/{id}/rescan \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ---
@@ -192,9 +203,11 @@ php bin/phlix library:rescan --force
 ### Using docker compose exec
 
 ```bash
-# Inside the container — backups land in the named volume
-docker compose exec phlix-server phlix backup:create \
-  --output /backups/phlix-$(date +%Y%m%d).tar.gz
+# Inside the container — dump the DB and tar the data, landing in a mounted volume
+docker compose exec phlix-server sh -c \
+  'mysqldump -u phlix -pYOURPASS phlix_db > /backups/phlix-db-$(date +%Y%m%d).sql && \
+   tar czf /backups/phlix-$(date +%Y%m%d).tar.gz -C /app config/ data/metadata/ data/plugins/ \
+   --exclude="data/transcode/*" --exclude="*.log"'
 
 # Copy the backup out of the container
 docker compose cp phlix-server:/backups/phlix-20250601.tar.gz ./phlix-backup-20250601.tar.gz
@@ -265,12 +278,13 @@ grep JWT_SECRET /path/to/phlix/config/server.php
 
 **Cause:** `FolderWatcher` uses mtime as its checksum. If the backup was restored to the same filesystem paths, mtimes are preserved and the watcher sees "no change."
 
-**Fix:** Force a full rescan after restore:
+**Fix:** Force a full rescan after restore from the admin UI or the API:
 
 ```bash
-php bin/phlix library:rescan --force
+curl -X POST http://localhost:32400/api/v1/libraries/{id}/rescan \
+  -H "Authorization: Bearer $TOKEN"
 
-# OR touch all media files to update mtime
+# OR touch all media files to update mtime, then rescan
 find /path/to/media -type f -exec touch {} \;
 ```
 
@@ -298,7 +312,6 @@ Active transcode job state is not recoverable anyway — excluding it saves spac
 
 ## 6. Next Steps
 
-- [Troubleshooting](troubleshooting.md) — general recovery help if restore has unexpected issues
-- [Logs](logs.md) — reading server logs during and after restore to confirm health
-- [Server Connectivity](server-connectivity.md) — verify your server is correctly configured after restore
-- Consider setting up monitoring/alerting on backup job success/failure (e.g., check `backup.log` for `backup:create completed`)
+- [Troubleshooting](../troubleshooting.md) — general recovery help if restore has unexpected issues, including reading server logs in `.logs/`
+- [Reverse proxy](reverse-proxy.md) — verify your server is correctly exposed after restore
+- Consider setting up monitoring/alerting on backup job success/failure (e.g., check your cron/timer exit status, or the `backups` table for recent successful entries)

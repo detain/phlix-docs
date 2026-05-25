@@ -58,28 +58,39 @@ On the Hub dashboard, the server card shows a green "Online" indicator. Clicking
 
 ## CLI Alternative
 
-Server administrators who prefer the command line can claim using the `hub:claim` command:
+Server administrators who prefer the command line can pair from the server with
+the `pair-with-hub.php` script. Unlike the web flow, the *server* generates the
+claim code here and you enter it on the Hub dashboard:
 
 ```bash
-php bin/phlix hub:claim --code ABCD-1234 --hub https://hub.phlix.example.com
+php scripts/pair-with-hub.php https://hub.phlix.example.com "Living Room Server"
 ```
 
-- `--code` — the claim code generated from **Settings → Hub** on the server
-- `--hub` — your Hub's base URL
+- First argument — your Hub's base URL
+- Second argument — a friendly server name shown in the Hub dashboard
 
-On success, the command prints:
+The script initiates pairing, prints a claim code, and polls the Hub until you
+enter that code at `https://hub.phlix.example.com/claim-server`. On success it
+prints the server ID, stores the enrollment, and starts the heartbeat loop:
+
 ```
-Server successfully claimed by Hub https://hub.phlix.example.com
-Server name: Living Room Server
+Pairing initiated.
+Claim code: ABCD-1234
+Enter this code at https://hub.phlix.example.com/claim-server
+Claimed! Server ID: <uuid>
+Pairing complete. Server is now connected to the hub.
 ```
 
-To unclaim (disconnect the server from the Hub) without claiming a new one:
+Once paired, claim a `*.phlix.media` subdomain (if your hub offers one):
 
 ```bash
-php bin/phlix hub:unclaim
+php scripts/claim-subdomain.php
 ```
 
-This removes the server from the Hub account and terminates the relay tunnel. Libraries that were shared via Hub become inaccessible to Hub users immediately.
+To unclaim (disconnect the server from the Hub), use the Hub dashboard:
+**My Servers → [server name] → Settings → Unclaim Server**. There is no
+dedicated unclaim script. Removing the claim terminates the relay tunnel and
+shared libraries become inaccessible to Hub users immediately.
 
 ## What Can Go Wrong
 

@@ -67,7 +67,7 @@ wire format or message types.
 | Frame type constants live in `Phlix\Shared\Relay\` | Both hub and server must agree on wire types; shared constants prevent drift | `phlix-shared/src/Hub/` (existing pattern) |
 | Wire format: `[4-byte seq][1-byte type][2-byte len][payload]` for DATA frames | Consistent with existing `RelayMessageFramer` (seq+len big-endian); separate type byte avoids ambiguity | `phlix-server/src/Hub/RelayMessageFramer.php` |
 | HELLO handshake is JSON text sent immediately after WS upgrade | architecture-hub.md shows JSON text exchange; avoids binary framing complexity for the single init message | `docs/dev/architecture-hub.md` "Relay tunnel design" |
-| Sequence numbers per-tunnel incrementing uint32 | Same counterparty assumption as C.6; implicit ack (tcp-like) | `relay-protocol.md` (phlix-docs) |
+| Leading 4-byte field = per-client **channel id** (relay-mux, v0.5.0) | Tunnel is reliable WS/TCP, so no ack/sequence counter is needed; the field is repurposed for per-client multiplexing (`CLIENT_CONNECT`/`CLIENT_DISCONNECT`/`DATA`), channel 0 for tunnel-scoped frames. See "Channel multiplexing" below. | `Phlix\Shared\Relay\RelayFrame` |
 | Heartbeat: every 30 s, 10 s grace | NAT timeout windows; matches PHLIX_RELAY_PING_INTERVAL=30 in current server config | `phlix-docs/docs/dev/relay-protocol.md` |
 | Close codes follow WebSocket RFC 6455 | `1000` normal, `1008` policy violation, `1011` server error, `1012` restart | Standard WS close |
 | `TunnelManager` in new `Phlix\Hub\Relay\` namespace | architecture-hub.md § Namespace map already shows `Phlix\Hub\Relay\` | `docs/dev/architecture-hub.md` § Namespace map |
@@ -158,23 +158,60 @@ close code `1008` (Policy Violation).
 All subsequent frames use this binary encoding (all integers big-endian):
 
 ```
-[4-byte sequence (uint32)][1-byte frame type][2-byte payload length (uint16)][N payload bytes]
+[4-byte channel/seq (uint32)][1-byte frame type][2-byte payload length (uint16)][N payload bytes]
 ```
 
 Maximum frame payload: 65535 bytes.
 
+### Channel multiplexing (the leading 4-byte field) — "relay-mux" (v0.5.0)
+
+The tunnel runs over a single **reliable** WebSocket/TCP connection, so the
+leading 4-byte field is **not** an ack/sequence/reordering counter. It is
+repurposed as a per-client **channel id (uint32)** so that multiple concurrent
+remote clients are demultiplexed over one server tunnel. The binary header
+**layout is unchanged** — only the *semantics* of the leading field changed.
+
+- The hub assigns each `ClientConnection` a stable, monotonically increasing
+  channel id (`1, 2, 3, …`) at `CLIENT_CONNECT` time and records a
+  `channel → ClientConnection` map (`Tunnel::registerClient()`).
+- Client-scoped frames carry the channel id in the leading field:
+  - `CLIENT_CONNECT` / `CLIENT_DISCONNECT` — channel id of the affected client.
+  - `DATA` (both directions) — channel id of the owning client. The hub
+    re-tags client→server `DATA` with the client's channel
+    (`Tunnel::sendClientData()`); the server tags its response `DATA` with the
+    same channel (`RelayConsumer::sendDataFrame()`).
+- Routing:
+  - **server→client** `DATA`: the hub delivers to the single client owning the
+    frame's channel (`Tunnel::sendToClient(channelId, frame)`), replacing the
+    old broadcast-to-all behaviour.
+  - **client→server** `DATA`: the server writes the bytes to the local
+    connection mapped to the frame's channel
+    (`RelayConsumer` `channel → AsyncTcpConnection` map).
+  - **unknown/closed channel**: a `DATA` frame whose channel has no live
+    mapping is **dropped and logged** (warning) on whichever side receives it.
+- Tunnel-scoped frames carry **channel id 0**: `HELLO_ACK`, `HEARTBEAT`,
+  `DISCONNECTED`, `ERROR`.
+
+The JSON `client_id` / `session_id` payload on `CLIENT_CONNECT` /
+`CLIENT_DISCONNECT` is retained for logging/observability only — routing is
+keyed solely on the channel id. This is a pre-release (v0.5.0) protocol change
+with **no backward compatibility** (no flags/shims); the old
+single-active-client `seq`-as-counter behaviour is removed. The shared contract
+exposes `Phlix\Shared\Relay\RelayFrame::channelId()` as a semantic accessor for
+the leading field (it returns `$seq`).
+
 ### Frame type mapping
 
-| Type constant | Value | Direction | Payload |
-|-------------|-------|----------|---------|
-| `TYPE_HELLO` | 0x01 | S→H | JSON object (handled as text before binary mode) |
-| `TYPE_HELLO_ACK` | 0x02 | H→S | JSON object (handled as text before binary mode) |
-| `TYPE_CLIENT_CONNECT` | 0x03 | H→S | `{"client_id":"<uuid>","session_id":"<uuid>"}` |
-| `TYPE_CLIENT_DISCONNECT` | 0x04 | H→S | `{"client_id":"<uuid>"}` |
-| `TYPE_DATA` | 0x05 | S↔H↔C | raw bytes forwarded verbatim |
-| `TYPE_HEARTBEAT` | 0x06 | either→either | empty or `{"seq":N}` |
-| `TYPE_DISCONNECTED` | 0x07 | H→C | `{"reason":"..."}` |
-| `TYPE_ERROR` | 0x08 | H↔any | `{"code":"...","message":"..."}` |
+| Type constant | Value | Direction | Leading field | Payload |
+|-------------|-------|----------|---------------|---------|
+| `TYPE_HELLO` | 0x01 | S→H | n/a (JSON text) | JSON object (handled as text before binary mode) |
+| `TYPE_HELLO_ACK` | 0x02 | H→S | n/a (JSON text) | JSON object (handled as text before binary mode) |
+| `TYPE_CLIENT_CONNECT` | 0x03 | H→S | channel id | `{"client_id":"<uuid>","session_id":"<uuid>"}` (observability) |
+| `TYPE_CLIENT_DISCONNECT` | 0x04 | H→S | channel id | `{"client_id":"<uuid>"}` (observability) |
+| `TYPE_DATA` | 0x05 | S↔H↔C | channel id | raw bytes forwarded verbatim |
+| `TYPE_HEARTBEAT` | 0x06 | either→either | 0 | empty |
+| `TYPE_DISCONNECTED` | 0x07 | H→C | 0 | `{"reason":"..."}` |
+| `TYPE_ERROR` | 0x08 | H↔any | 0 | `{"code":"...","message":"..."}` |
 
 > **Note:** `TYPE_HELLO` and `TYPE_HELLO_ACK` are exchanged as JSON text
 > before binary mode is entered. Binary mode begins immediately after the

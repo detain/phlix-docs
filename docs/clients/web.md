@@ -54,6 +54,23 @@ http://192.168.1.100:32400/web
 
 The web portal uses standard browser APIs and requires no plugins, extensions, or special permissions.
 
+## Browsing Your Media
+
+Once signed in, the sidebar links to the Home and Library views. Each media type also has a dedicated set of browsing pages:
+
+| Section | Pages | Entry URL |
+| --- | --- | --- |
+| **Music** | Albums, album detail, artists, artist detail, all-tracks, and a standalone player | `/music` (albums), `/music/artists`, `/music/tracks`, `/music/player` |
+| **Books** | Library grid, book detail, and a built-in reader | `/books`, `/books/{id}`, `/books/{id}/read` |
+| **Audiobooks** | Library grid, detail with chapter list, and the player | `/audiobooks`, `/audiobooks/{id}`, `/audiobooks/{id}/read` |
+| **Photos** | Date-grouped album grid, album view, single-photo view with EXIF, and a slideshow | `/photo/albums`, `/photo/album/{id}`, `/photo/photo/{id}`, `/photo/slideshow` |
+
+Notes:
+
+- The album and slideshow photo pages need a `library_id` query parameter; the links generated within the portal include it automatically.
+- Book covers and downloads are served from `/books/{id}/cover` and `/books/{id}/download`; photo thumbnails and full-size images from `/photo/photos/{id}/thumbnail` and `/photo/photos/{id}/full`.
+- The music section uses generated cover-art placeholders; embedded album art is not yet rendered.
+
 ## Hub Connection
 
 1. Click **Sign in with Hub** on the login screen.

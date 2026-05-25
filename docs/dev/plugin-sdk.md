@@ -617,6 +617,5 @@ composer install --no-dev --dry-run  # verify no conflicts
 - [`docs/dev/event-reference.md`](event-reference.md) — event catalog.
 - [`docs/dev/architecture-server.md`](architecture-server.md) —
   container, bootstrap, request lifecycle.
-- [`PHLIX_EXPANSION_PLAN.md`](../../PHLIX_EXPANSION_PLAN.md) §5,
-  §10, and Phase B for the long-term plan around contracts, signing,
-  and the `phlix-shared` extraction.
+- `PHLIX_EXPANSION_PLAN.md` §5, §10, and Phase B (internal planning doc) for the
+  long-term plan around contracts, signing, and the `phlix-shared` extraction.

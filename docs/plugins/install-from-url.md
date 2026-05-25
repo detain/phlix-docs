@@ -110,8 +110,8 @@ After install, click **Settings** (wrench icon) next to any enabled plugin to op
 
 ```bash
 systemctl restart phlix
-# or
-php bin/phlix restart
+# or, in the foreground, stop (Ctrl+C) and restart:
+php public/index.php
 ```
 
 ---

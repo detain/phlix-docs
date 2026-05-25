@@ -276,6 +276,6 @@ Run the IPTV tuner tests:
 ## See Also
 
 - [HDHomeRun Tuner Driver](hdhomerun.md)
-- [Live TV Configuration](../reference/livetv.md)
-- [Channel Manager](../reference/channel-manager.md)
-- [Guide Manager](../reference/guide-manager.md)
+- [Live TV Configuration](../advanced/live-tv.md)
+- [Tuner Discovery](discovery.md)
+- [DVR / Recordings](dvr.md)

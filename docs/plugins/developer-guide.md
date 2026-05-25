@@ -6,7 +6,7 @@ working plugin: pick a type, declare the manifest, implement the
 lifecycle contract, subscribe to events, package, sign (optional),
 publish, and install through the admin UI.
 
-Phase A of [`PHLIX_EXPANSION_PLAN.md`](../../PHLIX_EXPANSION_PLAN.md)
+Phase A of `PHLIX_EXPANSION_PLAN.md` (internal planning doc)
 delivers the **loader, manifest, lifecycle, signature, admin UI, and
 reference plugin**. Everything documented here works today (as of the
 Phase A.7 release); sections that anticipate later phases are flagged
@@ -1120,8 +1120,8 @@ POST   /api/v1/admin/auth-providers/{name}/disable
 GET    /api/v1/admin/auth-providers/{name}/config-schema
 ```
 
-See [`docs/reference/api/admin-auth-providers.md`](docs/reference/api/admin-auth-providers.md)
-for the full OpenAPI spec.
+See [`docs/reference/api/auth-webauthn.md`](../reference/api/auth-webauthn.md)
+for the related authentication API spec.
 
 ---
 

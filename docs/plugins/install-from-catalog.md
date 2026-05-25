@@ -99,8 +99,8 @@ Same as URL-installed plugins: **Settings → Plugins** → toggle **Disable** �
 
 ```bash
 systemctl restart phlix
-# or
-php bin/phlix restart
+# or, in the foreground, stop (Ctrl+C) and restart:
+php public/index.php
 ```
 
 The plugin auto-re-attaches on boot for enabled plugins.

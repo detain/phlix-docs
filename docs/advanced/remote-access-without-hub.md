@@ -15,7 +15,7 @@ You can access your Phlix server from outside your home network without using th
 - **Avoid subscription fees**: Hub relay may have usage limits; self-hosted alternatives are free
 - **Lower latency**: Direct connection can be faster than relay for geographically close clients
 
-The hub relay ([Remote Access via the Hub](../hub/remote-access-via-hub.md)) remains the easiest setup. These alternatives require more configuration but give you full control.
+The hub relay ([Remote Access via the Hub](../hub/remote-access.md)) remains the easiest setup. These alternatives require more configuration but give you full control.
 
 ---
 
@@ -387,7 +387,7 @@ curl ifconfig.me
 
 ## 7. Next Steps
 
-- [Remote Access via the Hub](../hub/remote-access-via-hub.md) — the easiest remote access option using the hub relay
+- [Remote Access via the Hub](../hub/remote-access.md) — the easiest remote access option using the hub relay
 - [Claim Your Server's Public Hostname](../hub/claim-server.md) — set up `*.phlix.media` subdomain for your server
 - [Self-Host the Hub](../hub/self-host-the-hub.md) — run your own hub instance for full control
-- [Server Connectivity Checklist](server-connectivity.md) — verify your server is correctly configured for remote access
+- [Reverse proxy](reverse-proxy.md) — verify your server is correctly exposed for remote access

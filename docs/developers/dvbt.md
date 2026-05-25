@@ -304,7 +304,7 @@ Run the DVB-T tuner tests:
 
 - [HDHomeRun Tuner Driver](hdhomerun.md)
 - [IPTV Tuner Driver](iptv.md)
-- [Live TV Configuration](../reference/livetv.md)
-- [Channel Manager](../reference/channel-manager.md)
+- [Live TV Configuration](../advanced/live-tv.md)
+- [DVR / Recordings](dvr.md)
 - [Linux DVB API Documentation](https://www.kernel.org/doc/html/latest/userspace-api/media/index.html)
 - [dvbv5-zap man page](https://manpages.debian.org/buster/dvb-tools/dvbv5-zap.1.en.html)

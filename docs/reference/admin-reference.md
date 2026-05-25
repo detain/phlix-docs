@@ -39,7 +39,7 @@ For hub pairing and port forwarding, see [CLI commands](cli.md).
 | --- | --- |
 | `php scripts/run-marker-detection-worker.php` | Run the intro/outro marker detection background worker. Processes jobs from a queue directory. Press Ctrl+C to stop. |
 | `./scripts/compatibility-check.sh` | Check server/hub major version compatibility. Exits 0 if compatible, 1 if not. Requires `PHLIX_HUB_URL` set. |
-| `php scripts/claim-subdomain.php` | Claim a `*.phlix.media` subdomain for the enrolled server after pairing. Provisions TLS certificates automatically. |
+| `php scripts/claim-subdomain.php` | Claim a `*.phlix.media` subdomain for the enrolled server after pairing. Note: automated TLS provisioning is **not implemented** — certificates must be provisioned out-of-band (see [TLS Certificates](../dev/tls-certificates.md)). |
 
 ### Release / Build
 
@@ -255,4 +255,4 @@ Restart the server after changing `JWT_SECRET`. All existing sessions will be in
 - [Environment variables detail](env-vars.md) — complete table of every env var.
 - [CLI commands detail](cli.md) — hub pairing and port forwarding scripts.
 - [Backup & restore](../advanced/backup-restore.md) — backup strategies and restore procedures.
-- [Troubleshooting](troubleshooting.md) — diagnosing startup and runtime issues.
+- [Troubleshooting](../troubleshooting.md) — diagnosing startup and runtime issues.

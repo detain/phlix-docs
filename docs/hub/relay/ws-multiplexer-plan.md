@@ -1,10 +1,21 @@
 # WebSocket Multiplexed Relay Tunnel — Implementation Plan
 
 ```
-status: not-started
-phase: 0
-updated: 2026-05-24
+status: implemented
+phase: complete
+updated: 2026-05-25
 ```
+
+> **Implemented (2026-05-25).** This plan has shipped. The server-side tunnel
+> worker (`RelayWorker`, `ws://…:8802`) and the client-facing worker
+> (`ClientRelayWorker`, `ws://…:8803`) both run from `Application::run()`;
+> `TunnelManager`/`Tunnel` multiplex frames per channel, `FrameEncoder`/
+> `FrameDecoder` handle the wire format, and `IdleReaper` sweeps idle
+> sessions. `ClientMountController::handle()` returns 426/501 steering plain
+> HTTP callers to the WS worker. See `phlix-hub` `CHANGELOG.md` (Section 9)
+> and the `tests/Unit/Relay/` suite. The remaining caveat is TLS: relay
+> certificates are provisioned out-of-band (ACME is not implemented) — see
+> `docs/hub-admin/tls.md`. This document is retained as the design record.
 
 ## Goal
 

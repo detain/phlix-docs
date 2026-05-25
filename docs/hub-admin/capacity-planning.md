@@ -209,8 +209,8 @@ HAVING total_gb > 100;
 
 ## Next Steps
 
-- [Hub claim and enrollment](hub-admin/enrollment.md) — enrolling your first server with the hub
-- [Relay tunnel deep-dive](hub-admin/relay-tunnel.md) — how the WSS relay actually works
-- [Hub admin panel reference](hub-admin/panel-reference.md) — configuring and monitoring the hub
-- [Hub sharing and access control](hub-share.md) — managing user access to your hub
-- [Troubleshooting](troubleshooting.md) — diagnose relay, bandwidth, and connection issues
+- [Hub claim and first boot](first-boot.md) — enrolling your first server with the hub
+- [Relay tunnel deep-dive](relay-tuning.md) — how the WSS relay actually works
+- [Hub monitoring & alerting](monitoring-alerting.md) — configuring and monitoring the hub
+- [Hub sharing and access control](../hub/share-with-friends.md) — managing user access to your hub
+- [Troubleshooting](../troubleshooting.md) — diagnose relay, bandwidth, and connection issues

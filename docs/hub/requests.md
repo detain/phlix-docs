@@ -250,5 +250,5 @@ curl -H "X-Api-Key: your-api-key" \
 ## 7. Next Steps
 
 - [API Reference: Media Requests](../reference/api/hub-media-requests.md) — full endpoint and response shapes
-- [Invite Links](./invite-links.md) — let users on the hub share access to their libraries
+- [What is the Hub](./what-is-the-hub.md) — overview of hub features and access management
 - [Shared Libraries with Friends](./share-with-friends.md) — share libraries after requests are fulfilled

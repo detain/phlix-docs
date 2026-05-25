@@ -193,8 +193,8 @@ Servers must be re-claimed to the new hub:
 3. Old hub releases the server claim (automatic after re-claim to new hub)
 
 ```bash
-# On the server, claim to the new hub
-php bin/phlix hub:claim --hub https://eu-west.hub.example.com --token <new-hub-token>
+# On the server, pair with the new hub (server prints a claim code to enter in the hub UI)
+php scripts/pair-with-hub.php https://eu-west.hub.example.com "My Server"
 ```
 
 ### Step 5: Verify Library Access
@@ -233,7 +233,7 @@ After migration:
 **Fix:** If the server was claimed to the wrong hub unintentionally:
 1. Contact the hub operator of the hub that currently holds the claim
 2. Request that the hub operator release the server claim: `php bin/hub.php server:release <server-id>`
-3. Once released, claim the server to the correct hub: `php bin/phlix hub:claim --hub https://correct-hub.example.com`
+3. Once released, pair the server with the correct hub: `php scripts/pair-with-hub.php https://correct-hub.example.com "My Server"`
 
 Note: Releasing a server claim does not delete any media or data on the server — it only removes the relay association with the hub.
 
@@ -241,7 +241,7 @@ Note: Releasing a server claim does not delete any media or data on the server �
 
 ## Next Steps
 
-- [Hub-admin overview](hub-admin/overview.md) — hub dashboard and admin CLI reference
-- [Hub claim and setup](hub-claim.md) — understanding server claiming and hub identity
-- [Hub shared libraries](hub-shared-libraries.md) — how shared libraries work within a single hub
-- [Hub-admin abuse handling](hub-admin/abuse-handling.md) — DMCA workflow, GDPR data handling, audit log review
+- [Hub-admin install & first boot](install.md) — hub setup and admin account creation
+- [Hub claim and setup](../hub/claim-server.md) — understanding server claiming and hub identity
+- [Hub shared libraries](../hub/share-with-friends.md) — how shared libraries work within a single hub
+- [Hub-admin abuse handling](abuse-handling.md) — DMCA workflow, GDPR data handling, audit log review

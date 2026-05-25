@@ -1,35 +1,62 @@
 # TLS Certificates
 
-## Overview
+## Status
 
-Phlix Media Server supports TLS certificates for secure HTTPS communication.
-When a server is enrolled with a hub that has subdomain allocation (C.8),
-the server can obtain a TLS certificate for its public hostname.
+**ACME/Let's Encrypt automated provisioning is NOT implemented.**
 
-## Certificate Sources
+The `TlsCertificateManager` class throws a `RuntimeException` when
+`provisionCertificate()` is called. This is the current build behaviour.
 
-### 1. Hub-Provisioned Certificates (Recommended)
+**What is implemented:**
+- Manual, out-of-band certificate provisioning (see below)
+- Read-side helpers that report whether certificates exist on disk
+- Certificate expiry monitoring (via `needsRenewal()`)
 
-When a server enrolls with a hub that supports subdomain allocation,
-the hub provisions a Let's Encrypt certificate for the server's subdomain
-(e.g., `abc12345.phlix.media`).
+**What is NOT implemented:**
+- Automated Let's Encrypt/ACME certificate provisioning
+- DNS-01 challenge handling
+- Automatic renewal via ACME
 
-**Flow:**
-1. Server enrolls with hub (C.3)
-2. Server claims subdomain via `POST /api/v1/servers/{id}/subdomain`
-3. Hub provisions Let's Encrypt certificate via ACME DNS-01 challenge
-4. Hub returns certificate paths in the response
-5. Server stores certificates locally
+The intended design for future ACME DNS-01 wildcard provisioning is
+documented below under "Planned: ACME Automated Provisioning".
 
-**Certificate Storage:**
-- Certificate: `config/tls/{subdomain}.phlix.media/fullchain.pem`
-- Private key: `config/tls/{subdomain}.phlix.media/privkey.pem`
+## Manual Provisioning
 
-**Renewal:**
-- Hub automatically renews certificates 60 days before expiry
-- Server fetches updated certificates on next enrollment refresh
+Operators must provision TLS certificates out-of-band. Place
+certificates in the configured `certs_dir` using the following structure:
 
-### 2. Self-Signed Certificates
+```
+{certs_dir}/
+  {subdomain}.phlix.media/
+    fullchain.pem   # Certificate chain
+    privkey.pem      # Private key
+```
+
+For example, for subdomain `abc12345`:
+```
+/home/phlix/certs/abc12345.phlix.media/fullchain.pem
+/home/phlix/certs/abc12345.phlix.media/privkey.pem
+```
+
+### Claiming a Subdomain
+
+Use the enrollment API to claim a subdomain:
+
+```bash
+curl -X POST /api/v1/servers/{id}/subdomain \
+  -H "Authorization: Bearer {token}"
+```
+
+The response will include your assigned subdomain (e.g., `abc12345.phlix.media`).
+
+### Certificate Storage Paths
+
+| File         | Path                                           |
+| ------------ | ---------------------------------------------- |
+| Certificate  | `{certs_dir}/{subdomain}.phlix.media/fullchain.pem` |
+| Private key  | `{certs_dir}/{subdomain}.phlix.media/privkey.pem` |
+
+### Self-Signed Certificates (Development)
 
 For development or environments without hub subdomain allocation,
 self-signed certificates can be used.
@@ -49,32 +76,31 @@ return [
 ];
 ```
 
-## Environment Variables
+## Planned: ACME Automated Provisioning
+
+The intended design for automated certificate provisioning:
+
+### Flow (Not Implemented)
+1. Server enrolls with hub (C.3)
+2. Server claims subdomain via `POST /api/v1/servers/{id}/subdomain`
+3. **FUTURE:** Hub provisions Let's Encrypt certificate via ACME DNS-01 challenge
+4. Hub returns certificate paths in the response
+5. Server stores certificates locally
+
+### Certificate Renewal
+- **FUTURE:** Hub automatically renews certificates 60 days before expiry
+- Server fetches updated certificates on next enrollment refresh
+
+### Environment Variables
 
 | Variable         | Default | Description |
 | ---------------- | ------- | ----------- |
 | `PHLIX_TLS_ENABLED` | `1`   | Enable TLS for the server |
 | `PHLIX_DOMAIN`   | `phlix.media` | Base domain for subdomains |
 
-## Certificate Scripts
-
-### Claim Subdomain
-
-```bash
-php scripts/claim-subdomain.php
-```
-
-Output:
-```
-Allocated subdomain: abc12345.phlix.media
-Certificate: /home/phlix/config/tls/abc12345.phlix.media.crt
-Key: /home/phlix/config/tls/abc12345.phlix.media.key
-```
-
 ## Security Considerations
 
 - Private keys should have restricted permissions (0600)
-- Certificates are stored in `config/tls/` which should be backupped
+- Certificates are stored in `config/tls/` which should be backed up
 - Let's Encrypt certificates expire after 90 days
-- Hub-managed certificates are automatically renewed
 - Self-signed certificates should only be used in development

@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Install a self-hosted Phlix Hub via Docker, docker-compose, Kubernetes Helm, or source. The hub requires a MySQL database, a JWT secret, and a public URL. TLS is handled automatically by Traefik/Caddy or configured manually. Create the first admin via the UI first-boot form, CLI, or an invite token.
+Install a self-hosted Phlix Hub via Docker, docker-compose, Kubernetes Helm, or source. The hub requires a MySQL database, a JWT secret, and a public URL. TLS must be provisioned out-of-band — automated certificate provisioning is **not implemented** (the hub's `TlsCertificateManager::provisionCertificate()` throws). Terminate TLS at a reverse proxy (Traefik/Caddy/nginx) or place certificates manually; see the hub's TLS runbook (`phlix-hub/docs/hub-admin/tls.md`) and [TLS Certificates](../dev/tls-certificates.md). Create the first admin via the UI first-boot form, CLI, or an invite token.
 
 ---
 
@@ -210,5 +210,5 @@ Verify that pairing works end-to-end:
 
 ## Next Steps
 
-- [Hub-Admin Capacity Planning](hub-admin/capacity-planning.md) — size hub hardware for your user base
-- [Hub-Admin Overview](hub-admin/overview.md) — hub dashboard and admin CLI reference
+- [Hub-Admin Capacity Planning](capacity-planning.md) — size hub hardware for your user base
+- [Hub-Admin Monitoring & Alerting](monitoring-alerting.md) — dashboards, metrics, and alerts for the hub

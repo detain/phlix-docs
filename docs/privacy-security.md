@@ -221,5 +221,5 @@ iptables -A OUTPUT -m limit --limit 5/min -j LOG --log-prefix "EGRESS BLOCKED: "
 
 - [First-run setup](first-run.md) — initial server configuration and TLS setup.
 - [Hub claim and setup](hub/claim-server.md) — understanding what the Hub can and cannot do.
-- [Remote access without Hub](../advanced/remote-access-without-hub.md) — VPN/blockchain-based remote access options.
+- [Remote access without Hub](advanced/remote-access-without-hub.md) — VPN/blockchain-based remote access options.
 - [Troubleshooting](troubleshooting.md) — diagnose connection and access issues.

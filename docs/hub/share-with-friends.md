@@ -53,30 +53,21 @@ You can restrict shared content to G-rated media for certain recipients. This us
 
 ---
 
-## 3. Granting Access via CLI
+## 3. Granting Access
 
-```bash
-# Grant view-only access to a friend's account
-php bin/phlix share:grant --user friend@example.com --library "Movies" --permission view
+Library sharing is managed entirely from the **hub dashboard** — there is no
+server-side CLI for sharing. Grant, list, change, and revoke access from the
+**Servers → [your server] → Sharing** tab described in §2 above:
 
-# Grant view+playback access
-php bin/phlix share:grant --user friend@example.com --library "Movies" --permission playback
+- **Grant** — click **Share Library**, choose the library/folder/item, pick a
+  permission level (**View only** / **View + Playback** / **View + Playback +
+  Download**, the last of which enables DLNA casting), and send the invite.
+- **List** — the Sharing tab lists every active share and its permission level.
+- **Change / Revoke** — adjust the permission level or revoke access inline;
+  revocation takes effect immediately.
 
-# Grant view+playback+download access (full access — enables DLNA casting)
-php bin/phlix share:grant --user friend@example.com --library "Movies" --permission download
-
-# Share a specific folder instead of the whole library
-php bin/phlix share:grant --user friend@example.com --folder "Movies/Classics" --permission playback
-
-# Share a specific media item by its ID
-php bin/phlix share:grant --user friend@example.com --item "abc123-def456" --permission view
-
-# List all active shares for a user
-php bin/phlix share:list --user friend@example.com
-
-# Revoke a friend's access to a library
-php bin/phlix share:revoke --user friend@example.com --library "Movies"
-```
+Sharing state lives on the hub, not on the media server, so these actions are
+only available through the hub UI.
 
 ---
 
@@ -152,14 +143,15 @@ grep "share_invite_accepted" .logs/hub-audit.log | tail -10
 
 **Diagnosis:**
 ```bash
-# On the server, check library scan status:
-php bin/phlix library:status
+# On the server, check library status via the API:
+curl -s http://localhost:32400/api/v1/libraries -H "Authorization: Bearer $TOKEN"
 
 # Check if a scan is currently running:
 ps aux | grep -i "media_scanner\|phlix" | grep -v grep
 
-# Manually trigger a full library rescan:
-php bin/phlix library:scan --all
+# Manually trigger a rescan of a library (use the library id from the call above):
+curl -X POST http://localhost:32400/api/v1/libraries/{id}/rescan \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 **Fix:** Library sharing requires the library scan to be complete. If a scan is still in progress, wait for it to finish. If no scan is running, trigger one manually. The friend should refresh the hub page after the scan completes and verify the library contents.
@@ -171,18 +163,13 @@ php bin/phlix library:scan --all
 **Symptom:** Friend logs in, browses the shared library, but pressing **Cast** or **Play To** on a DLNA device does nothing or shows an error.
 
 **Diagnosis:**
-```bash
-# Check the current permission level on the share:
-php bin/phlix share:list --user friend@example.com
-```
+Check the current permission level on the share from the hub dashboard's
+**Sharing** tab (it lists each share and its permission level).
 
-**Fix:** DLNA casting requires `View + Playback + Download` permission. Ask the library owner to upgrade your permission level:
-
-```bash
-php bin/phlix share:grant --user friend@example.com --library "Movies" --permission download
-```
-
-Or via the hub dashboard — change the share's permission to **"View + Playback + Download"**.
+**Fix:** DLNA casting requires `View + Playback + Download` permission. Ask the
+library owner to upgrade your permission level from the hub dashboard's
+**Sharing** tab — change the share's permission to **"View + Playback +
+Download"**.
 
 ---
 
@@ -191,4 +178,4 @@ Or via the hub dashboard — change the share's permission to **"View + Playback
 - [Claim your server to the hub](./claim-server.md) — connect your server to the hub before you can share libraries
 - [Hub: what is the hub?](./what-is-the-hub.md) — overview of all hub features and account management
 - [Self-host the hub](./self-host-the-hub.md) — run your own hub instance for full control
-- [Troubleshooting](./troubleshooting.md) — if sharing issues persist after trying the fixes above
+- [Troubleshooting](../troubleshooting.md) — if sharing issues persist after trying the fixes above

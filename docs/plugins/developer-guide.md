@@ -120,9 +120,9 @@ See also: [`manifest.md`](manifest.md) for the enum's canonical home.
 
 The manifest is a single `plugin.json` at the root of your plugin
 repository. Its full schema lives in
-[`manifest.schema.json`](manifest.schema.json) and the human-readable
-field-by-field reference is in [`manifest.md`](manifest.md). The
-relevant highlights for plugin authors:
+[`schemas/manifest.schema.json` in `detain/phlix-shared`](https://github.com/detain/phlix-shared/blob/master/schemas/manifest.schema.json)
+and the human-readable field-by-field reference is in
+[`manifest.md`](manifest.md). The relevant highlights for plugin authors:
 
 ### Canonical example
 
@@ -712,9 +712,9 @@ this is the contract.
 "signature": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
 ```
 
-The regex `^sha256:[0-9a-f]{64}$` is enforced by
-[`manifest.schema.json`](manifest.schema.json). Anything else fails
-manifest validation.
+The regex `^sha256:[0-9a-f]{64}$` is enforced by the manifest schema
+([`schemas/manifest.schema.json` in phlix-shared](https://github.com/detain/phlix-shared/blob/master/schemas/manifest.schema.json)).
+Anything else fails manifest validation.
 
 ### Computing a signature
 
@@ -928,8 +928,9 @@ then, install-from-URL is the supported install path.
 ### Documentation
 
 - [`docs/plugins/manifest.md`](manifest.md) — full manifest spec.
-- [`docs/plugins/manifest.schema.json`](manifest.schema.json) — the
-  JSON Schema used by `Manifest::validate()` and CI linters.
+- [`schemas/manifest.schema.json` in `detain/phlix-shared`](https://github.com/detain/phlix-shared/blob/master/schemas/manifest.schema.json) —
+  the JSON Schema used by `ManifestSchema::validate()` (shipped with
+  phlix-shared ≥ 0.6.0) and by CI linters.
 - [`docs/plugins/install-from-url.md`](install-from-url.md) — the
   operator-facing install walkthrough.
 - [`docs/plugins/install-from-catalog.md`](install-from-catalog.md) —

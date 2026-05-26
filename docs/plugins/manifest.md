@@ -4,12 +4,12 @@ Every Phlix plugin ships a `plugin.json` at the root of its package.
 This file is the source of truth for the loader (A.4), the admin UI
 (A.5), and the signature verifier (A.7+). A.3 defines:
 
-- **The schema** — [`manifest.schema.json`](manifest.schema.json) (JSON
-  Schema draft 2020-12). IDEs and CI lint manifests against this file.
-  The runtime validator loads its copy from
-  `vendor/detain/phlix-shared/schemas/manifest.schema.json` (shipped with
-  `detain/phlix-shared` ≥ 0.6.0) — the file in this repo and the one in
-  `phlix-shared` are kept identical.
+- **The schema** —
+  [`schemas/manifest.schema.json` in `detain/phlix-shared`](https://github.com/detain/phlix-shared/blob/master/schemas/manifest.schema.json)
+  (JSON Schema draft 2020-12). IDEs and CI lint manifests against this
+  file. The runtime validator (`Phlix\Plugins\Manifest\ManifestSchema`)
+  loads it from `vendor/detain/phlix-shared/schemas/manifest.schema.json`
+  on installs of `phlix-shared` ≥ 0.6.0.
 - **The parser** — `Phlix\Shared\Plugin\Manifest`, an immutable PHP
   value object (shipped in the `detain/phlix-shared` Composer package).
   Parses `plugin.json` into typed properties. The validator
@@ -143,9 +143,14 @@ for top-level keys that the schema does not allow.
    `valid-oidc.json` (auth provider) into your plugin's root.
 2. Replace `name`, `entry`, `events`, and `settings` to match your
    plugin.
-3. Run `npx ajv-cli validate -s docs/plugins/manifest.schema.json -d
-   plugin.json` (optional — the loader will validate again at install
-   time).
+3. Lint your `plugin.json` against the schema (optional — the loader
+   will validate again at install time):
+   ```sh
+   # If you have phlix-shared checked out next to phlix-server:
+   npx ajv-cli validate -s ../phlix-shared/schemas/manifest.schema.json -d plugin.json
+   # …or from a phlix-server install:
+   npx ajv-cli validate -s vendor/detain/phlix-shared/schemas/manifest.schema.json -d plugin.json
+   ```
 4. Commit the manifest alongside your PHP entry class. Wiring the
    plugin into the runtime arrives in A.4.
 

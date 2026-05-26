@@ -204,7 +204,7 @@ in the `detain/phlix-shared` Composer package) is the master list of
 plugin categories. The legacy `Phlix\Plugins\ManifestType` FQCN remains
 available as a deprecated alias through 0.11.x. Each value also appears in:
 
-- `docs/plugins/manifest.schema.json` (the `type` enum block).
+- `schemas/manifest.schema.json` in `detain/phlix-shared` (the `type` enum block).
 - `docs/plugins/manifest.md` (the field reference table).
 - `docs/plugins/developer-guide.md` §2 (the type matrix).
 - `PHLIX_EXPANSION_PLAN.md` §5 (the master plan).
@@ -224,8 +224,9 @@ multi-file edit** and every site needs to be touched in the same PR.
    `src/Plugin/ManifestType.php`. Pick a kebab-case value and
    document the use case in the docblock. Bump `phlix-shared` to a new
    tag and bump `phlix-server`'s composer require accordingly.
-3. **Update the JSON schema** at `docs/plugins/manifest.schema.json`
-   — add the value to the `type` enum array.
+3. **Update the JSON schema** at `schemas/manifest.schema.json` in
+   `detain/phlix-shared` — add the value to the `type` enum array, bump
+   the phlix-shared tag, and bump consumers' composer require.
 4. **Update the field tables** in `docs/plugins/manifest.md` and
    `docs/plugins/developer-guide.md` §2 (the matrix). Flag the
    implementation status honestly — "Loader yes; manager dispatch

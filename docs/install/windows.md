@@ -176,7 +176,7 @@ sudo apt update && sudo apt upgrade -y
 ```bash
 sudo apt install -y software-properties-common
 sudo add-apt-repository -y ppa:ondrej/php
-sudo apt install -y php8.3-fpm php8.3-mysql php8.3-curl php8.3-gd php8.3-zip php8.3-xml php8.3-mbstring php8.3-bcmath
+sudo apt install -y php-fpm php-mysql php-curl php-gd php-zip php-xml php-mbstring php-bcmath
 ```
 
 ### 3e. Install MariaDB

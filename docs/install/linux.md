@@ -9,8 +9,8 @@ phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time 
 **Quick one-liner (Ubuntu/Debian):**
 
 ```bash
-sudo apt update && sudo apt install -y php8.3-fpm php8.3-mysql php8.3-curl php8.3-gd \
-  php8.3-zip php8.3-xml php8.3-mbstring php8.3-bcmath mariadb-server ffmpeg git curl unzip && \
+sudo apt update && sudo apt install -y php-fpm php-mysql php-curl php-gd \
+  php-zip php-xml php-mbstring php-bcmath mariadb-server ffmpeg git curl unzip && \
   sudo mkdir -p /opt/phlix && sudo chown $USER:$USER /opt/phlix && \
   git clone https://github.com/detain/phlix-server.git /opt/phlix && cd /opt/phlix && \
   composer install --no-dev --optimize-autoloader && \
@@ -46,8 +46,8 @@ Use a non-root sudo user for all steps below.
 
 ```bash
 sudo apt update
-sudo apt install -y php8.3-fpm php8.3-mysql php8.3-curl php8.3-gd php8.3-zip \
-  php8.3-xml php8.3-mbstring php8.3-bcmath mariadb-server ffmpeg git curl unzip
+sudo apt install -y php-fpm php-mysql php-curl php-gd php-zip \
+  php-xml php-mbstring php-bcmath mariadb-server ffmpeg git curl unzip
 ```
 
 ### 2b. Fedora (DNF)
@@ -196,7 +196,7 @@ Expected: HTTP 200 from the phlix index page.
 ### PHP extension missing
 
 - **Symptom:** `Class 'PDO' not found` or similar during `composer install`
-- **Fix:** `sudo apt install php8.3-mysql php8.3-gd` (or matching extensions for your PHP version)
+- **Fix:** `sudo apt install php-mysql php-gd` (installs extensions for your default PHP version)
 - **Verify:** `php -m | grep pdo_mysql`
 
 ### MariaDB not running

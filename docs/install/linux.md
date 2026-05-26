@@ -320,18 +320,38 @@ What it removes when present:
 | Step | Artefact | Notes |
 |---|---|---|
 | 1 | `phlix-server` systemd service | `stop`, `disable`, remove unit, `daemon-reload` |
-| 2 | HAProxy config | If `/etc/haproxy/haproxy.cfg.phlix-server.bak` exists, it is restored over the current config and HAProxy reloaded. Otherwise the script warns and leaves it alone. |
+| 2 | HAProxy fragment | `/etc/haproxy/phlix-managed/phlix-server.cfg.fragment` removed; `haproxy.cfg` rebuilt from remaining Phlix fragments. If phlix-server was the last one, the pre-Phlix snapshot at `/etc/haproxy/haproxy.cfg.pre-phlix.bak` is restored, or `haproxy.cfg` is removed and haproxy is stopped + disabled. |
 | 3 | HAProxy TLS cert | The combined PEM at `/etc/haproxy/certs/<domain>.pem` |
 | 4 | Certbot helpers | `/etc/cron.d/phlix-server-certbot` and the renewal deploy hook |
 | 5 | Let's Encrypt cert | `certbot delete --cert-name <domain>` — only with `--purge` or interactive confirm |
 | 6 | MySQL database + user | `DROP DATABASE` / `DROP USER` — only with `--purge` or interactive confirm |
 | 7 | Install dir | `/var/www/phlix` (or whatever path was used); system paths refused |
 | 8 | Data dirs | `/var/phlix`, `/var/log/phlix`, `/var/run/phlix` — `/var/phlix` only with `--purge` or interactive confirm |
-| 9 | `/etc/phlix/env` | Last, so DB credentials are still readable for step 6 |
+| 9 | `/etc/phlix/env` | env file |
+| 10 | Dedicated system user `phlix` | `userdel` — only with `--purge` or interactive confirm. Refuses shared OS accounts. Cross-detects phlix-hub's `User=` and refuses to remove a name that's still being used by the hub. |
 
-System packages (`php-*`, `mysql-server`, `ffmpeg`, `haproxy`, `certbot`), `ufw` rules, and
-the `phlix` system user are left alone — remove them with `apt remove` / `userdel phlix` /
-`ufw delete` if you no longer need them.
+System packages (`php-*`, `mysql-server`, `ffmpeg`, `haproxy`, `certbot`) and `ufw` rules are
+left alone — `sudo apt remove …` / `sudo ufw delete …` to remove them.
+
+### Install flags
+
+`sudo bash scripts/install.sh --help` lists every option. Highlights:
+
+| Flag | Effect |
+|---|---|
+| `--domain HOST` | Public hostname; enables TLS when paired with `--admin-email` |
+| `--admin-email EMAIL` | Email registered with Let's Encrypt |
+| `--db-name`/`--db-user`/`--db-pass`/`--db-host`/`--db-port` | MySQL identity. `config/database.php` hardcodes host/port/db/user — only `DB_PASSWORD` is env-driven. |
+| `--http-port PORT` | HTTP listen port (default `8096`) |
+| `--tmdb-api-key KEY` | Optional TMDB API key |
+| `--hub-url URL` | Optional `PHLIX_HUB_URL` for hub relay pairing |
+| `--service-user USER` | System user to run as (default `phlix` — dedicated, created if missing) |
+| `--branch NAME` | Git branch or tag to install |
+| `--tls`/`--no-tls`/`--no-proxy` | Force TLS / plain HTTP / skip managed HAProxy |
+| `--update` | Pull new code + run migrations on an existing install (preserves env + secrets) |
+| `--uninstall` | Remove the install — interactive prompts before each destructive step |
+| `--purge` | With `--uninstall`, also drop the DB, delete the Let's Encrypt cert, wipe `/var/phlix`, and remove the dedicated system user |
+| `-y` / `--interactive` | Override interactivity detection |
 
 ---
 

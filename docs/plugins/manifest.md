@@ -4,8 +4,12 @@ Every Phlix plugin ships a `plugin.json` at the root of its package.
 This file is the source of truth for the loader (A.4), the admin UI
 (A.5), and the signature verifier (A.7+). A.3 defines:
 
-- **The schema** — `docs/plugins/manifest.schema.json` (JSON Schema
-  draft 2020-12). IDEs and CI lint manifests against this file.
+- **The schema** — [`manifest.schema.json`](manifest.schema.json) (JSON
+  Schema draft 2020-12). IDEs and CI lint manifests against this file.
+  The runtime validator loads its copy from
+  `vendor/detain/phlix-shared/schemas/manifest.schema.json` (shipped with
+  `detain/phlix-shared` ≥ 0.6.0) — the file in this repo and the one in
+  `phlix-shared` are kept identical.
 - **The parser** — `Phlix\Shared\Plugin\Manifest`, an immutable PHP
   value object (shipped in the `detain/phlix-shared` Composer package).
   Parses `plugin.json` into typed properties. The validator

@@ -13,6 +13,8 @@ export default defineConfig({
       { text: 'Clients', link: '/clients/overview' },
       { text: 'Advanced', link: '/advanced/hardware-transcoding' },
       { text: 'Developers', link: '/dev/architecture-server' },
+      { text: 'Integrations', link: '/integrations/lastfm' },
+      { text: 'Security', link: '/security/passkeys' },
       { text: 'Admin', link: '/admin/webhooks' },
       { text: 'Hub Admin', link: '/hub-admin/install' },
     ],
@@ -59,6 +61,8 @@ export default defineConfig({
             { text: 'Roku', link: '/clients/roku' },
             { text: 'Windows App', link: '/clients/windows' },
             { text: 'Web App', link: '/clients/web' },
+            { text: 'DLNA / Play To', link: '/clients/dlna' },
+            { text: 'Skip Button Integration Brief', link: '/clients/skip-button-integration-brief' },
           ]
         }
       ],
@@ -72,6 +76,9 @@ export default defineConfig({
             { text: 'Reverse Proxy', link: '/advanced/reverse-proxy' },
             { text: 'Backup & Restore', link: '/advanced/backup-restore' },
             { text: 'ARR Integration', link: '/advanced/arr-integration' },
+            { text: 'DLNA Server', link: '/advanced/dlna' },
+            { text: 'Live TV Comskip', link: '/advanced/live-tv-comskip' },
+            { text: 'Trickplay Thumbnails', link: '/advanced/trickplay' },
           ]
         }
       ],
@@ -112,6 +119,10 @@ export default defineConfig({
             { text: 'Config Files', link: '/reference/config-files' },
             { text: 'CLI', link: '/reference/cli' },
             { text: 'API', link: '/reference/api' },
+            { text: 'Admin Reference', link: '/reference/admin-reference' },
+            { text: 'Skip Button Protocol', link: '/reference/skip-button-protocol' },
+            { text: 'WebAuthn / Passkey API', link: '/reference/api/auth-webauthn' },
+            { text: 'Hub Media Requests API', link: '/reference/api/hub-media-requests' },
           ]
         }
       ],
@@ -122,6 +133,9 @@ export default defineConfig({
             { text: 'Server Architecture', link: '/dev/architecture-server' },
             { text: 'Hub Architecture', link: '/dev/architecture-hub' },
             { text: 'Pairing Protocol', link: '/dev/pairing-protocol' },
+            { text: 'Relay Protocol', link: '/dev/relay-protocol' },
+            { text: 'Hub Database Schema', link: '/dev/schema-hub' },
+            { text: 'TLS Certificates', link: '/dev/tls-certificates' },
             { text: 'Event Reference', link: '/dev/event-reference' },
           ]
         },
@@ -132,6 +146,7 @@ export default defineConfig({
             { text: 'Plugin Manifest', link: '/plugins/manifest' },
             { text: 'Install from Catalog', link: '/plugins/install-from-catalog' },
             { text: 'Install from URL', link: '/plugins/install-from-url' },
+            { text: 'Plugin Catalog', link: '/plugins/plugin-catalog' },
             { text: 'Trusted Plugin List', link: '/plugins/trusted-plugin-list' },
           ]
         },
@@ -140,6 +155,7 @@ export default defineConfig({
           items: [
             { text: 'Auth Providers', link: '/plugins/auth-providers' },
             { text: 'Plugin Developer Guide', link: '/plugins/developer-guide' },
+            { text: 'Arr API Clients', link: '/dev/arr-clients' },
           ]
         },
         {
@@ -149,6 +165,15 @@ export default defineConfig({
             { text: 'Debug Recipes', link: '/dev/debug-recipes' },
             { text: 'Release Process', link: '/dev/release-process' },
             { text: 'Contributing', link: '/dev/contributing' },
+          ]
+        },
+        {
+          text: 'Client App Build Guides',
+          items: [
+            { text: 'Mobile (iOS & Android)', link: '/dev/client-mobile' },
+            { text: 'Samsung Tizen', link: '/dev/client-tizen' },
+            { text: 'Roku', link: '/dev/client-roku' },
+            { text: 'Windows', link: '/dev/client-windows' },
           ]
         },
         {
@@ -194,6 +219,7 @@ export default defineConfig({
             { text: 'Federation Policy', link: '/hub-admin/federation-policy' },
             { text: 'Audit Log', link: '/hub-admin/audit-log' },
             { text: 'Network', link: '/hub-admin/network' },
+            { text: 'TLS Certificates', link: '/hub-admin/tls' },
           ]
         }
       ],
@@ -206,6 +232,33 @@ export default defineConfig({
             { text: 'Share with Friends', link: '/hub/share-with-friends' },
             { text: 'Remote Access', link: '/hub/remote-access' },
             { text: 'Self-Host the Hub', link: '/hub/self-host-the-hub' },
+            { text: 'Media Requests', link: '/hub/requests' },
+          ]
+        },
+        {
+          text: 'Relay Internals',
+          items: [
+            { text: 'Tunnel / TunnelManager', link: '/hub/relay/tunnel' },
+            { text: 'Frame Decoder / Encoder', link: '/hub/relay/frame-decoder' },
+            { text: 'Idle Reaper', link: '/hub/relay/idle-reaper' },
+            { text: 'WS Multiplexer Plan', link: '/hub/relay/ws-multiplexer-plan' },
+          ]
+        }
+      ],
+      '/integrations/': [
+        {
+          text: 'Integrations',
+          items: [
+            { text: 'Last.fm Scrobbling', link: '/integrations/lastfm' },
+            { text: 'Trakt.tv', link: '/integrations/trakt' },
+          ]
+        }
+      ],
+      '/security/': [
+        {
+          text: 'Security',
+          items: [
+            { text: 'Passkeys', link: '/security/passkeys' },
           ]
         }
       ]

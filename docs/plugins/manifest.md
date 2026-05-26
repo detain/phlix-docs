@@ -47,8 +47,8 @@ to bootstrap a new plugin.
 
 | Field | Type | Constraints |
 | --- | --- | --- |
-| `name` | string | Kebab-case. Must start with `phlix-plugin-`. Max 64 chars. Regex `^phlix-plugin-[a-z0-9][a-z0-9-]*$`. |
-| `version` | string | Plugin semver. Regex `^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.\-]+)?$`. |
+| `name` | string | Kebab-case. Must start with `phlix-plugin-`. Max 64 chars. Single hyphens only (no leading/trailing/doubled). Regex `^phlix-plugin-[a-z0-9]+(-[a-z0-9]+)*$`. |
+| `version` | string | Plugin semver (optional prerelease and/or build metadata). Regex `^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$`. |
 | `phlix_min_server_version` | string | Minimum supported Phlix server semver. Same regex. |
 | `type` | string | One of the eleven values below. |
 | `entry` | string | Fully-qualified entry class name. Regex `^[A-Z][A-Za-z0-9_]*(?:\\[A-Z][A-Za-z0-9_]*)+$`. |
@@ -77,7 +77,8 @@ Mirrors `PHLIX_EXPANSION_PLAN.md` §5 and `Phlix\Shared\Plugin\ManifestType`:
 
 An array of **manifest aliases**. Each alias is a dotted string of the
 form `phlix.<area>.<verb>(.<sub>)*` (regex
-`^phlix\.[a-z]+(?:\.[a-z]+)*$`). The canonical alias list lives in
+`^phlix\.[a-z]+(?:\.[a-z_]+)+$`; segments after `<area>` may contain
+underscores, e.g. `phlix.user.logged_in`). The canonical alias list lives in
 [`docs/dev/event-reference.md`](../dev/event-reference.md). The A.4
 loader resolves these aliases to event FQCNs at install time.
 

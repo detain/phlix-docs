@@ -84,3 +84,4 @@ The Hub connection allows you to access all of your Hub-linked servers without m
 - [Web client](./web.md) — access from any browser without installing software
 - [Roku](./roku.md) — living room streaming on Roku devices
 - [Tizen](./tizen.md) — Samsung Smart TV app
+- [Mobile client build guide](../dev/client-mobile.md) — for developers building these apps

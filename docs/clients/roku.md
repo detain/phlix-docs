@@ -76,3 +76,4 @@ Hub login also enables remote playback when you are away from home — the Hub r
 - [Tizen](./tizen.md) — Samsung Smart TV app
 - [Windows client](./windows.md) — desktop client with additional features
 - [First-run wizard](../first-run.md) — configure your libraries after connecting a client
+- [Roku client build guide](../dev/client-roku.md) — for developers building this channel

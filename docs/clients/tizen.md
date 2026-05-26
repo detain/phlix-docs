@@ -87,3 +87,4 @@ Hub login means your TV app works anywhere — the Hub relay handles the connect
 - [Roku](./roku.md) — alternative living room streaming platform
 - [Windows client](./windows.md) — desktop app with system tray and media key support
 - [Live TV](../advanced/live-tv.md) — watch live television through the Phlix app
+- [Samsung Tizen client build guide](../dev/client-tizen.md) — for developers building this app

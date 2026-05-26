@@ -2,9 +2,9 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://phlix.tv/schemas/plugin-manifest.schema.json",
     "title": "Phlix plugin manifest",
-    "description": "Schema for plugin.json files consumed by the Phlix plugin loader. See docs/plugins/manifest.md for the human-readable spec.",
+    "description": "Schema for plugin.json files consumed by the Phlix plugin loader. See docs/plugins/manifest.md for the human-readable spec. Unknown top-level fields are permitted here because the parser (Phlix\\Shared\\Plugin\\Manifest) reports them separately as soft `unknown_field` warnings rather than hard schema errors.",
     "type": "object",
-    "additionalProperties": false,
+    "additionalProperties": true,
     "required": [
         "name",
         "version",
@@ -15,23 +15,23 @@
     "properties": {
         "name": {
             "type": "string",
-            "description": "Globally unique kebab-case identifier; must start with 'phlix-plugin-'.",
-            "pattern": "^phlix-plugin-[a-z0-9][a-z0-9-]*$",
+            "description": "Globally unique kebab-case identifier; must start with 'phlix-plugin-'. Segments are joined by single hyphens (no leading, trailing, or doubled hyphens).",
+            "pattern": "^phlix-plugin-[a-z0-9]+(-[a-z0-9]+)*$",
             "maxLength": 64
         },
         "version": {
             "type": "string",
             "description": "Semver version of the plugin itself.",
-            "pattern": "^\\d+\\.\\d+\\.\\d+(?:[-+][A-Za-z0-9.\\-]+)?$"
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
         },
         "phlix_min_server_version": {
             "type": "string",
             "description": "Minimum Phlix server semver the plugin is compatible with.",
-            "pattern": "^\\d+\\.\\d+\\.\\d+(?:[-+][A-Za-z0-9.\\-]+)?$"
+            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
         },
         "type": {
             "type": "string",
-            "description": "Plugin category. Matches an entry in src/Plugins/ManifestType.php.",
+            "description": "Plugin category. Mirrors the cases of Phlix\\Shared\\Plugin\\ManifestType.",
             "enum": [
                 "metadata-provider",
                 "subtitle-provider",
@@ -53,10 +53,10 @@
         },
         "events": {
             "type": "array",
-            "description": "Manifest aliases (e.g., 'phlix.playback.started') the plugin subscribes to. The loader (A.4) resolves aliases to event class FQCNs.",
+            "description": "Manifest aliases (e.g., 'phlix.playback.started', 'phlix.user.logged_in') the plugin subscribes to. The loader (A.4) resolves aliases to event class FQCNs. Segments after the leading 'phlix.<area>' may contain underscores (e.g. 'logged_in').",
             "items": {
                 "type": "string",
-                "pattern": "^phlix\\.[a-z]+(?:\\.[a-z]+)*$"
+                "pattern": "^phlix\\.[a-z]+(?:\\.[a-z_]+)+$"
             },
             "uniqueItems": true
         },

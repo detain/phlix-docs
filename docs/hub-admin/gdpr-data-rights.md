@@ -17,4 +17,4 @@ Hub Admin supports right-to-erasure requests with full data purging.
 
 ## Compliance
 
-See the [Privacy & Security](../../privacy-security) documentation for full details.
+See the [Privacy & Security](/privacy-security) documentation for full details.

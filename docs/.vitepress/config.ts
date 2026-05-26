@@ -16,7 +16,7 @@ export default defineConfig({
       { text: 'Integrations', link: '/integrations/lastfm' },
       { text: 'Security', link: '/security/passkeys' },
       { text: 'Admin', link: '/admin/webhooks' },
-      { text: 'Hub Admin', link: '/hub-admin/install' },
+      { text: 'Hub Admin', link: '/hub-admin/overview' },
     ],
     sidebar: {
       '/install/': [
@@ -75,7 +75,6 @@ export default defineConfig({
             { text: 'Remote Access', link: '/advanced/remote-access-without-hub' },
             { text: 'Reverse Proxy', link: '/advanced/reverse-proxy' },
             { text: 'Backup & Restore', link: '/advanced/backup-restore' },
-            { text: 'ARR Integration', link: '/advanced/arr-integration' },
             { text: 'DLNA Server', link: '/advanced/dlna' },
             { text: 'Live TV Comskip', link: '/advanced/live-tv-comskip' },
             { text: 'Trickplay Thumbnails', link: '/advanced/trickplay' },
@@ -105,18 +104,11 @@ export default defineConfig({
           link: '/troubleshooting'
         }
       ],
-      '/faq': [
-        {
-          text: 'FAQ',
-          link: '/faq'
-        }
-      ],
       '/reference/': [
         {
           text: 'Reference',
           items: [
             { text: 'Environment Variables', link: '/reference/env-vars' },
-            { text: 'Config Files', link: '/reference/config-files' },
             { text: 'CLI', link: '/reference/cli' },
             { text: 'API', link: '/reference/api' },
             { text: 'Admin Reference', link: '/reference/admin-reference' },
@@ -161,9 +153,6 @@ export default defineConfig({
         {
           text: 'Developer Reference',
           items: [
-            { text: 'Test Harness', link: '/dev/test-harness' },
-            { text: 'Debug Recipes', link: '/dev/debug-recipes' },
-            { text: 'Release Process', link: '/dev/release-process' },
             { text: 'Contributing', link: '/dev/contributing' },
           ]
         },
@@ -207,6 +196,7 @@ export default defineConfig({
         {
           text: 'Hub Admin',
           items: [
+            { text: 'Overview', link: '/hub-admin/overview' },
             { text: 'Install', link: '/hub-admin/install' },
             { text: 'First Boot', link: '/hub-admin/first-boot' },
             { text: 'Capacity Planning', link: '/hub-admin/capacity-planning' },

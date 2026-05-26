@@ -41,6 +41,94 @@ if you'd rather configure each piece yourself.
 
 ---
 
+## Updating an existing install
+
+The same `install.sh` updates an in-place install. It reads `/etc/phlix-hub.env` so the JWT
+secret and DB password are **preserved** — nothing is regenerated — then pulls new code,
+runs `composer install`, applies pending migrations, and restarts the service.
+
+```bash
+sudo bash /opt/phlix-hub/scripts/install.sh --update -y
+```
+
+Or via the one-liner:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/detain/phlix-hub/master/scripts/install.sh \
+  | sudo bash -s -- --update -y
+```
+
+Pin to a specific branch or tag with `--branch`:
+
+```bash
+sudo bash /opt/phlix-hub/scripts/install.sh --update --branch v0.2.0 -y
+```
+
+`--update` steps, in order:
+
+1. **Discovers the install path** from the systemd unit (`WorkingDirectory`), so non-default
+   layouts work automatically.
+2. **Reads the env file** — every existing value is reused. `HUB_JWT_SECRET`, `HUB_DB_PASSWORD`,
+   `HUB_PUBLIC_DOMAIN`, etc. are never regenerated.
+3. **Pulls code** with `git fetch --depth 1 origin $BRANCH` followed by
+   `git reset --hard origin/$BRANCH`. Local uncommitted edits in the install directory are
+   discarded (the script warns first).
+4. **Composer** — `composer install --no-dev --optimize-autoloader` against the committed
+   `composer.lock`.
+5. **Clears `var/smarty/{compile,cache}`** to avoid stale compiled templates.
+6. **Runs migrations** — `scripts/run-migrations.php` is idempotent and only applies pending
+   files.
+7. **Restarts** — `systemctl daemon-reload` then `systemctl restart phlix-hub`.
+8. **Health check** — `curl http://localhost:$HUB_PORT/health`.
+
+What it does **not** touch: the env file, MySQL grants, HAProxy config, certbot/Let's Encrypt
+state. New `HUB_*` env vars introduced by a release must be added to `/etc/phlix-hub.env`
+manually — anything missing falls back to its documented default in the
+[Environment variables reference](#environment-variables-reference).
+
+> Mixed Docker users: this section applies to bare-metal / systemd installs. For Docker, pull
+> the new image (`docker pull detain/phlix-hub`), `docker compose up -d`, then run
+> `docker compose exec hub php /var/www/html/scripts/run-migrations.php`.
+
+---
+
+## Uninstalling
+
+`install.sh --uninstall` removes an existing install. By default it is **interactive** and
+prompts separately for each destructive step (database drop, certificate deletion). The
+database and the Let's Encrypt cert are **preserved** unless you opt in.
+
+```bash
+sudo bash /opt/phlix-hub/scripts/install.sh --uninstall
+```
+
+Add `--purge` to also drop the database and delete the Let's Encrypt certificate via
+`certbot delete`. Combine with `-y` for a fully unattended teardown:
+
+```bash
+sudo bash /opt/phlix-hub/scripts/install.sh --uninstall --purge -y
+```
+
+Piped (non-interactive) runs require an explicit `-y` to proceed.
+
+What `--uninstall` removes, only when present:
+
+| Step | Artefact | Notes |
+|---|---|---|
+| 1 | `phlix-hub` systemd service | `stop`, `disable`, remove unit, `daemon-reload` |
+| 2 | HAProxy config | If `/etc/haproxy/haproxy.cfg.phlix.bak` exists, it is restored over the current config and HAProxy reloaded. Otherwise the script warns and leaves it alone. |
+| 3 | HAProxy TLS cert | The combined PEM at `/etc/haproxy/certs/<domain>.pem` |
+| 4 | Certbot helpers | `/etc/cron.d/phlix-hub-certbot` and the renewal deploy hook |
+| 5 | Let's Encrypt cert | `certbot delete --cert-name <domain>` — only with `--purge` or interactive confirm |
+| 6 | MySQL database + user | `DROP DATABASE` / `DROP USER` — only with `--purge` or interactive confirm |
+| 7 | Install directory | `rm -rf` on the discovered install path; system paths like `/`, `/etc`, `/opt`, `/home` are refused |
+| 8 | `/etc/phlix-hub.env` | Last, so DB credentials are still readable for step 6 |
+
+System packages (`php-*`, `mysql-server`, `haproxy`, `certbot`) and `ufw` rules are left alone —
+remove them yourself with `apt remove` / `ufw delete` if you no longer need them.
+
+---
+
 ## Requirements
 
 - **PHP 8.3+** with `pcntl`, `posix`, `json`, `mbstring`, `curl`, and `sodium`
@@ -298,7 +386,8 @@ public address. Verify with `curl https://hub.example.com/health` from the serve
 **Cause:** The database user lacks `CREATE`/`ALTER`, or the database doesn't exist.
 
 **Fix:** Confirm the grants above and that the database exists. The runner is idempotent (it
-tracks applied migrations) — to start clean, drop and recreate the database, then re-run it.
+tracks applied migrations in a `migrations` table) — to start completely clean, run
+`sudo bash scripts/install.sh --uninstall --purge -y` followed by a fresh install.
 
 ---
 

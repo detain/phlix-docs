@@ -173,11 +173,14 @@ sudo apt update && sudo apt upgrade -y
 
 ### 3d. Install PHP 8.3
 
+Ubuntu 24.04 ships PHP 8.3 by default, so install straight from the distro repos:
+
 ```bash
-sudo apt install -y software-properties-common
-sudo add-apt-repository -y ppa:ondrej/php
 sudo apt install -y php-fpm php-mysql php-curl php-gd php-zip php-xml php-mbstring php-bcmath
+php -v   # confirm PHP 8.3 or newer
 ```
+
+If `php -v` reports something older than 8.3, you're on an older Ubuntu release — upgrade to 24.04 (or newer) rather than pulling PHP from a third-party PPA.
 
 ### 3e. Install MariaDB
 
@@ -343,7 +346,7 @@ Expected: phlix-server index page loads (HTTP 200).
 
 - **Symptom:** `composer install` fails with version errors, or runtime errors about missing PHP 8.3 features
 - **Fix (XAMPP):** Download PHP 8.3 version from apachefriends.org; uninstall old version first
-- **Fix (WSL2):** `php -v` should show 8.3; if not, `sudo update-alternatives --config php` or reinstall from ondrej/php PPA
+- **Fix (WSL2):** `php -v` should show 8.3; if not, upgrade Ubuntu to 24.04 (or newer), whose default PHP is 8.3
 - **Verify:** `php -v` shows `PHP 8.3.x`
 
 ### Missing Visual C++ Runtime

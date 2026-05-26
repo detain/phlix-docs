@@ -82,3 +82,4 @@ When hub-mode is available, you will be able to:
 - [Mobile app](./mobile.md) — iOS and Android
 - [Web client](./web.md) — browser-based access without installing software
 - [Hardware transcoding](../advanced/hardware-transcoding.md) — GPU acceleration on Windows for smooth 4K playback
+- [Windows client build guide](../dev/client-windows.md) — for developers building this app

@@ -116,16 +116,41 @@ What `--uninstall` removes, only when present:
 | Step | Artefact | Notes |
 |---|---|---|
 | 1 | `phlix-hub` systemd service | `stop`, `disable`, remove unit, `daemon-reload` |
-| 2 | HAProxy config | If `/etc/haproxy/haproxy.cfg.phlix.bak` exists, it is restored over the current config and HAProxy reloaded. Otherwise the script warns and leaves it alone. |
+| 2 | HAProxy fragment | `/etc/haproxy/phlix-managed/phlix-hub.cfg.fragment` removed; `haproxy.cfg` rebuilt from remaining Phlix fragments. If phlix-hub was the last one, the pre-Phlix snapshot at `/etc/haproxy/haproxy.cfg.pre-phlix.bak` is restored, or `haproxy.cfg` is removed and haproxy is stopped + disabled. |
 | 3 | HAProxy TLS cert | The combined PEM at `/etc/haproxy/certs/<domain>.pem` |
 | 4 | Certbot helpers | `/etc/cron.d/phlix-hub-certbot` and the renewal deploy hook |
 | 5 | Let's Encrypt cert | `certbot delete --cert-name <domain>` — only with `--purge` or interactive confirm |
 | 6 | MySQL database + user | `DROP DATABASE` / `DROP USER` — only with `--purge` or interactive confirm |
 | 7 | Install directory | `rm -rf` on the discovered install path; system paths like `/`, `/etc`, `/opt`, `/home` are refused |
-| 8 | `/etc/phlix-hub.env` | Last, so DB credentials are still readable for step 6 |
+| 8 | `/etc/phlix-hub.env` | env file |
+| 9 | Dedicated system user | `userdel` of the user listed in the systemd unit's `User=` — only with `--purge` or interactive confirm. Refuses shared OS accounts (`www-data`, `root`, etc.). Cross-detects phlix-server's `User=` and refuses to remove a shared name. |
 
 System packages (`php-*`, `mysql-server`, `haproxy`, `certbot`) and `ufw` rules are left alone —
 remove them yourself with `apt remove` / `ufw delete` if you no longer need them.
+
+### Install flags
+
+`sudo bash scripts/install.sh --help` lists every option. Highlights:
+
+| Flag | Effect |
+|---|---|
+| `--domain HOST` | Public hostname; enables TLS when paired with `--admin-email` |
+| `--admin-email EMAIL` | Email registered with Let's Encrypt |
+| `--db-name`/`--db-user`/`--db-pass`/`--db-host`/`--db-port` | MySQL identity (random password if `--db-pass` omitted) |
+| `--jwt-secret SECRET` | HMAC secret used to sign JWTs (random 32-byte hex if omitted) |
+| `--service-user USER` | System user to run as (default `phlix-hub` — dedicated, created if missing) |
+| `--workers N` | HTTP worker processes (default 4) |
+| `--branch NAME` | Git branch or tag to install |
+| `--tls`/`--no-tls`/`--no-proxy` | Force TLS / plain HTTP / skip the managed HAProxy entirely |
+| `--update` | Pull new code + run migrations on an existing install (preserves env + secrets) |
+| `--uninstall` | Remove the install — interactive prompts before each destructive step |
+| `--purge` | With `--uninstall`, also drop the DB, delete the Let's Encrypt cert, remove the system user |
+| `-y` / `--interactive` | Override interactivity detection |
+
+> Default service user changed from `www-data` to `phlix-hub` so the hub runs as its own
+> dedicated system account, isolated from the apache/nginx-owned `www-data`. Existing
+> installs that were created with `www-data` keep running on `www-data` — `--update` reads
+> `User=` from the systemd unit rather than rewriting it.
 
 ---
 

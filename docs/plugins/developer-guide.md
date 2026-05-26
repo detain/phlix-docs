@@ -1130,7 +1130,7 @@ for the related authentication API spec.
 A `scrobbler` plugin subscribes to playback events and reports what the
 user is listening to/watching to an external service (Last.fm, Trakt,
 etc.). Phlix ships an in-core reference implementation:
-[`Phlix\Plugins\Lastfm\Plugin`](../../src/Plugins/Lastfm/Plugin.php).
+[`Phlix\Plugins\Lastfm\Plugin`](https://github.com/detain/phlix/blob/master/src/Plugins/Lastfm/Plugin.php).
 
 ### What gets submitted
 

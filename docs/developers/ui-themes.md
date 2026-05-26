@@ -198,4 +198,4 @@ strings for the resolved `<link>` / `<script>` tags of the active theme.
 ## See Also
 
 - [Developer Guide](../plugins/developer-guide.md) — Full plugin development guide
-- [Built-in Themes](../../public/assets/css/themes/) — Reference implementations
+- [Built-in Themes](https://github.com/detain/phlix/tree/master/public/assets/css/themes) — Reference implementations

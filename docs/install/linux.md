@@ -6,20 +6,22 @@ phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time 
 
 **Minimum requirements:** 2 CPU / 4 GB RAM. A non-root sudo user is recommended.
 
-**Quick one-liner (Ubuntu/Debian):**
+**Quick one-liner (Ubuntu/Debian)** — `scripts/install.sh` does the entire install (system packages, MySQL DB + user, dedicated `phlix` system user, code clone, env file at `/etc/phlix/env`, migrations, systemd `phlix-server` service, HAProxy + Let's Encrypt):
 
 ```bash
-sudo apt update && sudo apt install -y php-fpm php-mysql php-curl php-gd \
-  php-zip php-xml php-mbstring php-bcmath mariadb-server ffmpeg git curl unzip && \
-  sudo mkdir -p /opt/phlix && sudo chown $USER:$USER /opt/phlix && \
-  git clone https://github.com/detain/phlix-server.git /opt/phlix && cd /opt/phlix && \
-  composer install --no-dev --optimize-autoloader && \
-  cp .env.example .env && php scripts/run-migrations.php && \
-  sudo cp phlix.service /etc/systemd/system/ && sudo systemctl daemon-reload && \
-  sudo systemctl enable --now phlix && sudo ufw allow 32400/tcp comment 'Phlix HTTP'
+curl -fsSL https://raw.githubusercontent.com/detain/phlix-server/master/scripts/install.sh | sudo bash
 ```
 
-Then open `http://your-server-ip:32400` in your browser.
+Or provision HTTPS in the same run by passing your domain and a Let's Encrypt contact email:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/detain/phlix-server/master/scripts/install.sh \
+  | sudo bash -s -- --domain phlix.example.com --admin-email you@example.com
+```
+
+Then open `http://your-server-ip:8096` (or `https://phlix.example.com` if you set up TLS) in your browser.
+
+The manual step-by-step below is the same workflow done by hand; you only need it if you want to customise something the script doesn't expose, or if you're on a distro other than Ubuntu/Debian.
 
 ::: tip Screenshots TBD
 This guide is text-first. Screenshots will be added in a follow-up.
@@ -66,128 +68,270 @@ Install PHP 8.3 from source, MariaDB from distro packages, and FFmpeg from the j
 
 ---
 
-## 3. Database setup (MariaDB)
+## 3. Database setup (MySQL / MariaDB)
+
+`config/database.php` hardcodes the host (`127.0.0.1`), port (`3306`), database name
+(`phlix`), and username (`phlix`); only `DB_PASSWORD` is read from the environment. So the
+database name and user must match those values exactly:
 
 ```bash
 sudo mysql_secure_installation
 
-sudo mysql -u root -p -e "CREATE DATABASE phlix CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-sudo mysql -u root -p -e "CREATE USER 'phlix'@'localhost' IDENTIFIED BY 'your_strong_password';"
-sudo mysql -u root -p -e "GRANT ALL PRIVILEGES ON phlix.* TO 'phlix'@'localhost';"
-sudo mysql -u root -p -e "FLUSH PRIVILEGES;"
+sudo mysql -e "CREATE DATABASE phlix CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+sudo mysql -e "CREATE USER 'phlix'@'127.0.0.1' IDENTIFIED BY 'your_strong_password';"
+sudo mysql -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, ALTER, INDEX, REFERENCES ON phlix.* TO 'phlix'@'127.0.0.1';"
+sudo mysql -e "FLUSH PRIVILEGES;"
 ```
 
-Replace `your_strong_password` with a real strong password.
+Replace `your_strong_password` with a real strong password (`openssl rand -base64 24` works).
 
 ---
 
-## 4. Clone phlix-server
+## 4. Create the `phlix` system user
+
+The systemd unit runs as a dedicated unprivileged account:
 
 ```bash
-sudo mkdir -p /opt/phlix
-sudo chown $USER:$USER /opt/phlix
-git clone https://github.com/detain/phlix-server.git /opt/phlix
-cd /opt/phlix
-```
-
----
-
-## 5. PHP dependencies (Composer)
-
-```bash
-composer install --no-dev --optimize-autoloader
+sudo useradd --system --no-create-home --shell /usr/sbin/nologin phlix
+sudo mkdir -p /var/phlix/{config,data,logs,backups} /var/log/phlix /var/run/phlix /etc/phlix
+sudo chown -R phlix:phlix /var/phlix /var/log/phlix /var/run/phlix
 ```
 
 ---
 
-## 6. Configure environment
+## 5. Clone phlix-server
 
 ```bash
-cp .env.example .env
+sudo mkdir -p /var/www/phlix
+sudo git clone https://github.com/detain/phlix-server.git /var/www/phlix
+cd /var/www/phlix
 ```
 
-Edit `.env` with your editor. Required settings:
+---
 
-```env
-APP_URL=http://your-server-ip:32400
-DB_HOST=localhost
-DB_DATABASE=phlix
-DB_USERNAME=phlix
+## 6. PHP dependencies (Composer)
+
+```bash
+sudo composer install --no-dev --optimize-autoloader
+sudo mkdir -p /var/www/phlix/.logs /var/www/phlix/templates_c
+sudo chown -R phlix:phlix /var/www/phlix
+```
+
+---
+
+## 7. Configure environment
+
+The systemd unit loads variables from `/etc/phlix/env`:
+
+```bash
+sudo tee /etc/phlix/env >/dev/null <<'EOF'
+# Phlix Media Server environment
+
+# DB_PASSWORD is the only DB var read by config/database.php; host/port/db/user
+# are hardcoded to 127.0.0.1:3306 / phlix / phlix.
 DB_PASSWORD=your_strong_password
+
+# 32-byte hex secret (openssl rand -hex 32)
+PHLIX_SECRET_KEY=CHANGE-ME
+
+PHLIX_DOMAIN=your-server.example.com
+PHLIX_LOG_LEVEL=info
+PHLIX_ENV=production
+
+# Optional integrations
+#TMDB_API_KEY=
+#PHLIX_HUB_URL=
+#PHLIX_RELAY_ENABLED=1
+EOF
+sudo chmod 640 /etc/phlix/env
+sudo chown root:phlix /etc/phlix/env
 ```
 
 ---
 
-## 7. Database migrations
+## 8. Database migrations
+
+The migration runner reads `config/database.php`, which pulls the password from
+`DB_PASSWORD`:
 
 ```bash
-php scripts/run-migrations.php
+sudo -u phlix DB_PASSWORD=your_strong_password \
+  php /var/www/phlix/scripts/run-migrations.php
 ```
+
+The runner is *currently* not idempotent (no tracking table), but every migration uses
+`CREATE TABLE IF NOT EXISTS` / `ALTER TABLE ... ADD COLUMN` and the script swallows duplicate
+errors, so re-runs are safe.
 
 ---
 
-## 8. systemd service unit
+## 9. systemd service unit
 
-Save this as `/etc/systemd/system/phlix.service`:
+Save this as `/etc/systemd/system/phlix-server.service`:
 
 ```ini
 [Unit]
 Description=Phlix Media Server
-After=network.target mariadb.service
+Documentation=https://docs.phlix.media
+After=network.target mysql.service
+Wants=mysql.service
 
 [Service]
 Type=simple
-User=www-data
-Group=www-data
-WorkingDirectory=/opt/phlix
-ExecStart=/usr/bin/php /opt/phlix/public/index.php
+User=phlix
+Group=phlix
+WorkingDirectory=/var/www/phlix
+EnvironmentFile=/etc/phlix/env
+Environment="PHLIX_ENV=production"
+ExecStart=/usr/bin/php /var/www/phlix/public/index.php start
+ExecReload=/bin/kill -SIGUSR1 $MAINPID
+ExecStop=/bin/kill -SIGTERM $MAINPID
 Restart=on-failure
-RestartSec=5
-StandardOutput=journal
-StandardError=journal
+RestartSec=5s
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/phlix /var/log/phlix /var/run/phlix /var/www/phlix/.logs /var/www/phlix/templates_c
+RestrictNamespaces=true
+LockPersonality=true
+RemoveIPC=true
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Install and enable:
+Enable and start:
 
 ```bash
-sudo cp phlix.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable phlix
-sudo systemctl start phlix
+sudo systemctl enable --now phlix-server
+sudo systemctl status phlix-server
 ```
+
+Note the `start` argument on `ExecStart` — phlix-server is a Workerman app and won't daemonise
+without it.
 
 ---
 
-## 9. Firewall configuration
+## 10. Firewall configuration
 
 ### UFW (Ubuntu/Debian)
 
 ```bash
-sudo ufw allow 32400/tcp comment 'Phlix HTTP'
+sudo ufw allow 8096/tcp comment 'Phlix HTTP'
 sudo ufw allow 1900/udp comment 'DLNA discovery (optional)'
 ```
 
 ### firewalld (Fedora)
 
 ```bash
-sudo firewall-cmd --permanent --add-port=32400/tcp
+sudo firewall-cmd --permanent --add-port=8096/tcp
 sudo firewall-cmd --permanent --add-port=1900/udp
 sudo firewall-cmd --reload
 ```
 
+For a public-facing install, put HAProxy or nginx on `:80/:443` in front of phlix on `:8096`
+and open only the proxy ports.
+
 ---
 
-## 10. Verify the install
+## 11. Verify the install
 
 ```bash
-sudo systemctl status phlix
-curl -I http://localhost:32400
+sudo systemctl status phlix-server
+curl -I http://localhost:8096/health
 ```
 
-Expected: HTTP 200 from the phlix index page.
+Expected: HTTP 200 from the `/health` endpoint.
+
+---
+
+## Updating an existing install
+
+If you used `scripts/install.sh` for the initial setup, the same script updates in place —
+preserving `/etc/phlix/env` (so `DB_PASSWORD` and `PHLIX_SECRET_KEY` survive), pulling the
+latest code, refreshing Composer deps, running pending migrations, and restarting the service:
+
+```bash
+sudo bash /var/www/phlix/scripts/install.sh --update -y
+```
+
+Pin to a specific tag or branch with `--branch`:
+
+```bash
+sudo bash /var/www/phlix/scripts/install.sh --update --branch v0.2.0 -y
+```
+
+The `--update` flow:
+
+1. Discovers the install path from the systemd unit's `WorkingDirectory`.
+2. Re-reads `/etc/phlix/env` — every existing value is preserved.
+3. Fetches code as the install dir owner (via `sudo -H -u <owner>`) so it doesn't trip Git's
+   CVE-2022-24765 dubious-ownership check.
+4. `composer install --no-dev --optimize-autoloader` against the committed `composer.lock`.
+5. Clears `templates_c/` so Smarty recompiles changed templates.
+6. Runs `scripts/run-migrations.php`.
+7. `systemctl daemon-reload` then `systemctl restart phlix-server`.
+8. `curl http://localhost:8096/health` as a final check.
+
+It explicitly does **not** touch the env file, MySQL grants, HAProxy config, or the Let's
+Encrypt cert.
+
+If you did a manual install (didn't use `install.sh`), update by hand:
+
+```bash
+cd /var/www/phlix
+sudo -u phlix git fetch --depth 1 origin master
+sudo -u phlix git reset --hard origin/master
+sudo -u phlix composer install --no-dev --optimize-autoloader --no-interaction
+sudo find /var/www/phlix/templates_c -mindepth 1 -delete
+sudo -u phlix DB_PASSWORD=your_strong_password \
+  php /var/www/phlix/scripts/run-migrations.php
+sudo systemctl restart phlix-server
+curl http://localhost:8096/health
+```
+
+---
+
+## Uninstalling
+
+`scripts/install.sh --uninstall` removes an install. It is **interactive by default** and
+prompts separately for each destructive step. The MySQL database, the `/var/phlix` data
+directory, and the Let's Encrypt certificate are **preserved** unless you opt in.
+
+```bash
+sudo bash /var/www/phlix/scripts/install.sh --uninstall
+```
+
+Add `--purge` to also drop the database (and user), wipe `/var/phlix`, and delete the
+Let's Encrypt certificate via `certbot delete`. Combine with `-y` for a fully unattended
+teardown:
+
+```bash
+sudo bash /var/www/phlix/scripts/install.sh --uninstall --purge -y
+```
+
+Piped, non-interactive runs require an explicit `-y` to proceed.
+
+What it removes when present:
+
+| Step | Artefact | Notes |
+|---|---|---|
+| 1 | `phlix-server` systemd service | `stop`, `disable`, remove unit, `daemon-reload` |
+| 2 | HAProxy config | If `/etc/haproxy/haproxy.cfg.phlix-server.bak` exists, it is restored over the current config and HAProxy reloaded. Otherwise the script warns and leaves it alone. |
+| 3 | HAProxy TLS cert | The combined PEM at `/etc/haproxy/certs/<domain>.pem` |
+| 4 | Certbot helpers | `/etc/cron.d/phlix-server-certbot` and the renewal deploy hook |
+| 5 | Let's Encrypt cert | `certbot delete --cert-name <domain>` — only with `--purge` or interactive confirm |
+| 6 | MySQL database + user | `DROP DATABASE` / `DROP USER` — only with `--purge` or interactive confirm |
+| 7 | Install dir | `/var/www/phlix` (or whatever path was used); system paths refused |
+| 8 | Data dirs | `/var/phlix`, `/var/log/phlix`, `/var/run/phlix` — `/var/phlix` only with `--purge` or interactive confirm |
+| 9 | `/etc/phlix/env` | Last, so DB credentials are still readable for step 6 |
+
+System packages (`php-*`, `mysql-server`, `ffmpeg`, `haproxy`, `certbot`), `ufw` rules, and
+the `phlix` system user are left alone — remove them with `apt remove` / `userdel phlix` /
+`ufw delete` if you no longer need them.
 
 ---
 
@@ -212,20 +356,36 @@ Expected: HTTP 200 from the phlix index page.
 - **Fix (Fedora):** Enable RPM Fusion first, then `dnf install ffmpeg`
 - **Verify:** `ffmpeg -version`
 
-### Permission denied on /var/lib/phlix
+### Permission denied on /var/phlix
 
-- **Symptom:** "Cannot create file /var/lib/phlix/..." in logs
-- **Fix:** `sudo chown -R www-data:www-data /var/lib/phlix && sudo chmod -R 755 /var/lib/phlix`
+- **Symptom:** "Cannot create file /var/phlix/..." in logs
+- **Fix:** `sudo chown -R phlix:phlix /var/phlix /var/log/phlix /var/run/phlix`
 
-### Port 32400 already in use
+### Port 8096 already in use
 
 - **Symptom:** `bind(): Address already in use`
-- **Fix:** `sudo ss -tlnp | grep 32400` to find the conflicting process, stop it or change phlix port via `APP_URL` env var
+- **Fix:** `sudo ss -tlnp | grep 8096` to find the conflicting process; stop it or change the
+  `port` in `config/server.php`.
+
+### Service exits immediately
+
+- **Symptom:** `systemctl status phlix-server` shows the service failing after a few seconds.
+- **Cause:** `ExecStart` is missing the trailing `start` argument — Workerman prints help text
+  and exits.
+- **Fix:** confirm the unit's `ExecStart=` ends with `public/index.php start`.
+
+### "dubious ownership in repository" on update
+
+- **Symptom:** `git fetch` aborts with *fatal: detected dubious ownership in repository at
+  '/var/www/phlix'*.
+- **Cause:** the install dir is owned by the `phlix` user but you ran git as root.
+- **Fix:** `scripts/install.sh --update` already handles this by `sudo`-ing as the install
+  dir owner. For a manual update, prefix the git commands with `sudo -u phlix`.
 
 ---
 
 ## Next steps
 
-- [First-run wizard](/first-run) — complete the browser-based setup at `http://your-server:32400`
+- [First-run wizard](/first-run) — complete the browser-based setup at `http://your-server:8096`
 - [Docker install](/install/docker) — alternative install method using containers
 - [Hardware transcoding](/advanced/hardware-transcoding) — configure NVENC/VAAPI for better performance

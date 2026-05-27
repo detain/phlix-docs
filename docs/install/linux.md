@@ -355,6 +355,93 @@ left alone — `sudo apt remove …` / `sudo ufw delete …` to remove them.
 
 ---
 
+## Swoole & php-uv (coroutine runtime)
+
+phlix-server runs on Workerman's coroutine event loop, which is backed by the
+**Swoole** PHP extension (with **php-uv** as the libuv-backed event-loop driver).
+`scripts/install.sh` and `install/systemd.sh` build both extensions **from source**
+as part of the install — you do not need to install them separately. This mirrors
+what the Docker images ship, so a bare-metal install gets the same coroutine
+runtime as a container.
+
+### What the install scripts build, and why
+
+The distro `php-swoole` apt package does **not** match the configuration phlix
+needs, so the installers compile Swoole from the upstream
+[`swoole/swoole-src`](https://github.com/swoole/swoole-src) repository with a
+specific `./configure` flag set (coroutine MySQL/PostgreSQL/SQLite/cURL clients,
+async DNS, HTTP/2, zstd/brotli compression, io_uring, SSH2/FTP). That flag set is
+copied **verbatim** from `phlix-server/docker/Dockerfile.base` so bare metal and
+Docker stay in lockstep — see
+[`phlix-server/docker/README.md` → "Swoole build flags"](https://github.com/detain/phlix-server/blob/master/docker/README.md#swoole-build-flags)
+for the full per-flag rationale (it is not duplicated here). php-uv is built from
+[`bwoebi/php-uv`](https://github.com/bwoebi/php-uv) with `./configure --with-uv`.
+
+To compile them the installers first `apt-get install` the matching build deps —
+`build-essential autoconf pkg-config git`, the C-library `-dev` headers each
+Swoole flag links against (`libssl-dev libuv1-dev libbrotli-dev libzstd-dev
+libnghttp2-dev libpq-dev libsqlite3-dev libc-ares-dev liburing-dev
+libssh2-1-dev`), and the version-matched `phpX.Y-dev` package (for `phpize`).
+Each extension is then enabled via a small `conf.d` ini (`zz-swoole.ini` /
+`zz-uv.ini`).
+
+### It's idempotent (skips if already loaded)
+
+The build is a true no-op when the extension is already present: each step runs
+`php -m` first and short-circuits before any clone or compile if `swoole` (or
+`uv`) already loads. Re-running `install.sh` — including the `--update` repair
+path — therefore never triggers the (slow) recompile on a host that already has
+the extensions. After a build the installer re-checks `php -m` and aborts with an
+actionable message if the freshly-built extension fails to load.
+
+Verify manually with:
+
+```bash
+php -m | grep -iE '^(swoole|uv)$'
+# expected output:
+# swoole
+# uv
+```
+
+### disable_functions preflight
+
+Before building anything, the installers run a **preflight** that fails loudly
+(and early) if PHP's `disable_functions` directive blocks any of the primitives
+Workerman needs. Workerman forks worker processes and manages listening sockets
+directly, so it requires these functions to be callable:
+
+- `pcntl_fork`, `pcntl_wait`, `pcntl_signal`, `pcntl_alarm`, `pcntl_async_signals`
+- `posix_getpid`, `posix_kill`, `posix_setuid`, `posix_setgid`
+- `proc_open`, `proc_close`, `proc_get_status`, `proc_terminate`
+- `exec`, `shell_exec`
+- `stream_socket_server`, `stream_socket_client`, `stream_socket_accept`
+
+If any of these appear in `disable_functions` the installer stops with a message
+naming the offending functions and pointing you at your `php.ini` (and php-fpm
+pool config, if present). The check uses an exact-token match, so a function
+whose name merely *contains* one of these (e.g. a hypothetical `pcntl_forkx`) is
+not flagged. Hardened shared-hosting `php.ini` profiles commonly disable
+`exec`/`shell_exec`/`proc_*` — remove them from `disable_functions` for the PHP
+SAPI phlix-server runs under before installing.
+
+### io_uring: kernel ≥ 5.6 runtime caveat
+
+Swoole is built with `--enable-iouring` / `--enable-uring-socket`, but io_uring is
+a **runtime** capability: those code paths only activate on **Linux kernel 5.6 or
+newer**. The build succeeds on any kernel, and on older kernels Swoole silently
+falls back to its epoll event loop — no configuration change, no failure, just no
+io_uring performance benefit (e.g. RHEL 7 / Ubuntu 18.04-era kernels). Check your
+kernel with `uname -r`.
+
+### CI
+
+Both repositories' PHPUnit CI jobs now load Swoole + php-uv (Swoole via
+`shivammathur/setup-php`, php-uv via a source-build step) and assert they are
+present with `php -m` before running the suite, so the full test suite exercises
+the coroutine runtime on every push.
+
+---
+
 ## What can go wrong
 
 ### PHP extension missing

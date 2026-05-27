@@ -7,8 +7,9 @@
 > driver and `Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL)`. **Never
 > use `exit`/`die`, never `sleep()`, and never store per-request data in
 > `static` properties / `global` / `$GLOBALS`.** Use
-> `Phlix\Server\Http\RequestContext` (server) or `support\Context` directly
-> for per-request state.
+> `Phlix\Server\Http\RequestContext` (server) or
+> `Phlix\Hub\Http\RequestContext` (hub) for per-request state. Both wrap
+> `support\Context`, which the eventLoop isolates per coroutine.
 
 This page covers the runtime model introduced in step 0.2 of the UI
 coverage plan. The entry-point Swoole hook landed in step **0.2a**
@@ -86,35 +87,46 @@ A `static` property is a **shared variable** across all of them.
 
 ### What you do instead
 
-The server provides a typed wrapper around `support\Context`:
+Both daemons provide a typed wrapper around `support\Context`, one per
+repo, that lives alongside the rest of the HTTP layer:
 
 ```php
+// phlix-server
 use Phlix\Server\Http\RequestContext;
 
-// In a middleware (e.g. AdminMiddleware) — publish the value:
+// In AdminMiddleware — publish the value:
 RequestContext::setUserId($request->userId);
 
-// In a downstream service or controller — read it:
+// In a downstream admin controller or service — read it:
 $userId = RequestContext::getUserId();
 if ($userId === null) {
     // anonymous — fall back to whatever your service expects
 }
 ```
 
-The hub uses `support\Context` directly today (it's a small surface):
-
 ```php
-use support\Context;
+// phlix-hub
+use Phlix\Hub\Http\RequestContext;
 
-Context::set('phlix.requestId', $requestId);
-// ...
-$requestId = Context::get('phlix.requestId');
+// In AuthMiddleware — publish the value:
+RequestContext::setUserId($claims->sub);
+
+// In a downstream hub controller or service — read it:
+$userId = RequestContext::getUserId();
 ```
 
-If the hub grows enough Context call sites that string keys become
-typo-prone, mirror the server's `RequestContext` wrapper. Audit before
-adding new wrappers — premature abstraction is just as bad as
-stringly-typed code.
+Both wrappers expose the same four methods (`setUserId`, `getUserId`,
+`hasUserId`, `clearUserId`) and use namespaced context keys
+(`phlix.userId` on the server, `phlix.hub.userId` in the hub) so they
+cannot collide with each other or with webman's own internal keys
+(`context.onDestroy`, etc.).
+
+If you need to publish per-request data that ISN'T the user-id (a
+correlation-id, a tenant id, …), call `support\Context::set/get`
+directly with a `phlix.*` / `phlix.hub.*` namespaced key — and consider
+adding a typed helper method to `RequestContext` if the call sites
+start to multiply. Premature abstraction is just as bad as stringly-typed
+code, but more than three call sites for the same key is the threshold.
 
 ### What Context actually is
 
@@ -220,8 +232,9 @@ or `phlix-hub/src/Http/`:
 - [ ] All new HTTP / DB / Redis I/O is non-blocking. Use
   `workerman/http-client` for outgoing HTTP, the existing async DB
   pool for queries, and `webman/redis ~2.1` for Redis.
-- [ ] If you add a new piece of per-request state, publish it via
-  `RequestContext` (server) or `support\Context` (hub) — not on a
+- [ ] If you add a new piece of per-request state, publish it via the
+  repo-appropriate `RequestContext` wrapper (`Phlix\Server\Http\RequestContext`
+  in the server, `Phlix\Hub\Http\RequestContext` in the hub) — not on a
   `static` somewhere.
 
 ---

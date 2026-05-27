@@ -20,24 +20,42 @@ Environment variables are read at process startup. Most can be overridden by `co
 - `TZ` — timestamps in logs and EPG depend on a correct timezone; set to your local timezone.
 - `PHLIX_LOG_LEVEL` — `debug` is verbose; `error` is production-minimal.
 
-## CLI Scripts
+## CLI Commands
 
-All scripts run from the Phlix Server install directory (`phlix-server/`). `php public/index.php` starts the Workerman HTTP server (blocking — use systemd or supervisord in production).
+All commands run from the Phlix Server install directory (`phlix-server/`). `php public/index.php` starts the Workerman HTTP server (blocking — use systemd or supervisord in production).
 
-For hub pairing and port forwarding, see [CLI commands](cli.md).
+Ongoing operation is driven by the `php bin/phlix <command>` console. Run `php bin/phlix list` to see every available command (it works with no database). For the full reference of each command's arguments and options, see [CLI commands](cli.md).
 
 ### Server lifecycle
 
 | Command | Description |
 | --- | --- |
 | `php public/index.php` | Start the Workerman HTTP server. Run under systemd/supervisord, not directly in a shell session. |
-| `php scripts/run-migrations.php` | Run pending DB migrations. Idempotent — safe to run multiple times. |
+| `php bin/phlix migrate` | Apply pending DB migrations (`migrations/*.sql`). Idempotent — safe to run multiple times. Supported equivalent of `php scripts/run-migrations.php` (both use the same `MigrationRunner`; the script remains for the Docker entrypoint/installer). |
 
-### Operational
+### Operational (`bin/phlix`)
 
 | Command | Description |
 | --- | --- |
-| `php scripts/run-marker-detection-worker.php` | Run the intro/outro marker detection background worker. Processes jobs from a queue directory. Press Ctrl+C to stop. |
+| `php bin/phlix library:list` | List configured media libraries. |
+| `php bin/phlix library:scan {libraryId} [--rescan]` | Scan (or, with `--rescan`, clear and rescan) a library for new content. |
+| `php bin/phlix plugin:list` | List installed plugins and their enabled state. |
+| `php bin/phlix plugin:enable {name}` / `plugin:disable {name}` | Enable / disable an installed plugin by manifest name. |
+| `php bin/phlix plugin:install {source}` / `plugin:uninstall {name}` | Install from an HTTPS / `file://` source, or uninstall by name. |
+| `php bin/phlix backup:create [--label=]` | Create a server backup archive (optionally labelled). |
+| `php bin/phlix backup:list` | List stored server backups. |
+| `php bin/phlix hwaccel:probe` | Probe for available hardware-acceleration encoders. |
+| `php bin/phlix user:reset-password {user} [--password=]` | Reset a user's password by username or email (Argon2ID; generates and prints a strong random password when `--password` is omitted). |
+
+### Operational (still script-based — no `bin/phlix` command yet)
+
+These remain standalone scripts (network-, daemon-, or TLS-bound) and are deferred to a later phase.
+
+| Command | Description |
+| --- | --- |
+| `php scripts/pair-with-hub.php <hub-url> <server-name>` | Pair this server with a Phlix Hub. Blocking poll loop; see [CLI commands](cli.md). |
+| `php scripts/port-forward.php <command>` | Manage UPnP-IGD / NAT-PMP port forwarding (`status`/`enable`/`disable`/`info`). See [CLI commands](cli.md). |
+| `php scripts/run-marker-detection-worker.php` | Intro/outro marker detection background worker (infinite daemon loop). Not yet wrapped as a `bin/phlix` command. |
 | `./scripts/compatibility-check.sh` | Check server/hub major version compatibility. Exits 0 if compatible, 1 if not. Requires `PHLIX_HUB_URL` set. |
 | `php scripts/claim-subdomain.php` | Claim a `*.phlix.media` subdomain for the enrolled server after pairing. Note: automated TLS provisioning is **not implemented** — certificates must be provisioned out-of-band (see [TLS Certificates](../dev/tls-certificates.md)). |
 
@@ -253,6 +271,6 @@ Restart the server after changing `JWT_SECRET`. All existing sessions will be in
 ## Next Steps
 
 - [Environment variables detail](env-vars.md) — complete table of every env var.
-- [CLI commands detail](cli.md) — hub pairing and port forwarding scripts.
+- [CLI commands detail](cli.md) — the full `bin/phlix` command reference plus the remaining hub-pairing and port-forwarding scripts.
 - [Backup & restore](../advanced/backup-restore.md) — backup strategies and restore procedures.
 - [Troubleshooting](../troubleshooting.md) — diagnosing startup and runtime issues.

@@ -1,8 +1,231 @@
 # CLI Reference
 
-Command-line scripts available in the Phlix Media Server.
+The Phlix Media Server and the Phlix Hub each ship a `bin/phlix` console
+entrypoint built on `webman/console` (a thin wrapper around Symfony Console).
+A handful of operations that are network-, daemon-, or TLS-bound are still
+provided as standalone `scripts/*.php` and are documented at the end of this
+page.
 
-## Hub / Pairing
+## `bin/phlix` — what it is
+
+`webman/console` only auto-discovers commands from an `app/command` directory,
+which neither repo has (both use a PSR-4 `Phlix\… → src/` layout). So each
+repo ships a small `bin/phlix` executable that bootstraps the autoloader and
+config, then explicitly registers its `Phlix\…\Console\Commands\*` classes on a
+`Webman\Console\Command` application and runs it.
+
+`bin/phlix` is a **one-shot CLI** — not the resident Workerman/Swoole worker —
+so it does not start the event loop. The DI container and the database
+connection are resolved **lazily**: a command only builds the container or opens
+a connection when it actually needs one. Consequently:
+
+```bash
+php bin/phlix list      # list every available command (no database needed)
+php bin/phlix help <command>
+```
+
+`php bin/phlix list` works with **no database configured or reachable** — it
+never builds the container, so you can always discover the available commands.
+
+All commands return a standard exit code: `0` on success, `1` on failure (the
+error is written to output). Commands never call `exit()`/`die()` internally.
+
+---
+
+## phlix-server commands
+
+Run from the phlix-server install directory (`phlix-server/`). Twelve commands
+are available.
+
+| Command | Arguments / options | Description |
+| --- | --- | --- |
+| `migrate` | — | Apply database migrations (`migrations/*.sql`). |
+| `library:list` | — | List all configured media libraries. |
+| `library:scan` | `{libraryId}` `[--rescan]` | Scan (or rescan) a media library for new content. |
+| `plugin:list` | — | List installed plugins and their enabled state. |
+| `plugin:enable` | `{name}` | Enable an installed plugin by name. |
+| `plugin:disable` | `{name}` | Disable an enabled plugin by name. |
+| `plugin:install` | `{source}` | Install a plugin from a source URL. |
+| `plugin:uninstall` | `{name}` | Uninstall a plugin by name. |
+| `backup:create` | `[--label=]` | Create a new server backup archive. |
+| `backup:list` | — | List stored server backups. |
+| `hwaccel:probe` | — | Probe for available hardware-acceleration encoders. |
+| `user:reset-password` | `{user}` `[--password=]` | Reset a user's password by username or email. |
+
+### `migrate`
+
+Applies every `migrations/*.sql` file in sorted order. Idempotent: it has **no
+migration-tracking table** and is safe to run repeatedly — duplicate-column /
+duplicate-key / "already exists" errors are downgraded to notes rather than
+treated as failures. This is the supported equivalent of
+`php scripts/run-migrations.php` (both delegate to the same
+`Phlix\Common\Database\MigrationRunner`); the script remains for the Docker
+entrypoint and installer.
+
+```bash
+php bin/phlix migrate
+```
+
+Returns exit `1` if a genuine (non-idempotent) statement error occurs.
+
+### `library:list`
+
+Prints the id, name, type, and configured path(s) of each library as a table.
+
+```bash
+php bin/phlix library:list
+```
+
+### `library:scan`
+
+Scans a library for new content. Pass `--rescan` to clear existing items and
+rescan from the filesystem.
+
+| Argument / option | Description |
+| --- | --- |
+| `libraryId` (required) | The library identifier to scan. |
+| `--rescan` | Clear existing items and rescan from scratch. |
+
+```bash
+php bin/phlix library:scan 3
+php bin/phlix library:scan 3 --rescan
+```
+
+### `plugin:list`
+
+Lists installed plugins with their version and enabled state (yes/no) as a
+table.
+
+```bash
+php bin/phlix plugin:list
+```
+
+### `plugin:enable` / `plugin:disable` / `plugin:uninstall`
+
+Each takes a required `name` argument — the plugin's manifest name.
+
+```bash
+php bin/phlix plugin:enable my-plugin
+php bin/phlix plugin:disable my-plugin
+php bin/phlix plugin:uninstall my-plugin
+```
+
+### `plugin:install`
+
+Installs a plugin from a source. The `source` argument is required and accepts
+an HTTPS URL or a `file://` path for local sources. (Plain `http://` is rejected
+unless `PHLIX_PLUGINS_ALLOW_HTTP` is enabled — see
+[Environment variables](env-vars.md).)
+
+| Argument | Description |
+| --- | --- |
+| `source` (required) | The plugin source URL (HTTPS, or `file://` for local sources). |
+
+```bash
+php bin/phlix plugin:install https://plugins.example.com/my-plugin.zip
+```
+
+On success it prints the installed plugin's name and version.
+
+### `backup:create`
+
+Creates a new server backup archive and prints the backup id, file path, and
+size.
+
+| Option | Description |
+| --- | --- |
+| `--label=` | Optional human-readable label for the backup. |
+
+```bash
+php bin/phlix backup:create
+php bin/phlix backup:create --label="before 1.2 upgrade"
+```
+
+### `backup:list`
+
+Lists stored backups (id, label, size, location — local or S3 — and creation
+time) as a table.
+
+```bash
+php bin/phlix backup:list
+```
+
+### `hwaccel:probe`
+
+Probes for available hardware-acceleration encoders/decoders using the
+configured `ffmpeg` binary (from `config/ffmpeg.php`) and renders the detected
+vendor, encoder, decoder, HDR support, and codecs per capability. Needs neither
+the container nor a database.
+
+```bash
+php bin/phlix hwaccel:probe
+```
+
+### `user:reset-password`
+
+Resets a user's password, looking the user up by username first, then by email.
+The password is hashed with Argon2ID before storage.
+
+| Argument / option | Description |
+| --- | --- |
+| `user` (required) | The username or email of the user to reset. |
+| `--password=` | The new password. When omitted, a strong random password is generated and **printed** to stdout. |
+
+```bash
+# Generate and print a strong random password
+php bin/phlix user:reset-password alice@example.com
+
+# Set a specific password (not echoed back)
+php bin/phlix user:reset-password alice --password='S3cret!Passphrase'
+```
+
+Returns exit `1` if the user is not found.
+
+---
+
+## phlix-hub commands
+
+Run from the phlix-hub install directory (`phlix-hub/`). Two commands are
+available.
+
+| Command | Arguments / options | Description |
+| --- | --- | --- |
+| `migrate` | — | Apply database migrations (`migrations/*.sql`). |
+| `smoke:jwt` | — | Smoke-test the JWT create/validate round-trip. |
+
+### `migrate`
+
+Applies the hub's pending `migrations/*.sql`. Unlike the server's `migrate`,
+the hub uses a real migration-tracking table (`Phlix\Hub\Common\Database\MigrationRunner`),
+so already-applied migrations are skipped. It is the supported equivalent of
+`php scripts/run-migrations.php`.
+
+```bash
+php bin/phlix migrate
+```
+
+Output reports each newly applied file and the total, or "All migrations
+already applied. Nothing to do." when up to date.
+
+### `smoke:jwt`
+
+Runs a self-contained JWT create-then-validate round-trip using a throwaway
+test secret (no config or database). Useful for verifying the
+`JwtHandler` ↔ `JwtClaims` wiring after a deploy. Prints
+`OK: JWT round-trip succeeded` and the asserted claim fields on success;
+returns exit `1` on any mismatch.
+
+```bash
+php bin/phlix smoke:jwt
+```
+
+---
+
+## Standalone scripts (not yet `bin/phlix` commands)
+
+The following operations remain `scripts/*.php` rather than `bin/phlix`
+commands. They are network-, daemon-, or TLS-bound and are deferred to a later
+phase; there is **no** `bin/phlix` equivalent for them today.
 
 ### `php scripts/pair-with-hub.php <hub-url> <server-name>`
 
@@ -50,11 +273,16 @@ Heartbeat loop has been started in the background.
 
 See `Phlix\Hub\HubClient` and `docs/dev/pairing-protocol.md`.
 
-## Port forwarding
+### `php scripts/claim-subdomain.php`
+
+Claims a `*.phlix.media` subdomain for the enrolled server after pairing.
+Note: automated TLS provisioning is **not implemented** — certificates must be
+provisioned out-of-band (see [TLS Certificates](../dev/tls-certificates.md)).
 
 ### `php scripts/port-forward.php <command>`
 
-Manages UPnP-IGD and NAT-PMP port forwarding for direct server access without relay tunnel.
+Manages UPnP-IGD and NAT-PMP port forwarding for direct server access without a
+relay tunnel.
 
 **Commands:**
 
@@ -111,3 +339,9 @@ External WAN IP: 203.0.113.42
    IP address and test port accessibility. See `Phlix\Network\StunClient`.
 
 **See also:** `docs/hub/remote-access.md`.
+
+### `php scripts/run-marker-detection-worker.php`
+
+Intro/outro marker-detection background worker (an infinite daemon loop). This
+script is a carry-over and is **not** wrapped as a `bin/phlix` command — it
+belongs to a future queue/worker step.

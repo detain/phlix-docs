@@ -95,6 +95,7 @@ export default defineConfig({
             { text: 'Stats', link: '/admin/stats' },
             { text: 'Dashboard', link: '/admin/dashboard' },
             { text: 'Backup', link: '/admin/backup' },
+            { text: 'Server Settings', link: '/admin/server-settings' },
           ]
         }
       ],

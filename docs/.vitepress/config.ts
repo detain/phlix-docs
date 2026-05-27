@@ -150,6 +150,7 @@ export default defineConfig({
             { text: 'Auth Providers', link: '/plugins/auth-providers' },
             { text: 'Plugin Developer Guide', link: '/plugins/developer-guide' },
             { text: 'Arr API Clients', link: '/dev/arr-clients' },
+            { text: 'Shared Schemas & Catalogs', link: '/dev/shared-schemas' },
           ]
         },
         {

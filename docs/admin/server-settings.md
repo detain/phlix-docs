@@ -156,9 +156,9 @@ Example validation-failure response:
 ## Editable Keys
 
 The current allow-list maps each dotted key to its type and the
-`config/<file>.php` default it overrides. (This inline allow-list is the
-validation source while the shared settings JSON schema is still in progress; see
-[Roadmap](#roadmap).)
+`config/<file>.php` default it overrides. As of step 0.7 this allow-list is
+**derived from the shared `server-settings.schema.json`** (bundled in
+`detain/phlix-shared`); see [Shared schemas](../dev/shared-schemas).
 
 | Key | Type | Backing config |
 |-----|------|----------------|
@@ -180,8 +180,10 @@ validation source while the shared settings JSON schema is still in progress; se
 
 This is a curated, representative slice of the Phase-1.3 settings groups
 (transcoding/hardware acceleration, metadata providers, marker detection,
-subtitles, discovery, trickplay, newsletter, port-forward/UPnP). The live source
-of truth is the `ALLOWED_KEYS` constant on the admin settings controller.
+subtitles, discovery, trickplay, newsletter, port-forward/UPnP). The single
+source of truth is the shared `server-settings.schema.json`; the controller's
+`AdminSettingsController::allowedKeys()` derives this map from that schema at
+runtime (replacing the former inline `ALLOWED_KEYS` constant).
 
 ## Storage
 
@@ -195,9 +197,10 @@ re-saving a key replaces its previous override in place.
 
 - **Settings UI (Phase 1.3)** — graphical screens in the admin console for editing
   these groups will be added; this page will gain a UI walkthrough section then.
-- **Shared schema (step 0.7)** — a shared `server-settings.schema.json` will become
-  the single source of truth for key names, types, and validation, replacing the
-  controller's inline allow-list.
+- **Shared schema (step 0.7)** ✅ *shipped* — the shared `server-settings.schema.json`
+  (in `detain/phlix-shared`) is now the single source of truth for key names and
+  types; `AdminSettingsController` derives its allow-list from it. See
+  [Shared schemas](../dev/shared-schemas).
 
 ## See Also
 

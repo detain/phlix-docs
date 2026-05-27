@@ -154,6 +154,7 @@ export default defineConfig({
           text: 'Developer Reference',
           items: [
             { text: 'Contributing', link: '/dev/contributing' },
+            { text: 'Admin SPA (admin-ui)', link: '/dev/admin-spa' },
           ]
         },
         {

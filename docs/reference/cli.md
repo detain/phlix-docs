@@ -81,6 +81,10 @@ php bin/phlix library:list
 Scans a library for new content. Pass `--rescan` to clear existing items and
 rescan from the filesystem.
 
+This command runs **synchronously** and blocks until the scan completes. (The
+HTTP `POST /api/v1/libraries/{id}/scan` endpoint is asynchronous instead — it
+queues a job; see the [Library Scan Worker](../dev/library-scan-worker).)
+
 | Argument / option | Description |
 | --- | --- |
 | `libraryId` (required) | The library identifier to scan. |

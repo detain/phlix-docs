@@ -166,3 +166,131 @@ uncovered lines are real-`window` navigation one-liners
 On the server side, `AdminAppControllerTest` covers the shell (200 + bundle
 HTML + content-type), the missing-bundle case (503), and the `gateRedirect`
 mapping (null → allow, 401/403 → 302 `/login`).
+
+---
+
+## 8. The Libraries page (step 1.1c — the first feature page)
+
+`LibrariesPage` (`admin-ui/src/pages/LibrariesPage.tsx`) is the **first real
+feature page** built on top of the 0.4 scaffold. It mounts at
+`/admin/libraries` (sidebar entry **Libraries**) and consumes the already-shipped
+1.1b async-scan + 0.6 fs-browse contracts — **no backend changes were made in
+this step**. The end-user workflow is documented on the
+[Library Management admin page](../admin/library-management#managing-libraries-in-the-admin-ui);
+this section covers the architecture details a contributor needs.
+
+### Typed API wrappers
+
+Two new typed wrappers sit beside `client.ts` and use the shared `ApiClient`:
+
+| Module | Endpoint surface |
+|---|---|
+| `admin-ui/src/api/libraries.ts` (`LibrariesApi`) | `list`/`get`/`create`/`update`/`remove`/`scan`/`rescan`/`scanStatus`/`scanHistory` — 1:1 with the `LibraryController` endpoints. |
+| `admin-ui/src/api/filesystem.ts` (`FilesystemApi`) | `browse(path?)` — wraps `GET /api/v1/admin/fs/browse` (step 0.6). |
+
+Both wrappers **unwrap the single-key envelopes** the server returns so callers
+receive the bare domain object — `{ libraries }` → `Library[]`, `{ library }` →
+`Library`, `{ scan_status }` → `ScanJob | null`, `{ history }` → `ScanJob[]`, and
+the `fs/browse` `{ success, data: { path, parent, entries } }` → bare
+`FsBrowseResult`. Non-2xx responses still throw `ApiError` from the shared
+client; the wrappers do not re-implement error handling.
+
+Both wrappers `encodeURIComponent()` every library `id` segment. `LibrariesApi.update()`
+**never sends `type`** — the PHP `updateLibrary()` ignores it, and the typed input omits
+it so a future caller can't accidentally try.
+
+### `LIBRARY_TYPES` — the `book` exclusion
+
+`LIBRARY_TYPES` is an `as const` tuple of exactly the **five** values the DB ENUM
+accepts:
+
+```ts
+export const LIBRARY_TYPES = ['movie', 'series', 'music', 'photo', 'video'] as const;
+```
+
+`book` is **deliberately absent**: migration `001_initial_schema.sql` declares the
+`libraries.type` ENUM as exactly those five values, even though
+`LibraryController::create()` *also* lists `book` in its `$validTypes`. A `book`
+insert would `500` at the DB ENUM, so the UI never offers it. This is a known
+controller/DB mismatch tracked as a backend carry-over.
+
+### Polling design (coarse, resident-safe)
+
+The Libraries page polls `scanStatus(id)` to follow a scan through its lifecycle.
+A few details worth knowing if you touch this code:
+
+- **Per-library `setInterval`.** Intervals live in a `useRef<Record<string, number>>`
+  keyed by library id; one interval per library. A guard (`if (timersRef.current[id]
+  !== undefined) return;`) prevents stacking when the user clicks **Scan** twice.
+- **Default 2000ms.** The interval period is exposed as the `pollIntervalMs` prop
+  (`DEFAULT_POLL_INTERVAL_MS = 2000`) so tests can drive it with fake timers.
+- **Stops on terminal state.** As soon as `isTerminal(status)` (`completed` or
+  `failed`) returns true, **or** `scan_status` is `null`, the interval is cleared.
+- **Cleared on unmount.** A `useEffect` cleanup walks `timersRef.current` and clears
+  every outstanding timer.
+- **Coarse status only.** The page renders the status badge from
+  `job.status` and the error string from `job.error` only. It deliberately
+  does **not** render `items_*` counters or `current_path` as if they were live
+  progress — the 1.1b worker leaves them at `0` / `null` (see the
+  [Library Scan Worker](./library-scan-worker#coarse-progress-is-intentional)
+  honesty note). Adding a per-file progress bar without first wiring the
+  counters through the worker would be a fabricated contract — don't.
+
+### Architecture note — destructure the stable `push` from `useToast()`
+
+The page uses the shared `useToast()` context to surface success/error toasts. A
+subtle gotcha bit the first implementation:
+
+```ts
+// WRONG — re-runs loadLibraries on every toast push
+const toast = useToast();
+const loadLibraries = useCallback(async () => { /* …toast.push(…)… */ }, [api, toast]);
+```
+
+`ToastProvider`'s context value is a `useMemo` over `[toasts, push, dismiss]`. Every
+`toast.push(...)` re-renders the provider with a **new** context-value object
+reference, so `useToast()` returns a new `toast` reference, which makes
+`loadLibraries` (a `useCallback` depending on `toast`) recreate, which fires the
+`useEffect([loadLibraries])` again — re-running `api.list()` and consuming the next
+mocked response in tests (and emitting an unnecessary refetch in production).
+
+The fix is to destructure the **stable** `push` callback (the provider wraps it in a
+`useCallback`, so its reference is stable across renders) and depend on `push` instead
+of the whole context value:
+
+```ts
+// RIGHT — push is reference-stable
+const { push: pushToast } = useToast();
+const loadLibraries = useCallback(async () => { /* …pushToast(…)… */ }, [api, pushToast]);
+```
+
+Mirror this pattern in any page that calls `pushToast` from inside a memoised callback
+or effect.
+
+### Test setup — real envelopes, no fabricated mocks
+
+All four 1.1c test files (`libraries.test.ts`, `filesystem.test.ts`,
+`PathPicker.test.tsx`, `LibrariesPage.test.tsx`) drive a **real** `ApiClient` against
+the `makeFetch(...)` concrete-mock helper from `src/test/memoryTokenStore.ts`. Each
+mocked response carries the **exact** envelope shape the PHP controller returns —
+`{ libraries: [...] }`, `201 { library_id, message }`, `202 { job_id, status:
+'queued', message }`, `{ scan_status: <ScanJob|null> }`, `{ history: [...] }`,
+`{ success: true, data: { path, parent, entries } }`. The polling test uses
+`vi.useFakeTimers()` to step `setInterval`, asserts the call count stops growing
+once the job is terminal, and asserts an unmount clears the remaining timers.
+
+This is the 0.4 fabricated-contract lesson: a green test on a hand-rolled wrong-shape
+mock will pass while real integration breaks. Always anchor mocks against the real
+controller response.
+
+### Coverage (Vitest)
+
+| File | Statements |
+|------|------------|
+| `src/api/libraries.ts` | 100% |
+| `src/api/filesystem.ts` | 100% |
+| `src/components/PathPicker.tsx` | 98.24% (uncovered = a defensively-unreachable early-return guard) |
+| `src/pages/LibrariesPage.tsx` | 95.62% (uncovered ≈ a `||`-fallback template literal and one ternary false-arm v8 reports as a partial branch) |
+
+Overall SPA: **98.73%** statements (2255/2284), 93.98% branches. The 95.62% floor on
+`LibrariesPage.tsx` matches the 0.4 precedent.

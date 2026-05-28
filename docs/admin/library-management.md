@@ -104,6 +104,121 @@ jail** — otherwise `null` (so the picker stops at a root):
 The checks run in the order `404` → `400` → `403`, so a non-existent or
 non-directory path reports the more specific `404`/`400` rather than `403`.
 
+## Scanning a Library
+
+Scanning indexes a library's filesystem for media and updates the catalog. As of
+**Phase 1.1b the scan runs asynchronously** — off the HTTP request. The scan and
+rescan endpoints no longer scan inline; they **enqueue a job** and return `202`
+immediately, and a background [Library Scan Worker](../dev/library-scan-worker)
+drains the queue. Use the [scan-status](#scan-status) endpoint to poll a job's
+progress.
+
+All four endpoints below are **admin-gated** (the `scan-status` job row exposes a
+server filesystem path in `current_path`), require a valid admin Bearer token
+(`401` unauthenticated, `403` non-admin), and return `404` when the library does
+not exist.
+
+### Enqueue a scan
+
+```http
+POST /api/v1/libraries/{id}/scan
+```
+
+Queues an **incremental** scan. Returns `202 Accepted` with the new job id:
+
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440099",
+  "status": "queued",
+  "message": "Library scan queued"
+}
+```
+
+### Enqueue a rescan
+
+```http
+POST /api/v1/libraries/{id}/rescan
+```
+
+Queues a **full rescan** (purge + rescan). Identical contract to `scan`, with a
+`rescan`-typed job and the message `"Library rescan queued"`:
+
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440100",
+  "status": "queued",
+  "message": "Library rescan queued"
+}
+```
+
+::: tip CLI is still synchronous
+The `php bin/phlix library:scan {libraryId} [--rescan]` console command is
+**unchanged** — it scans synchronously and blocks until done. Only the HTTP
+endpoints became asynchronous.
+:::
+
+### Scan status {#scan-status}
+
+```http
+GET /api/v1/libraries/{id}/scan-status
+```
+
+Returns the **latest** scan job for the library, or `null` when the library has
+never been scanned (still a valid `200`, not a `404`):
+
+```json
+{
+  "scan_status": {
+    "id": "550e8400-e29b-41d4-a716-446655440099",
+    "library_id": "550e8400-e29b-41d4-a716-446655440001",
+    "type": "scan",
+    "status": "running",
+    "items_found": 0,
+    "items_added": 0,
+    "items_updated": 0,
+    "items_removed": 0,
+    "current_path": null,
+    "error": null,
+    "queued_at": "2026-05-27 12:00:00",
+    "started_at": "2026-05-27 12:00:05",
+    "completed_at": null
+  }
+}
+```
+
+A UI polls this endpoint after enqueueing to follow the job through its
+lifecycle: `queued → running → completed` (or `failed`, where `error` carries the
+exception message).
+
+::: warning Progress is coarse, not per-item
+In this release `status` is the **only** live signal. `LibraryManager` reports no
+per-file counts, so `items_found` / `items_added` / `items_updated` /
+`items_removed` stay `0` and `current_path` stays `null`. Treat scan-status as a
+**lifecycle indicator** (queued / running / completed / failed), **not** a live
+per-file progress bar. Real per-item counters may be wired through in a later
+step. See the [Library Scan Worker](../dev/library-scan-worker#coarse-progress-is-intentional)
+developer page.
+:::
+
+### Scan history
+
+```http
+GET /api/v1/libraries/{id}/scan-history?limit=N
+```
+
+Returns recent scan jobs for the library, **newest first**. `limit` defaults to
+`20` and is clamped to `[1, 100]`:
+
+```json
+{
+  "history": [
+    { "id": "…", "type": "scan", "status": "completed", "queued_at": "…", "completed_at": "…" }
+  ]
+}
+```
+
+Each entry has the same shape as the `scan_status` job row above.
+
 ## Allowed Roots
 
 Directory listing is jailed to the roots declared in `config/filesystem.php`:
@@ -154,6 +269,7 @@ used to read directory structure outside the allowed roots.
 
 ## See Also
 
+- [Library Scan Worker](../dev/library-scan-worker) — how the async scan queue and worker work
 - [Server Settings](./server-settings) — server-wide settings store and admin API
 - [Dashboard](./dashboard) — visual admin dashboard overview
 - [Stats](./stats) — usage and activity statistics

@@ -1,25 +1,156 @@
 ---
 title: Library Management
-description: Admin filesystem-browse endpoint (library path picker) and its allowed-roots jail
+description: Managing libraries in the admin UI, the filesystem-browse picker API, and the async scan endpoints
 ---
 
 # Library Management
 
-When an admin adds or edits a media library, the path-picker needs a safe way to
-explore the server's filesystem and choose a directory. Phlix exposes a single,
-admin-only **filesystem-browse** endpoint for exactly this: it lists the
-immediate subdirectories of a path, jailed to a small set of configured roots so
-a picker can never wander outside them.
+This page documents two layers:
 
-::: tip UI coming in Phase 1.1
-This page documents the **path-picker API** only. The graphical
-add / edit / scan **Library Management** screens in the admin console land in
-Phase 1.1 — until then, the endpoint below is the only library-management
-surface. It is intentionally **not** a general file manager: it lists
-directories only (never files) and supports no read, write, or delete.
+1. The **admin UI Libraries page** (the operator workflow — list, add, edit, delete, scan, history).
+2. The **HTTP API contract** the page consumes — the filesystem-browse picker (step 0.6), the
+   async scan endpoints (step 1.1b), and the allowed-roots jail.
+
+The Libraries page is the **first feature page** built on top of the
+[Admin SPA scaffold](../dev/admin-spa) (step 0.4).
+
+## Managing libraries in the admin UI
+
+The admin console exposes a **Libraries** page at `/admin/libraries` for managing every
+media library on this server. The page is **admin-gated** (same gate as the rest of
+`/admin/*` — non-admin requests are redirected to `/login`).
+
+### Reaching the page
+
+Open `/admin` in a browser, sign in as an admin user, then click **Libraries** in the
+left-hand sidebar (under **Dashboard**). The page renders a single
+[`DataTable`](../dev/admin-spa) of every library currently registered with the server.
+
+### The library list
+
+For each library the table shows:
+
+| Column | Source |
+|--------|--------|
+| **Name** | `library.name` |
+| **Type** | `library.type` (one of `movie`, `series`, `music`, `photo`, `video`) |
+| **Paths** | A count (e.g. `2 paths`) — the full list appears in the edit form |
+| **Status** | A status badge (Idle / Queued / Running… / Completed / Failed) sourced from the latest scan job |
+| **Actions** | `Edit`, `Scan`, `Rescan`, `History`, `Delete` |
+
+When the library list is empty the page renders an empty-state message instead of an empty
+table. A load error (network failure or a non-2xx from
+`GET /api/v1/libraries`) raises a toast carrying the server error string — every server
+string is rendered as React text only (no `dangerouslySetInnerHTML`, so untrusted names
+can never inject HTML).
+
+### Adding a library
+
+Click **Add library** to open a modal with a form:
+
+| Field | Notes |
+|-------|-------|
+| **Name** | Free-text label for the library. |
+| **Type** | A select of the **five DB-valid types**: `movie`, `series`, `music`, `photo`, `video`. |
+| **Paths** | One or more directories chosen via the **PathPicker** (see below). At least one path is required. |
+
+Submitting `POST`s `{ name, type, paths, options? }` to `/api/v1/libraries`. On `201` the
+modal closes, a success toast appears, and the list refreshes. A `400` (validation error)
+surfaces the server's error message as a toast.
+
+::: warning `book` is deliberately not offered
+The `libraries.type` ENUM in migration `001_initial_schema.sql` is exactly
+`movie|series|music|photo|video`. The PHP controller `LibraryController::create()`
+*also lists* `book` in its `$validTypes`, but a `book` insert would `500` at the DB
+ENUM — so the UI excludes it. The controller/DB mismatch is a known pre-existing
+backend bug tracked as a carry-over for a later step.
 :::
 
+### The PathPicker
+
+The path field is a small directory picker that drives the
+[`GET /api/v1/admin/fs/browse`](#browse-filesystem) endpoint:
+
+- The initial view lists the **configured roots** (see [Allowed Roots](#allowed-roots)).
+- Click a directory name to drill **into** it; click **Up** to walk back to its parent
+  (disabled at a root).
+- Click **Select this folder** to add the current directory to the selected list.
+- Selected paths show a **Remove** link to drop them again; duplicates are deduplicated.
+
+Every directory name returned by the server is rendered as React text — an HTML-looking
+directory name is rendered as literal text, never parsed as markup.
+
+### Editing a library
+
+Click **Edit** on a row to open the same form, pre-filled with the current values. The
+form `PUT`s `{ name, paths, options? }` to `/api/v1/libraries/{id}`.
+
+::: tip Type is read-only on edit
+The PHP `LibraryController::update()` silently ignores `type` (the column is not
+updatable), so the form displays the existing type **read-only** and the SPA never
+sends `type` in a `PUT` payload. To change a library's type, delete it and re-add it.
+:::
+
+### Deleting a library
+
+Click **Delete** on a row to open a confirm modal. Confirming `DELETE`s
+`/api/v1/libraries/{id}`; success refreshes the list and shows a toast. A `404`
+(library already gone) surfaces a toast too.
+
+### Triggering a scan or rescan
+
+Each row has **Scan** and **Rescan** buttons. Both call the [async scan
+endpoints](#scanning-a-library) and return immediately with a `202` + a `job_id`. The
+page shows a "queued" toast with the returned message and starts polling status for that
+library.
+
+- **Scan** runs an **incremental** scan (new + changed files).
+- **Rescan** runs a **full** purge + rescan.
+
+Neither button blocks — the work happens in the background
+[Library Scan Worker](../dev/library-scan-worker). You can navigate away; the next time
+you visit the page the status badge picks up the current state of the latest job.
+
+### Reading the live status
+
+Once a scan is queued — and on initial load for a library that already has a job — the
+page polls `GET /api/v1/libraries/{id}/scan-status` every **2 seconds** for that library.
+Polling **stops** as soon as the job reaches a terminal state (`completed` or `failed`),
+or when the endpoint returns `null` (no job has ever run). The status badge then carries
+the final value.
+
+If a scan **fails**, the badge shows `Failed` and the page surfaces the server `error`
+string as React text.
+
+::: warning Per-file progress is not reported in this release
+The status badge tracks the **lifecycle only** — `queued → running → completed/failed`.
+The 1.1b worker does not emit per-file counts: `items_found`, `items_added`,
+`items_updated`, `items_removed` stay at `0` and `current_path` stays `null`. The page
+deliberately does **not** render a fabricated per-file progress bar. See the
+[Library Scan Worker — coarse progress is intentional](../dev/library-scan-worker#coarse-progress-is-intentional)
+note for why.
+:::
+
+### Reviewing scan history
+
+Click **History** on a row to open a modal that loads
+`GET /api/v1/libraries/{id}/scan-history?limit=20` and lists recent jobs (newest first)
+in a `DataTable`:
+
+| Column | Source |
+|--------|--------|
+| **Type** | `scan` / `rescan` |
+| **Status** | `queued` / `running` / `completed` / `failed` |
+| **Queued at** | `queued_at` |
+| **Completed at** | `completed_at` (or empty for jobs still in flight) |
+| **Error** | `error` (only for `failed` jobs) |
+
+The server clamps `limit` to `[1, 100]` and defaults to `20`; the UI uses the default.
+
 ## Browse Filesystem
+
+The admin UI's [PathPicker](#the-pathpicker) is the canonical consumer of this endpoint.
+The contract below documents the wire format for that picker and for any future tooling.
 
 ```http
 GET /api/v1/admin/fs/browse?path=<absolute-path>
@@ -112,6 +243,11 @@ rescan endpoints no longer scan inline; they **enqueue a job** and return `202`
 immediately, and a background [Library Scan Worker](../dev/library-scan-worker)
 drains the queue. Use the [scan-status](#scan-status) endpoint to poll a job's
 progress.
+
+The [admin UI](#triggering-a-scan-or-rescan) wraps all four endpoints below:
+per-row **Scan** / **Rescan** buttons hit the enqueue endpoints, the page polls
+`scan-status` every 2 seconds (stopping on terminal status), and a **History**
+modal shows the most recent jobs from `scan-history`.
 
 All four endpoints below are **admin-gated** (the `scan-status` job row exposes a
 server filesystem path in `current_path`), require a valid admin Bearer token

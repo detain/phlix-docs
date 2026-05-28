@@ -151,6 +151,7 @@ export default defineConfig({
             { text: 'Plugin Developer Guide', link: '/plugins/developer-guide' },
             { text: 'Arr API Clients', link: '/dev/arr-clients' },
             { text: 'Shared Schemas & Catalogs', link: '/dev/shared-schemas' },
+            { text: 'Library Scan Worker', link: '/dev/library-scan-worker' },
           ]
         },
         {

@@ -144,6 +144,109 @@ Create a new library.
 
 **Response 400:** Missing required fields or invalid type
 
+---
+
+### POST /api/v1/libraries/`{id}`/scan
+
+Enqueue an **incremental** scan of a library. As of Phase 1.1b the scan runs
+**asynchronously** — this endpoint queues a job and returns immediately; a
+background worker performs the scan. Poll `GET .../scan-status` for progress.
+
+**Auth:** Admin (Bearer token) — `401` unauthenticated, `403` non-admin
+
+**Response 202:**
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440099",
+  "status": "queued",
+  "message": "Library scan queued"
+}
+```
+
+**Response 404:** Library not found
+
+---
+
+### POST /api/v1/libraries/`{id}`/rescan
+
+Enqueue a **full rescan** (purge + rescan). Same contract as `scan` with a
+`rescan`-typed job and the message `"Library rescan queued"`.
+
+**Auth:** Admin (Bearer token)
+
+**Response 202:**
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440100",
+  "status": "queued",
+  "message": "Library rescan queued"
+}
+```
+
+**Response 404:** Library not found
+
+---
+
+### GET /api/v1/libraries/`{id}`/scan-status
+
+Return the **latest** scan job for the library, or `null` when it has never been
+scanned (still a `200`). Progress is **coarse** — `status` is the live signal;
+`items_*` counters stay `0` in this release.
+
+**Auth:** Admin (Bearer token)
+
+**Response 200:**
+```json
+{
+  "scan_status": {
+    "id": "550e8400-e29b-41d4-a716-446655440099",
+    "library_id": "550e8400-e29b-41d4-a716-446655440001",
+    "type": "scan",
+    "status": "running",
+    "items_found": 0,
+    "items_added": 0,
+    "items_updated": 0,
+    "items_removed": 0,
+    "current_path": null,
+    "error": null,
+    "queued_at": "2026-05-27 12:00:00",
+    "started_at": "2026-05-27 12:00:05",
+    "completed_at": null
+  }
+}
+```
+
+**Response 404:** Library not found
+
+---
+
+### GET /api/v1/libraries/`{id}`/scan-history
+
+Return recent scan jobs for the library, **newest first**. `limit` defaults to
+`20` and is clamped to `[1, 100]`. Each entry has the same shape as the
+`scan_status` job row.
+
+**Query Parameters:** `limit` (optional, default `20`, clamped `1`–`100`)
+
+**Auth:** Admin (Bearer token)
+
+**Response 200:**
+```json
+{
+  "history": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440099",
+      "type": "scan",
+      "status": "completed",
+      "queued_at": "2026-05-27 12:00:00",
+      "completed_at": "2026-05-27 12:03:11"
+    }
+  ]
+}
+```
+
+**Response 404:** Library not found
+
 ## Media Endpoints
 
 ### GET /api/v1/media/`{id}`

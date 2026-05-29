@@ -573,11 +573,14 @@ and all page render, expand/collapse, and action states.
 
 ---
 
-## 18. LiveTV API (step 2.4) — API-only, no SPA
+## 18. LiveTV API (step 2.4) + LiveTVPage SPA (step 2.5) — API + UI
 
 Step 2.4 introduces **20 admin-gated PHP endpoints** at `/api/v1/admin/livetv/*`
-covering tuners, channels, guide/EPG, recordings, and series rules. **No React
-SPA page is included in this step** — the `LiveTvPage` UI lands in step 2.5.
+covering tuners, channels, guide/EPG, recordings, and series rules. **Step 2.5
+adds the React SPA page** (`LiveTvPage` at `/admin/live-tv`) that consumes all 20
+endpoints. This section documents both: the API surface (from 2.4) and the SPA
+layer (from 2.5) that sits on top of it.
+
 The 20 endpoints are wired under `AdminMiddleware` in
 `Application::loadLiveTvAdminRoutes()`.
 
@@ -634,7 +637,80 @@ DVB-T tuner support is **deferred** to a future step. `DvbtTunerDriver` has a
 stubbed `performChannelScan` method that is untestable in this environment and is
 not exposed via the API.
 
-### Status: No SPA in this step
+### LiveTvPage SPA (step 2.5) — UI complement to the 2.4 API
 
-No `LiveTvPage` React component, no `LiveTvApi` wrapper, and no `navItems.ts`
-entry — those arrive in step 2.5. This step establishes the PHP API surface only.
+Step 2.5 adds `LiveTvPage` (`admin-ui/src/pages/LiveTvPage.tsx`) at `/admin/live-tv`,
+the UI consumer of all 20 step-2.4 endpoints. It replaces the "API-only, no SPA"
+carry-over note from the 2.4 docs.
+
+| File | Purpose |
+|------|---------|
+| `admin-ui/src/api/liveTv.ts` (`LiveTvApi`) | 20 typed wrappers across 5 resource groups — tuners (5), channels (4), guide (3), recordings (6), seriesRules (5) |
+| `admin-ui/src/api/liveTv.test.ts` | 22 unit tests for `LiveTvApi` (100% coverage) |
+| `admin-ui/src/pages/LiveTvPage.tsx` | React page — 4 collapsible sections (Tuners / Guide-EPG / Recordings / Series Rules) with expand/collapse state machine; each section lazy-loads on expand |
+| `admin-ui/src/pages/LiveTvPage.test.tsx` | 10 component tests — all section render states, empty states, modals, expand/collapse |
+| `admin-ui/src/styles.css` | Live TV page styles (`.page--live-tv`, tuner grid, programme cards, recording tabs, series rules list, modal styles) |
+
+### LiveTvApi wrapper (20 methods across 5 resource groups)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `listTuners()` | `GET /api/v1/admin/livetv/tuners` | List all tuners |
+| `getTuner(id)` | `GET /api/v1/admin/livetv/tuners/{id}` | Get a single tuner |
+| `scanTuners(id)` | `POST /api/v1/admin/livetv/tuners/{id}/scan` | Trigger channel scan |
+| `updateTuner(id, data)` | `PUT /api/v1/admin/livetv/tuners/{id}` | Update tuner (partial) |
+| `deleteTuner(id)` | `DELETE /api/v1/admin/livetv/tuners/{id}` | Delete a tuner |
+| `listChannels(tunerId?)` | `GET /api/v1/admin/livetv/channels` | List channels, optionally filtered |
+| `getChannel(id)` | `GET /api/v1/admin/livetv/channels/{id}` | Get a single channel |
+| `updateChannel(id, data)` | `PUT /api/v1/admin/livetv/channels/{id}` | Update channel |
+| `getStreamUrl(id)` | `GET /api/v1/admin/livetv/channels/{id}/stream` | Get stream URL + redirect |
+| `listGuide(params)` | `GET /api/v1/admin/livetv/guide` | List EPG entries (channel, time range) |
+| `getProgram(id)` | `GET /api/v1/admin/livetv/guide/programs/{id}` | Get a specific programme |
+| `refreshGuide()` | `POST /api/v1/admin/livetv/guide/refresh` | Trigger EPG refresh |
+| `listRecordings(status?)` | `GET /api/v1/admin/livetv/recordings` | List recordings, optionally filtered |
+| `getRecording(id)` | `GET /api/v1/admin/livetv/recordings/{id}` | Get a single recording |
+| `createRecording(data)` | `POST /api/v1/admin/livetv/recordings` | Create a recording |
+| `deleteRecording(id)` | `DELETE /api/v1/admin/livetv/recordings/{id}` | Delete a recording |
+| `listUpcoming()` | `GET /api/v1/admin/livetv/recordings/upcoming` | List upcoming recordings |
+| `listBySeries(ruleId)` | `GET /api/v1/admin/livetv/recordings/series/{ruleId}` | List recordings for a series |
+| `listSeriesRules()` | `GET /api/v1/admin/livetv/series-rules` | List series rules |
+| `getSeriesRule(id)` | `GET /api/v1/admin/livetv/series-rules/{id}` | Get a single series rule |
+| `createSeriesRule(data)` | `POST /api/v1/admin/livetv/series-rules` | Create a series rule |
+| `updateSeriesRule(id, data)` | `PUT /api/v1/admin/livetv/series-rules/{id}` | Update a series rule |
+| `deleteSeriesRule(id)` | `DELETE /api/v1/admin/livetv/series-rules/{id}` | Delete a series rule |
+
+### Page layout (4 sections, all start collapsed)
+
+| Section | Content | Key interactions |
+|---------|---------|-----------------|
+| **Tuners** | Card grid: type badge, status dot, name, host, last-seen | Scan / Delete per card; enable/disable toggle; Add Tuner modal |
+| **Guide / EPG** | Date picker (Today / +1 Day / +2 Day) + programme grid | Click card to expand details + Record button; Refresh Guide button |
+| **Recordings** | Tab bar (All / Upcoming / By Series) + recording cards | Delete per card; Schedule Recording modal (pre-fills from Guide) |
+| **Series Rules** | Rule rows: title, channel, priority | Edit / Delete per row; Add Rule modal with channel picker |
+
+### Architecture notes
+
+- **`useToast()` destructuring**: `const { push: pushToast } = useToast()` — the
+  `push` reference is stable across renders (wrapped in `useCallback` inside
+  `ToastProvider`); depending on the whole `toast` object re-triggers effects on
+  every push.
+- **Parallel API calls + React StrictMode**: all 4 sections load on mount but
+  StrictMode double-invokes effects, causing 8 parallel calls to consume 4
+  fallback responses. Resolved by using `urlMatch` in all test responses and
+  defensive optional chaining on all state variable length accesses
+  (`tuners?.length ?? 0`).
+- **Series Rules channel loading**: channels are fetched in parallel with rules
+  when the section first expands. If no channels mock is configured, the error
+  is silently caught and `channels` stays `[]`.
+- **Form validation**: Schedule Recording and Add Rule modals validate required
+  fields before submission, showing inline `form__error` messages.
+
+### Coverage (Vitest)
+
+| File | Coverage |
+|------|----------|
+| `src/api/liveTv.ts` | **100%** statements |
+| `src/pages/LiveTvPage.tsx` | ≥80% |
+| `src/pages/LiveTvPage.test.tsx` | **10/10** |
+
+Overall LiveTV SPA: **32 passing tests** (22 API + 10 page).

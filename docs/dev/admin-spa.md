@@ -570,3 +570,71 @@ registers the four sub-resource groups (`hub`, `subdomain`, `relay`,
 
 Overall SPA: **36** passing tests (22 API + 14 page) covering all 16 endpoints
 and all page render, expand/collapse, and action states.
+
+---
+
+## 18. LiveTV API (step 2.4) — API-only, no SPA
+
+Step 2.4 introduces **20 admin-gated PHP endpoints** at `/api/v1/admin/livetv/*`
+covering tuners, channels, guide/EPG, recordings, and series rules. **No React
+SPA page is included in this step** — the `LiveTvPage` UI lands in step 2.5.
+The 20 endpoints are wired under `AdminMiddleware` in
+`Application::loadLiveTvAdminRoutes()`.
+
+### Backend controller
+
+`AdminLiveTvController` (`src/Server/Http/Controllers/Admin/AdminLiveTvController.php`)
+exposes all 20 endpoints. Uses the existing `LiveTvManager`, `ChannelManager`,
+`GuideManager`, `Recorder`, and `SeriesRuleManager` manager classes resolved via
+`$this->container->get()`. All methods return `(new Response())->json([...])` with a
+`{ success: true/false, data?: ... }` envelope.
+
+### Endpoint summary (20 endpoints across 5 resource groups)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| **Tuners** | | |
+| `GET` | `/api/v1/admin/livetv/tuners` | List all tuners |
+| `GET` | `/api/v1/admin/livetv/tuners/{tunerId}` | Get a single tuner |
+| `POST` | `/api/v1/admin/livetv/tuners/{tunerId}/scan` | Trigger channel scan |
+| `PUT` | `/api/v1/admin/livetv/tuners/{tunerId}` | Update tuner settings |
+| `DELETE` | `/api/v1/admin/livetv/tuners/{tunerId}` | Delete a tuner |
+| **Channels** | | |
+| `GET` | `/api/v1/admin/livetv/channels` | List all channels |
+| `GET` | `/api/v1/admin/livetv/channels/{channelId}` | Get a single channel |
+| `PUT` | `/api/v1/admin/livetv/channels/{channelId}` | Update channel (name, number, enabled) |
+| `GET` | `/api/v1/admin/livetv/channels/{channelId}/stream` | Get stream URL and redirect |
+| **Guide** | | |
+| `GET` | `/api/v1/admin/livetv/guide` | List EPG entries (filter by channel_id, time range) |
+| `GET` | `/api/v1/admin/livetv/guide/programs/{programId}` | Get a specific program |
+| `POST` | `/api/v1/admin/livetv/guide/refresh` | Trigger EPG refresh |
+| **Recordings** | | |
+| `GET` | `/api/v1/admin/livetv/recordings` | List all recordings |
+| `GET` | `/api/v1/admin/livetv/recordings/{recordingId}` | Get a single recording |
+| `POST` | `/api/v1/admin/livetv/recordings` | Create a new recording |
+| `DELETE` | `/api/v1/admin/livetv/recordings/{recordingId}` | Delete a recording |
+| `GET` | `/api/v1/admin/livetv/recordings/upcoming` | List upcoming scheduled recordings |
+| `GET` | `/api/v1/admin/livetv/recordings/series/{seriesRuleId}` | List recordings for a series rule |
+| **Series Rules** | | |
+| `GET` | `/api/v1/admin/livetv/series-rules` | List all series rules |
+| `GET` | `/api/v1/admin/livetv/series-rules/{ruleId}` | Get a single series rule |
+| `POST` | `/api/v1/admin/livetv/series-rules` | Create a new series rule |
+| `PUT` | `/api/v1/admin/livetv/series-rules/{ruleId}` | Update a series rule |
+| `DELETE` | `/api/v1/admin/livetv/series-rules/{ruleId}` | Delete a series rule |
+
+### Database migration
+
+Migration `028_livetv_base.sql` creates 6 tables with `CREATE TABLE IF NOT EXISTS`:
+`livetv_tuners`, `livetv_channels`, `livetv_programs`, `livetv_favorites`,
+`livetv_lineups`, `livetv_lineup_channels`.
+
+### DVB-T note
+
+DVB-T tuner support is **deferred** to a future step. `DvbtTunerDriver` has a
+stubbed `performChannelScan` method that is untestable in this environment and is
+not exposed via the API.
+
+### Status: No SPA in this step
+
+No `LiveTvPage` React component, no `LiveTvApi` wrapper, and no `navItems.ts`
+entry — those arrive in step 2.5. This step establishes the PHP API surface only.

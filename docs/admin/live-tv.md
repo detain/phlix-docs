@@ -8,7 +8,88 @@ endpoints are under `/api/v1/admin/livetv` and require admin authentication.
 > endpoints (`DvbtTunerDriver::performChannelScan` and related) are not implemented.
 
 > **Note:** Step 2.5 adds a React SPA page (`LiveTvPage`) at `/admin/live-tv` that
-> consumes these endpoints.
+> consumes these endpoints. See the [UI Usage](#ui-usage) section below.
+
+---
+
+## UI Usage
+
+The Live TV / DVR SPA page at `/admin/live-tv` is the UI complement to the
+step 2.4 API. It is organized into **four collapsible sections**:
+
+### Tuners
+
+Lists all registered TV tuners as a card grid. Each card shows the tuner's
+type badge (e.g. `IPTV`), a status dot (green = online, red = offline), the
+tuner name, host address, and last-seen timestamp. Two action buttons per card:
+**Scan** triggers a channel scan via `POST .../tuners/{id}/scan`; **Delete**
+removes the tuner via `DELETE .../tuners/{id}`. An **Add Tuner** button at the
+section header opens a modal for `POST .../tuners`.
+
+Enable/disable is controlled by a toggle on each card that calls
+`PUT .../tuners/{id}` with `{ enabled: true/false }`. All buttons set
+`aria-busy` and show a loading label (e.g. `Scanning…`) while in-flight.
+API errors surface as error toasts.
+
+### Guide / EPG
+
+Displays programme listings in a scrollable grid. A **date picker** at the
+top switches between Today, +1 Day, and +2 Day — clicking a date button calls
+`GET /api/v1/admin/livetv/guide?start_time=…&end_time=…` with the appropriate
+ISO time window. Each programme card shows the title, start/end time, category
+badge, and a rating indicator.
+
+Clicking a programme card **expands it in-place** to show the full description,
+season/episode info, and a **Record** button. The Record button opens the
+**Schedule Recording** modal pre-filled with the programme's channel and time
+range. A **Refresh Guide** button at the section header triggers
+`POST /api/v1/admin/livetv/guide/refresh`.
+
+### Recordings
+
+Three tabs filter the recording list:
+
+| Tab | API | Shows |
+|-----|-----|-------|
+| **All** | `GET /api/v1/admin/livetv/recordings` | Every recording |
+| **Upcoming** | `GET /api/v1/admin/livetv/recordings/upcoming` | Scheduled but not started |
+| **By Series** | `GET /api/v1/admin/livetv/recordings/series/{ruleId}` | Recordings grouped under a series rule |
+
+Recording cards show the title, channel, scheduled time, status badge
+(`recording` / `completed` / `failed`), and a **Delete** button
+(`DELETE .../recordings/{id}`). A **Schedule Recording** button at the
+section header opens the modal described above.
+
+### Series Rules
+
+Lists all series recording rules as rows, each showing the rule title, target
+channel, and priority indicator. An **Add Rule** button opens a modal that
+accepts: channel, series ID, title, schedule type (`once` / `daily` /
+`weekly`), start/end time, and optional priority and quality. It posts to
+`POST /api/v1/admin/livetv/series-rules`.
+
+Each row has **Edit** and **Delete** actions (respectively `PUT` and `DELETE`
+on `/api/v1/admin/livetv/series-rules/{id}`). When the section expands it
+loads channels in parallel with the rules via `GET /api/v1/admin/livetv/channels`
+— channel data is needed to populate the channel picker in the Add Rule modal.
+
+### Expand / collapse
+
+All four sections start **collapsed**. Their content loads lazily when the
+section heading is clicked, following the same expand-then-fetch pattern as
+`RemoteAccessPage` (section 17).
+
+### Scheduling a recording
+
+To schedule a recording from the Guide:
+
+1. Navigate to the **Guide / EPG** section.
+2. Select a date to load programmes for that day.
+3. Click a programme card to expand it.
+4. Click **Record** — the Schedule Recording modal opens pre-filled with the
+   programme's `channel_id`, `program_id`, and time window.
+5. Adjust the time window if needed and click **Schedule**. This calls
+   `POST /api/v1/admin/livetv/recordings`.
 
 ---
 

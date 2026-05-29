@@ -11,11 +11,60 @@ override individual values at runtime. The store is exposed through an admin JSO
 API so settings can be read and changed without editing files or restarting the
 server.
 
-::: tip UI coming in Phase 1.3
-This page documents the **API** only. The graphical settings screens in the admin
-console land in Phase 1.3 — until then, settings are read and written through the
-endpoints below.
-:::
+## Settings SPA
+
+The admin console exposes a graphical Settings page at **`/admin/settings`**.
+It consumes the GET/PUT `/api/v1/admin/settings` contract described below — no
+new endpoints were added; the page is the UI layer on top of the 0.5 API.
+
+### Access
+
+Navigate to **`/admin/settings`** in the admin console sidebar (entry: **Settings**,
+positioned after **Users**). Requires admin authentication.
+
+### 8 Group Tabs
+
+The page renders all settings keys split across 8 tabbed sections:
+
+| Tab | Keys |
+|-----|------|
+| **Transcoding** | `hwaccel.enabled`, `hwaccel.prefer_hardware`, `hwaccel.probe_timeout` |
+| **Metadata** | `tmdb.api_key` |
+| **Markers** | `marker_detection.similarity_threshold`, `marker_detection.intro_max_duration` |
+| **Subtitles** | `subtitles.enabled`, `subtitles.default_language`, `subtitles.burn_in_by_default` |
+| **Discovery** | `discovery.discovery_port` |
+| **Trickplay** | `trickplay.enabled`, `trickplay.interval_seconds` |
+| **Newsletter** | `newsletter.enabled`, `newsletter.send_hour` |
+| **Port Forward** | `port-forward.port_forwarding.upnp_enabled` |
+
+### Field Types
+
+| Type | Control |
+|------|---------|
+| `bool` | Toggle switch |
+| `int` / `float` | Number input with `min`/`max` from schema constraints |
+| `string` | Text input; `tmdb.api_key` renders as a password field with Show/Hide toggle |
+
+### Overrides
+
+Each key shows a **"custom" badge** (blue accent pill) when its effective value
+comes from the `server_settings` DB table rather than the config-file default.
+The `overridden` array returned by GET `/api/v1/admin/settings` drives this
+indicator.
+
+### Saving
+
+The sticky **Save settings** footer button fires `PUT /api/v1/admin/settings`
+with `{ settings: { key: value, ... } }`. On `200` the page re-renders with the
+refreshed `overridden` list and shows a success toast. On `400` per-field
+validation errors appear inline next to the relevant inputs. On `500` an error
+toast is shown.
+
+Overrides **persist across restarts** — the database is the durable store.
+
+<!-- Screenshot: admin-settings-spa.png -->
+
+
 
 ## The Effective-Value Model
 

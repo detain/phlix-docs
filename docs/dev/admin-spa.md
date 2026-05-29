@@ -455,3 +455,118 @@ exposes `status()`, `start()`, and `stop()` wired under `AdminMiddleware` in
 
 Overall SPA: **18** passing tests (8 API + 10 page) covering all three endpoints
 and all user-facing render and action states.
+
+---
+
+## 17. RemoteAccessPage (step 2.3 — hub pairing / subdomain / relay / port-forward)
+
+`RemoteAccessPage` (`admin-ui/src/pages/RemoteAccessPage.tsx`) is the admin
+console's **remote access control page** at `/admin/remote-access`. Four
+collapsible sections manage the server's remote access stack: **Hub Pairing**
+(connection to a Phlix Hub instance), **Subdomain** (claimable HTTPS endpoint
+via Hub), **Relay Tunnel** (fallback connectivity when direct connection is
+unavailable), and **Port Forward** (UPnP/NAT-PMP port mapping on the LAN).
+
+All 16 backend endpoints are new in this step, wired under `AdminMiddleware`
+in `Application::loadRemoteAccessRoutes()`.
+
+### Tech stack additions
+
+| File | Purpose |
+|------|---------|
+| `admin-ui/src/api/remoteAccess.ts` (`RemoteAccessApi`) | Typed wrappers for all 16 endpoints — hub (5), subdomain (5), relay (4), portforward (2) |
+| `admin-ui/src/api/remoteAccess.test.ts` | 22 unit tests for `RemoteAccessApi` (100% coverage) |
+| `admin-ui/src/pages/RemoteAccessPage.tsx` | React page — 4 collapsible sections (Hub Pairing / Subdomain / Relay Tunnel / Port Forward) with expand/collapse state machine; each section lazy-loads its data on expand |
+| `admin-ui/src/pages/RemoteAccessPage.test.tsx` | 14 component tests — all render states, expand/collapse, action states, toast feedback, latency display |
+| `admin-ui/src/styles.css` | Remote access page styles (`.page--remote-access`, section/card styles) |
+
+### Page routing
+
+`RemoteAccessPage` is added to `App.tsx` at route `/remote-access` and to
+`navItems.ts` as the **Remote Access** sidebar entry.
+
+### RemoteAccessApi wrapper (16 methods across 4 resource groups)
+
+| Method | Endpoint | Returns |
+|--------|----------|---------|
+| `getHubStatus()` | `GET /api/v1/admin/remote/hub/status` | `{ paired, hub_id, hub_name, last_heartbeat }` |
+| `pairHub(hubId)` | `POST /api/v1/admin/remote/hub/pair` | `{ success, message }` |
+| `unenrollHub()` | `POST /api/v1/admin/remote/hub/unenroll` | `{ success, message }` |
+| `sendHeartbeat()` | `POST /api/v1/admin/remote/hub/heartbeat` | `{ success, message }` |
+| `getRelayCandidates()` | `GET /api/v1/admin/remote/hub/relay-candidates` | `{ candidates: [{ id, region, latency_ms }] }` |
+| `getSubdomainStatus()` | `GET /api/v1/admin/remote/subdomain/status` | `{ claimed, subdomain, fqdn, assigned_at }` |
+| `claimSubdomain(subdomain)` | `POST /api/v1/admin/remote/subdomain/claim` | `{ success, message }` |
+| `releaseSubdomain()` | `POST /api/v1/admin/remote/subdomain/release` | `{ success, message }` |
+| `updateSubdomain(subdomain)` | `PUT /api/v1/admin/remote/subdomain/update` | `{ success, message }` |
+| `verifySubdomain()` | `POST /api/v1/admin/remote/subdomain/verify` | `{ success, message }` |
+| `getRelayStatus()` | `GET /api/v1/admin/remote/relay/status` | `{ connected, relay_id, region, latency_ms, enabled }` |
+| `enableRelay()` | `POST /api/v1/admin/remote/relay/enable` | `{ success, message }` |
+| `disableRelay()` | `POST /api/v1/admin/remote/relay/disable` | `{ success, message }` |
+| `pingRelay()` | `POST /api/v1/admin/remote/relay/ping` | `{ success, latency_ms, relay_id }` |
+| `getPortForwardStatus()` | `GET /api/v1/admin/remote/portforward/status` | `{ enabled, port, protocol, upnp_enabled, nat_pmp_enabled }` |
+| `togglePortForward(enabled)` | `POST /api/v1/admin/remote/portforward/toggle` | `{ success, message }` |
+
+All methods throw `ApiError` on non-2xx. `togglePortForward` propagates HTTP
+`500` with `{ success: false, message: "…" }` as an error toast (network
+layer failure).
+
+### Collapsible section layout
+
+Each section renders a `<section>` element with:
+
+- A **heading** (`<h2>` or `<h3>`) that is also the expand/collapse trigger
+  — clicking it toggles `expanded.section` boolean.
+- A **summary line** in the header showing current state (e.g. `Paired
+  (srv-123)` or `Connected (45ms latency)`).
+- A **card body** rendered only when expanded (`{expanded && <Card>…}</Card>`)
+  with current details, action buttons, and any async result display.
+
+All four sections start collapsed. Hub Pairing and Relay Tunnel data loads
+**on expand**, not on page load, to avoid unnecessary API calls.
+
+### Action button behaviour
+
+| Section | Button | Call | Success | Error |
+|----------|--------|------|---------|-------|
+| Hub Pairing | **Pair** | `POST /hub/pair` | Toast + refresh | Error toast |
+| Hub Pairing | **Send Heartbeat** | `POST /hub/heartbeat` | Toast | Error toast |
+| Hub Pairing | **Unenroll** | `POST /hub/unenroll` | Toast + refresh | Error toast |
+| Subdomain | **Claim** | `POST /subdomain/claim` | Toast + refresh | Error toast |
+| Subdomain | **Release** | `POST /subdomain/release` | Toast + refresh | Error toast |
+| Subdomain | **Update** | `PUT /subdomain/update` | Toast + refresh | Error toast |
+| Relay Tunnel | **Enable** | `POST /relay/enable` | Toast + refresh | Error toast |
+| Relay Tunnel | **Disable** | `POST /relay/disable` | Toast + refresh | Error toast |
+| Relay Tunnel | **Ping** | `POST /relay/ping` | Latency update | Error toast |
+| Port Forward | **Enable/Disable** | `POST /portforward/toggle` | Toast + refresh | Error toast (500 surfaced) |
+
+Buttons set `aria-busy={acting}` and disable during the in-flight request.
+
+### Architecture note — stable `push` from `useToast()`
+
+The page destructures `useToast()` as `const { push: pushToast } = useToast()`,
+following the same stable-reference pattern documented in the [Libraries page
+(#8)](#8-the-libraries-page-step-11c--the-first-feature-page) section. `push`
+is wrapped in `useCallback` inside `ToastProvider`, so its reference is
+stable across renders; depending on the whole `toast` object would cause
+`useCallback` dependencies to shift on every toast push and re-trigger
+`useEffect` calls.
+
+### Backend controller
+
+`AdminHubController` (`src/Server/Http/Controllers/Admin/AdminHubController.php`)
+exposes all 16 endpoints. Each method is gated by `AdminMiddleware` and
+uses the existing DB abstraction layer with parameterised queries. The
+controller is bound in `Application.php` via `loadRemoteAccessRoutes()` which
+registers the four sub-resource groups (`hub`, `subdomain`, `relay`,
+`portforward`) under the shared `/api/v1/admin/remote` prefix.
+
+### Coverage (Vitest)
+
+| File | Statements |
+|------|------------|
+| `src/api/remoteAccess.ts` | **100%** |
+| `src/pages/RemoteAccessPage.tsx` | ≥80% |
+| `src/pages/RemoteAccessPage.test.tsx` | **100%** (14/14) |
+
+Overall SPA: **36** passing tests (22 API + 14 page) covering all 16 endpoints
+and all page render, expand/collapse, and action states.

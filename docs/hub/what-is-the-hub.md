@@ -20,6 +20,7 @@ convenience.
 ## Next Steps
 
 - [Claim your server to the hub](claim-server.md) — connect a server to a hub.
-- [Share with friends](share-with-friends.md) — grant others access to your libraries.
+- [Library Sharing](library-sharing.md) — share specific libraries with other hub users by email.
+- [Share with Friends](share-with-friends.md) — invite links and email-based sharing for non-hub users.
 - [Remote access](remote-access.md) — how remote connectivity works.
 - [Self-host the hub](self-host-the-hub.md) — run your own hub instance.

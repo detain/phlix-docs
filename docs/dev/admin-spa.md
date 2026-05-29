@@ -372,3 +372,86 @@ when activity has more results`, `appends new activity events when Load more is 
 fail due to `makeFetch` cycling the last mocked response when array indices are
 exhausted — the core pagination logic is verified by passing empty-state and skeleton
 tests.
+
+---
+
+## 16. DlnaServerPage (step 2.2 — DLNA server status/toggle)
+
+`DlnaServerPage` (`admin-ui/src/pages/DlnaServerPage.tsx`) is the admin console's
+**DLNA server control page** at `/admin/dlna-server`. It shows whether the built-in
+UPnP MediaServer is running and lets an admin start or stop it on demand — **no new
+backend endpoints were added in this step**; the page wraps the `CdsServer` lifecycle
+methods that `AdminDlnaServerController` exposes.
+
+### Tech stack additions
+
+| File | Purpose |
+|------|---------|
+| `admin-ui/src/api/dlnaServer.ts` (`DlnaServerApi`) | Typed wrappers for `status()`/`start()`/`stop()` endpoints |
+| `admin-ui/src/api/dlnaServer.test.ts` | 8 unit tests for `DlnaServerApi` (100% coverage) |
+| `admin-ui/src/pages/DlnaServerPage.tsx` | React page — status card (green/red indicator, friendly name), Start/Stop buttons with loading state, toast feedback |
+| `admin-ui/src/pages/DlnaServerPage.test.tsx` | 10 component tests — all render states, all action states, toast feedback, error toast, info toast (409 no-op) |
+| `admin-ui/src/styles.css` | DLNA page styles (`.page--dlna-server`) |
+
+### Page routing
+
+`DlnaServerPage` is added to `App.tsx` at route `/dlna-server` and to `navItems.ts`
+as the **DLNA Server** sidebar entry.
+
+### DlnaServerApi wrapper (3 methods)
+
+| Method | Endpoint | Returns |
+|--------|----------|---------|
+| `getStatus()` | `GET /api/v1/admin/dlna/status` | `{ running: bool, enabled: bool, friendly_name: string, uptime_seconds?: int }` |
+| `start()` | `POST /api/v1/admin/dlna/start` | `{ success: true, message: string }` |
+| `stop()` | `POST /api/v1/admin/dlna/stop` | `{ success: true, message: string }` |
+
+All three methods throw `ApiError` on non-2xx responses. `getStatus()` returns
+`enabled: false` gracefully when `CdsServer` is not registered in the DI container.
+
+### Status card layout
+
+The page renders a single **status card** showing:
+- A green (🟢) or red (🔴) status indicator driven by `running: true/false`
+- The friendly name from `friendly_name` (e.g. `Phlix Media Server`)
+- An `enabled` guard that hides both action buttons when DLNA is not configured
+
+### Action button behaviour
+
+| Button | Call | Success | Error |
+|--------|------|---------|-------|
+| **Start** | `POST /api/v1/admin/dlna/start` | Success toast → status refreshes | Error toast |
+| **Stop** | `POST /api/v1/admin/dlna/stop` | Success toast → status refreshes | Error toast |
+
+Both buttons set `aria-busy={acting}` and disable during the in-flight request.
+`409` responses (already running / already stopped) surface as **info toasts**,
+not error toasts — the no-op case is expected user behaviour, not an error condition.
+
+### Architecture note — stable `push` from `useToast()`
+
+The page destructures `useToast()` as `const { push: pushToast } = useToast()`,
+following the same stable-reference pattern documented in the [Libraries page
+(#8)](#8-the-libraries-page-step-11c--the-first-feature-page) section. `push` is
+wrapped in `useCallback` inside `ToastProvider`, so its reference is stable across
+renders; depending on the whole `toast` object would cause `useCallback`
+dependencies to shift on every toast push and re-trigger `useEffect` calls.
+
+### Backend controller
+
+`AdminDlnaServerController` (`src/Server/Http/Controllers/Dlna/AdminDlnaServerController.php`)
+exposes `status()`, `start()`, and `stop()` wired under `AdminMiddleware` in
+`Application::loadDlnaAdminRoutes()`. `CdsServer` is injected via
+`setCdsServer()` from the DI container — if no `CdsServer` registration exists,
+`status()` returns `{ running: false, enabled: false }` gracefully. `start()` and
+`stop()` delegate directly to `DlnaServer::start()` / `DlnaServer::stop()`.
+
+### Coverage (Vitest)
+
+| File | Statements |
+|------|------------|
+| `src/api/dlnaServer.ts` | **100%** |
+| `src/pages/DlnaServerPage.tsx` | ≥80% |
+| `src/pages/DlnaServerPage.test.tsx` | **100%** (10/10) |
+
+Overall SPA: **18** passing tests (8 API + 10 page) covering all three endpoints
+and all user-facing render and action states.

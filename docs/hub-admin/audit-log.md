@@ -17,11 +17,15 @@ admins (a non-admin gets `401 auth.required` / `403 auth.not_admin`) and reads f
 
 ## Log Retention
 
-Retention is governed by the hub's configuration; a fixed retention window or
-automatic pruning may be available depending on how your hub is configured.
+There is **no** retention window and **no** automatic pruning. Audit entries are
+written to the `audit_logs` table and kept indefinitely. If you need to trim old
+rows, delete them manually in MySQL (e.g. by `created_at`).
 
 ## Export
 
-Bulk CSV/JSON export of the audit log may be available depending on your hub
-configuration; otherwise the entries are available through the
-`GET /api/v1/me/audit-logs` API for programmatic retrieval.
+There is **no** bulk CSV export. The only programmatic access is the
+`GET /api/v1/me/audit-logs` JSON API (admin-gated). It supports filtering by
+`event`, `user_id`, `resource`, `action`, `success` (`0`/`1`), `from`/`to`
+(unix timestamps), plus `limit` (default 50, max 200) and `offset` for paging,
+and returns `{ logs, total, limit, offset }`. For a full dump, query the
+`audit_logs` table in MySQL directly.

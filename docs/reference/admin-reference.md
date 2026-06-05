@@ -4,6 +4,8 @@
 **Step:** N.20
 **Since:** 0.18.0
 
+> **Scope:** this reference covers the **media server** (`phlix-server`) — its environment variables, `php bin/phlix` CLI, and `config/*.php` files. The **hub** (`phlix-hub`) is administered through its web console, not these CLIs/configs. Hub admins should use the [Hub Admin Console](../hub-admin/admin-console.md) and the `hub-admin/*` guides; see [Hub administration](#hub-administration) at the bottom of this page for the pointer and the hub's `/api/v1/admin/*` API summary.
+
 ## TL;DR
 
 This page is the single admin landing page for three pillars of Phlix server operation: environment variables (control startup), CLI commands (control ongoing operation), and config files (control runtime behaviour). For the complete tables of every variable or command, see [Environment variables](env-vars.md) and [CLI commands](cli.md).
@@ -267,6 +269,25 @@ openssl rand -hex 32
 Environment=JWT_SECRET=$(openssl rand -hex 32)
 ```
 Restart the server after changing `JWT_SECRET`. All existing sessions will be invalidated — users must log in again.
+
+## Hub administration
+
+Everything above administers the **media server**. The **hub** (`phlix-hub`) is a separate service with its own administration model — it is operated through a gated web console (the Vue SPA at `/app/admin/*`), not through `bin/phlix` CLI commands or `config/*.php` files.
+
+- **Web console:** [Hub Admin Console](../hub-admin/admin-console.md) — Hub Dashboard, Users, Logs, Settings, and Audit Logs pages, visible only to admins. The first user to register on a hub is auto-promoted to admin.
+- **More hub-admin guides:** see the `hub-admin/*` section (install, network, TLS, audit log, backup/restore, …) for hub deployment and operations.
+
+The console is backed by the hub's JSON admin API under `/api/v1/admin/*` (all gated **auth + admin**):
+
+| Area | Endpoints |
+| --- | --- |
+| Logs | `GET /logs`, `GET /logs/tail`, `GET /logs/tail-all` |
+| Settings | `GET /settings`, `PUT /settings` |
+| Users | `GET/POST /users`, `GET/PUT/DELETE /users/{id}`, `POST /users/{id}/set-admin`, `POST /users/{id}/reset-password`, `GET /users/{id}/profiles` (always `[]`) |
+| Dashboard | `GET /dashboard/summary`, `GET /dashboard/activity?limit=` |
+| Media requests | `GET /requests`, `POST /requests/{id}/approve`, `POST /requests/{id}/deny` |
+
+For request/response shapes see [Hub admin API](api.md#hub-admin-api) in the API reference.
 
 ## Next Steps
 

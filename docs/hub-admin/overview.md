@@ -3,27 +3,46 @@
 The **Hub Admin** section covers running and operating a self-hosted [Phlix Hub](../hub/what-is-the-hub.md) —
 the cloud directory + reverse-tunnel relay that lets your media servers be reached from anywhere.
 
-This page is the entry point: it explains the **admin dashboard** (the web UI you manage the Hub
-from) and the **operational CLI reference** (the commands you run on the host). The rest of the
-section drills into install, capacity, tuning, monitoring, and policy.
+This page is the entry point: it explains the **web admin console** (the Vue single-page app you
+manage the Hub from) and the **operational CLI reference** (the commands you run on the host). The
+rest of the section drills into install, capacity, tuning, monitoring, and policy.
 
-## The Hub dashboard
+## The Hub web UI
 
-Once the Hub is running, the dashboard is the server-rendered web UI served by the HTTP worker
-(default port `8800`). Sign in at `/login`; the **first account created becomes an admin
-automatically** (see [Install](./install.md)).
+Once the Hub is running, its web UI is the **Vue single-page app** (built on the shared `@phlix/ui`
+design system) served by the HTTP worker on the public port (default `8800`). The bare root
+**redirects into the app** — `GET /` → `/app/servers` — and the SPA is served at `/app` and every
+`/app/*` deep link; it handles its own sign-in. (The Hub's original server-rendered Smarty pages —
+`/login`, `/my-servers`, `/claim-server`, `/manage-shares`, … — still resolve directly, but the SPA
+is the front door now.)
+
+The **first account created becomes an admin automatically** (see [Install](./install.md)); the SPA
+reads `is_admin` from `GET /api/v1/auth/me` and shows the **Admin** nav entry only to admins.
+
+### Primary nav (any signed-in user)
 
 | Page | Path | What it does |
 |------|------|--------------|
-| Landing | `/` | Public landing / sign-in entry |
-| My Servers | `/my-servers` | Lists your claimed servers and their live heartbeat status |
-| Claim Server | `/claim-server` | Pairs a new media server using a claim code |
-| Shared with me | `/shared-with-me` | Libraries other users have shared with you |
-| Manage shares | `/manage-shares` | Libraries you share, with permission levels |
-| Media requests | `/requests` | Submit movie/TV requests (user view) |
-| Admin: requests | `/admin/requests` | Approve/deny the media-request queue (admin only) |
+| My Servers | `/app/servers` | Your claimed servers + live heartbeat status; claim a new server here |
+| Federation | `/app/federation` | Peer-hub federation: peers, cross-hub library shares, admin delegation |
+| Shares | `/app/shares` | Libraries you share and libraries shared with you, with permission levels |
 
-Admin-only pages and APIs are gated by the admin middleware and require an account with the
+### Admin console (admins only)
+
+The gated **Admin** entry opens the shared admin console at `/app/admin/*` — five pages: Hub
+Dashboard, Users, Logs, Settings, and Audit Logs. It is backed by the `/api/v1/admin/*` API and is
+documented in full on the **[Admin Console](./admin-console.md)** page.
+
+| Page | Path |
+|------|------|
+| Hub Dashboard | `/app/admin/dashboard` |
+| Users | `/app/admin/users` |
+| Logs | `/app/admin/logs` |
+| Settings | `/app/admin/settings` |
+| Audit Logs | `/app/admin/audit-logs` |
+
+Admin-only pages and APIs are gated server-side by `AdminMiddleware` (**401 `auth.required`** when
+unauthenticated, **403 `auth.not_admin`** for a non-admin) and require an account with the
 `is_admin` flag. The first registered user gets it automatically; there is no separate
 "create admin" step.
 
@@ -94,6 +113,7 @@ Docker walkthrough.
 
 ## Where to next
 
+- [Admin Console](./admin-console.md) — the web admin console (Hub Dashboard, Users, Logs, Settings, Audit Logs)
 - [Install](./install.md) — deploy the Hub (Docker, source, reverse-proxy TLS)
 - [First Boot](./first-boot.md) — create the first admin and pair a server
 - [Capacity Planning](./capacity-planning.md) — size the host for your user base

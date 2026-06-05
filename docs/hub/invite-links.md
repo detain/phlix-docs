@@ -12,9 +12,12 @@ Invite links let you share access to a library (or all libraries) on one of your
 
 ## The Invite Links Page
 
-Navigate to **Invite Links** in the hub navigation (or go directly to `/invite-links`).
+Invite links are managed through the Hub API (the `/api/v1/me/invite-links`
+endpoints below) and the legacy `/invite-links` page. They are not in the current
+SPA top navigation (My Servers / Federation / Shares) — the public acceptance link
+`/invite/{token}` that you send to recipients is unchanged.
 
-The page lists every invite link you have created, one card per link:
+The invite-links view lists every invite link you have created, one card per link:
 
 ```
 ┌─ Invite Link ──────────────────────────────────────┐
@@ -91,7 +94,7 @@ All endpoints require authentication (`Authorization: Bearer <jwt>` or the `phli
 
 **Reason:** The Library dropdown is populated from the list of libraries you have shared from that server. If you have not shared any libraries yet, only "All Libraries" is available. Creating an invite link for a specific library requires you to have previously shared that library via the [Share with Friends](./share-with-friends.md) flow.
 
-**Fix:** Either select "All Libraries" to cover the entire server, or share at least one library from that server first using the **Sharing** tab on the server's detail page.
+**Fix:** Either select "All Libraries" to cover the entire server, or share at least one library from that server first using the **Shares** page (`/app/shares`).
 
 ### 2. Invite link is accepted but the library does not appear
 

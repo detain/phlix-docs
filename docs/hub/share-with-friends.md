@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Hub sharing lets you grant access to your media library to friends and family through the hub. Go to your server's **Sharing** tab → choose what to share → invite by email or link. Recipients see your server under **"Shared with me"** in their hub dashboard without needing to install anything or be on the same network. Permissions are configurable from view-only to full playback with optional download access.
+Hub sharing lets you grant access to your media library to friends and family through the hub. Open the **Shares** page (`/app/shares`) → choose what to share → invite by email or link. Recipients see your server under **"Shared with me"** on the same **Shares** page in their hub account without needing to install anything or be on the same network. Permissions are configurable from view-only to full playback with optional download access.
 
 ---
 
@@ -10,9 +10,9 @@ Hub sharing lets you grant access to your media library to friends and family th
 
 The sharing model is simple:
 
-- **You** (library owner) grant access from the hub dashboard
+- **You** (library owner) grant access from the **Shares** page (`/app/shares`)
 - **Your friend** receives an invite by email or a shareable link
-- **Your friend** logs into the hub and sees your server under **"Shared with me"**
+- **Your friend** logs into the hub and sees your server under **"Shared with me"** on the **Shares** page
 - **You** retain full control — revoke or change permissions at any time
 
 ### Three sharing scopes
@@ -35,10 +35,10 @@ The sharing model is simple:
 
 ---
 
-## 2. Granting Access via the Hub Dashboard
+## 2. Granting Access via the Hub Web App
 
 1. Log into the hub at `https://hub.phlix.app` (or your self-hosted hub URL)
-2. Navigate to **Servers** → your server → **Sharing** tab
+2. Open the **Shares** page (`/app/shares`) from the top navigation
 3. Click **Share Library**
 4. Choose what to share (entire library, specific folders, or specific items)
 5. Select the permission level: **View only** / **View + Playback** / **View + Playback + Download**
@@ -55,19 +55,19 @@ You can restrict shared content to G-rated media for certain recipients. This us
 
 ## 3. Granting Access
 
-Library sharing is managed entirely from the **hub dashboard** — there is no
-server-side CLI for sharing. Grant, list, change, and revoke access from the
-**Servers → [your server] → Sharing** tab described in §2 above:
+Library sharing is managed entirely from the **Shares** page (`/app/shares`) —
+there is no server-side CLI for sharing. Grant, list, change, and revoke access
+from the **Shares** page described in §2 above:
 
 - **Grant** — click **Share Library**, choose the library/folder/item, pick a
   permission level (**View only** / **View + Playback** / **View + Playback +
   Download**, the last of which enables DLNA casting), and send the invite.
-- **List** — the Sharing tab lists every active share and its permission level.
+- **List** — the **Shares** page lists every active share and its permission level.
 - **Change / Revoke** — adjust the permission level or revoke access inline;
   revocation takes effect immediately.
 
 Sharing state lives on the hub, not on the media server, so these actions are
-only available through the hub UI.
+only available through the hub web app.
 
 ---
 
@@ -89,7 +89,7 @@ only available through the hub UI.
 
 ## 5. Managing Shared Access
 
-As a library owner, you can manage all active shares from the **Sharing** tab:
+As a library owner, you can manage all active shares from the **Shares** page (`/app/shares`):
 
 - **View** all active shares and their permission levels
 - **Change** a permission level for an existing share
@@ -98,7 +98,7 @@ As a library owner, you can manage all active shares from the **Sharing** tab:
 
 As a recipient:
 
-- Shared libraries appear under **"Shared with me"** in your hub dashboard
+- Shared libraries appear under **"Shared with me"** on the **Shares** page
 - You cannot re-share content you have been given access to
 - Your access can be revoked by the library owner at any time
 
@@ -163,12 +163,12 @@ curl -X POST http://localhost:32400/api/v1/libraries/{id}/rescan \
 **Symptom:** Friend logs in, browses the shared library, but pressing **Cast** or **Play To** on a DLNA device does nothing or shows an error.
 
 **Diagnosis:**
-Check the current permission level on the share from the hub dashboard's
-**Sharing** tab (it lists each share and its permission level).
+Check the current permission level on the share from the hub's **Shares** page
+(`/app/shares`) — it lists each share and its permission level.
 
 **Fix:** DLNA casting requires `View + Playback + Download` permission. Ask the
-library owner to upgrade your permission level from the hub dashboard's
-**Sharing** tab — change the share's permission to **"View + Playback +
+library owner to upgrade your permission level from the hub's **Shares** page
+(`/app/shares`) — change the share's permission to **"View + Playback +
 Download"**.
 
 ---

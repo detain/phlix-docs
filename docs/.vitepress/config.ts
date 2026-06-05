@@ -202,6 +202,7 @@ export default defineConfig({
           text: 'Hub Admin',
           items: [
             { text: 'Overview', link: '/hub-admin/overview' },
+            { text: 'Admin Console', link: '/hub-admin/admin-console' },
             { text: 'Install', link: '/hub-admin/install' },
             { text: 'First Boot', link: '/hub-admin/first-boot' },
             { text: 'Capacity Planning', link: '/hub-admin/capacity-planning' },
@@ -277,5 +278,9 @@ export default defineConfig({
     }
   },
   cleanUrls: false,
-  ignoreDeadLinks: true
+  ignoreDeadLinks: true,
+  // Internal planning dumps under docs/old/ are not part of the published site
+  // (never linked from the nav) and contain raw angle-bracket text the VitePress
+  // Vue compiler can't parse — exclude them so the build/deploy succeeds.
+  srcExclude: ['old/**', '**/old/**']
 })

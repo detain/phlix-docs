@@ -346,27 +346,84 @@ Terminate a specific playback session (e.g., remote control of another device).
 
 ### POST /api/v1/server-claims/new
 
-Request a new server claim token from the Hub. Used by the server to initiate the claim flow. This is an unauthenticated bootstrap endpoint — the server proves possession of its Ed25519 keypair, there is no prior session.
+Initiate the claim flow. Called by the **server** (not the user) to start pairing — it is an unauthenticated bootstrap endpoint (the server has no JWT yet) but requires the protocol header `Accept-Phlix-Protocol: v1`. The request body is a `Phlix\Shared\Hub\ClaimRequest` (camelCase); the response is a `ClaimResponse` carrying a short human-readable claim code the user then redeems. See [Hub architecture → Pairing protocol](../dev/architecture-hub.md#pairing-protocol-internals) for the full flow and DTO shapes.
 
-**Auth:** None (Ed25519 keypair bootstrap)
+**Auth:** None — but `Accept-Phlix-Protocol: v1` is required (400 `HUB_PROTOCOL_UNSUPPORTED` otherwise).
+
+**Request body** (`ClaimRequest`):
+```json
+{
+  "serverName": "Alice's NAS",
+  "version": "0.18.0",
+  "publicKeysJwk": { "keys": [{ "kty": "OKP", "crv": "Ed25519", "x": "...", "kid": "..." }] },
+  "hostnameCandidates": ["nas.alice.com", "192.168.1.100"],
+  "protocolVersion": "v1"
+}
+```
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `serverName` | string | Operator-chosen friendly name. |
+| `version` | string | Server semver. |
+| `publicKeysJwk` | object | JWKS the server publishes for hub-minted token validation. |
+| `hostnameCandidates` | string[] | Hostnames/IPs the server thinks it is reachable at. |
+| `protocolVersion` | string | Spec version — `"v1"`. |
+
+**Response 200** (`ClaimResponse`):
+```json
+{
+  "claimCode": "ABCD-1234",
+  "expiresIn": 600,
+  "claimId": "550e8400-e29b-41d4-a716-446655440009",
+  "hubBaseUrl": "https://hub.phlix.example.com"
+}
+```
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `claimCode` | string | Short human code the user pastes in the SPA to redeem. |
+| `expiresIn` | int | Seconds the claim code is valid (default 600). |
+| `claimId` | string (UUID) | Opaque token the server stores so it can poll claim status. |
+| `hubBaseUrl` | string | Where the server should send heartbeats once enrolled. |
+
+**Response 400:** `HUB_PROTOCOL_UNSUPPORTED` (missing/wrong protocol header) or malformed `ClaimRequest`.
+
+---
+
+### GET /api/v1/server-claims/`{claimId}`
+
+Poll claim status. Called by the **server** while it waits for the user to redeem the code; public, because the server still has no JWT — the `claimId` UUID is itself the bearer secret. A `claimed` response returns the one-time enrollment material (the Ed25519 enrollment JWT + the hub JWKS URL).
+
+**Auth:** None (the unguessable `claimId` in the path is the secret). `Accept-Phlix-Protocol: v1` required.
+
+**Parameters:**
+- `claimId` (path) — the UUID returned by `/server-claims/new`.
+
+---
+
+### POST /api/v1/server-claims/claim
+
+Redeem a claim code. Called by the **user** from the SPA (**My Servers**, `/app/servers`) to bind a pending server to their account. This is the only step in the pairing flow that requires user auth.
+
+**Auth:** Required (Bearer token). `Accept-Phlix-Protocol: v1` required.
 
 **Request body:**
 ```json
 {
-  "hub_token": "claim-token-from-hub-ui"
+  "claim_code": "ABCD-1234"
 }
 ```
 
-**Response 201:**
+**Response 200:**
 ```json
 {
-  "server_id": "550e8400-e29b-41d4-a716-446655440004",
-  "hub_url": "https://hub.phlix.example.com",
-  "enrolled": true
+  "enrollment_jwt": "eyJ...",
+  "hub_jwks_url": "https://hub.phlix.example.com/.well-known/jwks.json",
+  "server_id": "550e8400-e29b-41d4-a716-446655440004"
 }
 ```
 
-**Response 401:** Invalid or expired hub token
+**Response 404 / 410 / 409:** `CLAIM_CODE_NOT_FOUND` / `CLAIM_CODE_EXPIRED` / `CLAIM_CODE_ALREADY_CLAIMED`.
 
 ---
 
@@ -442,7 +499,9 @@ Unbind a claimed server from the authenticated Hub account. Returns 204 on succe
 
 **Response 403/404:** Same `code` values as `/access-info`.
 
-## Admin Endpoints
+## Admin Endpoints (media server)
+
+> **Scope:** the endpoints in this section are served by the **media server** (`phlix-server`). The **hub** exposes a different `/api/v1/admin/*` surface — see [Hub admin API](#hub-admin-api) below. The hub has no plugin subsystem, so the `/admin/plugins` endpoints are server-only.
 
 ### GET /api/v1/admin/users
 
@@ -505,6 +564,83 @@ Uninstall a plugin by name.
 **Response 204:** Plugin removed
 
 **Response 404:** Plugin not found
+
+## Hub admin API
+
+> **Scope:** these endpoints are served by the **hub** (`phlix-hub`), not the media server. They are the JSON backend for the hub's gated Admin console (the Vue SPA at `/app/admin/*`). All routes are gated by **auth + admin** middleware (`401` when unauthenticated, `403` when authenticated but not an admin). The first user to register is auto-promoted to admin.
+
+The hub admin API is mounted under `/api/v1/admin/*`. Most read shapes follow the `{ success, data: … }` envelope used by the shared `@phlix/ui` admin pages.
+
+### Logs
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/api/v1/admin/logs` | List the hub's log files. |
+| `GET` | `/api/v1/admin/logs/tail` | Tail a single log file. |
+| `GET` | `/api/v1/admin/logs/tail-all` | Tail all log files merged into one chronological stream. |
+
+### Settings
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/api/v1/admin/settings` | Read effective hub settings. |
+| `PUT` | `/api/v1/admin/settings` | Persist hub setting overrides. |
+
+### Users
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET` | `/api/v1/admin/users` | List users. |
+| `POST` | `/api/v1/admin/users` | Create a user. |
+| `GET` | `/api/v1/admin/users/{id}` | Get one user. |
+| `PUT` | `/api/v1/admin/users/{id}` | Update a user. |
+| `DELETE` | `/api/v1/admin/users/{id}` | Delete a user. |
+| `POST` | `/api/v1/admin/users/{id}/set-admin` | Grant/revoke admin. |
+| `POST` | `/api/v1/admin/users/{id}/reset-password` | Reset a user's password. |
+| `GET` | `/api/v1/admin/users/{id}/profiles` | Per-user profiles — always returns `[]` on the hub (no profiles subsystem; present for SPA parity). |
+
+### Dashboard
+
+#### GET /api/v1/admin/dashboard/summary
+
+Hub-scoped headline counters, aggregated from existing tables.
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "servers": { "total": 12, "online": 9, "offline": 3 },
+    "active_relay_sessions": 4,
+    "pending_requests": 2,
+    "user_count": 37
+  }
+}
+```
+
+#### GET /api/v1/admin/dashboard/activity?limit=
+
+Recent audit events as the dashboard activity feed. `limit` caps the number of rows returned.
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440010",
+      "action": "login_success",
+      "actor": "admin@example.com",
+      "target": "user:550e8400-…",
+      "created_at": "2026-06-04T12:00:00Z"
+    }
+  ]
+}
+```
+
+### Media requests
+
+The hub also exposes an admin queue for member media requests at `/api/v1/admin/requests` (list) plus `/{id}/approve` and `/{id}/deny`. These are documented in full, with the member-facing `/api/v1/me/requests` surface, in [Hub media requests](./api/hub-media-requests.md).
 
 ## Error Codes
 

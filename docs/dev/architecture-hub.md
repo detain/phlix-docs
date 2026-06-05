@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-The hub is a Workerman HTTP + WebSocket server that holds server claim codes, validates Ed25519 enrollment tokens, runs a 60-second heartbeat loop with each paired server, multiplexes relay tunnels for remote client access, and issues RS256 user-session JWTs. This guide covers the hub-specific architecture, the complete pairing protocol flow (claim code → enrollment JWT → heartbeat → user-session JWT), relay tunnel design (outbound WS from server to hub, client multiplexing), namespace map, and debug recipes. If pairing fails, check the 10-minute claim-code expiry and the heartbeat logs. If a relay tunnel drops, check the relay logs. If auth is failing, check the audit log.
+The hub is a Workerman HTTP + WebSocket server that holds server claim codes, validates Ed25519 enrollment tokens, runs a 60-second heartbeat loop with each paired server, multiplexes relay tunnels for remote client access, and issues HS256 user-session JWTs. Its primary UI is the shared Vue SPA (`@phlix/ui`) served at `/app`. This guide covers the hub-specific architecture, the complete pairing protocol flow (claim code → enrollment JWT → heartbeat → user-session JWT), relay tunnel design (outbound WS from server to hub, client multiplexing), namespace map, and debug recipes. If pairing fails, check the 10-minute claim-code expiry and the heartbeat logs. If a relay tunnel drops, check the relay logs. If auth is failing, check the audit log.
 
 ---
 
@@ -23,6 +23,21 @@ php public/index.php status  # check worker status
 php public/index.php stop   # stop all workers
 ```
 
+**Ports:** HTTP `8800`, server relay `8802` (servers connect outbound here), client relay `8803` (remote clients connect here).
+
+---
+
+## User interface (Vue SPA)
+
+The hub's primary UI is the shared **Vue 3 SPA** (the cross-repo `@phlix/ui` design system, consumed by `web-ui/` = `@phlix/hub-web-ui`). It is served by `SharedUiController` from the committed `public/assets/app/` bundle:
+
+- `GET /` → redirects to `/app/servers` (the front door).
+- `GET /app` and `GET /app/{path}` serve the SPA shell — no server-side auth gate; the SPA handles its own auth.
+- SPA top nav (any logged-in user): **My Servers** `/app/servers`, **Federation** `/app/federation`, **Shares** `/app/shares`.
+- A gated **Admin** console lives at `/app/admin/{dashboard,users,logs,settings,audit-logs}` (visible only to admins). See [`../hub-admin/admin-console.md`](../hub-admin/admin-console.md).
+
+The older SSR Smarty pages (`/login`, `/signup`, `/my-servers`, `/claim-server`, …) still resolve but are **legacy** — they are no longer the documented front door.
+
 ---
 
 ## Container topology
@@ -32,7 +47,7 @@ PHP-DI PSR-11 container built by `ContainerFactory::create()`:
 | Provider | What it wires |
 |---------|---------------|
 | `CoreServicesProvider` | `Workerman\MySQL\Connection`, `LoggerFactory`, `AuditLogger` |
-| `AuthServicesProvider` | `JwtHandler` (RS256 for user sessions), `UserRepository`, `AuditLogger`, `AuthManager` |
+| `AuthServicesProvider` | `JwtHandler` (HS256 for user sessions), `UserRepository`, `AuditLogger`, `AuthManager` |
 | `HttpServicesProvider` | `PageRenderer`, all controllers, all middleware |
 
 ```php
@@ -49,7 +64,7 @@ $app->boot();
 
 ```text
 Browser → Hub:  POST /api/v1/auth/register  {email, password, display_name}
-Hub:    create user row (unprivileged), issue RS256 access + refresh JWTs
+Hub:    create user row (unprivileged), issue HS256 access + refresh JWTs
 Hub → Browser: {access_token, refresh_token, user}
 ```
 
@@ -57,7 +72,7 @@ Hub → Browser: {access_token, refresh_token, user}
 
 ```text
 Browser → Hub:  POST /api/v1/auth/login  {email, password}
-Hub:    verify Argon2ID password hash, issue RS256 JWTs
+Hub:    verify Argon2ID password hash, issue HS256 JWTs
 Hub → Browser: {access_token, refresh_token, user}
 ```
 
@@ -65,7 +80,7 @@ Hub → Browser: {access_token, refresh_token, user}
 
 ```text
 Browser → Hub:  GET /api/v1/libraries  (Authorization: Bearer <access_token>)
-Hub:    validate RS256 JWT (iss=phlix-hub, aud=hub)
+Hub:    validate HS256 JWT (iss=phlix-hub, aud=hub)
 Hub → Browser: {libraries: [...]}
 ```
 
@@ -93,6 +108,11 @@ All hub JWTs follow `Phlix\Shared\Auth\JwtClaims::fromPayload()`:
 | `type` | `access` (1h TTL) or `refresh` (7d TTL) |
 | `scope` | `["library:read", "library:playback"]` |
 | `serverId` | Present on server-issued enrollment tokens |
+
+**Algorithms — two distinct token families:**
+
+- **User-session JWTs** (access + refresh, minted by `src/Auth/JwtHandler.php`) are **HS256** — symmetric HMAC-SHA256 signed with the hub's shared secret. The handler explicitly supports HS256 only (no RS256/ES256).
+- **Server enrollment JWTs** are **Ed25519** — asymmetric, minted by `EnrollmentJwtService` / `Ed25519KeyManager` and verified against the hub's public JWKS at `/.well-known/jwks.json`. These are a separate mechanism from user sessions; see the pairing protocol below.
 
 ---
 
@@ -149,16 +169,18 @@ Step-by-step flow for pairing a `phlix-server` instance with the hub.
 ### Step 1 — Server initiates claim
 
 ```bash
-# Server (HubClient) POSTs to hub:
+# Server (HubClient) POSTs to hub. The request body is a `Phlix\Shared\Hub\ClaimRequest`
+# (camelCase fields); the protocol version is gated by the Accept-Phlix-Protocol header.
 POST https://hub.example.com/api/v1/server-claims/new
 Content-Type: application/json
-X-Phlix-Signature: Ed25519  (signature of request body using server's private key)
+Accept-Phlix-Protocol: v1
 
 {
-  "server_name": "Alice's NAS",
-  "public_keys": [{ "kty": "OKP", "crv": "Ed25519", "x": "...", "kid": "..." }],
+  "serverName": "Alice's NAS",
   "version": "1.2.0",
-  "hostname_candidates": ["nas.alice.com", "192.168.1.100"]
+  "publicKeysJwk": { "keys": [{ "kty": "OKP", "crv": "Ed25519", "x": "...", "kid": "..." }] },
+  "hostnameCandidates": ["nas.alice.com", "192.168.1.100"],
+  "protocolVersion": "v1"
 }
 ```
 
@@ -166,19 +188,22 @@ X-Phlix-Signature: Ed25519  (signature of request body using server's private ke
 
 - Hub stores `server_claims` row: `claim_code` (human-friendly `ABCD-1234`), `status=pending`, `expires_at=NOW+10min`
 - Hub stores `servers` row: `status=claiming` (not yet linked to a user)
-- Returns `201 Created`:
+- Responds with a `Phlix\Shared\Hub\ClaimResponse` (camelCase fields):
 
 ```json
 {
-  "claim_id": "uuid",
-  "claim_code": "ABCD-1234",
-  "expires_in": 600
+  "claimCode": "ABCD-1234",
+  "expiresIn": 600,
+  "claimId": "uuid",
+  "hubBaseUrl": "https://hub.example.com"
 }
 ```
 
+The server stores `claimId` and polls `GET /api/v1/server-claims/{claimId}` (the UUID is the bearer secret) until the claim is redeemed.
+
 ### Step 3 — User redeems claim code
 
-- User pastes `ABCD-1234` at `https://hub.example.com/claim`
+- The user pastes `ABCD-1234` in the SPA (**My Servers**, `https://hub.example.com/app/servers`), which calls `POST /api/v1/server-claims/claim` with `{ "claim_code": "ABCD-1234" }` (auth required). There is no `/claim` page.
 - Hub looks up `server_claims` by `claim_code` where `status=pending` AND `expires_at > NOW`
 - Hub issues **Ed25519 enrollment JWT** (7-day TTL, signed with hub's Ed25519 key):
 
@@ -229,7 +254,7 @@ Authorization: Bearer {enrollment_jwt}
 ### Step 5 — Hub issues user-session JWTs
 
 - Hub validates the enrollment JWT (Ed25519, verifies against server's JWKS at `/.well-known/jwks.json`)
-- Hub issues **RS256 user-session JWTs** that server-side `HubClient` uses to authenticate remote user requests through the hub relay:
+- Hub issues **HS256 user-session JWTs** that server-side `HubClient` uses to authenticate remote user requests through the hub relay:
 
 ```json
 {
@@ -274,12 +299,18 @@ Hub → Server (over relay tunnel): { "type": "client_connect", "client_id": "..
 
 ```
 Phlix\Hub\          — Application bootstrap, Router, Config
-Phlix\Hub\Auth\     — JwtHandler (RS256 for user sessions), UserRepository,
+Phlix\Hub\Auth\     — JwtHandler (HS256 for user sessions), UserRepository,
                       AuditLogger, AuthManager
 Phlix\Hub\Relay\   — RelaySession (entity), TunnelManager (orchestrator)
 Phlix\Hub\Webhooks\ — WebhookDispatcher, WebhookDelivery
-Phlix\Hub\Http\    — Request, Response, Router, Controllers
-                      (Auth, Server, User, Me, Health)
+Phlix\Hub\Http\    — Request, Response, Router, Controllers + middleware.
+                      Controllers: Auth, Me, Page, Health, ServerClaim,
+                      Server, ServerList, ServerManage, ServerDetail,
+                      HubJwks, Relay, ClientMount, Subdomain, Library,
+                      LibraryShare, InviteLink, HubSettings, AuditLog,
+                      Log, Request, Federation, and the admin-console
+                      controllers AdminDashboard + AdminUser. SharedUiController
+                      serves the Vue SPA shell at /app.
 Phlix\Hub\Common\   — Container, Database (ConnectionPool),
                       Logger (LoggerFactory, LogChannels)
 Phlix\Shared\       — Types shared with phlix-server:
@@ -375,7 +406,7 @@ grep "550e8400-e29b-41d4-a716-446655440000" .logs/hub.log | grep relay
 
 ### Failure 1: Claim code expired
 
-**Symptom:** Server pairing stalls after displaying the claim code. User pastes the code at `https://hub.example.com/claim` but gets "Invalid or expired claim code."
+**Symptom:** Server pairing stalls after displaying the claim code. The user pastes the code in the SPA (My Servers, `https://hub.example.com/app/servers`) but gets "Invalid or expired claim code."
 
 **Diagnosis:**
 ```bash

@@ -165,7 +165,7 @@ The Hub runs three long-lived workers in one process group:
 
 | Worker | Default port | Purpose |
 |--------|--------------|---------|
-| HTTP | `8800` | REST API + dashboard + `/health` |
+| HTTP | `8800` | REST API + the Vue SPA (`/app`) + `/health` |
 | Relay (server-facing) | `8802` | Servers open their outbound tunnel here |
 | Relay (client-facing) | `8803` | Remote clients connect and are routed to a server |
 
@@ -349,9 +349,10 @@ Verify pairing works end-to-end:
 1. Start the Hub and a media server (the server has relay enabled and points at
    `HUB_PUBLIC_DOMAIN`).
 2. On the **server**: Settings → Hub → Connect → generate a claim code (e.g. `HUB-CLAIM-ABCD1234`).
-3. On the **Hub**: sign in, open **`/claim-server`**, and enter the claim code.
-4. Confirm the server appears under **`/my-servers`** with a live heartbeat indicator.
-5. Create a second account at `/signup`, sign in as that user, and confirm shared libraries and
+3. On the **Hub**: sign in (the root `/` redirects to **My Servers** at `/app/servers`) and enter
+   the claim code there.
+4. Confirm the server appears under **My Servers** (`/app/servers`) with a live heartbeat indicator.
+5. Create a second account, sign in as that user, and confirm shared libraries and
    media are visible.
 
 ---
@@ -398,7 +399,7 @@ constant across restarts and across all Hub nodes.
 
 ### Server can't reach the Hub
 
-**Symptom:** A server appears offline in `/my-servers`; no heartbeat is recorded.
+**Symptom:** A server appears offline under **My Servers** (`/app/servers`); no heartbeat is recorded.
 
 **Fix:** Make sure the Hub's HTTP (`8800`) and relay (`8802`) ports are reachable from the
 server's network through your reverse proxy, and that `HUB_PUBLIC_DOMAIN` resolves to the Hub's

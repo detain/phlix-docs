@@ -76,7 +76,7 @@ composer install
 php bin/hub.php                 # starts the hub on 0.0.0.0:8800
 ```
 
-The hub holds server claim codes, runs heartbeat loops, multiplexes relay tunnels, and issues RS256 user-session JWTs. See [`docs/dev/architecture-hub.md`](architecture-hub.md) for internals.
+The hub holds server claim codes, runs heartbeat loops, multiplexes relay tunnels, and issues HS256 user-session JWTs. See [`docs/dev/architecture-hub.md`](architecture-hub.md) for internals.
 
 ### Mobile client (phlix-mobile-client)
 

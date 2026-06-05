@@ -156,18 +156,20 @@ Radarr or Sonarr downloads and imports the media. When the hub is notified (or p
 
 ---
 
-## 4. Admin UI / Dashboard
+## 4. Admin Review
 
-The hub provides a built-in admin view for request management:
+Request approval is performed by admins through the `/api/v1/admin/requests`
+endpoints (see §3.2–§3.3 above) and the legacy server-rendered `/admin/requests`
+page. The Hub's Vue admin console (`/app/admin/*`) does **not** include a Media
+Requests page — its pages are Hub Dashboard, Users, Logs, Settings, and Audit
+Logs. Use the API (or the legacy `/admin/requests` page) to:
 
-1. Log into the hub as an administrator
-2. Navigate to **Admin → Media Requests**
-3. Review pending requests, approve, deny, or view history
-
-The admin view supports:
-- Filtering by status (`pending`, `approved`, `available`, `rejected`)
-- Search by title or TMDB ID
+- List and filter requests by status (`pending`, `approved`, `available`, `rejected`)
+- Approve or deny a request
 - View per-request history (submitted, approved/denied timestamp, admin who took action)
+
+The §5 `curl` recipes below are the supported way to drive request review from the
+command line.
 
 ---
 

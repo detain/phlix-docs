@@ -6,13 +6,13 @@
 
 ## TL;DR
 
-The server detail page shows everything about one of your claimed servers — basic info, the active relay session if there is one, and recent heartbeat history. Reach it by clicking **View Details** on any server card in **My Servers**, or navigate directly to `/servers/{id}`.
+The server detail page shows everything about one of your claimed servers — basic info, the active relay session if there is one, and recent heartbeat history. Reach it by clicking **View Details** on any server card in **My Servers** (`/app/servers`). (The legacy detail route `/servers/{id}` still resolves directly.)
 
 ---
 
-## The Server Detail Page (`/servers/{id}`)
+## The Server Detail Page
 
-Open **My Servers** from the hub navigation, then click **View Details** on the server card you want to inspect.
+Open **My Servers** (`/app/servers`) from the hub's top navigation, then click **View Details** on the server card you want to inspect. (The underlying detail route is `/servers/{id}`, which still resolves directly.)
 
 ### Server Info Section
 
@@ -74,13 +74,13 @@ The server has not sent any heartbeats yet.
 
 ### Back to My Servers
 
-A **Back to My Servers** link at the top-left returns you to `/my-servers`.
+A **Back to My Servers** link at the top-left returns you to **My Servers** (`/app/servers`).
 
 ---
 
 ## View Details Button
 
-Every server card on the **My Servers** page (`/my-servers`) has a **View Details** button:
+Every server card on the **My Servers** page (`/app/servers`) has a **View Details** button:
 
 ```html
 <a href="/servers/{server-id}" class="btn btn-small">View Details</a>

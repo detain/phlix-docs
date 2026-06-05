@@ -5,16 +5,23 @@ description: Hub Admin activity tracking and audit trail
 
 # Audit Log
 
-The Hub Admin audit log tracks all administrative actions.
+The Hub Admin audit log tracks administrative actions.
 
 ## Viewing Logs
 
-Access the audit log from the main Admin panel → Security → Audit Log.
+Audit Logs is one of the five pages in the Hub's [Admin Console](./admin-console.md).
+Sign in as an admin and open **Audit Logs** from the Admin section of the top
+navigation, or go directly to **`/app/admin/audit-logs`**. The page is gated to
+admins (a non-admin gets `401 auth.required` / `403 auth.not_admin`) and reads from
+`GET /api/v1/me/audit-logs`.
 
 ## Log Retention
 
-Audit logs are retained for 90 days by default. Configure retention policy in settings.
+Retention is governed by the hub's configuration; a fixed retention window or
+automatic pruning may be available depending on how your hub is configured.
 
 ## Export
 
-Export audit logs as CSV or JSON for compliance reporting.
+Bulk CSV/JSON export of the audit log may be available depending on your hub
+configuration; otherwise the entries are available through the
+`GET /api/v1/me/audit-logs` API for programmatic retrieval.

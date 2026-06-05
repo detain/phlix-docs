@@ -10,13 +10,16 @@ Library sharing lets you grant a hub user access to one of your libraries by ema
 
 ---
 
-## Two Pages
+## The Shares Page
 
-### Libraries I've Shared (`/manage-shares`)
+Both "libraries I've shared" and "shared with me" live together on the single
+**Shares** page (`/app/shares`), reached from the hub's top navigation. (The
+legacy `/manage-shares` and `/shared-with-me` pages still resolve, but `/app/shares`
+is the current entry point.)
 
-Navigate to **Manage Shares** in the hub navigation (or go directly to `/manage-shares`).
+### Libraries I've Shared
 
-This page lists every library share you have created, one row per share:
+The **Shares** page lists every library share you have created, one row per share:
 
 ```
 ┌─ Library    Shared With    Permission   Shared On   Actions ────────┐
@@ -35,11 +38,9 @@ Each row shows:
 - **Shared On** — the date the share was created.
 - **Actions** — **Edit** lets you change the permission inline. **Revoke** deletes the share immediately.
 
-### Shared With Me (`/shared-with-me`)
+### Shared With Me
 
-Navigate to **Shared With Me** in the hub navigation (or go directly to `/shared-with-me`).
-
-This page lists every library another hub user has shared with you, one card per library:
+The same **Shares** page also lists every library another hub user has shared with you, one card per library:
 
 ```
 ┌─ Library ──────────────────────────────┐
@@ -57,7 +58,7 @@ Clicking **Browse Library** opens the library in the browse view.
 
 ## Sharing a Library
 
-Click **+ Share Library** in the top-right corner of the **Manage Shares** page to open the Share modal.
+Click **+ Share Library** in the top-right corner of the **Shares** page to open the Share modal.
 
 ### Fields
 
@@ -77,7 +78,7 @@ Click **Share** to create the share. The new row appears at the top of the list 
 
 ### Change permission
 
-On the **Manage Shares** page, find the row for the share you want to update. Click the permission badge (e.g., "Read only") in the **Actions** column and select a new level from the dropdown. The change is saved immediately via the API and the badge updates to reflect the new level.
+On the **Shares** page, find the row for the share you want to update. Click the permission badge (e.g., "Read only") in the **Actions** column and select a new level from the dropdown. The change is saved immediately via the API and the badge updates to reflect the new level.
 
 ### Revoke a share
 

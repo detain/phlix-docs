@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Hub is stateless by design — JWT validation, session state, and relay state are stored in MariaDB and Redis — so horizontal scaling is straightforward: add hub instances behind a load balancer, point them all at the same DB and Redis, and enable sticky sessions. Database backups use `mysqldump` with binlog for point-in-time recovery; offsite copies go to S3/R2 with 30-day retention. Restore drills should be run quarterly to catch corrupt or incomplete backups before a real disaster. RTO target is under 15 minutes with automated failover; RPO is under 4 hours.
+Hub persistent state — users, server registry, grants, and audit logs — lives entirely in MariaDB; there is no Redis. JWT validation is stateless (HS256, no server-side session store). Horizontal scaling is straightforward for the HTTP API: add hub instances behind a load balancer and point them all at the same database. The one caveat is the relay: relay tunnel and session state is held **in-process** by each hub instance (Workerman `RelaySessionManager`/`TunnelManager`), so a server's WSS tunnel is bound to the single instance that holds it — use sticky sessions so each server's connection consistently lands on the same instance. Database backups use `mysqldump` with binlog for point-in-time recovery; offsite copies go to S3/R2 with 30-day retention. Restore drills should be run quarterly to catch corrupt or incomplete backups before a real disaster. RTO target is under 15 minutes with automated failover; RPO is under 4 hours.
 
 | Metric | Target |
 |---|---|
@@ -10,7 +10,7 @@ Hub is stateless by design — JWT validation, session state, and relay state ar
 | RPO | < 4 hours |
 | Hub instances | 2+ recommended |
 | DB replication | MariaDB Galera (multi-master) or single primary + read replica |
-| Redis relay state | Shared across all hub instances |
+| Relay state | In-process per hub instance (not shared); requires sticky sessions |
 | Backup retention | 30 days offsite |
 
 ---
@@ -19,16 +19,17 @@ Hub is stateless by design — JWT validation, session state, and relay state ar
 
 ### Architecture Overview
 
-- Hub is stateless: all state lives in MariaDB (users, server registry, grants, audit logs) and Redis (relay session state)
-- Multiple hub instances share the same DB + Redis behind a load balancer
-- Each server maintains one persistent WSS connection; clients are routed to the same hub instance via sticky sessions (source IP hash)
+- Persistent state lives entirely in MariaDB (users, server registry, grants, audit logs); there is no Redis
+- Relay tunnel/session state is **not** persisted — it is held in-process by each hub instance's Workerman `RelaySessionManager`/`TunnelManager`, so it is per-instance and not shared
+- Multiple hub instances share the same database behind a load balancer
+- Each server maintains one persistent WSS connection; that connection must stick to the instance that holds its tunnel, so route servers via sticky sessions (source IP hash)
 - Docker Swarm or Kubernetes for orchestration; `docker-compose up --scale phlix-hub=2` for simple HA
 
 ### Deployment Topology
 
 ```yaml
 # Minimal HA stack (docker-compose)
-# 2 hub instances + nginx load balancer + MariaDB primary + 1 read replica + Redis
+# 2 hub instances + nginx load balancer + MariaDB primary + 1 read replica
 services:
   phlix-hub:
     image: phlix/hub:latest
@@ -38,10 +39,8 @@ services:
       HUB_DB_HOST: hub-db
       HUB_DB_USER: phlix_hub
       HUB_DB_NAME: hub_db
-      HUB_REDIS_HOST: hub-redis
     depends_on:
       - hub-db
-      - hub-redis
 
   nginx:
     image: nginx:latest
@@ -61,11 +60,6 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - hub-db-data:/var/lib/mysql
-
-  hub-redis:
-    image: redis:7-alpine
-    volumes:
-      - hub-redis-data:/data
 
   hub-db-replica:
     image: mariadb:10.11
@@ -194,11 +188,15 @@ curl -X POST https://your-hub.com/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@yourhub.com","password":"testpassword"}'
 
-# Verify enrolled servers show correct claim status
-php bin/hub.php server:list
+# Verify enrolled servers and relay sessions via the admin dashboard summary
+# (requires an admin JWT). The console at /app/admin/dashboard shows the same data.
+curl -s -H "Authorization: Bearer $ADMIN_JWT" \
+  https://your-hub.com/api/v1/admin/dashboard/summary
+# -> servers (total/online/offline), active relay sessions, pending requests, user count
 
-# Verify relay sessions resume (servers reconnect automatically after hub restart)
-php bin/hub.php relay:status
+# Recent activity feed (server claims, logins, etc.)
+curl -s -H "Authorization: Bearer $ADMIN_JWT" \
+  https://your-hub.com/api/v1/admin/dashboard/activity
 ```
 
 ---
@@ -208,8 +206,8 @@ php bin/hub.php relay:status
 ### Hub Instance Down
 
 - **Detection:** Load balancer health check fails (`/health` endpoint returns non-200)
-- **Response:** Load balancer automatically routes traffic to healthy instance(s)
-- **Recovery:** Restart crashed container/pod; no data loss (stateless)
+- **Response:** Load balancer automatically routes new traffic to healthy instance(s)
+- **Recovery:** Restart crashed container/pod. No persistent data is lost (all of that is in MariaDB), but any relay tunnels that were held in-process on the dead instance are dropped — the affected servers reconnect (landing on a healthy instance via sticky sessions) and re-establish their tunnels
 - **RTO:** < 1 minute
 
 ### Database Down
@@ -226,21 +224,21 @@ php bin/hub.php relay:status
 - **RTO:** < 15 minutes (automated failover preferred)
 - **RPO:** < 4 hours (last full backup + binlog replay)
 
-### Redis Down
+### Relay Tunnels Dropped (instance restart / failover)
 
-- **Symptom:** Relay sessions drop; clients must reconnect after timeout (~30s)
-- **Recovery:** Redis restarts; server WSS connections re-establish automatically
-- **Important:** Relay session state is lost on Redis crash — clients reconnect and resume stream position from their own last reported position (server-side), not from hub state
-- **RTO:** < 5 minutes if Redis is restarted; longer if data directory recovery is needed
-- **RPO:** N/A for Redis (no persistent relay state needed for playback resumption)
+- **Symptom:** Active relay sessions on a restarted or failed-over instance drop; clients must reconnect after timeout (~30s)
+- **Cause:** Relay tunnel/session state is held in-process per hub instance (`RelaySessionManager`/`TunnelManager`); it is not persisted anywhere, so it does not survive that instance restarting or its connections moving to another instance
+- **Recovery:** Servers reconnect automatically; clients resume from their own last reported stream position (server-side), not from any hub-held state
+- **RTO:** < 5 minutes (servers re-establish WSS tunnels after reconnect)
+- **RPO:** N/A (no persistent relay state is needed for playback resumption)
 
 ### Summary RTO/RPO
 
 | Failure | RTO | RPO |
 |---|---|---|
-| Hub instance crash | < 1 minute (LB routes to other instance) | N/A (stateless) |
+| Hub instance crash | < 1 minute (LB routes to other instance) | N/A (no persistent state on the instance) |
 | DB primary crash | < 15 minutes (automated failover or manual promote) | < 4 hours |
-| Redis crash | < 5 minutes (restart; clients reconnect) | N/A |
+| Relay tunnels dropped (instance restart) | < 5 minutes (servers reconnect, tunnels re-establish) | N/A |
 | Full site failure | < 15 minutes (restore from backup in new region) | < 4 hours |
 
 ---
@@ -257,15 +255,15 @@ php bin/hub.php relay:status
 
 **Prevention:** Minimum 3 nodes, odd node count, proper network isolation testing in staging.
 
-### Redis Relay State Lost on Crash (sessions drop)
+### Sticky Sessions Missing (relay tunnels break across instances)
 
-**Symptom:** All active relay sessions disappear; users see "connection lost" and must reconnect.
+**Symptom:** With more than one hub instance, server WSS tunnels flap or relay sessions appear to vanish; the admin dashboard shows inconsistent relay-session counts.
 
-**Cause:** Redis was running without persistence (`appendonly no`) or Redis crashed before last `AOF` write.
+**Cause:** Relay tunnel/session state is held in-process per instance (`RelaySessionManager`/`TunnelManager`) and is not shared. Without sticky sessions, a server's connection (or its frames) can be routed to an instance that does not hold its tunnel.
 
-**Fix:** Enable AOF persistence (`appendonly yes` and `appendfsync everysec`); after Redis restarts, servers reconnect automatically and resume from last reported stream position (server-side); relay state is not critical for playback resumption.
+**Fix:** Enable sticky sessions at the load balancer (nginx `ip_hash`, Kubernetes Ingress `sessionAffinity: ClientIP`) so each server consistently lands on the instance that holds its tunnel. When totalling relay sessions across the fleet, query each instance's `/api/v1/admin/dashboard/summary` directly rather than a single load-balanced response.
 
-**Prevention:** Verify AOF is on; test Redis crash recovery in staging quarterly.
+**Prevention:** Verify sticky sessions before scaling past one instance; test instance failover in staging and confirm servers re-establish tunnels.
 
 ### Backup Not Tested (restore fails when needed)
 
@@ -291,9 +289,9 @@ php bin/hub.php relay:status
 
 **Symptom:** Users see 502s or connection timeouts; hub logs show requests from unhealthy instance.
 
-**Cause:** Health check interval too long (e.g., 60s), or endpoint returns 200 when instance is actually degraded (relay sessions exhausted, DB connection pool depleted).
+**Cause:** Health check interval too long (e.g., 60s); or you rely solely on `/health`, which is a static liveness payload that checks nothing — it returns 200 even when the instance is actually degraded (DB connection pool depleted, relay tunnels exhausted), so the load balancer keeps routing to a broken instance.
 
-**Fix:** Use a meaningful `/health` endpoint that checks DB, Redis, and relay session capacity; set `intervall_ms: 5000` and `timeout: 3s`; mark instance unhealthy if any check fails; test health check manually before deploying.
+**Fix:** Use `/health` only as a liveness probe (process up / not up) and keep the interval tight — `interval: 5s`, `timeout: 3s`. For deeper health, layer on out-of-band checks your tooling controls: probe the DB, and poll `/api/v1/admin/dashboard/summary` for relay-session counts; drain an instance from the pool when those checks fail. Test the health check manually before deploying.
 
 **Prevention:** Canary deploy new hub versions with brief health check window; monitor both healthy and unhealthy state transitions in alerting.
 

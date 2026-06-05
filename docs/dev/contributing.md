@@ -18,7 +18,7 @@ git clone git@github.com:detain/phlix-windows-client.git
 cd phlix-server && composer install && php scripts/run-migrations.php && php public/index.php
 
 # Hub dev setup
-cd phlix-hub && composer install && php bin/hub.php
+cd phlix-hub && composer install && php start.php start
 
 # Mobile/Windows clients
 cd phlix-mobile-client && npm install
@@ -73,7 +73,7 @@ The server uses `Workerman\MySQL\Connection` (never PDO or mysqli). All DB acces
 ```bash
 cd phlix-hub
 composer install
-php bin/hub.php                 # starts the hub on 0.0.0.0:8800
+php start.php start            # starts the hub on 0.0.0.0:8800
 ```
 
 The hub holds server claim codes, runs heartbeat loops, multiplexes relay tunnels, and issues HS256 user-session JWTs. See [`docs/dev/architecture-hub.md`](architecture-hub.md) for internals.

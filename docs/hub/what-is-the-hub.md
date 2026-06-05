@@ -15,7 +15,11 @@ convenience.
 - **Remote access** to your server via the hub relay, so clients can connect
   even when your server is behind NAT.
 - **Library sharing** with friends and family who have a hub account.
-- **Multi-server management** from a single dashboard.
+- **Multi-server management** from a single web app.
+
+Once you have an account, the hub's web app is your entry point: open the hub in a
+browser and you land on **My Servers** (`/app/servers`), where you claim servers and
+reach Federation and Shares from the top navigation.
 
 ## Next Steps
 

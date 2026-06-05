@@ -38,11 +38,13 @@ Record the code and switch to your Hub dashboard. The countdown begins immediate
 
 ### 3 — Hub Dashboard: Claim the Server
 
-Open the Hub dashboard at `https://hub.phlix.example.com` (replace with your Hub's actual URL) and navigate to:
-
-**My Servers → Claim a Server**
+Open the Hub web app at `https://hub.phlix.example.com` (replace with your Hub's
+actual URL). The hub opens on **My Servers** (`/app/servers`) — claiming happens
+right here.
 
 Enter the claim code from step 2 into the **Claim Code** field and click **Claim**.
+(The legacy `/claim-server` page still works, but `/app/servers` is the current
+entry point.)
 
 The Hub immediately verifies the code with your server. On success:
 
@@ -87,10 +89,11 @@ Once paired, claim a `*.phlix.media` subdomain (if your hub offers one):
 php scripts/claim-subdomain.php
 ```
 
-To unclaim (disconnect the server from the Hub), use the Hub dashboard:
-**My Servers → [server name] → Settings → Unclaim Server**. There is no
-dedicated unclaim script. Removing the claim terminates the relay tunnel and
-shared libraries become inaccessible to Hub users immediately.
+To unclaim (disconnect the server from the Hub), use the Hub web app:
+open **My Servers** (`/app/servers`), select the server, and choose
+**Unclaim Server** from its settings. There is no dedicated unclaim script.
+Removing the claim terminates the relay tunnel and shared libraries become
+inaccessible to Hub users immediately.
 
 ## What Can Go Wrong
 
@@ -104,7 +107,7 @@ shared libraries become inaccessible to Hub users immediately.
 
 **Symptom:** The Hub dashboard shows "This server has already been claimed by another Hub account."
 
-**Fix:** A server can only be claimed by one Hub account at a time. To transfer ownership, the current Hub admin must first unclaim the server from **My Servers → [server name] → Settings → Unclaim Server**. Once unclaimed, any Hub account can claim it.
+**Fix:** A server can only be claimed by one Hub account at a time. To transfer ownership, the current Hub admin must first unclaim the server from **My Servers** (`/app/servers`) — select the server and choose **Unclaim Server**. Once unclaimed, any Hub account can claim it.
 
 ### Network isolation — server cannot reach the Hub
 
@@ -121,5 +124,5 @@ shared libraries become inaccessible to Hub users immediately.
 ## Next Steps
 
 - [Hub remote access](./remote-access.md) — Access your server from outside your home network using the Hub relay
-- [Hub administration](https://hub.phlix.example.com/admin) — Manage connected servers, users, and relay bandwidth from the Hub admin panel
+- [Hub administration](https://hub.phlix.example.com/app/admin/dashboard) — Manage users, logs, and settings from the Hub admin console (admins only)
 - [Libraries overview](../libraries/overview.md) — Add or manage media libraries after your server is connected

@@ -2,169 +2,110 @@
 
 ## TL;DR
 
-Phlix Hub exposes Prometheus metrics at `/metrics` — servers enrolled, relay sessions active, API request counts and latencies, auth failures, and heartbeat rates. Point Grafana at that endpoint to see the Hub Overview, Relay Bandwidth, API Performance, and Auth Security dashboards. Set up five alert rules (servers offline, relay cap, brute force, API latency, disk usage) to get emailed before users notice problems. Structure all hub logs as JSON and ship them to Loki or your ELK stack, keeping an audit trail of logins, server claims, suspensions, and deletions.
+Phlix Hub exposes a single liveness endpoint, `GET /health`, that returns a small static JSON payload (status, service, version, phlixShared, timestamp). It does **not** ship a Prometheus `/metrics` endpoint. Monitor the hub by polling `/health` from an external uptime monitor, tailing the systemd journal (`journalctl -u phlix-hub`), querying the hub's MySQL/MariaDB tables, and reading fleet/relay/request/user counts from the admin dashboard summary (`GET /api/v1/admin/dashboard/summary`). Keep an audit trail of logins, server claims, suspensions, and deletions, and ship structured logs to Loki or your ELK stack.
 
 ```bash
-# Verify hub is healthy
-curl https://hub.example.com/api/v1/health
-# {"status":"ok","version":"x.y.z","uptime_seconds":123456}
+# Verify hub is healthy (static liveness JSON, no DB query)
+curl https://hub.example.com/health
+# {"status":"ok","service":"phlix-hub","version":"x.y.z","phlixShared":"x.y.z","timestamp":1700000000}
 
-# Verify Prometheus metrics endpoint (auth via basic auth or IP allowlist)
-curl -H "Authorization: Basic $(echo -n user:pass | base64)" \
-  https://hub.example.com/metrics | grep "^phlix_hub"
+# Read fleet/relay/request/user counts (requires an admin JWT)
+curl -H "Authorization: Bearer $ADMIN_JWT" \
+  https://hub.example.com/api/v1/admin/dashboard/summary
 ```
 
 ---
 
-## Prometheus Metrics
+## What You Can Monitor
 
-**Endpoint:** `GET /metrics` — unauthenticated by default (secure via basic auth or IP allowlist in production)
+The hub does **not** expose a Prometheus `/metrics` endpoint and has no Prometheus instrumentation. There are four practical signals you can monitor today:
 
-| Metric | Type | Labels | Description |
-|---|---|---|---|
-| `phlix_hub_servers_total` | gauge | — | Number of enrolled servers |
-| `phlix_hub_users_total` | gauge | — | Total hub users |
-| `phlix_hub_relay_sessions_active` | gauge | server_id | Current relay sessions |
-| `phlix_hub_relay_bandwidth_bytes_total` | counter | server_id | Total relay bytes transferred |
-| `phlix_hub_api_requests_total` | counter | method, route, status | API request count |
-| `phlix_hub_api_latency_seconds` | histogram | method, route | API latency histogram |
-| `phlix_hub_heartbeat_received_total` | counter | — | Heartbeats received from servers |
-| `phlix_hub_auth_failures_total` | counter | reason | Failed login attempts |
+### 1. `/health` liveness probe
 
-### Enabling Basic Auth on `/metrics`
+`GET /health` returns a static JSON liveness payload and queries nothing — it is safe to hit while the rest of the stack is still starting up. Use it for load-balancer health checks and external uptime monitors (see [Uptime Monitoring](#uptime-monitoring)). It tells you the process is up and which versions are running; it does **not** report subsystem health.
+
+### 2. systemd / journal logs
+
+The hub runs as a long-lived Workerman daemon (`php start.php start`). When supervised by systemd, follow its output with:
 
 ```bash
-# In hub config
-HUB_METRICS_BASIC_AUTH_USER=prometheus
-HUB_METRICS_BASIC_AUTH_PASSWORD=your_secure_password
+# Live tail of the hub daemon
+journalctl -u phlix-hub -f
 
-# Prometheus scrape config
-- job_name: phlix-hub
-  metrics_path: /metrics
-  basic_auth:
-    username: prometheus
-    password: your_secure_password
-  static_configs:
-    - targets: ['hub.example.com:443']
+# Errors only, last hour
+journalctl -u phlix-hub --since "1 hour ago" -p err
 ```
+
+Ship these logs to Loki or ELK for retention and alerting (see [Log Aggregation](#log-aggregation)).
+
+### 3. MySQL/MariaDB queries
+
+The hub stores all persistent state (users, server registry, grants, relay session records, audit logs) in MySQL/MariaDB. Query the hub database directly for ad-hoc operational checks, for example:
+
+```sql
+-- Enrolled servers and how recently each checked in
+SELECT id, name, last_seen_at FROM servers ORDER BY last_seen_at DESC;
+
+-- Recent failed logins (brute-force signal)
+SELECT ip, COUNT(*) AS failures
+FROM audit_logs
+WHERE action = 'user.login' AND success = 0
+  AND created_at > NOW() - INTERVAL 5 MINUTE
+GROUP BY ip ORDER BY failures DESC;
+```
+
+(Adjust column/table names to your schema; inspect with `SHOW TABLES;` / `DESCRIBE <table>;`.)
+
+### 4. Admin dashboard summary
+
+The admin console aggregates fleet, relay, request, and user counts. Read them programmatically from:
+
+- `GET /api/v1/admin/dashboard/summary` — servers (total / online / offline), active relay sessions, pending requests, and user count.
+- `GET /api/v1/admin/dashboard/activity` — recent activity feed.
+
+Both require an authenticated admin JWT (`[AuthMiddleware, AdminMiddleware]`) and back the `/app/admin/dashboard` page. Poll the summary endpoint on an interval and alert on threshold crossings (for example, online server count dropping) from your own tooling.
+
+::: tip In-process relay state
+Relay tunnel/session state lives in the in-process Workerman managers (`RelaySessionManager`, `TunnelManager`) on each hub instance, so the relay-session count returned by the dashboard summary reflects the instance that answered the request. With multiple hub instances behind a load balancer, query each instance to see the full picture.
+:::
 
 ---
 
-## Grafana Dashboards
+## Dashboards & Alerting
 
-Four dashboards ship with the hub. Import them from `contrib/grafana/` or the Grafana.com dashboard registry.
+The hub ships no Grafana dashboards and no Prometheus metrics, so there are no PromQL panels or `phlix_hub_*` alert rules to import. Build dashboards and alerts on the real signals instead: the admin dashboard summary endpoint, the hub's MySQL/MariaDB tables, the structured logs, and host-level metrics from a generic exporter such as `node_exporter`.
 
-### 1. Hub Overview (ID: `phlix-hub-overview`)
+### Fleet & relay status
 
-- Servers online / offline count with percentage
-- Total hub users
-- Active relay sessions vs. `HUB_MAX_RELAY_SESSIONS` cap
-- Last heartbeat age per server (heatmap)
-
-### 2. Relay Bandwidth (ID: `phlix-hub-relay`)
-
-- Aggregate relay bandwidth (bytes/sec) across all servers
-- Per-server relay bandwidth breakdown (top-10 bar chart)
-- Monthly relay bytes per enrolled server
-- Current vs. cap on `HUB_MAX_RELAY_SESSIONS`
-
-### 3. API Performance (ID: `phlix-hub-api`)
-
-- Request rate per route and method (lines)
-- p50 / p95 / p99 latency per route (heatmap)
-- Error rate (4xx + 5xx) per route
-- Top 10 slowest API endpoints
-
-### 4. Auth Security (ID: `phlix-hub-auth`)
-
-- Failed login attempts over time (with `reason` label: `invalid_password`, `invalid_totp`, `rate_limited`)
-- New hub users registered (counter)
-- Suspicious activity: >5 failures in 5 min per IP (annotation on auth failures chart)
-- Active sessions count
-
-### Panel Configuration Example — p95 Latency Heatmap
+The built-in admin console at `/app/admin/dashboard` already renders servers online/offline, active relay sessions, pending requests, and user count. For your own dashboards or alerting, poll the underlying API on an interval and compare against thresholds in your tooling:
 
 ```bash
-# PromQL for API latency p95 per route
-histogram_quantile(0.95,
-  sum(rate(phlix_hub_api_latency_seconds_bucket[5m])) by (le, route)
-)
+# Poll fleet/relay/request/user counts (requires an admin JWT)
+curl -s -H "Authorization: Bearer $ADMIN_JWT" \
+  https://hub.example.com/api/v1/admin/dashboard/summary
+# -> servers (total/online/offline), active relay sessions, pending requests, user count
 ```
 
----
+Because relay session state is held in-process per hub instance (`RelaySessionManager`/`TunnelManager`), poll each instance to total relay sessions across a multi-instance deployment.
 
-## Alert Rules
+### Suggested alert conditions
 
-Five alert rules to paste into Grafana Alerting, Prometheus Alertmanager, or your alerting tool of choice.
+You can express these conditions in any scheduler/alerting tool by querying the database or the summary endpoint; the hub does not evaluate them for you.
 
-### 1. HubServersOffline
+| Condition | Source signal | Threshold idea |
+|---|---|---|
+| Servers offline | `summary` online vs. total, or `last_seen_at` age in the `servers` table | > 20% offline for 10 min |
+| Relay sessions high | `summary` active relay sessions (per instance) | Approaching your configured relay cap |
+| Brute-force attempts | failed-login rows in `audit_logs` grouped by IP | > 10 failures from one IP in 5 min |
+| Disk space low | host `node_exporter` (filesystem free), not the hub itself | < 20% free on `/` |
+| Hub process down | `/health` not returning HTTP 200 | Any failed probe (see [Uptime Monitoring](#uptime-monitoring)) |
 
-```bash
-# Condition: > 20% of enrolled servers have not sent a heartbeat in 5 min
-- alert: HubServersOffline
-  expr: |
-    (count(phlix_hub_heartbeat_received_total)
-     - count(phlix_hub_heartbeat_received_total offset 5m > 0))
-    / count(phlix_hub_heartbeat_received_total) > 0.20
-  for: 5m
-  labels:
-    severity: critical
-  annotations:
-    summary: "More than 20% of servers offline"
-    description: "{{ $value | humanizePercentage }} of enrolled servers have not sent a heartbeat in 5 minutes."
-```
+### Disk space (host-level)
 
-### 2. RelaySessionCapReached
+Disk pressure on the hub host is a host concern, not a hub metric. If you run `node_exporter` on the host, a standard Prometheus rule covers it:
 
-```bash
-# Condition: active relay sessions equal to HUB_MAX_RELAY_SESSIONS
-- alert: RelaySessionCapReached
-  expr: phlix_hub_relay_sessions_active >= HUB_MAX_RELAY_SESSIONS
-  for: 1m
-  labels:
-    severity: warning
-  annotations:
-    summary: "Relay session cap reached"
-    description: "Active relay sessions ({{ $value }}) have hit the HUB_MAX_RELAY_SESSIONS limit. New relay connections will be rejected."
-```
-
-### 3. BruteForceAttemptDetected
-
-```bash
-# Condition: > 10 auth failures in 5 min
-- alert: BruteForceAttemptDetected
-  expr: |
-    increase(phlix_hub_auth_failures_total[5m]) > 10
-  for: 1m
-  labels:
-    severity: critical
-  annotations:
-    summary: "Brute force attempt detected"
-    description: "{{ $value }} failed login attempts in the last 5 minutes. Consider blocking the source IP."
-```
-
-### 4. ApiLatencyDegraded
-
-```bash
-# Condition: p95 API latency > 2 seconds
-- alert: ApiLatencyDegraded
-  expr: |
-    histogram_quantile(0.95, sum(rate(phlix_hub_api_latency_seconds_bucket[5m])) by (le))
-    > 2
-  for: 5m
-  labels:
-    severity: warning
-  annotations:
-    summary: "API latency degraded"
-    description: "Hub API p95 latency is {{ $value | humanizeDuration }} — above the 2s threshold."
-```
-
-### 5. DiskSpaceLow
-
-```bash
-# Condition: disk usage > 80%
-# Note: requires a node_exporter or similar exporter on the hub host
-- alert: DiskSpaceLow
+```yaml
+- alert: HubHostDiskSpaceLow
   expr: |
     (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.20
   for: 5m
@@ -172,12 +113,14 @@ Five alert rules to paste into Grafana Alerting, Prometheus Alertmanager, or you
     severity: warning
   annotations:
     summary: "Disk space low on hub host"
-    description: "Disk usage is above 80% on {{ $labels.instance }}. Investigate log rotation, old transcode files, or increasing disk size."
+    description: "Disk usage is above 80% on {{ $labels.instance }}. Investigate log rotation and old backup files."
 ```
 
-### Routing Alerts to Email
+### Routing alerts to email
 
-```bash
+Once your tooling evaluates the conditions above, route notifications however you prefer — for example with Prometheus Alertmanager driven by your `node_exporter` host rules:
+
+```yaml
 # Alertmanager config (alertmanager.yml)
 route:
   receiver: hub-admin-email
@@ -271,18 +214,20 @@ output.elasticsearch:
 
 ### Health Endpoint
 
-`GET /api/v1/health` — returns real-time hub health:
+`GET /health` — returns the hub's liveness JSON. It is a static payload built without touching the database, so it confirms the process is up and which versions are running, but it does **not** compute subsystem health:
 
 ```bash
-curl https://hub.example.com/api/v1/health
-# {"status":"ok","version":"1.2.3","uptime_seconds":1234567}
+curl https://hub.example.com/health
+# {"status":"ok","service":"phlix-hub","version":"1.2.3","phlixShared":"1.2.3","timestamp":1700000000}
 ```
 
 | Field | Description |
 |---|---|
-| `status` | `ok` if hub is healthy; `degraded` if some subsystems are degraded; `error` if critical failure |
-| `version` | Running hub version |
-| `uptime_seconds` | Seconds since hub process started |
+| `status` | Always the literal string `"ok"` — a liveness indicator, **not** a computed health verdict (there is no `degraded`/`error` logic) |
+| `service` | Service identity; always `"phlix-hub"` |
+| `version` | Running `phlix-hub` version |
+| `phlixShared` | Version of the bundled `Phlix\Shared` package |
+| `timestamp` | Unix timestamp (seconds) when the response was generated |
 
 ### External Uptime Monitors
 
@@ -295,9 +240,9 @@ For public hubs, configure an external monitor from:
 
 ```bash
 # Create a new monitor in BetterStack dashboard
-# URL: https://hub.example.com/api/v1/health
+# URL: https://hub.example.com/health
 # Expected status: 200
-# Expected response: {"status":"ok"}
+# Expected response to contain: "status":"ok"
 # Interval: 1 minute
 # Alert on: connection failure, SSL expiry, status != 200, response mismatch
 ```
@@ -308,11 +253,11 @@ For public hubs, configure an external monitor from:
 # gatus.yaml
 services:
   - name: phlix-hub
-    url: https://hub.example.com/api/v1/health
+    url: https://hub.example.com/health
     interval: 30s
     conditions:
       - "[STATUS] == 200"
-      - '[BODY] == "{\"status\":\"ok\"}"'
+      - '[BODY].status == "ok"'
     alerts:
       - type: email
         enabled: true
@@ -350,29 +295,37 @@ openssl s_client -connect hub.example.com:443 \
 
 ## What Can Go Wrong
 
-### Metrics Endpoint Not Secured (anyone can scrape)
+### Expecting a `/metrics` Endpoint (there isn't one)
 
-**Symptom:** Your hub's internal metrics (server IDs, user counts, relay session counts) are publicly accessible.
+**Symptom:** Prometheus scrape of the hub fails; Grafana panels show "No data"; `curl .../metrics` returns 404.
 
-**Cause:** `/metrics` is unauthenticated by default; operators forgot to add basic auth or IP allowlist.
+**Cause:** The hub has no Prometheus instrumentation and no `/metrics` endpoint — only the static `/health` liveness route.
 
-**Fix:** Add `HUB_METRICS_BASIC_AUTH_USER` / `HUB_METRICS_BASIC_AUTH_PASSWORD` env vars; update your Prometheus scrape config with `basic_auth` block; or restrict access at the reverse proxy (Traefik middleware, nginx allow/deny) to only the Prometheus server IP range.
+**Fix:** Don't scrape the hub for metrics. Drive dashboards and alerts off the real signals instead: the admin dashboard summary (`/api/v1/admin/dashboard/summary`), MySQL/MariaDB queries, structured logs, and host-level `node_exporter`. See [Dashboards & Alerting](#dashboards-alerting).
 
-### Alert Fatigue (too many alerts, thresholds too low)
+### Health Check Treated as a Health Verdict (false confidence)
 
-**Symptom:** Alerts fire constantly for normal operation; operators start ignoring them or silencing the entire group.
+**Symptom:** Monitors stay green while users hit failures, because the monitor only checks `/health`.
 
-**Cause:** `HubServersOffline` threshold too aggressive for servers on intermittent connections; `BruteForceAttemptDetected` fires on legitimate typos; `ApiLatencyDegraded` fires during peak hours.
+**Cause:** `/health` is a liveness probe — it returns a static `"ok"` and never queries the database or relay subsystem, so it cannot detect a degraded DB connection or an exhausted relay capacity.
 
-**Fix:** Raise the threshold to >20% offline for 10 min (not 5 min) to allow reconnecting servers; exclude `rate_limited` from brute-force alert (it fires on the rate limiter, not a real attack); set `ApiLatencyDegraded` `for: 10m` instead of `5m`; review alert severity labels and route warning vs. critical to different receivers.
+**Fix:** Treat `/health` as "the process is up", nothing more. Layer on DB-level checks (query the hub tables) and the admin summary endpoint (online server / relay-session counts) for real subsystem visibility, and alert on those.
 
-### Grafana Dashboard Empty (Prometheus scraper not configured)
+### Admin Endpoint Poll Returns 401/403 (missing admin JWT)
 
-**Symptom:** Grafana shows "No data" on all hub panels despite hub running.
+**Symptom:** Your dashboard-summary poller logs `auth.required` (401) or a 403, so fleet/relay panels never populate.
 
-**Cause:** Prometheus not scraping the hub `/metrics` endpoint — wrong URL path, missing `metrics_path`, basic auth credentials mismatch, TLS verification failure, or hub not reachable from Prometheus.
+**Cause:** `/api/v1/admin/dashboard/summary` is gated by `[AuthMiddleware, AdminMiddleware]`; an anonymous or non-admin request is rejected.
 
-**Fix:** Check `targets` in Prometheus UI (Status → Targets); verify `metrics_path: /metrics` is set; for TLS, add `tls_config: { insecure_skip_verify: false }` if using self-signed certs; test curl from Prometheus host to hub metrics endpoint with the same auth; check Prometheus logs for scrape errors.
+**Fix:** Authenticate the poller with an admin JWT (`Authorization: Bearer <token>`) belonging to an admin account; confirm the token has not expired.
+
+### Relay Session Count Looks Wrong Across Instances (per-instance state)
+
+**Symptom:** The relay-session count reported by the summary endpoint jumps around or undercounts when you run multiple hub instances.
+
+**Cause:** Relay tunnel/session state lives in the in-process Workerman managers (`RelaySessionManager`, `TunnelManager`) on whichever instance answered the request; it is not shared across instances.
+
+**Fix:** Query each hub instance's summary endpoint directly (bypassing the load balancer) and sum the counts, rather than reading a single load-balanced response.
 
 ---
 
@@ -381,5 +334,5 @@ openssl s_client -connect hub.example.com:443 \
 - [Hub claim and first boot](first-boot.md) — enrolling your first server with the hub
 - [Hub-admin install & first boot](install.md) — hub setup and admin account creation
 - [Relay tunnel deep-dive](relay-tuning.md) — how the WSS relay works
-- [Troubleshooting](../troubleshooting.md) — diagnose metrics gaps, alert firing, and dashboard issues
+- [Troubleshooting](../troubleshooting.md) — diagnose health-check failures, log gaps, and dashboard issues
 - [Hub capacity planning](capacity-planning.md) — sizing hub hardware based on server and user count

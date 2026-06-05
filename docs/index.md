@@ -49,7 +49,7 @@ features:
 
   - icon: 🌐
     title: Hub Admin
-    details: "Deploy and manage a Phlix Hub — relay tuning, abuse handling, GDPR compliance, and federation policy"
+    details: "Deploy and manage a Phlix Hub — relay tuning, abuse handling, data-handling guidance, and federation policy"
     link: /hub-admin/overview
     linkText: Hub admin docs
 ---

@@ -96,7 +96,9 @@ Refresh an expired access token using a valid refresh token.
 
 ### GET /api/v1/libraries
 
-List all configured libraries.
+List all configured libraries, ordered by `display_order` then name. The SPA
+Browse home renders one rail per library in this order (and the media server's
+nav renders one Browse link per library — see below).
 
 **Auth:** Required (Bearer token)
 
@@ -248,6 +250,47 @@ Return recent scan jobs for the library, **newest first**. `limit` defaults to
 **Response 404:** Library not found
 
 ## Media Endpoints
+
+### GET /api/v1/media
+
+List media items across all libraries, or scoped to a single library. This is the
+endpoint that backs the SPA Browse rails and the per-library Browse grid.
+
+**Auth:** Required (Bearer token)
+
+**Query parameters** (all optional):
+
+| Parameter | Type | Notes |
+| --- | --- | --- |
+| `libraryId` | UUID | Scope results **and** `total` to a single library. Absent or blank = all libraries (the default — unchanged). |
+| `search` | string | Free-text title match. |
+| `genres[]` | string[] | Filter by one or more genres. |
+| `yearFrom` / `yearTo` | int | Release-year range. |
+| `ratings[]` | string[] | Filter by one or more content ratings. |
+| `actors[]` | string[] | Filter by one or more cast members. |
+| `sort` | string | Sort field (e.g. `name`, `year`, `added`). |
+| `order` | string | `asc` or `desc`. |
+| `limit` / `offset` | int | Pagination window. |
+
+**Response 200:**
+```json
+{
+  "items": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "name": "The Matrix",
+      "type": "movie",
+      "library_id": "550e8400-e29b-41d4-a716-446655440001"
+    }
+  ],
+  "total": 342
+}
+```
+
+When `libraryId` is supplied, `total` reflects the count **within that one
+library** (used to drive per-library pagination on `/app/library/:id`).
+
+---
 
 ### GET /api/v1/media/`{id}`
 

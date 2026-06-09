@@ -27,6 +27,7 @@ http://192.168.1.100:32400/web
 - The web portal requires the server's web address to be reachable from your browser — either on the local network or via a Hub relay / reverse proxy.
 - Some browser extensions (ad blockers, privacy extensions) may interfere with playback. If playback does not start, try disabling extensions or using an incognito/private window.
 - For best playback performance, use a browser with hardware acceleration enabled (Chrome and Edge have this on by default).
+- **Incompatible formats play automatically.** Titles your browser can't play directly — non-web containers like MKV, or codecs like HEVC — are transcoded on the server on demand and streamed as HLS. You'll see a brief "Preparing your stream…" message while the server starts the conversion, then playback begins. mp4/WebM titles play instantly with no conversion.
 
 ## Setup Steps
 

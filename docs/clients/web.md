@@ -56,7 +56,17 @@ The web portal uses standard browser APIs and requires no plugins, extensions, o
 
 ## Browsing Your Media
 
-Once signed in, the sidebar links to the Home and Library views. Each media type also has a dedicated set of browsing pages:
+### Per-library Browse sections
+
+The Browse home (`/app`) is organized as horizontal rails: a **Continue Watching** rail, any rows your server has configured for the home page, and then **one rail per library** — for example **Movies**, **TV**, and **Anime**. Libraries appear in the order the admin set (their display order), then alphabetically.
+
+Each library rail has a **See all** link that opens a dedicated page for that library at `/app/library/<library-id>`. That page is the full grid for the single library, with the filter bar (search, genres, year range, ratings, cast) and pagination — so you can drill into one library at a time instead of one flat all-libraries grid. The media server's sidebar also shows a **Browse** link per library, so you can jump straight to any library's page from the nav.
+
+> The hub's web UI has no libraries, so it shows no per-library rails or links — its home is **My Servers**.
+
+### Media-type sections
+
+Each media type also has a dedicated set of browsing pages:
 
 | Section | Pages | Entry URL |
 | --- | --- | --- |

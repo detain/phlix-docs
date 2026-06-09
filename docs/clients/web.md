@@ -64,6 +64,24 @@ Each library rail has a **See all** link that opens a dedicated page for that li
 
 > The hub's web UI has no libraries, so it shows no per-library rails or links — its home is **My Servers**.
 
+### TV & anime series
+
+A series-type library (e.g. **TV** or **Anime**) lists **shows**, not a flat dump
+of every episode. Each card is a series; the rails and the library page show the
+shows only.
+
+Opening a show goes to its detail page, which lays the show out as a tree:
+
+- **Seasons** (and **Specials**) appear as collapsible sections, in order, with
+  Specials last.
+- Each season lists its **episodes** in order, with the episode number, title,
+  and runtime.
+- Click any episode (or its play button) to start it. **Play** on the show
+  header starts the first episode of the first season.
+
+Searching inside a series library still matches episodes by title — the
+"shows only" view applies to browsing, not to search.
+
 ### Media-type sections
 
 Each media type also has a dedicated set of browsing pages:

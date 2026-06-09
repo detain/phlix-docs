@@ -263,6 +263,8 @@ endpoint that backs the SPA Browse rails and the per-library Browse grid.
 | Parameter | Type | Notes |
 | --- | --- | --- |
 | `libraryId` | UUID | Scope results **and** `total` to a single library. Absent or blank = all libraries (the default — unchanged). |
+| `parentId` | UUID | Scope to the **direct children** of one item — the seasons/episodes of a series (or the episodes of a season). Drives the series detail drill-down. Mutually exclusive with `topLevel`. |
+| `topLevel` | `1`/`true` | Return only **top-level** items (those with no parent: movies + series), excluding seasons and episodes. Browse rails and library grids set this so a series library shows shows, not a flat dump of every episode. Ignored when `search` is set (so search still spans the whole library). Mutually exclusive with `parentId`. |
 | `search` | string | Free-text title match. |
 | `genres[]` | string[] | Filter by one or more genres. |
 | `yearFrom` / `yearTo` | int | Release-year range. |
@@ -270,7 +272,7 @@ endpoint that backs the SPA Browse rails and the per-library Browse grid.
 | `actors[]` | string[] | Filter by one or more cast members. |
 | `sort` | string | Sort field (e.g. `name`, `year`, `added`). |
 | `order` | string | `asc` or `desc`. |
-| `limit` / `offset` | int | Pagination window. |
+| `limit` / `offset` | int | Pagination window (`limit` is capped at 100). |
 
 **Response 200:**
 ```json
@@ -280,7 +282,20 @@ endpoint that backs the SPA Browse rails and the per-library Browse grid.
       "id": "550e8400-e29b-41d4-a716-446655440003",
       "name": "The Matrix",
       "type": "movie",
-      "library_id": "550e8400-e29b-41d4-a716-446655440001"
+      "poster_url": null,
+      "genres": ["Action", "Sci-Fi"],
+      "year": 1999,
+      "rating": "R",
+      "runtime": 8160,
+      "overview": "A hacker learns the truth...",
+      "actors": ["Keanu Reeves"],
+      "director": "The Wachowskis",
+      "parent_id": null,
+      "season_number": null,
+      "episode_number": null,
+      "episode_title": null,
+      "created_at": "2026-01-01T00:00:00+00:00",
+      "updated_at": "2026-01-02T00:00:00+00:00"
     }
   ],
   "total": 342
@@ -289,6 +304,31 @@ endpoint that backs the SPA Browse rails and the per-library Browse grid.
 
 When `libraryId` is supplied, `total` reflects the count **within that one
 library** (used to drive per-library pagination on `/app/library/:id`).
+
+#### Series hierarchy fields
+
+Every item carries the series→season→episode hierarchy (all `null` for flat
+content such as movies):
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `type` | string | `movie` · `series` · `season` · `episode` · `audio` · `image`. `series`/`season`/`episode` form the TV/anime tree. |
+| `parent_id` | UUID \| null | Parent item (episode → season → series). `null` for top-level items (movies, series). |
+| `season_number` | int \| null | Season this item belongs to (from metadata). Season `0` / a `null` number on a series episode = **Specials**. |
+| `episode_number` | int \| null | Episode number within its season; orders episodes. |
+| `episode_title` | string \| null | Per-episode title, distinct from `name` (which may be the series name). |
+
+**Drilling into a series.** The SPA shows series libraries as a list of shows
+(`topLevel=1`); opening a series fetches its tree:
+
+```http
+GET /api/v1/media?parentId=<seriesId>&limit=100
+```
+
+Episodes are grouped client-side by `season_number` (Specials last) and ordered
+by `episode_number`. When a server models seasons as their own `type: "season"`
+rows, the client fetches each season's children (`parentId=<seasonId>`) and
+flattens them, so grouping is uniformly by `season_number` either way.
 
 ---
 

@@ -384,10 +384,14 @@ second FFmpeg. The encode runs detached, so this returns immediately.
   "job_id": "1f2e3d4c-....",
   "master_url": "/hls/1f2e3d4c-..../master.m3u8",
   "hls_url": "/hls/1f2e3d4c-..../master.m3u8",
+  "dash_url": "/dash/1f2e3d4c-..../manifest.mpd",
   "status": "running",
   "reused": false
 }
 ```
+
+One CMAF (fMP4) encode produces **both** the HLS (`master_url`) and DASH
+(`dash_url`) outputs from shared segments — play whichever the client supports.
 
 **Response 404:** Media item not found
 **Response 503:** Maximum concurrent transcodes reached (retry shortly)
@@ -408,7 +412,8 @@ HLS segments exist, then start playback.
   "segments": 3,
   "playlist_ready": true,
   "progress": 3.0,
-  "master_url": "/hls/1f2e3d4c-..../master.m3u8"
+  "master_url": "/hls/1f2e3d4c-..../master.m3u8",
+  "dash_url": "/dash/1f2e3d4c-..../manifest.mpd"
 }
 ```
 
@@ -417,16 +422,18 @@ once `playlist_ready` is `true` (or `status` is `completed`).
 
 **Response 404:** Job not found
 
-### HLS delivery routes
+### HLS / DASH delivery routes
 
-Served from the transcoded output on disk (no auth header is required, mirroring
-direct play, so a `<video>`/hls.js request works):
+Served from the transcoded CMAF output on disk (no auth header is required,
+mirroring direct play, so a `<video>` / hls.js / DASH-player request works). HLS
+and DASH share the **same fMP4 segments** from one encode:
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /hls/{jobId}/master.m3u8` | Master playlist (references the variant) |
-| `GET /hls/{jobId}/{variant}/playlist.m3u8` | Variant playlist (real ffmpeg output) |
-| `GET /hls/{jobId}/{variant}/{n}.ts` | MPEG-TS segment |
+| `GET /hls/{jobId}/master.m3u8` | HLS master playlist |
+| `GET /hls/{jobId}/{file}` | HLS media playlist / segment (`media_N.m3u8`, `init-N.m4s`, `chunk-*.m4s`) |
+| `GET /dash/{jobId}/manifest.mpd` | DASH manifest |
+| `GET /dash/{jobId}/{file}` | DASH segment (the shared `init-N.m4s` / `chunk-*.m4s`) |
 
 ## Playback Endpoints
 

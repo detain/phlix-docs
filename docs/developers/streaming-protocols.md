@@ -116,28 +116,36 @@ hls.attachMedia(document.querySelector('#video'));
 ### Class Architecture
 
 ```
-StreamManager
-├── HlsStreamer     → generates .m3u8 playlists + .ts segments
-└── DashStreamer    → generates .mpd manifests + .m4s segments
+TranscodeManager  → one CMAF encode per job (FFmpeg dash muxer + -hls_playlist)
+                    writes manifest.mpd + master.m3u8 + media_N.m3u8 + shared *.m4s
+HlsController  ─┐
+DashController ─┴→ serve the job dir's files verbatim (TranscodeFileServer trait)
 ```
 
-Both streamers share the same segment storage (transcode pipeline writes segments once). The appropriate streamer is selected based on the client's requested protocol.
+The transcode pipeline writes one job directory holding both the DASH manifest
+and the HLS playlists plus the shared fMP4 segments. The controllers serve those
+files directly — playlists/manifest reference segments by relative filename, so
+no rewriting is needed and the same `.m4s` segments back both protocols.
 
 ### Routes
 
+Both protocols are produced by one **CMAF (fMP4)** encode into a single job
+directory and cross-reference their segments by relative filename, so each
+protocol is served by a generic per-job file handler (plus a JSON info route):
+
 | Endpoint | Protocol | Description |
 |---------|----------|-------------|
-| `GET /hls/{jobId}/master.m3u8` | HLS | Master playlist (references the variant) |
-| `GET /hls/{jobId}/{variant}/playlist.m3u8` | HLS | Variant playlist (real ffmpeg output) |
-| `GET /hls/{jobId}/{variant}/{n}.ts` | HLS | TS segment |
-| `GET /dash/{jobId}/manifest.mpd` | DASH | Master manifest |
-| `GET /dash/{jobId}/{setId}/manifest.mpd` | DASH | Adaptation set manifest |
-| `GET /dash/{jobId}/{setId}/segment_{n}.m4s` | DASH | M4S segment |
+| `GET /hls/{jobId}/playlist` | HLS | JSON `{ playlist_url }` pointer |
+| `GET /hls/{jobId}/{file}` | HLS | `master.m3u8`, `media_N.m3u8`, `init-N.m4s`, `chunk-*.m4s` |
+| `GET /dash/{jobId}/manifest` | DASH | JSON `{ manifest_url }` pointer |
+| `GET /dash/{jobId}/{file}` | DASH | `manifest.mpd` + the **shared** `init-N.m4s` / `chunk-*.m4s` |
 
-> **HLS is the wired playback path.** The on-demand transcode pipeline produces
-> HLS (`-f hls`) and the web player consumes it via hls.js. The DASH routes
-> generate valid manifests but the transcode pipeline does not currently emit
-> `.m4s` output, so prefer HLS for actual playback.
+> **One encode, both protocols.** The transcode pipeline runs FFmpeg's DASH muxer
+> with `-hls_playlist 1`, so a single CMAF/fMP4 pass writes `manifest.mpd` (DASH),
+> `master.m3u8` + `media_N.m3u8` (HLS v7), and **shared** `init-N.m4s` /
+> `chunk-N-NNNNN.m4s` segments. There is no second encode and no duplicate
+> storage — the same `.m4s` segments are served under both the `/hls` and `/dash`
+> prefixes. The web player uses HLS via hls.js; DASH clients use `manifest.mpd`.
 
 ## On-Demand Transcode Flow
 
@@ -146,17 +154,17 @@ When a file can't be direct-played, the client drives this flow:
 1. **Start** — `POST /api/v1/media/{id}/transcode?profile=web`. The
    `TranscodeManager` probes the source, decides per stream whether to **copy**
    (a fast remux of already-compatible h264/aac) or **encode** (libx264/aac, with
-   a downscale to the profile's max resolution), then launches FFmpeg's native
-   HLS muxer **detached** so the Workerman event loop never blocks. Returns a
-   `job_id` + `master_url`. Idempotent — a still-valid job for the same item +
-   profile is reused.
+   a downscale to the profile's max resolution), then launches the FFmpeg CMAF
+   encode **detached** so the Workerman event loop never blocks. Returns a
+   `job_id`, `master_url` (HLS) and `dash_url` (DASH). Idempotent — a still-valid
+   job for the same item + profile is reused.
 2. **Poll** — `GET /api/v1/transcode/{jobId}/status` until `playlist_ready`
-   (segments exist on disk). Completion/failure is detected from `.complete` /
-   `.failed` markers FFmpeg's wrapper writes on exit, so readiness survives worker
-   reloads.
-3. **Play** — point hls.js (native HLS on Safari/iOS) at `master_url`. The
-   variant playlist is the real FFmpeg `stream_0.m3u8`, with segment URIs
-   rewritten to the canonical route form; segments stream from disk.
+   (`master.m3u8` + segments exist on disk). Completion/failure is detected from
+   `.complete` / `.failed` markers FFmpeg's wrapper writes on exit, so readiness
+   survives worker reloads.
+3. **Play** — point hls.js (native HLS on Safari/iOS) at `master_url`, or a DASH
+   player at `dash_url`. Playlists/manifest are served verbatim and reference the
+   shared fMP4 segments by relative filename.
 
 ### Getting the Correct Manifest URL
 

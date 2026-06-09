@@ -127,12 +127,36 @@ Both streamers share the same segment storage (transcode pipeline writes segment
 
 | Endpoint | Protocol | Description |
 |---------|----------|-------------|
-| `GET /hls/{jobId}/playlist.m3u8` | HLS | Master playlist |
-| `GET /hls/{jobId}/stream_{n}.m3u8` | HLS | Variant playlist |
-| `GET /hls/{jobId}/{variant}/segment_{n}.ts` | HLS | TS segment |
+| `GET /hls/{jobId}/master.m3u8` | HLS | Master playlist (references the variant) |
+| `GET /hls/{jobId}/{variant}/playlist.m3u8` | HLS | Variant playlist (real ffmpeg output) |
+| `GET /hls/{jobId}/{variant}/{n}.ts` | HLS | TS segment |
 | `GET /dash/{jobId}/manifest.mpd` | DASH | Master manifest |
 | `GET /dash/{jobId}/{setId}/manifest.mpd` | DASH | Adaptation set manifest |
 | `GET /dash/{jobId}/{setId}/segment_{n}.m4s` | DASH | M4S segment |
+
+> **HLS is the wired playback path.** The on-demand transcode pipeline produces
+> HLS (`-f hls`) and the web player consumes it via hls.js. The DASH routes
+> generate valid manifests but the transcode pipeline does not currently emit
+> `.m4s` output, so prefer HLS for actual playback.
+
+## On-Demand Transcode Flow
+
+When a file can't be direct-played, the client drives this flow:
+
+1. **Start** — `POST /api/v1/media/{id}/transcode?profile=web`. The
+   `TranscodeManager` probes the source, decides per stream whether to **copy**
+   (a fast remux of already-compatible h264/aac) or **encode** (libx264/aac, with
+   a downscale to the profile's max resolution), then launches FFmpeg's native
+   HLS muxer **detached** so the Workerman event loop never blocks. Returns a
+   `job_id` + `master_url`. Idempotent — a still-valid job for the same item +
+   profile is reused.
+2. **Poll** — `GET /api/v1/transcode/{jobId}/status` until `playlist_ready`
+   (segments exist on disk). Completion/failure is detected from `.complete` /
+   `.failed` markers FFmpeg's wrapper writes on exit, so readiness survives worker
+   reloads.
+3. **Play** — point hls.js (native HLS on Safari/iOS) at `master_url`. The
+   variant playlist is the real FFmpeg `stream_0.m3u8`, with segment URIs
+   rewritten to the canonical route form; segments stream from disk.
 
 ### Getting the Correct Manifest URL
 

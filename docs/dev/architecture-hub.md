@@ -38,6 +38,8 @@ The hub's primary UI is the shared **Vue 3 SPA** (the cross-repo `@phlix/ui` des
 
 The older SSR Smarty pages (`/login`, `/signup`, `/my-servers`, `/claim-server`, …) still resolve but are **legacy** — they are no longer the documented front door.
 
+> **Per-library Browse (media server only).** As of **`@phlix/ui` v0.21.0** the shared SPA's Browse home renders one rail per library (fetched from `GET /api/v1/libraries`, ordered by `display_order` then name), and each rail's **See all** opens a dedicated per-library page at **`/app/library/:id`** (route name `library`) — the full filterable, paginated grid scoped to one library. A consumer `MenuItem` can set `libraryLinks: true` to also render one nav link per library. The **media server** opts in (its **Browse** entry); the **hub does not** — the hub has no libraries, so its home stays `/app/servers` and it renders no per-library rails or links.
+
 ---
 
 ## Container topology

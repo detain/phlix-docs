@@ -359,6 +359,75 @@ Get a single media item by ID.
 
 **Response 404:** Media item not found
 
+## Transcoding Endpoints
+
+Files the browser can't direct-play (non-web containers like MKV, or codecs like
+HEVC) are transcoded on demand to **HLS** and played via hls.js. The flow is:
+`POST .../transcode` → poll `GET /api/v1/transcode/{jobId}/status` until
+`playlist_ready` → play `master_url` (served by the HLS routes below).
+
+### POST /api/v1/media/`{id}`/transcode
+
+Start (or reuse) an on-demand HLS transcode job for a media item. Idempotent: a
+still-valid job for the same item + profile is reused instead of starting a
+second FFmpeg. The encode runs detached, so this returns immediately.
+
+**Parameters:**
+- `id` (path) — Media item UUID
+- `profile` (query, optional) — Device profile: `web` (default), `generic`,
+  `mobile-low`, `mobile-high`, `tv-4k`. Controls the max resolution the variant
+  is downscaled to.
+
+**Response 200:**
+```json
+{
+  "job_id": "1f2e3d4c-....",
+  "master_url": "/hls/1f2e3d4c-..../master.m3u8",
+  "hls_url": "/hls/1f2e3d4c-..../master.m3u8",
+  "status": "running",
+  "reused": false
+}
+```
+
+**Response 404:** Media item not found
+**Response 503:** Maximum concurrent transcodes reached (retry shortly)
+
+### GET /api/v1/transcode/`{jobId}`/status
+
+Report a transcode job's readiness — used by the client to poll until the first
+HLS segments exist, then start playback.
+
+**Parameters:**
+- `jobId` (path) — Transcode job UUID
+
+**Response 200:**
+```json
+{
+  "job_id": "1f2e3d4c-....",
+  "status": "running",
+  "segments": 3,
+  "playlist_ready": true,
+  "progress": 3.0,
+  "master_url": "/hls/1f2e3d4c-..../master.m3u8"
+}
+```
+
+`status` is one of `running`, `completed`, `failed`, `cancelled`. Begin playback
+once `playlist_ready` is `true` (or `status` is `completed`).
+
+**Response 404:** Job not found
+
+### HLS delivery routes
+
+Served from the transcoded output on disk (no auth header is required, mirroring
+direct play, so a `<video>`/hls.js request works):
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /hls/{jobId}/master.m3u8` | Master playlist (references the variant) |
+| `GET /hls/{jobId}/{variant}/playlist.m3u8` | Variant playlist (real ffmpeg output) |
+| `GET /hls/{jobId}/{variant}/{n}.ts` | MPEG-TS segment |
+
 ## Playback Endpoints
 
 ### POST /api/v1/sessions/`{id}`/progress

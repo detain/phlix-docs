@@ -71,6 +71,34 @@ Supported formats: `.mkv`, `.mp4`, `.ts`, and most common video containers.
 - Version tag after the episode code creates a separate library entry per version
 - Each version maintains its own playback state and resume position
 
+### 1f. Per-Series-Directory Libraries (Recommended for one-folder-per-show layouts)
+
+If every show lives in its own top-level directory, enable the
+**`series_per_directory`** option on the series library (a toggle in the
+library's create/edit form). With it set, the scanner treats **each top-level
+subdirectory as exactly one series** and uses the folder name —
+**`Series Title (Year)`** — as the authoritative series title and year for both
+grouping and TMDB TV matching:
+
+```
+/vault1/anime/
+  Assassination Classroom (2013)/
+    Assassination Classroom S01E01.mkv
+    Assassination Classroom S01E02.mkv
+  Being Human US (2011)/
+    Being Human US S01E01.mkv
+```
+
+- The folder name is the match key, so name disambiguators are preserved:
+  `Being Human US (2011)` keeps the "US", and `Battlestar Galactica (1978)` vs
+  `Battlestar Galactica (2003)` stay distinct (sibling year folders never merge).
+- Episode filenames only need a `SxxExx` code — season/episode numbers come from
+  the filename; the show identity comes from the folder.
+- Full series, season, and episode metadata is resolved from TMDB.
+
+See [Library Management → Per-series-directory libraries](../admin/library-management#per-series-directory-libraries)
+for how to set the option.
+
 ## 2. Specials and Bonus Episodes
 
 ### Season 00
@@ -171,6 +199,28 @@ mtime-based checksum — only files whose modification time changed since the la
 
 Each user profile has a rating filter set in **Settings → Profiles**: G / PG / PG-13 / R / NC-17 / X / UNRATED. TV shows rated above the profile's filter are hidden from that profile's library view. TV ratings from TVDB are mapped to the MPAA equivalent scale.
 
+## 7. Browsing Series, Seasons, and Episodes
+
+In the web app a series has its own **series page**: a hero with the show
+artwork and details, plus a **season grid** — one card per season (with the
+season poster, "Season N" / "Specials" label, and episode count). Specials are
+grouped at the bottom of the grid.
+
+Clicking a season card opens a **per-season page** that lists that season's
+episodes, with a back link to the series page. Playing an episode opens the
+player, which provides **Previous / Next episode** buttons (see
+[Web App → Playback](../clients/web)).
+
+## 8. Fixing a Wrong or Missing Match
+
+Admins can correct the metadata for a single series, season, or episode (or any
+movie) directly from the UI without re-scanning. A **Match metadata** action on
+media cards and on the series/detail page opens a search modal: it auto-searches
+TMDB for the item, lets you refine the query and year, and applies the chosen
+result — enriching the whole season/episode subtree when you match the parent
+series. See
+[Library Management → Fixing a single item's match](../admin/library-management#fixing-a-single-items-match).
+
 ## What Can Go Wrong
 
 ### Incorrect Season Folder Naming
@@ -199,7 +249,11 @@ Each user profile has a rating filter set in **Settings → Profiles**: G / PG /
 
 **Cause:** TVDB and TMDB use different IDs for some shows; country-specific variants (e.g., "The Office" UK vs. US) can cross-match incorrectly.
 
-**Fix:** Create a `show.nfo` in the show root with the correct `tvdbid` (or `tmdbid` as fallback) to lock metadata to the correct provider record. Re-scan to apply.
+**Fix:** Create a `show.nfo` in the show root with the correct `tmdbid` to lock metadata to the correct provider record, then re-scan to apply. Alternatively, use the per-item **Match metadata** action (see [section 8](#_8-fixing-a-wrong-or-missing-match)) to pick the right TMDB record interactively.
+
+::: tip TMDB is the active TV metadata provider
+Phlix resolves TV series, season, and episode metadata through **TheMovieDB (TMDB)** — configure a TMDB API key under [Server Settings → Metadata](../admin/server-settings). TheTVDB is a separate service and is not used by the current matcher; for per-series-directory libraries the folder name (`Series Title (Year)`) drives the TMDB TV search.
+:::
 
 ---
 

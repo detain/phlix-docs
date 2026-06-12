@@ -74,7 +74,7 @@ Steps: paste → Install → toggle Enable → confirm in the plugins table. The
 
 ## 5. Plugin Settings
 
-After install, click **Settings** (wrench icon) next to any enabled plugin to open its per-plugin settings form. Settings are persisted in `plugins.settings_json`. Each plugin exposes its own fields (API keys, endpoint URLs, etc.) as declared in its `plugin.json` `settings` block.
+After install, click **Configure** next to any plugin to open its per-plugin settings form. Settings are persisted in `plugins.settings_json`. Each plugin exposes its own fields (API keys, endpoint URLs, etc.) as declared in its `plugin.json` `settings` block; secret fields are masked and preserved unless you change them. See [Managing Plugins in the Admin UI](./admin-management#configure) for the full configure workflow.
 
 ---
 

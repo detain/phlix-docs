@@ -96,6 +96,7 @@ export default defineConfig({
             { text: 'Dashboard', link: '/admin/dashboard' },
             { text: 'Backup', link: '/admin/backup' },
             { text: 'Library Management', link: '/admin/library-management' },
+            { text: 'User Management', link: '/admin/user-management' },
             { text: 'Server Settings', link: '/admin/server-settings' },
           ]
         }
@@ -140,6 +141,7 @@ export default defineConfig({
             { text: 'Plugin Manifest', link: '/plugins/manifest' },
             { text: 'Install from Catalog', link: '/plugins/install-from-catalog' },
             { text: 'Install from URL', link: '/plugins/install-from-url' },
+            { text: 'Managing Plugins (Admin UI)', link: '/plugins/admin-management' },
             { text: 'Plugin Catalog', link: '/plugins/plugin-catalog' },
             { text: 'Trusted Plugin List', link: '/plugins/trusted-plugin-list' },
           ]

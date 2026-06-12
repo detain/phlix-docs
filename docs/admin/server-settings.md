@@ -24,10 +24,12 @@ positioned after **Users**). Requires admin authentication.
 
 ### 8 Group Tabs
 
-The page renders all settings keys split across 8 tabbed sections:
+The page renders all settings keys split across tabbed sections (the **Access**
+tab is shown first):
 
 | Tab | Keys |
 |-----|------|
+| **Access** | `auth.signup_mode` |
 | **Transcoding** | `hwaccel.enabled`, `hwaccel.prefer_hardware`, `hwaccel.probe_timeout` |
 | **Metadata** | `tmdb.api_key` |
 | **Markers** | `marker_detection.similarity_threshold`, `marker_detection.intro_max_duration` |
@@ -211,6 +213,7 @@ The current allow-list maps each dotted key to its type and the
 
 | Key | Type | Backing config |
 |-----|------|----------------|
+| `auth.signup_mode` | `string` (enum) | `config/auth.php` |
 | `hwaccel.enabled` | `bool` | `config/hwaccel.php` |
 | `hwaccel.prefer_hardware` | `bool` | `config/hwaccel.php` |
 | `hwaccel.probe_timeout` | `int` | `config/hwaccel.php` |
@@ -234,6 +237,31 @@ source of truth is the shared `server-settings.schema.json`; the controller's
 `AdminSettingsController::allowedKeys()` derives this map from that schema at
 runtime (replacing the former inline `ALLOWED_KEYS` constant).
 
+## Signup mode (`auth.signup_mode`)
+
+The **Access** tab exposes `auth.signup_mode`, which controls how new account
+registrations are handled. It is an enum string with three values (the
+config-file default is **`approval`**):
+
+| Value | Behaviour |
+|-------|-----------|
+| `open` | New registrations become **active** immediately and receive a session — the classic open-signup behaviour. |
+| `approval` | New registrations are created with status **pending**: no session/token is issued, and the user cannot log in or browse media until an admin approves them. Registering returns a `202` with a "your account is awaiting administrator approval" message. **(default)** |
+| `disabled` | New registrations are rejected with a `403` — no account is created. |
+
+Notes and caveats:
+
+- **The first-ever registered user is always created active and admin**, regardless
+  of the configured mode. This guarantees a server can be bootstrapped even when
+  signups are set to `approval` or `disabled`.
+- **Disabling an active user revokes their live session.** User status is
+  re-checked on the token-refresh and token-validation paths, so a user who is
+  set to `disabled` loses access on their next request — an already-issued access
+  token (and its refresh token) stops working without waiting for expiry. A
+  disabled **admin** also immediately loses admin access.
+- See [User Management](./user-management) for the approval queue and the
+  `approve` / `disable` / `reject` admin actions.
+
 ## Storage
 
 Overrides live in the `server_settings` table. Each row records the dotted
@@ -253,6 +281,7 @@ re-saving a key replaces its previous override in place.
 
 ## See Also
 
+- [User Management](./user-management) — the signup approval queue and user statuses
 - [Dashboard](./dashboard) — visual admin dashboard overview
 - [Stats](./stats) — usage and activity statistics
 - [Backup](./backup) — server backup and restore

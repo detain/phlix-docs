@@ -12,7 +12,7 @@ Phlix organizes your media into **Libraries** — each a dedicated space for one
 | Library | What it holds | Key features |
 |---------|---------------|---------------|
 | [Movies](./movies) | Films & trailers | Posters, fanart, ratings |
-| [TV Shows](./tv-shows) | Series & episodes | Seasons, Unaired, Next Up |
+| [TV Shows](./tv-shows) | Series & episodes | Season grid, per-season pages, per-directory matching |
 | [Music](./music) | Albums & tracks | By Artist, Album, Genre |
 | [Photos](./photos) | Images & albums | EXIF, timeline, albums |
 | [Books](./books) | eBooks & comics | PDF, EPUB, CBZ |

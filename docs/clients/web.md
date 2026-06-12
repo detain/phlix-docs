@@ -27,7 +27,7 @@ http://192.168.1.100:32400/web
 - The web portal requires the server's web address to be reachable from your browser — either on the local network or via a Hub relay / reverse proxy.
 - Some browser extensions (ad blockers, privacy extensions) may interfere with playback. If playback does not start, try disabling extensions or using an incognito/private window.
 - For best playback performance, use a browser with hardware acceleration enabled (Chrome and Edge have this on by default).
-- **Incompatible formats play automatically.** Titles your browser can't play directly — non-web containers like MKV, or codecs like HEVC — are transcoded on the server on demand and streamed as HLS. You'll see a brief "Preparing your stream…" message while the server starts the conversion, then playback begins. mp4/WebM titles play instantly with no conversion.
+- **Incompatible formats play automatically.** Titles your browser can't play directly — non-web containers like MKV, or codecs like HEVC (including **10-bit HEVC**) — are transcoded on the server on demand and streamed as HLS. The server transcodes them to 8-bit H.264 (High@4.1, yuv420p) so they decode in any modern browser. You'll see a brief "Preparing your stream…" message while the server starts the conversion, then playback begins. mp4/WebM titles play instantly with no conversion.
 
 ## Setup Steps
 
@@ -71,14 +71,17 @@ A series-type library (e.g. **TV** or **Anime**) lists **shows**, not a flat dum
 of every episode. Each card is a series; the rails and the library page show the
 shows only.
 
-Opening a show goes to its detail page, which lays the show out as a tree:
+Opening a show goes to its **series page**: a hero with the show artwork and
+details, plus a **season grid** below it.
 
-- **Seasons** (and **Specials**) appear as collapsible sections, in order, with
-  Specials last.
-- Each season lists its **episodes** in order, with the episode number, title,
-  and runtime.
-- Click any episode (or its play button) to start it. **Play** on the show
-  header starts the first episode of the first season.
+- The grid shows **one card per season** (and a **Specials** card, grouped last),
+  each with the season poster, the "Season N" / "Specials" label, and the episode
+  count.
+- Click a season card to open its **per-season page**, which lists that season's
+  **episodes** in order — episode number, title, and runtime — with a back link to
+  the series page.
+- Click any episode (or its play button) to start it. **Play** on the series hero
+  starts the first episode.
 
 Searching inside a series library still matches episodes by title — the
 "shows only" view applies to browsing, not to search.
@@ -99,6 +102,46 @@ Notes:
 - The album and slideshow photo pages need a `library_id` query parameter; the links generated within the portal include it automatically.
 - Book covers and downloads are served from `/books/{id}/cover` and `/books/{id}/download`; photo thumbnails and full-size images from `/photo/photos/{id}/thumbnail` and `/photo/photos/{id}/full`.
 - The music section uses generated cover-art placeholders; embedded album art is not yet rendered.
+
+## Playback
+
+The web player runs in the browser and handles both direct-play (mp4/WebM) and
+on-demand transcoded (HLS) titles.
+
+### Autoplay
+
+Opening a title from a **Play** click starts playback automatically as soon as the
+stream is ready — no extra click on the player. If your browser blocks autoplay
+with sound, playback retries **muted**; you can unmute from the player's volume
+control. If even muted autoplay is blocked, the center play button remains as a
+tap-to-play affordance.
+
+### Previous / Next episode
+
+When you're watching an episode, the player shows **Previous** and **Next episode**
+buttons flanking play/pause. They follow the show's order and roll over across
+seasons — the last episode of a season is followed by the first of the next.
+**Specials are excluded from the auto-advance chain** (they remain reachable from
+the series page), and the buttons are hidden at the very first / last episode and
+for movies.
+
+### Subtitles
+
+Embedded **text** subtitle tracks (ASS/SRT) in a transcoded title are extracted on
+the server to WebVTT and offered as selectable tracks in the player's captions menu,
+each with a language and label. Pick a track or turn captions off from the menu; your
+choice is remembered. (Bitmap subtitle formats such as PGS/dvdsub are not extracted.)
+
+### Player controls
+
+The player's control menus (such as the speed and quality selectors) use a
+translucent dark styling that matches the player chrome.
+
+### Page titles
+
+The browser tab title updates as you navigate — it reflects the current page or the
+title of the media you're viewing or playing (for example `Assassination Classroom · Phlix`),
+so tabs and history entries are easy to tell apart.
 
 ## Hub Connection
 

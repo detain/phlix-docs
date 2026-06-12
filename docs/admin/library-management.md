@@ -53,10 +53,57 @@ Click **Add library** to open a modal with a form:
 | **Name** | Free-text label for the library. |
 | **Type** | A select of the **five DB-valid types**: `movie`, `series`, `music`, `photo`, `video`. |
 | **Paths** | One or more directories chosen via the **PathPicker** (see below). At least one path is required. |
+| **Series per directory** | (series libraries only) Toggle the `series_per_directory` option — see [Per-series-directory libraries](#per-series-directory-libraries) below. |
 
 Submitting `POST`s `{ name, type, paths, options? }` to `/api/v1/libraries`. On `201` the
 modal closes, a success toast appears, and the list refreshes. A `400` (validation error)
 surfaces the server's error message as a toast.
+
+### Per-series-directory libraries
+
+A **series** library can carry a `series_per_directory` option (stored inside the
+library's `options` blob). When it is set, the scanner treats **each top-level
+subdirectory of the library as exactly one series**, and the folder name —
+formatted as **`Series Title (Year)`** — is the authoritative source for the series
+title and year used for both **grouping episodes** and **TMDB TV metadata matching**.
+
+This is the recommended layout for collections where each show lives in its own
+directory, e.g.:
+
+```
+/vault1/anime/
+  Assassination Classroom (2013)/
+    Assassination Classroom S01E01.mkv
+    Assassination Classroom S01E02.mkv
+  Being Human US (2011)/
+    ...
+```
+
+Why the folder name matters:
+
+- The folder name is used verbatim as the match key, so disambiguators in the name
+  are preserved — `Being Human US (2011)` keeps the "US", and
+  `Battlestar Galactica (1978)` vs `Battlestar Galactica (2003)` stay distinct
+  (sibling year folders never merge into one series).
+- Episode filenames only need to carry `SxxExx` — the season and episode numbers
+  come from the filename, but the show identity comes from the folder.
+- Full series, season, and episode metadata (posters, overviews, air dates,
+  ratings, stills) is then resolved from **TheMovieDB (TMDB)**.
+
+::: tip TMDB, not TheTVDB
+Phlix resolves TV metadata through **TheMovieDB (TMDB)**. TheTVDB is a separate
+service and is not used — configure a TMDB API key under
+[Server Settings → Metadata](./server-settings) for matching to work.
+:::
+
+::: tip Setting the option
+The option can be sent at the top level of the create/update body (`series_per_directory: true`)
+or nested inside `options`; either way it is coerced to a real boolean and stored
+canonically inside `options`. It is ignored (and stripped) for non-series library
+types. Activating it on an already-scanned library and re-scanning stamps the
+folder-derived title/year onto existing series rows, so a plain rescan is enough —
+a full purge is not required.
+:::
 
 ::: warning `book` is deliberately not offered
 The `libraries.type` ENUM in migration `001_initial_schema.sql` is exactly
@@ -403,9 +450,54 @@ This mirrors the canonical path-jail pattern used elsewhere in the server (e.g.
 `AudiobookController::validateMediaPath()`), so the browse endpoint cannot be
 used to read directory structure outside the allowed roots.
 
+## Fixing a single item's match
+
+When a single movie, series, season, or episode is matched to the wrong metadata —
+or never matched at all — an admin can correct it without re-scanning the whole
+library. A **Match metadata** action appears (for admins only) on media cards across
+Browse and library pages, and on the detail/series page hero.
+
+Clicking it opens a modal that:
+
+- **Auto-searches** TMDB on open using the item's current title and year (TV vs movie
+  is derived from the item type — series/season/episode search TV, everything else
+  searches movies).
+- Lets you **refine the query** with a manual title and optional year and re-search.
+- Shows the candidate results (poster, title, year, type badge, overview) with a
+  **Use this** button per result.
+
+Picking a result resolves and persists the chosen metadata for that item (and, for a
+**series**, walks its seasons and episodes to enrich the whole subtree), then refreshes
+the card/page in place with the new poster and details.
+
+If TMDB has no API key configured, the modal shows a clear "configure a TMDB API key"
+message instead of empty results.
+
+This is backed by two admin-gated endpoints:
+
+```http
+GET  /api/v1/media/{id}/match/search?query=&year=&type=
+POST /api/v1/media/{id}/match/apply
+```
+
+- `GET .../match/search` returns up to 20 candidates as
+  `{ results: [ { tmdb_id, type, title, year, overview, poster_url, backdrop_url, vote_average } ], query, type }`.
+  All query params are optional — the server derives `query`/`year`/`type` from the
+  item when omitted.
+- `POST .../match/apply` with `{ tmdb_id, type? }` resolves and persists the match and
+  returns the re-shaped item plus an `applied` summary
+  (`{ item_id, mode, tmdb_id, matched, children_enriched }`).
+
+::: tip Apply to the parent series for a full subtree
+Applying a match to the parent **series** item reliably enriches the entire
+season/episode subtree. A season- or episode-level apply only enriches that node and
+depends on the item already knowing its season/episode number.
+:::
+
 ## See Also
 
 - [Library Scan Worker](../dev/library-scan-worker) — how the async scan queue and worker work
+- [TV Shows](../libraries/tv-shows) — series, seasons, and episodes
 - [Server Settings](./server-settings) — server-wide settings store and admin API
 - [Dashboard](./dashboard) — visual admin dashboard overview
 - [Stats](./stats) — usage and activity statistics

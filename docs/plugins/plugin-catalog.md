@@ -5,7 +5,97 @@
 > is documented in [install-from-catalog.md](./install-from-catalog.md)
 > and [install-from-url.md](./install-from-url.md).
 
+## How the catalog works
+
+The admin **Plugins** section browses a **catalog** of installable plugins
+rather than only accepting a single repo URL. A catalog is a `plugins.json`
+document hosted in a git repo. The **default catalog** is
+[`detain/phlix-plugins`](https://github.com/detain/phlix-plugins) and ships
+configured out of the box; operators can add more catalog URLs from the UI.
+
+### The `plugins.json` format
+
+A catalog document looks like this:
+
+```json
+{
+  "schemaVersion": 1,
+  "name": "Phlix Official Plugins",
+  "plugins": [
+    {
+      "name": "phlix-plugin-anidb",
+      "title": "AniDB",
+      "type": "metadata-provider",
+      "summary": "Anime metadata from AniDB.",
+      "description": "Longer description shown in the plugin detail panel.",
+      "repo": "https://github.com/detain/phlix-plugin-anidb",
+      "author": "detain",
+      "tags": ["anime", "metadata"]
+    }
+  ]
+}
+```
+
+Only **`name`** and **`repo`** are required per entry — every other field
+(`title`, `type`, `summary`, `description`, `author`, `tags`) degrades to a
+sensible empty default, so a sparse catalog still renders. `repo` is the git
+repository URL the plugin installs from (it is handed verbatim to the existing
+[install-from-URL](./install-from-url.md) flow).
+
+### Browsing from the admin UI
+
+The server fetches every configured catalog **server-side** (not from the
+browser) — both to dodge GitHub-raw CORS restrictions and to keep a single,
+auditable egress path. The admin Plugins section then renders each catalog's
+plugins as cards. Each card is annotated with its local **install state**
+(installed / not installed, and enabled / disabled), so you can install,
+uninstall, or configure straight from the catalog view.
+
+A plugin you installed from a bare URL that is **not listed in any catalog**
+still appears, grouped under an **"Other installed plugins"** section.
+
+### Adding another catalog
+
+You can point the section at additional catalogs (e.g. a private or
+community-maintained list) by adding their URL in the admin UI. The URL must be
+an `http://` or `https://` URL. The **default `detain/phlix-plugins` source
+cannot be removed**; operator-added sources are persisted as a
+`plugins.catalog.sources` override in `server_settings`. The default itself is
+set in the server's `config/plugins.php` under `catalog.default_source` and can
+be overridden per install.
+
+The wire contract for the catalog browser (the `GET /plugins/catalog` and
+`POST`/`DELETE /plugins/catalog/sources` admin endpoints) is documented in the
+[Admin Plugins API](../reference/api/admin-plugins.yaml).
+
 ## Official Plugins (Maintained by Phlix)
+
+The first-party plugins below are published in the default
+[`detain/phlix-plugins`](https://github.com/detain/phlix-plugins) catalog —
+`phlix-plugin-anidb`, `phlix-plugin-myanimelist`, and `phlix-plugin-trakt` —
+and each installs from its own repository.
+
+### phlix-plugin-anidb
+
+**Type:** `metadata-provider` | **Repository:** `detain/phlix-plugin-anidb`
+
+Anime metadata provider sourcing titles, descriptions, and topics/tags from
+**AniDB**. Listed as a catalog plugin in `detain/phlix-plugins`.
+
+### phlix-plugin-myanimelist
+
+**Type:** `metadata-provider` | **Repository:** `detain/phlix-plugin-myanimelist`
+
+Anime metadata provider sourcing descriptions and topics from **MyAnimeList**.
+Listed as a catalog plugin in `detain/phlix-plugins`.
+
+### phlix-plugin-trakt
+
+**Type:** `scrobbler` | **Repository:** `detain/phlix-plugin-trakt`
+
+Trakt scrobbler / sync integration. Previously bundled into the server, Trakt
+is now maintained in its **own repository** and is published as a catalog
+plugin in `detain/phlix-plugins`.
 
 ### phlix-plugin-oidc
 

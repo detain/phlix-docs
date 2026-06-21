@@ -257,6 +257,7 @@ export default defineConfig({
           text: 'Security',
           items: [
             { text: 'Passkeys', link: '/security/passkeys' },
+            { text: 'Signed Media URLs', link: '/security/signed-media-urls' },
           ]
         }
       ]

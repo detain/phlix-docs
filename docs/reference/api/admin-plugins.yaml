@@ -21,6 +21,109 @@ security:
   - bearerAuth: []
 
 paths:
+  /plugins/catalog:
+    get:
+      summary: Browse the aggregated plugin catalog
+      description: |
+        Fetches every configured **catalog** (a `plugins.json` document in a
+        git repo) **server-side** — not from the browser — so the admin UI is
+        not blocked by GitHub-raw CORS and every fetch goes through one
+        auditable path.
+
+        The default catalog ships pointing at
+        `https://github.com/detain/phlix-plugins` (set in `config/plugins.php`
+        → `catalog.default_source`); operators can add more catalogs with the
+        `POST /plugins/catalog/sources` endpoint.
+
+        Each catalog plugin is annotated with `installed`/`enabled` by
+        cross-referencing the installed-plugin list, so the UI can show install
+        state per card. A catalog that fails to fetch or parse is reported in
+        `errors[]` rather than failing the whole response.
+      operationId: browsePluginCatalog
+      responses:
+        '200':
+          description: Aggregated catalog across every configured source.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /plugins/catalog/sources:
+    post:
+      summary: Add an extra catalog source
+      description: |
+        Adds an operator-supplied catalog URL to the source list. The URL must
+        use an `http://` or `https://` scheme (catalogs are network documents);
+        anything else is rejected with `plugin.catalog.url.invalid`. A missing
+        or empty `url` yields `plugin.catalog.url.required`. The added source is
+        persisted as a `plugins.catalog.sources` override in `server_settings`.
+
+        Adding a URL that duplicates the default or an existing source is a
+        no-op (it still returns `200` with the unchanged list).
+      operationId: addPluginCatalogSource
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogSourceRequest'
+      responses:
+        '200':
+          description: The full source list after the add (default first).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogSourceList'
+        '400':
+          description: Missing (`plugin.catalog.url.required`) or non-http(s) (`plugin.catalog.url.invalid`) URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWithFields'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    delete:
+      summary: Remove an extra catalog source
+      description: |
+        Removes an operator-added catalog source. The **default source cannot
+        be removed** — passing it is a no-op that returns the unchanged list.
+
+        The URL is read from the `?url=` **query string** (the browser's
+        `DELETE` carries no body), though a JSON body `{ "url": "…" }` is also
+        accepted for direct API callers.
+      operationId: removePluginCatalogSource
+      parameters:
+        - in: query
+          name: url
+          required: true
+          schema:
+            type: string
+            format: uri
+          description: The catalog source URL to remove.
+      responses:
+        '200':
+          description: The full source list after the remove (default first).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogSourceList'
+        '400':
+          description: Missing URL (`plugin.catalog.url.required`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWithFields'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /plugins:
     get:
       summary: List installed plugins
@@ -242,6 +345,90 @@ components:
           type: array
           items: { type: string }
 
+    CatalogResponse:
+      type: object
+      description: The aggregated catalog returned by `GET /plugins/catalog`.
+      properties:
+        default_source:
+          type: string
+          format: uri
+          description: The immutable default catalog URL (cannot be removed).
+        sources:
+          type: array
+          description: Every configured source — the default first, then any operator-added extras.
+          items: { type: string, format: uri }
+        catalogs:
+          type: array
+          description: One entry per source that fetched and parsed successfully.
+          items:
+            type: object
+            properties:
+              source:
+                type: string
+                format: uri
+                description: The catalog source URL this block came from.
+              name:
+                type: string
+                description: The catalog's display name (from its `plugins.json` `name`, falling back to the source URL).
+              plugins:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogPlugin'
+        errors:
+          type: array
+          description: Per-source fetch/parse failures, so one dead catalog cannot blank the page.
+          items:
+            type: object
+            properties:
+              source: { type: string, format: uri }
+              error: { type: string }
+
+    CatalogPlugin:
+      type: object
+      description: |
+        One plugin listed in a catalog's `plugins.json`, annotated with its
+        local install state. Only `name` and `repo` are required in the source
+        document; every other field degrades to an empty default.
+      properties:
+        name:
+          type: string
+          description: Manifest name (`phlix-plugin-*`); the identity used to cross-reference installed plugins.
+        title: { type: string, description: Human display name (falls back to name). }
+        type: { type: string, description: Category, e.g. metadata-provider (empty when unspecified). }
+        summary: { type: string }
+        description: { type: string }
+        repo:
+          type: string
+          format: uri
+          description: Git repository URL the plugin installs from (passed verbatim to `POST /plugins/install`).
+        author: { type: string }
+        tags:
+          type: array
+          items: { type: string }
+        installed:
+          type: boolean
+          description: True when a plugin with this `name` is already installed.
+        enabled:
+          type: boolean
+          description: True when the installed plugin of this `name` is enabled (false when not installed).
+
+    CatalogSourceRequest:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Catalog repository or `plugins.json` URL. Must be `http://` or `https://`.
+
+    CatalogSourceList:
+      type: object
+      properties:
+        sources:
+          type: array
+          description: The full source list after the change — the default first, then extras.
+          items: { type: string, format: uri }
+
     Error:
       type: object
       required: [error, code]
@@ -250,6 +437,12 @@ components:
         code: { type: string }
 
     ErrorWithFields:
+      description: |
+        `Error` plus a `fields` array naming the offending input(s). The
+        install pipeline (`POST /plugins/install`, `422`) emits per-field
+        objects; the catalog-source endpoints (`/plugins/catalog/sources`,
+        `400`) emit a flat list of field names, e.g. `{ "error": "...",
+        "code": "plugin.catalog.url.invalid", "fields": ["url"] }`.
       allOf:
         - $ref: '#/components/schemas/Error'
         - type: object
@@ -257,8 +450,10 @@ components:
             fields:
               type: array
               items:
-                type: object
-                properties:
-                  field: { type: string }
-                  code: { type: string }
-                  message: { type: string }
+                oneOf:
+                  - type: string
+                  - type: object
+                    properties:
+                      field: { type: string }
+                      code: { type: string }
+                      message: { type: string }

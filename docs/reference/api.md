@@ -192,8 +192,13 @@ Enqueue a **full rescan** (purge + rescan). Same contract as `scan` with a
 ### GET /api/v1/libraries/`{id}`/scan-status
 
 Return the **latest** scan job for the library, or `null` when it has never been
-scanned (still a `200`). Progress is **coarse** — `status` is the live signal;
-`items_*` counters stay `0` in this release.
+scanned (still a `200`). The endpoint is type-agnostic (`scan`, `rescan`, and
+`metadata`/match jobs all report onto the same row). For `movie`/`series`/`video`
+libraries the job streams **live per-file progress**: `items_found` is the total
+media-file count and `items_updated` the processed count (`items_updated /
+items_found` is the percentage), with `current_path` the file being processed.
+`items_added`/`items_removed` are not streamed (stay `0`); the specialised
+music/photo/book/audiobook scanners stay coarse (`status` is the live signal).
 
 **Auth:** Admin (Bearer token)
 
@@ -205,11 +210,11 @@ scanned (still a `200`). Progress is **coarse** — `status` is the live signal;
     "library_id": "550e8400-e29b-41d4-a716-446655440001",
     "type": "scan",
     "status": "running",
-    "items_found": 0,
+    "items_found": 1280,
     "items_added": 0,
-    "items_updated": 0,
+    "items_updated": 432,
     "items_removed": 0,
-    "current_path": null,
+    "current_path": "/media/movies/Action/Heat (1995)/Heat.mkv",
     "error": null,
     "queued_at": "2026-05-27 12:00:00",
     "started_at": "2026-05-27 12:00:05",

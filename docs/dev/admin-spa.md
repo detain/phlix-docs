@@ -228,13 +228,14 @@ A few details worth knowing if you touch this code:
   `failed`) returns true, **or** `scan_status` is `null`, the interval is cleared.
 - **Cleared on unmount.** A `useEffect` cleanup walks `timersRef.current` and clears
   every outstanding timer.
-- **Coarse status only.** The page renders the status badge from
-  `job.status` and the error string from `job.error` only. It deliberately
-  does **not** render `items_*` counters or `current_path` as if they were live
-  progress — the 1.1b worker leaves them at `0` / `null` (see the
-  [Library Scan Worker](./library-scan-worker#coarse-progress-is-intentional)
-  honesty note). Adding a per-file progress bar without first wiring the
-  counters through the worker would be a fabricated contract — don't.
+- **Status badge.** This React-admin page renders the status badge from
+  `job.status` and the error string from `job.error`. (The worker now streams
+  real per-file counters — `items_found` / `items_updated` / `current_path` —
+  onto the job row for `scan` / `rescan` / `metadata`; see
+  [Library Scan Worker → Real per-file progress](./library-scan-worker#real-per-file-progress).
+  The live percentage/count/current-file **progress bar** that consumes those
+  counters ships in the Vue `@phlix/ui` admin Libraries page, documented in
+  [Library Management](../admin/library-management#live-progress-bar).)
 
 ### Architecture note — destructure the stable `push` from `useToast()`
 

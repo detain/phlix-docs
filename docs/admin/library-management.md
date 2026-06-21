@@ -144,6 +144,27 @@ Click **Delete** on a row to open a confirm modal. Confirming `DELETE`s
 `/api/v1/libraries/{id}`; success refreshes the list and shows a toast. A `404`
 (library already gone) surfaces a toast too.
 
+### Scan vs Rescan vs Match metadata
+
+The Libraries page offers three distinct actions, and it is worth being clear on
+which one you want:
+
+| Action | What it does | When to use |
+|--------|--------------|-------------|
+| **Scan** | Adds new files and updates changed ones, **keeping** existing items. | The routine, everyday update after dropping in new media. |
+| **Rescan** | **Deletes all** of the library's items, then runs a full scan from scratch. | After **moving files** around, or to repair bad/duplicated matches — anything where the existing rows are wrong. |
+| **Match metadata** | Re-fetches posters / details for items **already** in the library (no filesystem changes). | When art or details are missing or stale but the items themselves are fine. |
+
+::: warning Rescan is destructive
+**Rescan** purges every item in the library before rebuilding — continue-watching
+positions and any per-item state tied to the old rows are lost. Reach for **Scan**
+unless you specifically need the clean rebuild.
+:::
+
+**Match metadata** is the per-library counterpart of the single-item
+[Match metadata action](#fixing-a-single-items-match) described below; it is a third
+job type (`metadata`) alongside `scan` and `rescan`.
+
 ### Triggering a scan or rescan
 
 Each row has **Scan** and **Rescan** buttons. Both call the [async scan
@@ -169,13 +190,28 @@ the final value.
 If a scan **fails**, the badge shows `Failed` and the page surfaces the server `error`
 string as React text.
 
-::: warning Per-file progress is not reported in this release
-The status badge tracks the **lifecycle only** — `queued → running → completed/failed`.
-The 1.1b worker does not emit per-file counts: `items_found`, `items_added`,
-`items_updated`, `items_removed` stay at `0` and `current_path` stays `null`. The page
-deliberately does **not** render a fabricated per-file progress bar. See the
-[Library Scan Worker — coarse progress is intentional](../dev/library-scan-worker#coarse-progress-is-intentional)
-note for why.
+#### Live progress bar
+
+While a job is running, the page renders a **live progress bar** above the badge,
+not just a lifecycle state. It shows:
+
+- a **percentage** — `items_updated / items_found` (processed ÷ total);
+- the raw **`processed / total`** count; and
+- the **current file** being processed (`current_path`).
+
+This is wired for `scan`, `rescan`, **and** `metadata` (match) jobs — all three stream
+progress onto the same job row, polled through the same
+`GET /api/v1/libraries/{id}/scan-status` endpoint (it returns the latest job regardless
+of type). The worker pre-counts the library's media files for the denominator and ticks
+once per processed file; writes are coalesced (at most one every 25 files, plus the
+final) so a large library does not hammer the job row. See the
+[Library Scan Worker](../dev/library-scan-worker#real-per-file-progress) for the
+mechanics.
+
+::: tip Music, photo, book and audiobook libraries stay coarse
+The specialised music / photo / book / audiobook scanners do **not** emit per-file
+counts, so for those library types the bar does not fill — the lifecycle badge
+(`queued → running → completed/failed`) is still accurate.
 :::
 
 ### Reviewing scan history
@@ -356,11 +392,11 @@ never been scanned (still a valid `200`, not a `404`):
     "library_id": "550e8400-e29b-41d4-a716-446655440001",
     "type": "scan",
     "status": "running",
-    "items_found": 0,
+    "items_found": 1280,
     "items_added": 0,
-    "items_updated": 0,
+    "items_updated": 432,
     "items_removed": 0,
-    "current_path": null,
+    "current_path": "/media/movies/Action/Heat (1995)/Heat.mkv",
     "error": null,
     "queued_at": "2026-05-27 12:00:00",
     "started_at": "2026-05-27 12:00:05",
@@ -371,16 +407,20 @@ never been scanned (still a valid `200`, not a `404`):
 
 A UI polls this endpoint after enqueueing to follow the job through its
 lifecycle: `queued → running → completed` (or `failed`, where `error` carries the
-exception message).
+exception message). `scan`, `rescan`, and `metadata` jobs all report onto the same
+row, so the endpoint is type-agnostic — it returns whichever is the latest job.
 
-::: warning Progress is coarse, not per-item
-In this release `status` is the **only** live signal. `LibraryManager` reports no
-per-file counts, so `items_found` / `items_added` / `items_updated` /
-`items_removed` stay `0` and `current_path` stays `null`. Treat scan-status as a
-**lifecycle indicator** (queued / running / completed / failed), **not** a live
-per-file progress bar. Real per-item counters may be wired through in a later
-step. See the [Library Scan Worker](../dev/library-scan-worker#coarse-progress-is-intentional)
-developer page.
+::: tip Progress is per-file for scan / rescan / match
+For `movie` / `series` / `video` libraries, `items_found` is the **total** media-file
+count (the denominator) and `items_updated` is the **processed** count, so a live
+percentage is `items_updated / items_found`; `current_path` is the file currently being
+processed. (`items_added` / `items_removed` are not part of the streamed progress and
+stay `0`.) The worker pre-counts the files and ticks once per file, coalescing writes to
+at most one every 25 files (plus the final). `metadata` (match-metadata) jobs report the
+same way. The specialised **music / photo / book / audiobook** scanners do **not** emit
+per-file counts, so for those types the counters stay coarse and the lifecycle badge is
+the live signal. See the
+[Library Scan Worker](../dev/library-scan-worker#real-per-file-progress) developer page.
 :::
 
 ### Scan history

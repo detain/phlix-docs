@@ -1,6 +1,6 @@
 ---
 title: Library Scan Worker
-description: The async worker that drains the library_scan_jobs queue off the HTTP path, its run paths, config/process.php settings, and the coarse-progress model
+description: The async worker that drains the library_scan_jobs queue off the HTTP path, its run paths, config/process.php settings, and the real per-file progress streaming
 ---
 
 # Library Scan Worker
@@ -15,7 +15,10 @@ dedicated, Workerman-native worker process:
   [Library Management](../admin/library-management#scanning-a-library) for the
   contract).
 - A **worker process** claims queued jobs (oldest first) and runs the existing
-  `LibraryManager` scan, recording the lifecycle as it goes.
+  `LibraryManager` scan, **streaming real per-file progress** onto the job row
+  as it goes (see [Real per-file progress](#real-per-file-progress)).
+- The worker also drains `metadata` (match-metadata) jobs through
+  `LibraryMetadataMatcher`, which already reported progress the same way.
 - Two read endpoints expose progress: `scan-status` (latest job) and
   `scan-history`.
 
@@ -43,10 +46,11 @@ A job row (the `ScanJobRepository::decodeRow()` shape) carries:
 |-------|-------|
 | `id` | Job UUID. |
 | `library_id` | The library being scanned. |
-| `type` | `scan` or `rescan`. |
+| `type` | `scan`, `rescan`, or `metadata` (match-metadata). |
 | `status` | `queued` → `running` → `completed` \| `failed`. |
-| `items_found`, `items_added`, `items_updated`, `items_removed` | Progress counters — **always `0` in this release** (see [Coarse progress](#coarse-progress-is-intentional)). |
-| `current_path` | Server filesystem path; `null` in this release. |
+| `items_found`, `items_updated` | Live progress: total media files (denominator) / processed (numerator) for `scan` / `rescan` / `metadata` — see [Real per-file progress](#real-per-file-progress). |
+| `items_added`, `items_removed` | Defined on the row but **not** part of the streamed progress; stay `0`. |
+| `current_path` | The file currently being processed (the progress hint); populated during a `scan` / `rescan`. |
 | `error` | The exception message when `status = failed`, else `null`. |
 | `queued_at`, `started_at`, `completed_at` | Lifecycle timestamps (nullable until reached). |
 
@@ -54,8 +58,9 @@ A job row (the `ScanJobRepository::decodeRow()` shape) carries:
 
 `src/Media/Library/LibraryScanWorker.php` (`Phlix\Media\Library`) is the
 consumer. It is autowired in `MediaServicesProvider` — its constructor takes
-`ScanJobRepository` + `LibraryManager` (both already autowired) plus an optional
-`StructuredLogger` that defaults to the `MEDIA` channel.
+`ScanJobRepository` + `LibraryManager` + `LibraryMetadataMatcher` (all already
+autowired) plus an optional `StructuredLogger` that defaults to the `MEDIA`
+channel.
 
 It has two public methods:
 
@@ -65,8 +70,12 @@ Processes **at most one** job:
 
 1. `claimNext()` the oldest queued job. If the queue is empty (or the claim lost
    the race), return `false` — the scan engine is never touched.
-2. Otherwise run `rescanLibrary($id)` when `type === 'rescan'`, else
-   `scanLibrary($id)`.
+2. Otherwise dispatch on `type`, passing a **progress sink** so the job row
+   streams a live percentage:
+   - `metadata` → `LibraryMetadataMatcher::matchLibrary($id, fn(processed, total) => …)`,
+     writing `items_found`/`items_updated`;
+   - `rescan` → `rescanLibrary($id, $this->scanProgressSink($jobId))`;
+   - otherwise (`scan`) → `scanLibrary($id, $this->scanProgressSink($jobId))`.
 3. On success → `markCompleted()`, return `true`.
 4. On any `\Throwable` → `markFailed($jobId, $e->getMessage())` + an error log,
    return `true`. A failed job is **never** marked completed.
@@ -97,20 +106,52 @@ kept a one-liner and is exercised only at runtime, not in unit tests.
 the event loop. A backlog of N jobs therefore drains in ≤ N ticks, which is fine
 for the infrequent-scan workload.
 
-## Coarse progress is intentional
+## Real per-file progress
 
-`LibraryManager::scanLibrary()` / `rescanLibrary()` return `void` and emit **no
-per-item counts** — they just call `MediaScanner::scan()` per path. So the worker
-records the **honest lifecycle only**: `queued → running → completed/failed`. The
-`items_*` counters and `current_path` stay at their defaults (`0` / `null`) in
-this release.
+`scan` / `rescan` jobs stream a **live percentage** onto the job row — the same
+shape the `metadata` (match-metadata) job already reported. The numerator is the
+processed-file count and the denominator is the total media-file count, so a
+polling UI can render `items_updated / items_found` plus the `current_path`.
+(This corrects the original 1.1b behaviour, where `LibraryManager` emitted no
+counts and the row's `items_*` / `current_path` stayed at their defaults.)
 
-This is by design. The worker does **not** fabricate counts, and step 1.1b does
-**not** expand `LibraryManager`/`MediaScanner` to emit per-file progress. A future
-step can wire real counters through `ScanJobRepository::updateProgress()` /
-`current_path` (the 1.1a repository already supports them). Until then, a polling
-UI should treat scan-status as a **lifecycle indicator** (queued / running /
-completed / failed), not a live per-file progress bar.
+The pipeline is end-to-end:
+
+1. **`MediaScanner::countFiles(string $path, string $type): int`** walks each
+   library path **before** the scan and returns the media-file count — the
+   progress denominator. The count walk is cheap (no DB, no metadata) relative
+   to the scan itself.
+2. **`LibraryManager::scanLibrary($id, ?callable $onProgress)`** /
+   **`rescanLibrary($id, ?callable $onProgress)`** accept an optional progress
+   sink. When one is supplied they pre-count via `countFiles()`, then build an
+   `$onFile` callback that `MediaScanner::scan()` invokes **once per processed
+   media file**; that callback increments a `processed` counter and calls
+   `$onProgress($processed, $total, $currentPath)`.
+3. **`LibraryScanWorker::scanProgressSink(string $jobId)`** is the worker's
+   `$onProgress` implementation. It **throttles** writes: it persists at most
+   one update every `PROGRESS_WRITE_EVERY` (**25**) processed files, **and**
+   always on the final file, calling
+   `ScanJobRepository::updateProgress($jobId, ['items_found' => $total,
+   'items_updated' => $processed], $currentPath)`. Throttling keeps a large
+   library from issuing one `UPDATE` per media file.
+4. The **`metadata`** branch streams the same `items_found`/`items_updated`
+   percentage straight from `LibraryMetadataMatcher::matchLibrary()`'s
+   `(processed, total)` callback (no `current_path`).
+
+::: warning Specialised scanners stay coarse
+`LibraryManager::scanLibrary()` early-returns into the specialised
+**music / photo / book / audiobook** managers (`scanMusicLibrary()`,
+`scanPhotoLibrary()`, `scanBookLibrary()`, `scanAudiobookLibrary()`) **before**
+the progress-sink wiring. Those paths do **not** pass `$onProgress` through, so
+for those library types the `items_*` counters stay `0` and the lifecycle badge
+remains the only live signal. Real per-file progress is wired for the generic
+`movie` / `series` / `video` path only.
+:::
+
+The worker never fabricates counts — `items_added` / `items_removed` are not
+streamed and stay `0`; only `items_found` (total) and `items_updated`
+(processed), plus `current_path`, are written. `ScanJobRepository::updateProgress()`
+writes only the counter keys it is handed and ignores unknown ones.
 
 ## Two run paths
 

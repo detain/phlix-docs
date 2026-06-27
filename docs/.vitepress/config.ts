@@ -278,6 +278,15 @@ export default defineConfig({
     theme: {
       light: 'github-light',
       dark: 'github-dark'
+    },
+    // Shiki doesn't bundle grammars for these fence languages; alias each to
+    // the closest bundled grammar so highlighting works and the
+    // "language not loaded, falling back to txt" build warnings go away.
+    languageAlias: {
+      env: 'dotenv',        // dotenv is the real id for .env files
+      brightscript: 'vb',   // BrightScript is BASIC-like → Visual Basic grammar
+      smarty: 'twig',       // Smarty templates ≈ Twig's {…} delimited syntax
+      caddy: 'nginx'        // Caddyfile ≈ nginx-style web-server config directives
     }
   },
   cleanUrls: false,

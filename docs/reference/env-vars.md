@@ -123,19 +123,6 @@ See [`docs/hub/requests.md`](../hub/requests.md) for the full media-request work
 | `PHLIX_STUN_SERVER`          | `stun.l.google.com` | STUN server hostname for discovering the server's public IP address. See `Phlix\Network\StunClient` and `config/port-forward.php`. |
 | `PHLIX_STUN_PORT`            | `19302`       | STUN server port. See `Phlix\Network\StunClient` and `config/port-forward.php`. |
 
-## Database (test only)
-
-These are consumed by `phpunit.xml` only and have no effect on production.
-
-| Variable      | Default        | Description |
-| ------------- | -------------- | ----------- |
-| `APP_ENV`     | `testing`      | Marks the runtime as a test environment. |
-| `DB_HOST`     | `127.0.0.1`    | MySQL host used by integration tests. |
-| `DB_PORT`     | `3306`         | MySQL port used by integration tests. |
-| `DB_DATABASE` | `phlix_test`   | MySQL database name used by integration tests. |
-| `DB_USER`     | `root`         | MySQL username used by integration tests. |
-| `DB_PASSWORD` | _empty_        | MySQL password used by integration tests. |
-
 ## Server
 
 | Variable | Default | Description |
@@ -145,6 +132,29 @@ These are consumed by `phpunit.xml` only and have no effect on production.
 | `PHLIX_LOG_LEVEL` | `info` | Minimum log level for application logs written to `.logs/app.log`. Valid values (in order of verbosity): `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`. See `config/logger.php`. |
 
 ## Database
+
+These are the **production runtime** connection parameters. `config/database.php`
+reads **every** one of them from the environment, each with a localhost default
+that targets a stock single-host install (the `install.sh`-managed `phlix` MySQL
+user on `127.0.0.1`). A default install only needs to set `DB_PASSWORD`; override
+any of the others when your database is remote or renamed. See `config/database.php`.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `DB_HOST` | `127.0.0.1` | MySQL host consumed by `config/database.php` `connections.mysql.host`. |
+| `DB_PORT` | `3306` | MySQL port consumed by `config/database.php` `connections.mysql.port`. |
+| `DB_DATABASE` | `phlix` | Database name consumed by `config/database.php` `connections.mysql.database`. Legacy alias: `DB_NAME` (used only when `DB_DATABASE` is unset). |
+| `DB_USER` | `phlix` | Database username consumed by `config/database.php` `connections.mysql.username`. Legacy alias: `DB_USERNAME` (used only when `DB_USER` is unset). |
+| `DB_PASSWORD` | _empty_ | Database password consumed by `config/database.php` `connections.mysql.password` via `getenv('DB_PASSWORD')`. Set this on every non-dev install. |
+| `DB_POOL_ENABLED` | `0` | When truthy (`1`, `true`, `yes`, `on`) enables the per-worker coroutine connection pool; off by default (single-connection mutex). See `config/database.php`. |
+| `DB_POOL_SIZE` | `8` | Per-worker connection-pool ceiling when `DB_POOL_ENABLED` is on. The server-wide max is roughly (worker count × pool size); keep it under MySQL `max_connections`. See `config/database.php`. |
+
+> **Test overrides:** `phpunit.xml`'s `<env>` block overrides these same `DB_*`
+> vars for the integration test suite (e.g. `DB_DATABASE=phlix_test`,
+> `DB_USER=root`, plus `APP_ENV=testing`). Those values apply **only** when
+> running the test suite — they are not the production defaults shown above.
+
+### `PHLIX_DATABASE_*` aliases
 
 | Variable | Default | Description |
 | --- | --- | --- |

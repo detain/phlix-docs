@@ -1,7 +1,5 @@
 # Reverse Proxy Configuration
 
-**Phase:** N (End-User Documentation)
-**Step:** N.23
 **Since:** 0.18.0
 
 ## TL;DR

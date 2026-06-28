@@ -1,7 +1,5 @@
 # Web Portal
 
-**Phase:** N (End-User Documentation)
-**Step:** N.13
 **Since:** 0.18.0
 
 > [!TIP]

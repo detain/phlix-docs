@@ -1,7 +1,5 @@
 # Admin Reference
 
-**Phase:** N (End-User Documentation)
-**Step:** N.20
 **Since:** 0.18.0
 
 > **Scope:** this reference covers the **media server** (`phlix-server`) — its environment variables, `php bin/phlix` CLI, and `config/*.php` files. The **hub** (`phlix-hub`) is administered through its web console, not these CLIs/configs. Hub admins should use the [Hub Admin Console](../hub-admin/admin-console.md) and the `hub-admin/*` guides; see [Hub administration](#hub-administration) at the bottom of this page for the pointer and the hub's `/api/v1/admin/*` API summary.

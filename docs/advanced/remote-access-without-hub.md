@@ -1,5 +1,3 @@
-**Phase:** N (End-User Documentation)
-**Step:** N.17
 **Since:** 0.18.0
 
 ## TL;DR

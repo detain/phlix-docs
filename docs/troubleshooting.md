@@ -1,7 +1,5 @@
 # Troubleshooting & FAQ
 
-**Phase:** N (End-User Documentation)
-**Step:** N.19
 **Since:** 0.18.0
 
 ## TL;DR

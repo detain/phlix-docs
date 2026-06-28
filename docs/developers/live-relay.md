@@ -2,7 +2,6 @@
 
 **Since:** 0.12.0
 **Component:** Live TV / Hub Relay
-**Step:** Phase I, Step I.7
 
 ---
 

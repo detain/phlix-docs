@@ -1,6 +1,5 @@
 # SSDP + mDNS Discovery
 
-**Phase:** J (DLNA / Cast / Discovery)
 **Since:** 0.12.0
 
 ## Overview

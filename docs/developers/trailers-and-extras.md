@@ -1,6 +1,5 @@
 # Trailers and Extras
 
-**Phase:** H.5
 **Since:** 0.14.0
 
 ## Overview

@@ -1,7 +1,5 @@
 # DLNA Server
 
-**Phase:** 4 (Server Features)
-**Step:** 4.4
 **Since:** 0.12.0
 
 ## TL;DR

@@ -1,6 +1,5 @@
 # Movies Library Setup
 
-**Step:** N.7
 **Since:** 0.14.0
 
 ## TL;DR

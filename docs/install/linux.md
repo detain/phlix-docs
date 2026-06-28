@@ -48,7 +48,7 @@ Use a non-root sudo user for all steps below.
 
 ```bash
 sudo apt update
-sudo apt install -y php-fpm php-mysql php-curl php-gd php-zip \
+sudo apt install -y php-cli php-mysql php-curl php-gd php-zip \
   php-xml php-mbstring php-bcmath mariadb-server ffmpeg git curl unzip
 ```
 
@@ -58,7 +58,7 @@ First enable RPM Fusion for a full FFmpeg build:
 
 ```bash
 sudo dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
-sudo dnf install -y php-fpm php-mysqlnd php-curl php-gd php-zip php-xml \
+sudo dnf install -y php-cli php-mysqlnd php-curl php-gd php-zip php-xml \
   php-mbstring php-bcmath mariadb-server ffmpeg git curl unzip
 ```
 

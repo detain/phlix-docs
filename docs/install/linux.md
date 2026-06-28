@@ -70,9 +70,12 @@ Install PHP 8.3 from source, MariaDB from distro packages, and FFmpeg from the j
 
 ## 3. Database setup (MySQL / MariaDB)
 
-`config/database.php` hardcodes the host (`127.0.0.1`), port (`3306`), database name
-(`phlix`), and username (`phlix`); only `DB_PASSWORD` is read from the environment. So the
-database name and user must match those values exactly:
+`config/database.php` reads **every** connection parameter from the environment, each with a
+sensible localhost default: `DB_HOST` (default `127.0.0.1`), `DB_PORT` (default `3306`),
+`DB_DATABASE` — or the legacy alias `DB_NAME` — (default `phlix`), `DB_USER` — or the legacy
+alias `DB_USERNAME` — (default `phlix`), and `DB_PASSWORD` (default empty). A stock single-host
+install only needs to set `DB_PASSWORD`, so the steps below use the default `phlix` database and
+user; if your database is remote or renamed, override the matching `DB_*` var instead:
 
 ```bash
 sudo mysql_secure_installation
@@ -127,8 +130,10 @@ The systemd unit loads variables from `/etc/phlix/env`:
 sudo tee /etc/phlix/env >/dev/null <<'EOF'
 # Phlix Media Server environment
 
-# DB_PASSWORD is the only DB var read by config/database.php; host/port/db/user
-# are hardcoded to 127.0.0.1:3306 / phlix / phlix.
+# config/database.php reads every DB var from the environment. The defaults
+# target a local single-host install (127.0.0.1:3306 / phlix / phlix), so a
+# stock install only needs DB_PASSWORD. Override DB_HOST / DB_PORT /
+# DB_DATABASE / DB_USER here if your database is remote or renamed.
 DB_PASSWORD=your_strong_password
 
 # 32-byte hex secret (openssl rand -hex 32)
@@ -152,12 +157,15 @@ sudo chown root:phlix /etc/phlix/env
 ## 8. Database migrations
 
 The migration runner reads `config/database.php`, which pulls the password from
-`DB_PASSWORD`:
+`DB_PASSWORD` (and every other connection parameter from the environment):
 
 ```bash
 sudo -u phlix DB_PASSWORD=your_strong_password \
   php /var/www/phlix/scripts/run-migrations.php
 ```
+
+If your database is remote or renamed, prepend the matching `DB_*` vars the same way
+(e.g. `DB_HOST=db.internal DB_DATABASE=mediadb DB_USER=mediauser DB_PASSWORD=...`).
 
 The runner is *currently* not idempotent (no tracking table), but every migration uses
 `CREATE TABLE IF NOT EXISTS` / `ALTER TABLE ... ADD COLUMN` and the script swallows duplicate
@@ -341,7 +349,7 @@ left alone — `sudo apt remove …` / `sudo ufw delete …` to remove them.
 |---|---|
 | `--domain HOST` | Public hostname; enables TLS when paired with `--admin-email` |
 | `--admin-email EMAIL` | Email registered with Let's Encrypt |
-| `--db-name`/`--db-user`/`--db-pass`/`--db-host`/`--db-port` | MySQL identity. `config/database.php` hardcodes host/port/db/user — only `DB_PASSWORD` is env-driven. |
+| `--db-name`/`--db-user`/`--db-pass`/`--db-host`/`--db-port` | MySQL identity. `config/database.php` reads every connection parameter from the environment (`DB_DATABASE`/`DB_USER`/`DB_PASSWORD`/`DB_HOST`/`DB_PORT`), defaulting to `127.0.0.1:3306` / `phlix` / `phlix` for a single-host install. |
 | `--http-port PORT` | HTTP listen port (default `8096`) |
 | `--tmdb-api-key KEY` | Optional TMDB API key |
 | `--hub-url URL` | Optional `PHLIX_HUB_URL` for hub relay pairing |

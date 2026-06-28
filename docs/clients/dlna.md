@@ -1,7 +1,5 @@
 # DLNA / Play To
 
-**Phase:** N+1 (End-User Client Documentation)
-**Step:** N+1.4
 **Since:** 0.18.0
 
 ## Overview

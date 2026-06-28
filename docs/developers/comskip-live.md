@@ -1,7 +1,6 @@
 # Comskip Commercial Skip for Live TV Recordings
 
 **Since:** 0.12.0
-**Phase:** I.6 (Live TV / DVR / IPTV)
 
 ## Overview
 

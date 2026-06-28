@@ -1,5 +1,3 @@
-**Phase:** N (End-User Documentation)
-**Step:** N.14
 **Since:** 0.18.0 (catalog browser reworked to git-repo `plugins.json` sources)
 
 ## TL;DR

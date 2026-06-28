@@ -1,7 +1,5 @@
 # Library Sharing
 
-**Phase:** H.2 (End-User Documentation)
-**Step:** H.2
 **Since:** 0.19.0
 
 ## TL;DR

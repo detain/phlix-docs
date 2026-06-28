@@ -1,7 +1,6 @@
 # Smart Playlists Developer Guide
 
 **Since:** 0.14.0
-**Phase:** H.1 (Smart Features)
 
 Smart playlists auto-populate based on JSON DSL rules evaluated against the media library at scan time and on folder-watch events. Unlike manual playlists, smart playlists dynamically update as content changes.
 

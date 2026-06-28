@@ -1,6 +1,5 @@
 # Comskip Integration for Live TV Recordings
 
-**Phase:** F (Skip-Intro, Skip-Outro, Scene Markers)
 **Feature:** Automatic commercial detection and chapter storage for Live TV recordings
 **Since:** 0.12.0
 

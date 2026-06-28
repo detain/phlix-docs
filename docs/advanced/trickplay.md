@@ -1,7 +1,5 @@
 # Trickplay Thumbnails
 
-**Phase:** 4 (Server Features)
-**Step:** 4.4
 **Since:** 0.11.0
 
 ## TL;DR

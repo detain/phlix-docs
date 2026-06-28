@@ -290,9 +290,5 @@ export default defineConfig({
     }
   },
   cleanUrls: false,
-  ignoreDeadLinks: true,
-  // Internal planning dumps under docs/old/ are not part of the published site
-  // (never linked from the nav) and contain raw angle-bracket text the VitePress
-  // Vue compiler can't parse — exclude them so the build/deploy succeeds.
-  srcExclude: ['old/**', '**/old/**']
+  ignoreDeadLinks: true
 })

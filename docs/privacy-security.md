@@ -1,7 +1,5 @@
 # Privacy & Security
 
-**Phase:** N (End-User Documentation)
-**Step:** N.22
 **Since:** 0.18.0
 
 ## TL;DR

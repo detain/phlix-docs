@@ -1,6 +1,5 @@
 # TV Shows Library Setup
 
-**Step:** N.8
 **Since:** 0.14.0
 
 ## TL;DR

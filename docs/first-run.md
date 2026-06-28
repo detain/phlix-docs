@@ -3,8 +3,6 @@ title: First-Run Wizard
 description: Get your Phlix server running in minutes with the first-run setup wizard.
 ---
 
-**Phase:** N (End-User Documentation)
-**Step:** N.6
 **Since:** 0.18.0
 
 ## TL;DR

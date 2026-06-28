@@ -1,7 +1,5 @@
 # Collections (Step H.2)
 
-**Phase:** H (Smart Features)
-**Step:** H.2
 **Since:** 0.14.0
 
 ## Overview

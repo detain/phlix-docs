@@ -1,7 +1,5 @@
 # Audiobooks Library
 
-**Phase:** G (Music / Photos / Books / Audiobooks)
-**Step:** G.6
 **Since:** 0.18.0
 
 Audiobook library support provides chapter-aware playback with per-user progress tracking, similar to Plex's audiobook agent.

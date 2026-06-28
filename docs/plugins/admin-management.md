@@ -1,6 +1,5 @@
 # Managing Plugins in the Admin UI
 
-**Phase:** N (End-User Documentation)
 **Since:** 0.29.0 (@phlix/ui)
 
 ## TL;DR

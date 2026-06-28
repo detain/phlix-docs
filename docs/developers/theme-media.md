@@ -1,7 +1,5 @@
 # Theme Media (H.6)
 
-**Phase:** H (Smart Features)
-**Step:** H.6
 **Since:** 0.14.0
 
 ## Overview

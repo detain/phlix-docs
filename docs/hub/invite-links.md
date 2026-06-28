@@ -1,7 +1,5 @@
 # Invite Links
 
-**Phase:** H.1 (End-User Documentation)
-**Step:** H.1
 **Since:** 0.19.0
 
 ## TL;DR

@@ -1,7 +1,5 @@
 # Server Detail
 
-**Phase:** H.3 (End-User Documentation)
-**Step:** H.3
 **Since:** 0.19.0
 
 ## TL;DR

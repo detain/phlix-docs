@@ -1,12 +1,12 @@
 # Phlix Media Server API Reference
 
-**Phase:** N (End-User Documentation)
-**Step:** N.21
 **Since:** 0.18.0
 
 ## Overview
 
-Phlix exposes a REST API at `/api/v1/` returning JSON. Authentication uses JWT Bearer tokens (except on `/api/v1/auth/*` endpoints, which are unauthenticated). If swagger-php is installed, the full OpenAPI 3.0 spec is auto-generated and available at `/api/v1/openapi.json`. An interactive Swagger UI explorer is at `/api/v1/docs`.
+Phlix exposes a REST API at `/api/v1/` returning JSON. Authentication uses JWT Bearer tokens (except on `/api/v1/auth/*` endpoints, which are unauthenticated). The API is documented by this hand-maintained reference page; there is no auto-generated OpenAPI spec or interactive API explorer at this time.
+
+> **Future work:** A machine-readable OpenAPI specification may be provided in a future release. It is not available today.
 
 ## Auth Endpoints
 

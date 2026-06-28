@@ -180,7 +180,7 @@ Save this as `/etc/systemd/system/phlix-server.service`:
 ```ini
 [Unit]
 Description=Phlix Media Server
-Documentation=https://docs.phlix.media
+Documentation=https://detain.github.io/phlix-docs/
 After=network.target mysql.service
 Wants=mysql.service
 

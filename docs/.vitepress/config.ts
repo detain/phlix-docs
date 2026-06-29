@@ -8,6 +8,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: 'Install', link: '/install/linux' },
+      { text: 'FAQ', link: '/faq' },
       { text: 'Get Started', link: '/first-run' },
       { text: 'Libraries', link: '/libraries/overview' },
       { text: 'Clients', link: '/clients/overview' },
@@ -28,6 +29,7 @@ export default defineConfig({
             { text: 'Windows', link: '/install/windows' },
             { text: 'macOS', link: '/install/macos' },
             { text: 'Kubernetes', link: '/install/kubernetes' },
+            { text: 'Upgrade', link: '/install/upgrade' },
           ]
         }
       ],
@@ -35,6 +37,12 @@ export default defineConfig({
         {
           text: 'First Run',
           link: '/first-run'
+        }
+      ],
+      '/faq': [
+        {
+          text: 'FAQ',
+          link: '/faq'
         }
       ],
       '/libraries/': [
@@ -78,6 +86,7 @@ export default defineConfig({
             { text: 'DLNA Server', link: '/advanced/dlna' },
             { text: 'Live TV Comskip', link: '/advanced/live-tv-comskip' },
             { text: 'Trickplay Thumbnails', link: '/advanced/trickplay' },
+            { text: 'ARR Integration', link: '/advanced/arr-integration' },
           ]
         }
       ],
@@ -112,6 +121,7 @@ export default defineConfig({
           text: 'Reference',
           items: [
             { text: 'Environment Variables', link: '/reference/env-vars' },
+            { text: 'Config Files', link: '/reference/config-files' },
             { text: 'CLI', link: '/reference/cli' },
             { text: 'API', link: '/reference/api' },
             { text: 'Admin Reference', link: '/reference/admin-reference' },
@@ -161,6 +171,9 @@ export default defineConfig({
           items: [
             { text: 'Contributing', link: '/dev/contributing' },
             { text: 'Admin SPA (admin-ui)', link: '/dev/admin-spa' },
+            { text: 'Test Harness', link: '/dev/test-harness' },
+            { text: 'Debug Recipes', link: '/dev/debug-recipes' },
+            { text: 'Release Process', link: '/dev/release-process' },
           ]
         },
         {
@@ -258,6 +271,7 @@ export default defineConfig({
           items: [
             { text: 'Passkeys', link: '/security/passkeys' },
             { text: 'Signed Media URLs', link: '/security/signed-media-urls' },
+            { text: 'Hardening Checklist', link: '/security/hardening' },
           ]
         }
       ]
@@ -290,5 +304,5 @@ export default defineConfig({
     }
   },
   cleanUrls: false,
-  ignoreDeadLinks: true
+  ignoreDeadLinks: false
 })

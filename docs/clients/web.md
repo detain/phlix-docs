@@ -63,6 +63,30 @@ Each library rail has a **See all** link that opens a dedicated page for that li
 
 > The hub's web UI has no libraries, so it shows no per-library rails or links — its home is **My Servers**.
 
+### Adaptive Index Rail {#adaptive-index-rail}
+
+The library page (`/app/library/<id>`) shows a **fixed vertical jump rail** on the right
+edge of the grid. Clicking a rail button jumps the grid directly to that bucket's
+first title — the same `ensureRange()` random-access mechanism that drives normal
+scrolling, so jumped-to skeleton slots fill with the correct titles.
+
+The rail **adapts its bucket labels to the current sort field**:
+
+| Sort field | Rail shows | Default order |
+|---|---|---|
+| `name` | A–Z letters | asc |
+| `year` | Decade buckets (1990s, 2000s, …) | desc |
+| `rating` | MPAA rating buckets (G, PG, PG-13, R, …) | desc |
+| `runtime` | Duration buckets (0–30 min, 30–60 min, …) | desc |
+| `date_added` | Relative time buckets (Today, This week, …) | desc |
+
+The rail re-fetches automatically whenever the sort field changes, so switching from
+`name-asc` to `year-desc` swaps the A–Z rail for a decade rail.
+
+> [!TIP]
+> **Server compatibility:** On older servers that don't implement `GET /api/v1/media/index`,
+> the rail silently hides (graceful 404 fallback). Browsing works normally.
+
 ### TV & anime series
 
 A series-type library (e.g. **TV** or **Anime**) lists **shows**, not a flat dump

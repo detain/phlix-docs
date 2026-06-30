@@ -521,9 +521,16 @@ POST /api/v1/media/{id}/match/apply
 ```
 
 - `GET .../match/search` returns up to 20 candidates as
-  `{ results: [ { tmdb_id, type, title, year, overview, poster_url, backdrop_url, vote_average } ], query, type }`.
+  `{ results: [ { tmdb_id, type, title, year, overview, poster_url, backdrop_url, vote_average } ], query, type, context }`.
   All query params are optional — the server derives `query`/`year`/`type` from the
   item when omitted.
+  The `context` block provides source-file context for the current item:
+  `{ original_filename?, path?, parsed_title?, year?, tags? }` — only non-null/non-empty
+  keys are included. `original_filename` is the original raw filename or `basename(path)`;
+  `path` is the file path (max 500 chars); `parsed_title` is the cleaned query string;
+  `year` is the item's release year; `tags` is a normalized map of media-type-specific
+  metadata (series/episode: show, season, episode, episode_title; audio: artist, album,
+  genre, track, date, id3/Vorbis tags).
 - `POST .../match/apply` with `{ tmdb_id, type? }` resolves and persists the match and
   returns the re-shaped item plus an `applied` summary
   (`{ item_id, mode, tmdb_id, matched, children_enriched }`).

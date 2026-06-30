@@ -358,11 +358,120 @@ Get a single media item by ID.
     "title": "Pilot",
     "year": 2020,
     "summary": "The pilot episode..."
+  },
+  "user_data": {
+    "favorite": false,
+    "rating": null,
+    "like_level": 0
   }
 }
 ```
 
+The **`user_data`** block is **add-only** and per-user (account-level, keyed on
+`user_id` — not per-profile). It is present only on this single-item detail
+response (and on the favorites list below); browse/list rows do not carry it.
+
+- `favorite` (`boolean`) — whether the current user has favorited the item.
+- `rating` (`int 1-10 | null`) — the current user's personal rating (`null` when unset).
+- `like_level` (`int 0-3`) — the current user's multi-level "Love" value
+  (`0` = not loved … `3` = most loved). **Since:** 0.57.0.
+
+`user_data` is `null` when the request is unauthenticated; when authenticated
+with no stored row it defaults to `{ "favorite": false, "rating": null, "like_level": 0 }`.
+
 **Response 404:** Media item not found
+
+## User Item Data Endpoints
+
+Per-user favorites, personal ratings, and the multi-level **Love** value for any
+media item. All routes require authentication (Bearer token). Favorites/ratings/Love
+are **account-level** (keyed on `user_id`, like user settings) — **not per-profile**.
+Each write returns a `{ "message": "..." }` envelope.
+
+> **Hub relay caveat:** when a server is browsed through the hub's relay proxy,
+> these **write** endpoints degrade — the relay proxy allowlists `GET`/`HEAD` only,
+> so `POST .../favorite` returns `403 proxy.scope_denied` and `PUT .../like` +
+> `DELETE .../favorite` are not routed. Favorites and Love writes only persist over
+> a **direct** session to the server. Tracked as phlix-hub issue
+> [#122](https://github.com/detain/phlix-hub/issues/122).
+
+### POST /api/v1/media/`{id}`/favorite
+
+Mark a media item as one of the current user's favorites.
+
+**Auth:** Required · **Body:** none · **Response 200:** `{ "message": "Added to favorites" }`
+
+### DELETE /api/v1/media/`{id}`/favorite
+
+Remove a media item from the current user's favorites.
+
+**Auth:** Required · **Body:** none · **Response 200:** `{ "message": "Removed from favorites" }`
+
+### PUT /api/v1/media/`{id}`/rating
+
+Set the current user's personal rating for the item.
+
+**Auth:** Required
+
+**Body:**
+```json
+{ "rating": 8 }
+```
+- `rating` (`int 1-10 | null`) — `null` clears the rating.
+
+**Response 200:** `{ "message": "Rating saved" }`
+**Response 400:** non-numeric or out-of-range rating
+**Response 404:** media item not found
+
+### DELETE /api/v1/media/`{id}`/rating
+
+Clear the current user's personal rating.
+
+**Auth:** Required · **Body:** none · **Response 200:** `{ "message": "Rating saved" }`
+
+### PUT /api/v1/media/`{id}`/like
+
+Set the current user's multi-level **Love** value for the item.
+
+**Since:** 0.57.0
+
+**Auth:** Required
+
+**Body:**
+```json
+{ "level": 2 }
+```
+- `level` (`int 0-3`, **required**) — `0` = not loved … `3` = most loved. The
+  `level` field is required (there is no "clear" / null branch — set `0` to unset).
+  The 0-3 range is enforced in PHP (no DB `CHECK` constraint), and `like_level` is a
+  **separate axis** from `favorite` (boolean) and `rating` (1-10).
+
+**Response 200:** `{ "message": "Love level saved" }`
+**Response 400:** missing/non-integer `level`, or a value outside `0-3`
+**Response 401:** unauthenticated
+**Response 404:** media item not found
+
+### GET /api/v1/users/me/favorites
+
+List the current user's favorited items.
+
+**Auth:** Required
+
+**Query parameters:**
+- `limit` (optional) — clamped to `1-100` (default `50`).
+- `offset` (optional) — floored at `0` (default `0`).
+
+**Response 200:**
+```json
+{
+  "items": [ /* shaped media items, each with a `user_data` block */ ],
+  "limit": 50,
+  "offset": 0
+}
+```
+Each item carries the same add-only `user_data: { favorite, rating, like_level }`
+block as the detail response (with `favorite: true`). The response has **no `total`**
+field (unlike the browse list).
 
 ## Transcoding Endpoints
 

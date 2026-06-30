@@ -92,6 +92,7 @@ registry is fair game for advanced plugins that want priority control.
 | `Phlix\Media\Library\ItemRepository`              | `ItemRepository`      | Media-item CRUD (parses `metadata_json`)         |
 | `Phlix\Media\Library\MediaScanner`                | `MediaScanner`        | Trigger ad-hoc rescans (avoid in event handlers) |
 | `Phlix\Media\Metadata\MetadataManager`            | `MetadataManager`     | Resolve metadata via configured providers        |
+| `Phlix\Media\Metadata\Resolution\SourceRegistry`  | `SourceRegistry`      | Process-scoped registry of enabled metadata sources (see [Metadata-source plugins](#metadata-source-plugins-the-typed-contract)) |
 
 ### Session
 
@@ -254,6 +255,76 @@ multi-file edit** and every site needs to be touched in the same PR.
    talk to it through a stable interface rather than relying on
    container introspection. Until those registries land, the pattern
    above is the pragmatic interim.
+
+   > **Metadata sources have landed exactly this typed-registry path.**
+   > A `metadata-provider` plugin no longer needs the brittle
+   > `method_exists` / FQCN-sniffing convention — it implements the
+   > typed `Phlix\Shared\Metadata\MetadataSourceInterface` and the host
+   > registers it into `SourceRegistry` on enable / deregisters on
+   > disable. See [Metadata-source plugins](#metadata-source-plugins-the-typed-contract).
+
+---
+
+## Metadata-source plugins (the typed contract) {#metadata-source-plugins-the-typed-contract}
+
+`metadata-provider` plugins register as **metadata sources** through a typed
+interface shipped in `detain/phlix-shared` (since **v0.15.0**). This replaces the
+old `method_exists` / FQCN registration convention: the host no longer sniffs
+methods, it type-checks for the interface.
+
+### The interface
+
+```php
+namespace Phlix\Shared\Metadata;
+
+interface MetadataSourceInterface
+{
+    /** Stable lower-case source name, e.g. "anidb" — the key used in
+     *  metadata.provider_priority and the sources endpoint. */
+    public function sourceName(): string;
+
+    /** Media types this source can resolve, e.g. ['series', 'anime']. */
+    public function supportedMediaTypes(): array;
+
+    /** Search candidates for a query. */
+    public function search(string $query, array $options = []): array;
+
+    /** Resolve full details for one external id. */
+    public function getDetails(string $externalId, array $options = []): array;
+
+    /** Image candidates (posters/backdrops) for one external id. */
+    public function getImages(string $externalId): array;
+}
+```
+
+### How the host wires it (`SourceRegistry`)
+
+`Phlix\Media\Metadata\Resolution\SourceRegistry` is a **process-scoped**
+(container-singleton) registry keyed by `sourceName()`:
+
+- On `PluginLoader::enable()`, any instantiated plugin entry that is
+  `instanceof MetadataSourceInterface` is **registered** (`register()`); on
+  `disable()` it is **deregistered** — there is no leak (register is idempotent,
+  deregister truly `unset`s the entry).
+- `SourceRegistry::names()` returns the registered source names in registration
+  order. The admin
+  [`GET /api/v1/admin/metadata/sources`](../reference/api#get-api-v1-admin-metadata-sources)
+  endpoint surfaces the built-ins (`tmdb`, `imdb`, `tvdb`, `fanart`, `local`) plus
+  these plugin names so the
+  [source-priority editor](../admin/server-settings#metadata-source-priority-metadata-provider-priority)
+  can list real names.
+- The built-in plugins `phlix-plugin-anidb` and `phlix-plugin-myanimelist`
+  implement the interface on their entry classes (delegating to their existing
+  adapters), so they appear in the registry — and therefore in the priority editor —
+  when enabled.
+
+::: tip Registry vs. live resolvers
+`SourceRegistry` is driven purely by plugin enable/disable; it tracks *which*
+sources are available. As shipped it does **not yet feed the live
+`MovieMetadataResolver` / `SeriesMetadataResolver`** — wiring the configured order
+into live matching is a deliberate future behavior change. The registry exists today
+to power the admin sources endpoint and the priority editor.
+:::
 
 ---
 

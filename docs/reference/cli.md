@@ -349,3 +349,47 @@ External WAN IP: 203.0.113.42
 Intro/outro marker-detection background worker (an infinite daemon loop). This
 script is a carry-over and is **not** wrapped as a `bin/phlix` command — it
 belongs to a future queue/worker step.
+
+### `php scripts/dedup-series.php [--library=ID] [--dry-run|--apply]`
+
+Find and (optionally) merge **duplicate top-level items** (series and movies) across
+the catalog. Title-slug variance — separators, year bleed, a flat→per-directory
+re-scan, or a concurrent-scan race — can create a second top-level row for the same
+show or film (the classic "100 episodes + 1 episode" symptom). This script is the
+offline counterpart of the admin
+[Duplicates page](../admin/library-management#merging-duplicate-series-movies) /
+[`POST /api/v1/admin/media/merge`](./api#post-api-v1-admin-media-merge) endpoint: it
+runs `DuplicateFinder` per library and, on `--apply`, collapses each group with
+`SeriesMerger`.
+
+**Options:**
+
+| Option | Description |
+| ------ | ----------- |
+| `--library=ID` | Restrict to a single library UUID. Omit to process every library. |
+| `--dry-run` | List the duplicate groups that would be merged, **without** mutating anything. **This is the default.** |
+| `--apply` | Actually merge each group (re-parent children onto the primary, delete empty shells / duplicate movie rows). |
+
+**Behavior:**
+
+- Default mode is **dry-run** — you must pass `--apply` to make changes.
+- The "primary" of each group is the member with the most descendants; the rest are
+  re-parented into it. Re-parented episodes keep their ids, so per-user playback
+  progress survives; only empty shells and duplicate movie rows are deleted (their
+  own per-user rows go via `ON DELETE CASCADE`).
+- A re-run after `--apply` reports **zero groups** (idempotent).
+
+**Prerequisite:** migration `043_media_items_canonical_key.sql` (adds a nullable,
+**non-unique** `canonical_key` column + a `(library_id, type, canonical_key)` index).
+There is intentionally **no** UNIQUE constraint — historical duplicates exist;
+uniqueness is enforced in application code at scan time.
+
+**Example:**
+
+```bash
+# Preview duplicate groups in one library (no changes)
+php scripts/dedup-series.php --library=550e8400-e29b-41d4-a716-446655440001 --dry-run
+
+# Merge duplicates across every library
+php scripts/dedup-series.php --apply
+```

@@ -729,6 +729,102 @@ Uninstall a plugin by name.
 
 **Response 404:** Plugin not found
 
+---
+
+### GET /api/v1/admin/libraries/`{id}`/duplicates
+
+Preview the **duplicate groups** in one library. The server pages the library's
+top-level items, buckets them by a canonical key (separator/year/external-id
+normalized), and returns only the groups with two or more members (singletons
+excluded). An empty library — or one with no duplicates — returns `{ "groups": [] }`
+(`200`, not `404`).
+
+**Auth:** Required (admin Bearer token). `401` unauthenticated, `403` non-admin.
+
+**Parameters:**
+- `id` (path) — Library UUID.
+
+**Response 200:**
+```json
+{
+  "groups": [
+    {
+      "canonical_key": "hunterexhunter",
+      "type": "series",
+      "library_id": "550e8400-e29b-41d4-a716-446655440001",
+      "primary":    { "id": "…", "title": "Hunter x Hunter", "descendant_count": 100 },
+      "duplicates": [ { "id": "…", "title": "Hunter.x.Hunter", "descendant_count": 1 } ]
+    }
+  ]
+}
+```
+
+The **primary** is the group member with the most descendants (ties broken by
+smaller id); the rest are **duplicates**. `descendant_count` lets the UI show how
+many seasons/episodes (or none, for a movie) hang off each row.
+
+---
+
+### POST /api/v1/admin/media/merge
+
+Apply a merge: collapse the duplicates into the primary. For a **series**, episodes
+are re-parented onto the primary's matching season (re-parent-before-delete), then
+the empty duplicate season/series shells are deleted. For a **movie**, richer
+metadata is gap-filled onto the primary (add-only — non-empty primary fields are
+never overwritten) and the duplicate row is deleted. The whole operation runs inside
+one real DB transaction.
+
+**Auth:** Required (admin Bearer token). `401` unauthenticated, `403` non-admin.
+
+**Request body:**
+```json
+{
+  "primary_id": "550e8400-…",
+  "duplicate_ids": ["…", "…"]
+}
+```
+
+**Response 200:**
+```json
+{ "moved": 1, "deleted": 2 }
+```
+
+- `moved` — number of children re-parented onto the primary.
+- `deleted` — number of empty shell / duplicate rows removed.
+
+**Errors:**
+- `400` — `primary_id` empty/missing, `duplicate_ids` not a non-empty array, a
+  self-merge (primary id listed in `duplicate_ids`), or a duplicate that is in a
+  **different library** or of a **different type** than the primary.
+- `404` — primary item not found.
+- `503` — the merge is unavailable because no transaction-capable database
+  connection is bound (the read-only `…/duplicates` preview is unaffected).
+
+This is the backend for the admin SPA **Duplicates** page; the same merge logic is
+exposed offline as the [`scripts/dedup-series.php`](./cli#php-scripts-dedup-series-php-library-id-dry-run-apply)
+CLI.
+
+---
+
+### GET /api/v1/admin/metadata/sources
+
+List the metadata **source names** available for the per-media-type priority editor:
+the built-ins plus any enabled metadata-provider plugin's registered source name.
+
+**Auth:** Required (admin Bearer token). `401` unauthenticated, `403` non-admin.
+
+**Response 200:**
+```json
+{ "sources": ["tmdb", "imdb", "tvdb", "fanart", "local", "anidb", "myanimelist"] }
+```
+
+The built-ins (`tmdb`, `imdb`, `tvdb`, `fanart`, `local`) are listed first in a
+stable order, followed by any extra plugin source names from the live
+`SourceRegistry` (registered when a metadata-provider plugin is enabled, deregistered
+on disable). Names are de-duplicated, so a plugin re-using a built-in name does not
+appear twice. This feeds the [Metadata source priority](../admin/server-settings#metadata-source-priority-metadata-provider-priority)
+editor.
+
 ## Hub admin API
 
 > **Scope:** these endpoints are served by the **hub** (`phlix-hub`), not the media server. They are the JSON backend for the hub's gated Admin console (the Vue SPA at `/app/admin/*`). All routes are gated by **auth + admin** middleware (`401` when unauthenticated, `403` when authenticated but not an admin). The first user to register is auto-promoted to admin.

@@ -534,6 +534,51 @@ season/episode subtree. A season- or episode-level apply only enriches that node
 depends on the item already knowing its season/episode number.
 :::
 
+## Merging duplicate series & movies
+
+A series container is found-or-created by a synthetic path, and there is **no DB
+UNIQUE constraint** on the items table, so any title-slug variance (separators, year
+bleed, a parse failure, a flat→per-directory re-scan, or a concurrent-scan race) can
+silently create a **second top-level row** for the same show or film — the classic
+"100 episodes in one series + 1 stray episode in a near-duplicate" symptom.
+
+### Prevention (automatic, at scan time)
+
+The scanner resolves a container by a **canonical key** (a normalized form that
+collapses separator/article/case variance and prefers a matched external id) in
+addition to the exact path: `containerCache → exact path → canonical key`. On a
+canonical hit with a different path, the existing container is reused instead of
+creating a sibling. So new scans no longer manufacture duplicates from title-slug
+drift — the merge tooling below is for **historical** duplicates created before this
+landed.
+
+### The admin Duplicates page
+
+The admin console exposes a **Duplicates** page (near **Libraries** in the sidebar)
+for cleaning up existing duplicates:
+
+- Pick a **library** from the picker. The page calls
+  `GET /api/v1/admin/libraries/{id}/duplicates` and lists each duplicate group.
+- For every group the **primary** (the member with the most descendants) is shown
+  **"Keep"-locked**, and the duplicates are pre-checked. Each row shows its
+  **descendant count** (seasons/episodes for a series, none for a movie) so you can
+  confirm the right primary.
+- Clicking **Merge** calls `POST /api/v1/admin/media/merge` with
+  `{ primary_id, duplicate_ids }`, then refreshes the list. For a series the
+  episodes are re-parented onto the primary's matching season and the empty
+  duplicate shells are deleted; for a movie, missing metadata is gap-filled onto the
+  primary and the duplicate row is removed.
+
+::: tip Re-parenting preserves watch progress
+Merging re-parents episodes (keeping their ids), so continue-watching positions on
+those episodes survive. Only empty shells and the duplicate movie row are deleted.
+:::
+
+The same logic is available offline as the
+[`scripts/dedup-series.php`](../reference/cli#php-scripts-dedup-series-php-library-id-dry-run-apply)
+CLI (`--dry-run` by default, `--apply` to merge). The API contract is documented at
+[`POST /api/v1/admin/media/merge`](../reference/api#post-api-v1-admin-media-merge).
+
 ## See Also
 
 - [Library Scan Worker](../dev/library-scan-worker) — how the async scan queue and worker work

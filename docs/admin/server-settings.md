@@ -31,7 +31,8 @@ tab is shown first):
 |-----|------|
 | **Access** | `auth.signup_mode` |
 | **Transcoding** | `hwaccel.enabled`, `hwaccel.prefer_hardware`, `hwaccel.probe_timeout` |
-| **Metadata** | `tmdb.api_key` |
+| **Metadata** | `tmdb.api_key`, `metadata.provider_priority`, `metadata.genres_mode` |
+| **Matching** | `matching.noise_suffixes` |
 | **Markers** | `marker_detection.similarity_threshold`, `marker_detection.intro_max_duration` |
 | **Subtitles** | `subtitles.enabled`, `subtitles.default_language`, `subtitles.burn_in_by_default` |
 | **Discovery** | `discovery.discovery_port` |
@@ -46,6 +47,7 @@ tab is shown first):
 | `bool` | Toggle switch |
 | `int` / `float` | Number input with `min`/`max` from schema constraints |
 | `string` | Text input; `tmdb.api_key` renders as a password field with Show/Hide toggle |
+| `json` | A bespoke control (the generic string-coercing path is skipped). `metadata.provider_priority` renders a per-media-type **`SourcePriorityEditor`** (reorderable up/down source lists); `matching.noise_suffixes` renders as an editable string list. The Metadata tab also exposes a `metadata.genres_mode` enum select (`first` / `union`). These keys are saved verbatim through the same `PUT /api/v1/admin/settings` call (no stringification). |
 
 ### Overrides
 
@@ -218,6 +220,9 @@ The current allow-list maps each dotted key to its type and the
 | `hwaccel.prefer_hardware` | `bool` | `config/hwaccel.php` |
 | `hwaccel.probe_timeout` | `int` | `config/hwaccel.php` |
 | `tmdb.api_key` | `string` | `config/tmdb.php` |
+| `metadata.provider_priority` | `json` | `config/metadata.php` |
+| `metadata.genres_mode` | `string` (enum) | `config/metadata.php` |
+| `matching.noise_suffixes` | `json` | `config/matching.php` |
 | `marker_detection.similarity_threshold` | `float` | `config/marker_detection.php` |
 | `marker_detection.intro_max_duration` | `int` | `config/marker_detection.php` |
 | `subtitles.enabled` | `bool` | `config/subtitles.php` |
@@ -261,6 +266,87 @@ Notes and caveats:
   disabled **admin** also immediately loses admin access.
 - See [User Management](./user-management) for the approval queue and the
   `approve` / `disable` / `reject` admin actions.
+
+## Metadata source priority (`metadata.provider_priority`)
+
+The **Metadata** tab exposes `metadata.provider_priority`, which controls the
+**order in which metadata sources are consulted, per field, per media type**. The
+matching pipeline normalizes each source's payload into a canonical field set and
+then, for every field, takes the **first non-empty value** walking the configured
+source order. External IDs are merged (earlier source wins on conflict).
+
+The value is a JSON object mapping a media type to an **ordered array of source
+names**:
+
+```json
+{
+  "movie":  ["tmdb", "imdb"],
+  "series": ["tmdb", "imdb"],
+  "anime":  ["anidb", "myanimelist", "tvdb", "fanart", "local"]
+}
+```
+
+Config-file defaults (`config/metadata.php`, mirrored byte-for-byte from the shared
+schema):
+
+| Media type | Default order |
+|------------|---------------|
+| `movie` | `["tmdb", "imdb"]` |
+| `series` | `["tmdb", "imdb"]` — **deliberately no `tvdb`** |
+| `anime` | `["anidb", "myanimelist", "tvdb", "fanart", "local"]` |
+
+Notes and caveats:
+
+- The override is stored as a `json` value via the settings store; an absent
+  (un-overridden) type falls back to the config-file default for that type. The
+  controller merges per-type so overriding one type never drops the others.
+- Available source names come from the live
+  [`GET /api/v1/admin/metadata/sources`](../reference/api) endpoint — the built-ins
+  (`tmdb`, `imdb`, `tvdb`, `fanart`, `local`) plus any enabled metadata-provider
+  plugin's source name (e.g. `anidb`, `myanimelist`). The editor only offers real,
+  registered names.
+- The `SourcePriorityEditor` is a pure up/down reorder control (no drag-drop
+  dependency); each media type gets its own list.
+
+::: warning Series ordering does not yet flow into live series matching
+As shipped, `SeriesMetadataResolver` builds its records under a **fixed `['tmdb']`
+order** and does not consume the configured series order — this is intentional (it
+avoids surfacing a phantom rating from a lower-priority source). The
+`provider_priority` setting and its editor are fully wired through the API and the
+movie resolver; making the configured *series* order take effect in live matching
+is a deliberate future behavior change, not part of this release.
+:::
+
+## Genres mode (`metadata.genres_mode`)
+
+`metadata.genres_mode` controls how genres are combined across sources during
+resolution. It is an enum string (config-file default **`first`**):
+
+| Value | Behaviour |
+|-------|-----------|
+| `first` | Use the genre list from the first source (in priority order) that supplies one. **(default)** |
+| `union` | Merge genres from every source into a de-duplicated union. |
+
+## Noise-suffix list (`matching.noise_suffixes`)
+
+`matching.noise_suffixes` is the admin-extensible list of trailing "noise" phrases
+that are stripped from a filename-derived title **before** it is sent to a metadata
+provider for matching. Multi-word edition markers such as `Directors Cut`,
+`UNCUT & UNRATED`, `ALTERNATE ENDING`, `Extended Cut`, `Remastered`, and scene tags
+like `YIFY` / `DC` would otherwise survive into the search query and depress the
+match hit-rate.
+
+- The value is a JSON **array of strings**. It is a **replace-not-merge** override:
+  setting it replaces the code defaults wholesale. An **empty** override (`[]`)
+  falls back to the built-in code defaults (the defaults are also mirrored in
+  `config/matching.php`).
+- The list is applied longest-phrase-first, end-anchored, on word boundaries, and a
+  single-token noise word will never empty a title (the original title is kept as a
+  fallback). The original filename (`raw`) is never mutated — only the
+  match/search title.
+- Both the movie filename normalizer (`SceneFilenameNormalizer`) and the series
+  parser (`EpisodeFilenameParser::cleanSeries()`) consume the same effective list
+  via the shared `TitleSuffixStripper` (single source of truth).
 
 ## Storage
 

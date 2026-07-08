@@ -1,3 +1,9 @@
+/**
+ * VitePress theme entry point.
+ *
+ * @copyright 2026 Joe Huss <detain@interserver.net>
+ */
+
 import { h } from 'vue'
 import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'

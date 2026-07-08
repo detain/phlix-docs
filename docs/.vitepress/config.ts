@@ -1,3 +1,9 @@
+/**
+ * VitePress site configuration.
+ *
+ * @copyright 2026 Joe Huss <detain@interserver.net>
+ */
+
 import { defineConfig } from 'vitepress'
 
 export default defineConfig({

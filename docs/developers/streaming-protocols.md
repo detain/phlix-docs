@@ -2,6 +2,18 @@
 
 Phlix Media Server supports two adaptive streaming protocols: **HLS** (HTTP Live Streaming) and **DASH** (Dynamic Adaptive Streaming over HTTP). Both protocols enable adaptive bitrate streaming, allowing clients to select appropriate quality levels based on network conditions and device capabilities.
 
+> **On-demand HLS is now multi-variant.** The description below (one shared CMAF
+> encode driving both a single-variant HLS master and DASH) is accurate for **DASH**
+> and for the historical/CMAF code paths, but on-demand **HLS** playback was rebuilt to
+> emit a real multi-variant ABR ladder (240p–2160p clamped to source, plus an `Original`
+> stream-copy/top-rung variant), with segments generated per-variant on demand as plain
+> `.ts` (not the shared CMAF `.m4s`). See
+> [Stream Quality / ABR](./stream-quality-abr) for the current, authoritative
+> description of that pipeline — including the real segment/playlist naming, the
+> per-variant dedup/cap/cache-sweep behavior, the hub relay's streaming pass-through,
+> and client (web/native) ABR support. DASH is unaffected by that work and still uses
+> the single-CMAF-job pipeline described in this page.
+
 ## Overview
 
 | Feature | HLS | DASH |
@@ -146,25 +158,32 @@ protocol is served by a generic per-job file handler (plus a JSON info route):
 > `chunk-N-NNNNN.m4s` segments. There is no second encode and no duplicate
 > storage — the same `.m4s` segments are served under both the `/hls` and `/dash`
 > prefixes. The web player uses HLS via hls.js; DASH clients use `manifest.mpd`.
+>
+> **This is DASH's actual pipeline today.** For HLS, `master.m3u8`/`media_N.m3u8` are
+> now **multi-variant** (one `media_v{renditionId}.m3u8` per ABR rung, segments named
+> `seg-v{renditionId}-NNNNN.ts`) and segments are plain `.ts`, not shared `.m4s` — see
+> [Stream Quality / ABR](./stream-quality-abr#on-demand-per-variant-segments-d2-a5-a6-s1-s3)
+> for the current route/filename reference.
 
 ## On-Demand Transcode Flow
 
 When a file can't be direct-played, the client drives this flow:
 
-1. **Start** — `POST /api/v1/media/{id}/transcode?profile=web`. The
-   `TranscodeManager` probes the source, decides per stream whether to **copy**
-   (a fast remux of already-compatible h264/aac) or **encode** (libx264/aac, with
-   a downscale to the profile's max resolution), then launches the FFmpeg CMAF
-   encode **detached** so the Workerman event loop never blocks. Returns a
-   `job_id`, `master_url` (HLS) and `dash_url` (DASH). Idempotent — a still-valid
-   job for the same item + profile is reused.
+1. **Start** — `POST /api/v1/media/{id}/transcode?profile=web` (or the resolved
+   `X-Phlix-Device-Type` profile). Returns a `job_id`, `master_url` (HLS),
+   `dash_url` (DASH, still CMAF-based per above), and — for HLS — a `variants[]`
+   quality-ladder array (see [Stream Quality / ABR](./stream-quality-abr)). Idempotent
+   — a still-valid job for the same item + profile is reused. Segments themselves are
+   generated **on demand** as each is first requested, not all up front; see
+   [Stream Quality / ABR](./stream-quality-abr#on-demand-per-variant-segments-d2-a5-a6-s1-s3)
+   for the current per-variant copy-vs-encode decision, dedup, and cap behavior.
 2. **Poll** — `GET /api/v1/transcode/{jobId}/status` until `playlist_ready`
-   (`master.m3u8` + segments exist on disk). Completion/failure is detected from
+   (`master.m3u8` exists on disk). Completion/failure is detected from
    `.complete` / `.failed` markers FFmpeg's wrapper writes on exit, so readiness
    survives worker reloads.
 3. **Play** — point hls.js (native HLS on Safari/iOS) at `master_url`, or a DASH
-   player at `dash_url`. Playlists/manifest are served verbatim and reference the
-   shared fMP4 segments by relative filename.
+   player at `dash_url`. For HLS, `master_url` now resolves to a multi-variant master;
+   hls.js (or native HLS) performs ABR across its rungs automatically.
 
 ### Getting the Correct Manifest URL
 

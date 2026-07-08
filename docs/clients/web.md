@@ -159,6 +159,26 @@ choice is remembered. (Bitmap subtitle formats such as PGS/dvdsub are not extrac
 The player's control menus (such as the speed and quality selectors) use a
 translucent dark styling that matches the player chrome.
 
+### Choosing your stream quality
+
+For a transcoded title (anything that isn't played back byte-for-byte), the player
+offers a quality menu with **Auto**, a set of fixed resolutions (240p up to the
+source's native resolution), and **Original**:
+
+- **Auto** (the default) climbs and drops between quality rungs automatically as your
+  network conditions change — the same behavior you'd expect from YouTube or Netflix.
+  The menu shows what Auto is currently playing, e.g. "Auto (720p)".
+- Picking a specific resolution **pins** playback to that rung until you change it
+  again or start a new title; your choice is remembered for next time.
+- **Original** plays the source at its native resolution/bitrate. When the source is
+  already web-compatible (H.264/AAC) this is a fast, low-CPU passthrough on the server;
+  otherwise it's the highest quality rung the server can produce.
+- The menu never offers a resolution higher than the source actually is — you won't
+  see "1080p" offered for a title that was only ever 480p.
+- The quality menu is currently available in the **web player** only. The mobile,
+  Samsung Tizen, Windows, and Roku apps automatically pick the best sustainable quality
+  ("Auto" behavior) but don't yet expose a manual quality picker.
+
 ### Page titles
 
 The browser tab title updates as you navigate — it reflects the current page or the

@@ -391,3 +391,13 @@ if ($colorMeta['color_transfer'] === 'smpte2084' || $colorMeta['color_transfer']
 | `AmfToneMapper` | AMD AMF implementation |
 | `V4L2ToneMapper` | V4L2 implementation (software fallback) |
 | `SoftwareToneMapper` | CPU-based zscale implementation |
+
+## See Also
+
+- [Stream Quality / ABR](./stream-quality-abr) — the on-demand multi-variant HLS ABR
+  ladder. Its per-variant segment encoder currently always runs the **CPU** `libx264`
+  path described above, not this file's hardware-accelerated encoders — wiring
+  `HwaccelRegistry`/`HwaccelCommandBuilder` into that path is a candidate future
+  mitigation for the ABR feature's CPU-multiplication risk on GPU-equipped boxes.
+- [Streaming Protocols](./streaming-protocols) — HLS/DASH manifest and on-demand
+  transcode fundamentals.

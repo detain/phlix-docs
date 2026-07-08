@@ -190,15 +190,35 @@ same hot paths and matter more once every segment request also carries a variant
   responses are untouched by two independent guards) plus `Cache-Control: immutable,
   max-age=31536000` for hashed `/assets/app/**` static assets, and monotonic `hrtime(true)`
   request timing.
+- **S6 — non-blocking ffprobe + reuse scanned metadata.** `FfmpegRunner::probe()` used a
+  blocking `shell_exec()`; the server's coroutine hook mask deliberately does not hook
+  `shell_exec`/`proc_open`, so every probe (every `ensureHlsJob()` play-start, every
+  scanned file) stalled the *entire* worker for the run. A new coroutine-aware dispatch
+  (`Swoole\Coroutine\System::exec()` inside a coroutine, `shell_exec()` fallback
+  otherwise — CLI scanner/backfill, tests) fixes that for every probe caller. On top of
+  that, `ensureHlsJob()` now skips the probe as the source of the ABR ladder/duration
+  whenever A1's persisted `metadata_json['source']` is fresh, and tolerates a probe
+  *failure* on that path (see below) instead of throwing. **The probe call itself is
+  still issued even when metadata is fresh** — it also drives embedded-subtitle
+  detection (A1 doesn't persist subtitle stream descriptors) — but it is (a) now
+  non-blocking and (b) no longer a hard dependency for playback to start.
 
 ## Source metadata at scan (A1) and the API surface (A6/A7)
 
 `MediaScanner` now persists width/height/video codec/bitrate/pix_fmt/audio codec into
 both `media_streams` (via `ItemRepository::addStream()`) and
-`metadata_json['source']` during scan/rescan, so the ladder can be built **without a
-live ffprobe on every playback start**. `ensureHlsJob()` still falls back to a live
-probe when this metadata is absent (older, pre-A1 items) — so nothing breaks for
-un-backfilled libraries, it's just slower to start the first play. A one-shot CLI
+`metadata_json['source']` during scan/rescan, so the ladder can be built **without
+depending on a live ffprobe on every playback start**. `ensureHlsJob()` still falls
+back to the probe as its source-of-truth for the ladder/duration when persisted
+metadata is absent (older, pre-A1 items) — so nothing breaks for un-backfilled
+libraries, it's just slower to start the first play — and, since **S6**, that
+fallback probe (like every other probe call) runs through a coroutine-friendly,
+non-blocking exec path rather than a worker-stalling `shell_exec()`. Even when
+persisted metadata **is** fresh, `ensureHlsJob()` still issues the (non-blocking)
+probe once, purely to detect embedded text-subtitle tracks — A1 does not persist
+subtitle descriptors — and now tolerates that probe failing outright on the
+fresh-metadata path (the job still builds from persisted duration + ladder; the only
+degradation is no embedded-subtitle sidecars for that request). A one-shot CLI
 (`scripts/backfill-source-metadata.php`) idempotently backfills existing items
 (`--library`, `--limit`; skips items that already have `source`).
 

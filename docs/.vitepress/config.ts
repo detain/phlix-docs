@@ -189,6 +189,7 @@ export default defineConfig({
           text: 'Streaming & Providers',
           items: [
             { text: 'Streaming Protocols', link: '/developers/streaming-protocols' },
+            { text: 'Stream Quality / ABR', link: '/developers/stream-quality-abr' },
             { text: 'Music Providers', link: '/developers/music-providers' },
             { text: 'IPTV', link: '/developers/iptv' },
             { text: 'HDHomeRun', link: '/developers/hdhomerun' },

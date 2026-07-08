@@ -185,10 +185,15 @@ Many concurrent FFmpeg processes indicate the transcode limit (`max_concurrent_t
 tail -100 .logs/phlix.log | grep -i "deadlock\|timeout\|fatal"
 ```
 
-If using the DB connection pool (`DB_POOL_ENABLED=1`), set `DB_POOL_SIZE=1` as a safe fallback while diagnosing:
+The DB connection pool is on by default (`DB_POOL_ENABLED` defaults to `1` as of
+Stream Quality/ABR step S9). While diagnosing, either pin `DB_POOL_SIZE=1` as a
+safe, fully-serialised pool size, or set `DB_POOL_ENABLED=0` to fall all the way
+back to the single-connection coroutine mutex path:
 
 ```bash
-DB_POOL_ENABLED=1 DB_POOL_SIZE=1 sudo systemctl restart phlix-server
+DB_POOL_SIZE=1 sudo systemctl restart phlix-server
+# or, to bypass the pool entirely:
+DB_POOL_ENABLED=0 sudo systemctl restart phlix-server
 ```
 
 ---

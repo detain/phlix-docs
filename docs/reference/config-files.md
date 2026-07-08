@@ -102,7 +102,7 @@ All connection parameters are **environment-variable-driven** with safe localhos
 
 | Env var | Default | Description |
 |---------|---------|-------------|
-| `DB_POOL_ENABLED` | `false` | When `true`, each coroutine gets its own leased connection for intra-worker DB parallelism |
+| `DB_POOL_ENABLED` | `true` | **On by default** (Stream Quality/ABR step S9): each coroutine gets its own leased connection for intra-worker DB parallelism. Set to `0`/`false`/`no`/`off` to fall back to the single-connection coroutine mutex. |
 | `DB_POOL_SIZE` | `8` | Per-worker pool ceiling; total server maximum ≈ `worker_count × pool_size` — keep under MySQL `max_connections` |
 
 ```php
@@ -114,7 +114,12 @@ All connection parameters are **environment-variable-driven** with safe localhos
         'username'     => getenv('DB_USER') ?: (getenv('DB_USERNAME') ?: 'phlix'),
         'password'     => getenv('DB_PASSWORD') ?: '',
         'charset'      => 'utf8mb4',
-        'pool_enabled' => filter_var(getenv('DB_POOL_ENABLED') ?: false, FILTER_VALIDATE_BOOLEAN),
+        // DB_POOL_ENABLED defaults ON (unset env var -> '1'); DB_POOL_ENABLED=0
+        // is the explicit opt-out back to the single-connection mutex path.
+        'pool_enabled' => filter_var(
+            getenv('DB_POOL_ENABLED') === false ? '1' : getenv('DB_POOL_ENABLED'),
+            FILTER_VALIDATE_BOOLEAN
+        ),
         'pool_size'    => (int) (getenv('DB_POOL_SIZE') ?: 8),
         'timeout'      => 5,
     ],

@@ -146,8 +146,8 @@ any of the others when your database is remote or renamed. See `config/database.
 | `DB_DATABASE` | `phlix` | Database name consumed by `config/database.php` `connections.mysql.database`. Legacy alias: `DB_NAME` (used only when `DB_DATABASE` is unset). |
 | `DB_USER` | `phlix` | Database username consumed by `config/database.php` `connections.mysql.username`. Legacy alias: `DB_USERNAME` (used only when `DB_USER` is unset). |
 | `DB_PASSWORD` | _empty_ | Database password consumed by `config/database.php` `connections.mysql.password` via `getenv('DB_PASSWORD')`. Set this on every non-dev install. |
-| `DB_POOL_ENABLED` | `0` | When truthy (`1`, `true`, `yes`, `on`) enables the per-worker coroutine connection pool; off by default (single-connection mutex). See `config/database.php`. |
-| `DB_POOL_SIZE` | `8` | Per-worker connection-pool ceiling when `DB_POOL_ENABLED` is on. The server-wide max is roughly (worker count × pool size); keep it under MySQL `max_connections`. See `config/database.php`. |
+| `DB_POOL_ENABLED` | `1` | The per-worker coroutine connection pool is **on by default** (Stream Quality/ABR step S9): each coroutine leases its own connection so independent queries within a worker run in parallel instead of serialising on one shared socket. Set `DB_POOL_ENABLED=0` (or `false`/`no`/`off`) to opt back into the single-connection mutex path. See `config/database.php`. |
+| `DB_POOL_SIZE` | `8` | Per-worker connection-pool ceiling while `DB_POOL_ENABLED` is on (the default). The server-wide max is roughly (worker count × pool size); keep it under MySQL `max_connections`. See `config/database.php`. |
 
 > **Test overrides:** `phpunit.xml`'s `<env>` block overrides these same `DB_*`
 > vars for the integration test suite (e.g. `DB_DATABASE=phlix_test`,

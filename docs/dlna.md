@@ -131,6 +131,6 @@ Some DLNA clients cache credentials incorrectly. Try:
 
 ## See Also
 
-- [Advanced DLNA Configuration](../advanced/dlna.md) — detailed architecture, SOAP API, and deep troubleshooting
-- [Hardware Transcoding](../advanced/hardware-transcoding.md) — enabling GPU-accelerated transcoding for legacy devices
-- [Reverse Proxy](../advanced/reverse-proxy.md) — running Phlix behind a reverse proxy with DLNA
+- [Advanced DLNA Configuration](/advanced/dlna) — detailed architecture, SOAP API, and deep troubleshooting
+- [Hardware Transcoding](/advanced/hardware-transcoding) — enabling GPU-accelerated transcoding for legacy devices
+- [Reverse Proxy](/advanced/reverse-proxy) — running Phlix behind a reverse proxy with DLNA

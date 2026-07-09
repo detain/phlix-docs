@@ -93,6 +93,11 @@ export default defineConfig({
             { text: 'Live TV Comskip', link: '/advanced/live-tv-comskip' },
             { text: 'Trickplay Thumbnails', link: '/advanced/trickplay' },
             { text: 'ARR Integration', link: '/advanced/arr-integration' },
+            { text: 'Player Experience', link: '/advanced/player-experience' },
+            { text: 'Recommendations & Discovery', link: '/advanced/recommendations' },
+            { text: 'Parental & Session Controls', link: '/advanced/parental-controls' },
+            { text: 'Music & Audio', link: '/advanced/music-audio' },
+            { text: 'SyncPlay', link: '/advanced/syncplay' },
           ]
         }
       ],

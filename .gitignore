@@ -3,3 +3,7 @@ docs/.vitepress/dist/
 docs/.vitepress/cache/
 *.local
 .DS_Store
+.caliber/
+.claude/
+CALIBER_LEARNINGS.md
+docs/old/

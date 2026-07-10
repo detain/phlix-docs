@@ -62,6 +62,16 @@ export default defineConfig({
             { text: 'Photos', link: '/libraries/photos' },
             { text: 'Books', link: '/libraries/books' },
             { text: 'Audiobooks', link: '/libraries/audiobooks' },
+            { text: 'Metadata & Ratings', link: '/libraries' },
+          ]
+        }
+      ],
+      '/player/': [
+        {
+          text: 'Player',
+          items: [
+            { text: 'Chapters', link: '/player/chapters' },
+            { text: 'Quality & Audio', link: '/player/player-quality-audio' },
           ]
         }
       ],

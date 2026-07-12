@@ -98,7 +98,7 @@ if ($capability !== null && $capability->supports_hdr_tone_mapping) {
 1. Create a new class implementing `VendorProbeInterface` in `src/Media/Transcoding/Hwaccel/VendorProbe/`
 2. Implement the 5 methods: `getVendorName()`, `isAvailable()`, `probe()`, `runAcceptanceTest()`
 3. Register the probe in `HwaccelProbe::__construct()`
-4. Add vendor priority in `config/hwaccel.php`
+4. Add vendor priority in `config/hwaccel_base.php`
 
 Example:
 
@@ -236,14 +236,46 @@ $cmd = (new HwaccelCommandBuilder(new NvencProfile(), $capability, 'high'))
 
 ## Configuration
 
-See `config/hwaccel.php` for configuration options:
+The hardware acceleration configuration uses a two-file architecture with `HwAccelConfig` as the single source of truth at runtime.
 
-- `enabled` — Enable/disable hardware acceleration
-- `prefer_hardware` — Prefer hardware over software
-- `vendor_priority` — Vendor fallback order
-- `probe_timeout` — Timeout for probe operations
+### Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `config/hwaccel.php` | Provides `HwAccelConfig` class — **use `\Phlix\Config\HwAccelConfig::get()` at runtime** |
+| `config/hwaccel_base.php` | Base hwaccel settings (vendor priority, timeouts, fallback behavior) |
+| `config/transcoding.php` | Transcoding-specific settings (tone-mapping, preferred accelerator) |
+| `config/ffmpeg.php` | Legacy `hwaccel` key — delegates to `HwAccelConfig::get()` (deprecated) |
+
+### Getting the Merged Configuration
+
+```php
+// RECOMMENDED: Get the authoritative merged config at runtime
+$config = \Phlix\Config\HwAccelConfig::get();
+
+// Legacy (deprecated):读取 base config only
+$baseConfig = require __DIR__ . '/hwaccel_base.php';
+```
+
+The `HwAccelConfig::get()` method merges settings from both `hwaccel_base.php` and `transcoding.php`, resolving any conflicts and providing the complete configuration used by the runtime.
+
+### Configuration Options
+
+**From `config/hwaccel_base.php`:**
+
+- `enabled` — Enable/disable hardware acceleration (default: true)
+- `prefer_hardware` — Prefer hardware over software (default: true)
+- `vendor_priority` — Vendor fallback order (lower = higher priority)
+- `probe_timeout` — Timeout for probe operations (default: 30 seconds)
 - `test_clip_path` — Path for acceptance test clip
-- `fallback_to_software` — Allow software fallback
+- `fallback_to_software` — Allow software fallback (default: true)
+
+**From `config/transcoding.php`:**
+
+- `preferred_accelerator` — Preferred accelerator (cuda, qsv, vaapi, etc.) or null for auto
+- `tone_mapping_mode` — HDR tone mapping mode ('none', 'zscale', 'libplacebo')
+- `prefer_hdr_output` — Prefer HDR10 output over SDR tone mapping
+- `include_software_fallback` — Include software encoding in accelerator lists
 
 ## Detection Methods by Vendor
 

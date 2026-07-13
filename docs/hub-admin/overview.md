@@ -88,6 +88,15 @@ Applies every SQL file in `migrations/` in order. The runner records what it has
 There is no destructive `--force` flag; to start over, drop and recreate the database, then
 re-run.
 
+The ledger also stores a comment-normalized checksum of each applied file. If you **hand-edit the
+SQL of a migration that has already run** (a "rewrite-class" migration), the next run detects the
+changed content, logs a **WARNING** (via `error_log()` — it shows up in the deploy output / CLI
+stderr), **re-applies** the file, and refreshes its stored checksum, instead of skipping it forever
+on filename alone. Comment/header-only edits are ignored (comments are stripped before hashing), and
+migrations that pre-date the checksum column are backfilled without re-running — upgrading never
+mass-re-applies your existing schema. Because a re-applied file executes again, keep migrations
+re-run-safe (`CREATE TABLE IF NOT EXISTS`, additive/idempotent DDL).
+
 ### JWT smoke test — `scripts/smoke-jwt-roundtrip.php`
 
 ```bash

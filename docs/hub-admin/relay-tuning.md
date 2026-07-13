@@ -11,10 +11,11 @@ metrics you can query for capacity planning. All of it is operator-configurable.
 
 ## Rate limiting
 
-Each surface has its **own** in-memory rate limiter (a single login-grade limiter is wrong for
-everything but login). The `rate_limit` section of `config/server.php` sets each surface's
-`{max, window}` plus a shared key-count `cap`; every value is env-overridable. Absent keys fall
-back to the per-worker defaults below.
+Each surface has its **own** rate limiter (a single login-grade limiter is wrong for everything
+but login). Five surfaces use a per-worker in-memory limiter; **`login` alone is shared and
+DB-backed** (see [Per-worker vs global](#per-worker-vs-global-important) below). The `rate_limit`
+section of `config/server.php` sets each surface's `{max, window}` plus a shared key-count `cap`;
+every value is env-overridable. Absent keys fall back to the defaults below.
 
 | Env override | Default (`max` / `window` s) | Surface / key |
 | --- | --- | --- |
@@ -36,16 +37,25 @@ back to the per-worker defaults below.
 
 ### Per-worker vs global (important)
 
-Thresholds are enforced **per worker process**, not globally:
+Most thresholds are enforced **per worker process**, not globally:
 
 - The **:8802 and :8803 relay workers are `count=1`**, so for `relay_connect` and `client_mount`
   the per-worker limit *is* the global limit — these are the primary DoS surfaces, so this is
   intentional.
 - **`proxy`, `heartbeat`, and `jwks`** run across `HUB_WORKERS` HTTP workers (default 2), so
   their effective soft-global limit is roughly `max × HUB_WORKERS`. Size your override
-  accordingly, or reduce `HUB_WORKERS`.
+  accordingly, or reduce `HUB_WORKERS`. A strict global cap for these would require a shared
+  store (Redis/DB) and is planned future work.
 
-A strict global cap would require a shared store (Redis/DB) and is planned future work.
+**`login` is the exception — it is genuinely global.** Its bucket is backed by the shared
+`login_rate_limit` DB table (migration `040_login_rate_limit`) — the **one** DB-backed profile —
+so every HTTP worker shares one counter per key. This means the **5 attempts / 900 s login budget
+is actually 5/900**, not the `~5 × HUB_WORKERS / 900` (≈20/900 with `HUB_WORKERS=4`, where the
+first 429 landed near attempt ~9) it was when `login` was worker-local like the other surfaces.
+This closes the one surface where the per-worker weakening was a real brute-force concern
+(HB-4.6 "Option B"). The `login_rate_limit` table holds one row per bucket key (an
+`INSERT … ON DUPLICATE KEY UPDATE` counter with a TTL-driven `reset_at`); a bounded sweep on each
+recorded attempt reclaims expired rows, so it stays small with no operator maintenance.
 
 ::: tip Do not set `PROXY_MAX` too low
 The proxy limiter is keyed per user and sized generously on purpose: a single HLS/DASH playback

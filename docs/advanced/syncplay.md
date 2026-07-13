@@ -36,6 +36,16 @@ The following states are synchronized across all clients in a SyncPlay room:
 - **Subtitle selection** — each client can use their own subtitle track and offset
 - **Audio track selection** — each client can choose their own audio language
 
+### Automatic Drift Correction
+
+Follower clients don't just apply the host's play/pause/seek events — the web player also
+continuously measures its own **drift** from the host's extrapolated position
+(`local − (hostPosition + elapsed × playbackRate)`). When the drift exceeds the
+**2-second** tolerance (`Max Latency Tolerance`, below) it seeks to the host position
+automatically; smaller drifts are left alone so playback isn't interrupted by needless
+micro-seeks. This keeps followers locked to the host between explicit sync events, without
+a manual resync.
+
 ---
 
 ## Creating a SyncPlay Session

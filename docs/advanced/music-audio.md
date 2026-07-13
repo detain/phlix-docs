@@ -100,6 +100,14 @@ The server sends crossfade configuration to the player as part of the playback i
 
 Clients that do not support crossfade ignore these fields.
 
+> [!NOTE]
+> **Web player (browser).** The browser web player implements crossfade and gapless
+> **client-side** — it alternates between two HTML5 `<audio>` elements and reads your
+> **Settings → Playback** crossfade-duration and gapless values directly, rather than
+> relying on server-side LADSPA DSP or the `audio_config` block above. Each track is
+> fetched with a signed, expiring stream URL, so it works over a direct connection or a
+> Hub relay alike. (Native clients still consume the server-provided `audio_config`.)
+
 ---
 
 ## 4. High-Resolution Audio

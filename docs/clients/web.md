@@ -179,6 +179,24 @@ source's native resolution), and **Original**:
   Samsung Tizen, Windows, and Roku apps automatically pick the best sustainable quality
   ("Auto" behavior) but don't yet expose a manual quality picker.
 
+### Music playback
+
+Music tracks play right in the web player. Press play on any track (or from an album's
+track list) and a **now-playing bar** appears with previous / play-pause / next controls,
+a seek slider, and elapsed time. Each track streams directly via a signed, expiring URL,
+so nothing extra has to be exposed for playback to work.
+
+Two listening options from **Settings → Playback** take effect in the browser:
+
+- **Crossfade** overlaps the end of one track with the start of the next by the duration
+  you set, so songs blend rather than cut.
+- **Gapless** pre-buffers the next track so consecutive tracks play with no silence
+  between them.
+
+Both are handled entirely by the browser player (two alternating audio elements) — there
+is no server-side audio processing involved, so they behave the same over a direct
+connection or a Hub relay.
+
 ### Page titles
 
 The browser tab title updates as you navigate — it reflects the current page or the

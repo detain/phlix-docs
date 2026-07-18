@@ -11,7 +11,14 @@ info:
     (Cache-Control: public, max-age=3600).
 
     The corresponding private key is stored in `config/hub-server-key.pem`
-    and is never exposed over the network.
+    and is never exposed over the network. The key reader accepts **both**
+    the app's native `-----BEGIN ED25519 PRIVATE KEY-----` format and a
+    standard PKCS#8 Ed25519 key (`-----BEGIN PRIVATE KEY-----`, e.g. from
+    `openssl genpkey -algorithm Ed25519`).
+
+    Graceful degradation: if the private key cannot be loaded, the endpoint
+    returns a valid but empty keyset (`{"keys":[]}`) with HTTP 200 and logs
+    an error, rather than failing with a 500.
   version: '1.0.0'
 
 servers:
@@ -25,7 +32,10 @@ paths:
       operationId: getServerJwks
       responses:
         '200':
-          description: JWKS document containing the server's Ed25519 public key(s).
+          description: >-
+            JWKS document containing the server's Ed25519 public key(s). If the
+            private key cannot be loaded, `keys` is an empty array (`[]`) rather
+            than the request failing.
           content:
             application/json:
               schema:

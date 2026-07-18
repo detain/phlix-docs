@@ -165,10 +165,20 @@ Rotating file log handlers. All paths are relative to the phlix-server root.
 
 | Handler | Path key | Level | Purpose |
 |---------|----------|-------|---------|
-| `file` | `path` | `debug` | General application log (`.logs/app.log`) |
-| `error` | `path` | `error` | Error-only log (`.logs/error.log`) |
-| `events` | `path` | `debug` | PSR-14 event dispatch trace — active only when `PHLIX_DEBUG_EVENTS=1` (`.logs/events.log`) |
-| `plugins` | `path` | `debug` | Plugin lifecycle events — install, enable, disable, uninstall (`.logs/plugins.log`) |
+| `file` | `path` | `debug` | General application log — **all** channels, every level (`.logs/app.log`) |
+| `error` | `path` | `error` | Error aggregation — **all** channels, error-and-above (`.logs/error.log`) |
+| `events` | `path` | `debug` | PSR-14 event dispatch trace — **only** the `EVENTS` channel, and **only** when `PHLIX_DEBUG_EVENTS` is truthy (`.logs/events.log`) |
+| `plugins` | `path` | `debug` | Plugin lifecycle events (install / enable / disable / uninstall) — **only** the `PLUGINS` channel (`.logs/plugins.log`) |
+
+Each handler may declare two optional gates that decide whether it attaches to a
+given per-channel logger: `channels` (a list of channel names it serves; absent
+or empty = attach to every channel) and `env` (an environment variable that must
+be truthy — `1`/`true`/`yes`/`on` — for it to attach; absent = always attach).
+Without these gates every handler attaches to every channel, which previously
+duplicated each record across `app.log`, `events.log`, and `plugins.log` and
+polluted the two subsystem logs with unrelated records. `app.log` and
+`error.log` are intentionally left unrestricted so no diagnostic coverage is
+lost.
 
 ```php
 'file' => [
@@ -269,13 +279,19 @@ Hub pairing, heartbeat, and public hostname configuration.
 'heartbeat_interval' => (int)(getenv('PHLIX_HUB_HEARTBEAT_INTERVAL') ?: 60),  // Seconds (30–3600)
 'enrollment_token_ttl' => 7 * 86400,                               // 7 days
 'jwks_cache_ttl'     => 900,                                       // 15 minutes
-'key_path'           => __DIR__ . '/hub-server-key.pem',            // Server identity key
+'key_path'           => __DIR__ . '/hub-server-key.pem',            // Server identity key (Ed25519)
 'config_dir'         => __DIR__,
 'subdomain_auto_claim' => (bool)(getenv('PHLIX_SUBDOMAIN_AUTO_CLAIM') ?: true),
 'tls_enabled'        => $tlsEnabled,                                // Derived from PHLIX_TLS_ENABLED env
 'domain'             => $domain ?: 'phlix.media',                   // Base domain for *.phlix.media subdomains
 'public_url'         => /* derived */ '',                           // Advertised public hostname during pairing
 ```
+
+`hub-server-key.pem` may be either the app's native
+`-----BEGIN ED25519 PRIVATE KEY-----` format or a standard PKCS#8 Ed25519 key
+(`-----BEGIN PRIVATE KEY-----`, e.g. from `openssl genpkey -algorithm Ed25519`);
+both are accepted by the JWKS reader (see
+[JWKS API](/reference/api/hub-jwks)).
 
 See [/hub/what-is-the-hub](/hub/what-is-the-hub) and [/hub/remote-access](/hub/remote-access).
 

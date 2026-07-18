@@ -32,6 +32,42 @@ that consumes it.
 | `PHLIX_SIGNED_URL_SECRET` | _derived from `JWT_SECRET`_ | HMAC key for the [signed media URLs](/security/signed-media-urls) that gate the binary/streaming endpoints (`/media/{id}/stream`, `/hls/**`, `/dash/**`, book/audiobook/photo bytes). When unset it is derived from `JWT_SECRET` via a domain-separated HMAC, so a leaked stream token can never be replayed as a JWT (and vice-versa). Set an explicit value to rotate stream tokens independently of JWTs. Read by `Phlix\Auth\SignedUrl::fromEnv()`. |
 | `PHLIX_SIGNED_URL_TTL`    | `21600` (6 h)               | Lifetime, in seconds, of a minted signed media URL before it expires. Must be a positive integer. Read by `Phlix\Auth\SignedUrl::fromEnv()`. |
 
+## Auth rate limiting (SV-4.15)
+
+The previously-unlimited auth surfaces (`register`, `refresh`, WebAuthn login
+`start`+`finish`, the public JWKS endpoint, and WS-connect on `:8097`) are
+rate-limited per surface. HTTP surfaces reply `429 Too Many Requests` with a
+`Retry-After` header and body `{"error":"Too Many Requests","code":"rate_limited"}`;
+WS-connect rejects the handshake. `login` keeps its own IP-keyed DB-backed limiter
+(migration 074) and is not configured here. Read by `config/server.php` →
+`rate_limit` and `Phlix\Common\RateLimit\RateLimitProfiles`.
+
+Each surface's `max` (attempts) and `window` (seconds) are overridable by a pair
+of env vars named for the surface. `<SURFACE>` ∈ `REGISTER`, `REFRESH`,
+`WEBAUTHN_START`, `WEBAUTHN_FINISH`, `JWKS`, `WS_CONNECT`.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `RATE_LIMIT_REGISTER_MAX` / `_WINDOW` | `5` / `600` | Registration attempts per window. |
+| `RATE_LIMIT_REFRESH_MAX` / `_WINDOW` | `30` / `60` | Token-refresh attempts per window. |
+| `RATE_LIMIT_WEBAUTHN_START_MAX` / `_WINDOW` | `10` / `60` | WebAuthn login-ceremony start attempts per window. |
+| `RATE_LIMIT_WEBAUTHN_FINISH_MAX` / `_WINDOW` | `10` / `60` | WebAuthn login-ceremony finish attempts per window. |
+| `RATE_LIMIT_JWKS_MAX` / `_WINDOW` | `120` / `60` | Public JWKS (`/.well-known/jwks.json`) requests per window. |
+| `RATE_LIMIT_WS_CONNECT_MAX` / `_WINDOW` | `30` / `60` | WebSocket (`:8097`) connection attempts per window. |
+| `TRUSTED_PROXIES` | loopback only (`127.0.0.1`, `::1`) | Comma-separated IP/CIDR list of the reverse-proxy hops in front of Phlix. Used to derive the **real** client IP from `X-Forwarded-For`/`X-Real-IP` for rate-limit keys. **Must list every non-loopback proxy hop (nginx/HAProxy)** — otherwise IP-keyed limits bucket every request under the proxy address (or trust a client-forged header). The stock install fronts Phlix over loopback, so the default is correct. Read by `Phlix\Common\Http\TrustedProxyResolver`. See [/advanced/reverse-proxy](/advanced/reverse-proxy). |
+
+> Register / refresh / WebAuthn use a **shared DB-backed** limiter
+> (migration `085_rate_limit_buckets.sql`) so the budget is truly global across
+> all HTTP workers. JWKS and WS-connect use a worker-local in-memory limiter
+> (JWKS is cache-frontable; the `:8097` WS worker runs `count=1`, so per-worker
+> equals global there). **Apply migration 085 on deploy.**
+
+## HLS / segment cache
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `HLS_MIN_DISK_SPACE_BYTES` | `524288000` (500 MiB) | Free-space floor for the HLS segment-cache directory (`config/server.php` → `hls.min_disk_space_bytes`). When free space on the segment-cache filesystem drops below this, the server sweeps the cache and returns `503` with `Retry-After: 3` rather than failing an encode with `ENOSPC`. |
+
 ## Hub / Pairing (phlix-server)
 
 | Variable                        | Default | Description |

@@ -10,6 +10,15 @@ Phlix exposes a REST API at `/api/v1/` returning JSON. Authentication uses JWT B
 
 ## Auth Endpoints
 
+> **Rate limiting (SV-4.15).** `register`, `refresh`, and the WebAuthn login
+> `start`/`finish` endpoints (and the public JWKS endpoint) are rate-limited per
+> surface. Over-limit requests return **`429 Too Many Requests`** with a
+> `Retry-After` header and body `{"error":"Too Many Requests","code":"rate_limited"}`.
+> Limits are tunable via `RATE_LIMIT_*` and keyed on the real client IP — set
+> `TRUSTED_PROXIES` behind a proxy. See
+> [Auth rate limiting](/reference/env-vars#auth-rate-limiting-sv-4-15) and
+> [Security hardening](/security/hardening#_11-auth-rate-limiting-built-in).
+
 ### POST /api/v1/auth/register
 
 Register a new user account.
@@ -479,6 +488,14 @@ Files the browser can't direct-play (non-web containers like MKV, or codecs like
 HEVC) are transcoded on demand to **HLS** and played via hls.js. The flow is:
 `POST .../transcode` → poll `GET /api/v1/transcode/{jobId}/status` until
 `playlist_ready` → play `master_url` (served by the HLS routes below).
+
+> **Client capability negotiation (SV-3.3).** Clients may send an
+> `X-Phlix-Client-Capabilities` request header — a JSON codec-support map
+> (e.g. `{"eac3":false}`) — on playback-info requests. When present, the
+> server's `direct_play` verdict is set from whether the client can decode the
+> item's audio codec (a client that can't decode the audio is steered to
+> transcode); an absent/empty/malformed header keeps the prior always-`true`
+> behavior. See [Player Quality & Audio → Client Capability Negotiation](/player/player-quality-audio#client-capability-negotiation).
 
 ### POST /api/v1/media/`{id}`/transcode
 

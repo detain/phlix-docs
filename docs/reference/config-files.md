@@ -55,13 +55,38 @@ The curated hook allowlist enables socket, sleep, and stream hooks only. `SWOOLE
 
 ```php
 'hls' => [
-    'segment_dir'     => sys_get_temp_dir() . '/phlix_hls',  // Where .m3u8/.ts files are written
-    'base_url'        => 'http://localhost:8096',             // Used for absolute playlist URLs (casting)
-    'segment_seconds' => 6,                                  // Target segment duration (Apple default)
+    'segment_dir'         => sys_get_temp_dir() . '/phlix_hls',  // Where .m3u8/.ts files are written
+    'base_url'            => 'http://localhost:8096',             // Used for absolute playlist URLs (casting)
+    'segment_seconds'     => 6,                                  // Target segment duration (Apple default)
+    // SV-1.9: free-space floor for the segment-cache filesystem. Below this the
+    // server sweeps the cache and returns 503 + Retry-After: 3 instead of ENOSPC.
+    'min_disk_space_bytes' => (int) (getenv('HLS_MIN_DISK_SPACE_BYTES') ?: 500 * 1024 * 1024),
 ],
 ```
 
-`segment_dir` is the single source of truth — both the transcode writer and the HLS streamer read from the same path.
+`segment_dir` is the single source of truth — both the transcode writer and the HLS streamer read from the same path. `min_disk_space_bytes` is overridable via `HLS_MIN_DISK_SPACE_BYTES` (default 500 MiB).
+
+### Rate limiting (SV-4.15)
+
+Per-surface auth rate limits for the previously-unlimited surfaces (`register`, `refresh`, WebAuthn `start`+`finish`, public JWKS, WS-connect on `:8097`). Over-limit HTTP surfaces reply `429 Too Many Requests` + `Retry-After` (body `{"error":"Too Many Requests","code":"rate_limited"}`); WS-connect rejects the handshake. `login` keeps its own DB-backed limiter (migration 074) and is not configured here.
+
+```php
+// Each surface's {max, window} is env-overridable via
+// RATE_LIMIT_<SURFACE>_MAX / RATE_LIMIT_<SURFACE>_WINDOW, falling back to
+// Phlix\Common\RateLimit\RateLimitProfiles::defaults():
+//   register 5/600, refresh 30/60, webauthn_start 10/60,
+//   webauthn_finish 10/60, jwks 120/60, ws_connect 30/60
+'rate_limit' => [ /* built from RateLimitProfiles::defaults() + env overrides */ ],
+
+// Reverse-proxy hops used to derive the REAL client IP (X-Forwarded-For /
+// X-Real-IP) for rate-limit keys. Default = loopback only. Override with a
+// comma-separated IP/CIDR list via TRUSTED_PROXIES when a NON-loopback proxy
+// fronts the server, or IP-keyed limits will bucket every request under the
+// proxy address.
+'trusted_proxies' => \Phlix\Common\Http\TrustedProxyResolver::configuredProxies(),
+```
+
+Register/refresh/WebAuthn are backed by the shared DB table `migrations/085_rate_limit_buckets.sql` (true-global across all HTTP workers); JWKS and WS-connect are worker-local in-memory. **Run migration 085 on deploy.** See [/reference/env-vars](/reference/env-vars#auth-rate-limiting-sv-4-15) and [/advanced/reverse-proxy](/advanced/reverse-proxy).
 
 ### WebSocket (SyncPlay)
 
@@ -195,6 +220,21 @@ See [/advanced/hardware-transcoding](/advanced/hardware-transcoding) for how to 
 ```
 
 Defines per-quality-tier encoder settings (bitrate, preset, profile). Rarely needs manual changes.
+
+### Loudness normalization (SV-3.3)
+
+```php
+'loudness' => [
+    'enabled' => false,   // OFF by default
+    'I'       => -16,     // Integrated loudness target (LUFS)
+    'LRA'     => 11,      // Loudness range
+    'TP'      => -1.5,    // True-peak ceiling (dBTP)
+],
+```
+
+When `enabled`, an EBU R128 `loudnorm` audio filter (`I`/`LRA`/`TP`) is applied to **re-encoded** audio on every segment-assembly path. Common targets: Podcast/online `-16/11/-1.5`, Broadcast `-23/7/-2.0`, Streaming `-27/2.0/-2.0`.
+
+> **Operator note:** `loudnorm` applies **only to re-encoded audio**. Any rung that copies the source stream (`-c:a copy`, e.g. the `original` variant) and every **direct-play** session bypass normalization by design — you cannot filter a copied (non-decoded) stream. To normalize such content it must be transcoded.
 
 ### Subtitles
 

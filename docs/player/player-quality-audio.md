@@ -273,6 +273,35 @@ GET /api/v1/media/{id}/playback
 }
 ```
 
+## Client Capability Negotiation
+
+A client can tell the server which codecs it is able to decode by sending an
+`X-Phlix-Client-Capabilities` request header on playback-info requests. The value
+is a JSON codec-support map, for example:
+
+```http
+X-Phlix-Client-Capabilities: {"eac3":false,"aac":true}
+```
+
+When the header is present, the server's `direct_play` verdict reflects whether
+the client can decode the item's (first/default) audio codec — a client that
+declares it **cannot** decode e.g. E-AC-3 is steered to transcode instead of
+direct play, avoiding a "video plays but audio is silent" result. When the header
+is **absent, empty, or malformed**, `direct_play` keeps its previous always-`true`
+behavior, so existing clients are unaffected.
+
+## Loudness Normalization
+
+The server can apply EBU R128 loudness normalization (`loudnorm`) to transcoded
+audio so volume is consistent across titles. It is **disabled by default** and
+enabled by an operator in `config/ffmpeg.php` (`loudness.enabled = true`, with
+`I`/`LRA`/`TP` targets). See [Config files → Loudness normalization](/reference/config-files#loudness-normalization-sv-3-3).
+
+Because normalization is an audio **filter**, it applies only to **re-encoded**
+audio. Rungs that copy the source audio stream (the `original` variant) and
+**direct-play** sessions are not normalized — a copied stream is never decoded,
+so no filter can be applied to it.
+
 ## See Also
 
 - [Stream Quality / ABR](/developers/stream-quality-abr) — Technical ABR details

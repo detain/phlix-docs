@@ -149,6 +149,19 @@ Set up a log aggregation system or use `fail2ban` to auto-block IPs with repeate
 
 ---
 
+## 11. Auth rate limiting (built-in)
+
+Phlix rate-limits its abuse-prone auth surfaces out of the box (SV-4.15) — this is defence-in-depth on top of any `fail2ban` you add in step 10. The `register`, `refresh`, WebAuthn login `start`/`finish`, public JWKS, and WS-connect (`:8097`) surfaces each have their own limiter (`login` keeps its long-standing DB-backed IP limiter).
+
+- **Over-limit HTTP responses:** `429 Too Many Requests` + a `Retry-After` header, body `{"error":"Too Many Requests","code":"rate_limited"}`. WS-connect rejects the handshake.
+- **Tune per surface** with `RATE_LIMIT_<SURFACE>_MAX` / `RATE_LIMIT_<SURFACE>_WINDOW` — see [/reference/env-vars](/reference/env-vars#auth-rate-limiting-sv-4-15).
+- **Behind a reverse proxy, set `TRUSTED_PROXIES`.** IP-keyed limits derive the client IP from `X-Forwarded-For`/`X-Real-IP`. If your non-loopback nginx/HAProxy hops are **not** listed in `TRUSTED_PROXIES`, every request buckets under the proxy address (so one abuser can lock out everyone, or spoof the header to dodge the limit). The stock loopback-fronted install needs no change; a custom proxy topology **must** list its hops. See [/advanced/reverse-proxy](/advanced/reverse-proxy).
+- **Apply migration `085_rate_limit_buckets.sql`** on deploy — it backs the shared, cross-worker limiter for the credential-enumeration surfaces.
+
+The Hub runs the same per-surface framework; see [Hub relay tuning → Rate limiting](/hub-admin/relay-tuning#rate-limiting) for the shared design rationale.
+
+---
+
 ## Quick reference: hardening env vars
 
 | Variable | Recommended value | Effect |
@@ -159,3 +172,5 @@ Set up a log aggregation system or use `fail2ban` to auto-block IPs with repeate
 | `PHLIX_TLS_ENABLED` | `1` | Enforces TLS on the Hub tunnel |
 | `PHLIX_PLUGINS_REQUIRE_SIGNATURE` | `1` | Refuses unsigned plugins in the catalog |
 | `PHLIX_PLUGINS_ALLOW_HTTP` | `0` | Disallows plugin installation from `http://` URLs |
+| `TRUSTED_PROXIES` | _(your proxy hops)_ | Comma-separated IP/CIDR of reverse-proxy hops — required for correct rate-limit client-IP keying behind a non-loopback proxy (default is loopback only) |
+| `RATE_LIMIT_<SURFACE>_MAX` / `_WINDOW` | per-surface | Tighten the built-in auth rate limits (`REGISTER`, `REFRESH`, `WEBAUTHN_START`, `WEBAUTHN_FINISH`, `JWKS`, `WS_CONNECT`) |

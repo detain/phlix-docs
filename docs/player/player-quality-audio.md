@@ -302,6 +302,23 @@ audio. Rungs that copy the source audio stream (the `original` variant) and
 **direct-play** sessions are not normalized — a copied stream is never decoded,
 so no filter can be applied to it.
 
+## Browser HLS Compatibility
+
+Web playback uses hls.js with Media Source Extensions (MSE), which is stricter than a native
+player. For a transcoded stream to play in a normal browser, three things must line up:
+
+- **8-bit H.264 video.** 10-bit ("High 10") output cannot be decoded by any browser; Phlix forces
+  8-bit (`yuv420p`) on all software transcode paths.
+- **Stereo AAC audio.** Re-encoded HLS audio is **downmixed to stereo** (`-ac 2`). Surround layouts —
+  in particular AC-3 **5.1(side)** sources — otherwise encode to AAC with a PCE and
+  `channel_configuration=0` in the ADTS header, which **hls.js cannot parse**: it fails to build the
+  audio SourceBuffer and the entire player load errors even when the video is valid. Direct-play /
+  stream-copy (`original`) rungs keep the source layout untouched.
+- **CSP `blob:` allowances.** The server's Content-Security-Policy allows `media-src 'self' blob:` and
+  `worker-src 'self' blob:` so hls.js can attach its MSE `blob:` object URL and spawn its transmux Web
+  Worker. If these are stripped (e.g. by a reverse proxy rewriting the CSP), the browser rejects
+  playback with `MEDIA_ELEMENT_ERROR: Media load rejected by URL safety check`.
+
 ## See Also
 
 - [Stream Quality / ABR](/developers/stream-quality-abr) — Technical ABR details

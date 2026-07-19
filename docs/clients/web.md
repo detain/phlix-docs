@@ -110,14 +110,22 @@ Searching inside a series library still matches episodes by title — the
 
 ### Media-type sections
 
-Each media type also has a dedicated set of browsing pages:
+Each media type also has a dedicated set of browsing pages in the `/app` SPA, reachable from the
+top-bar nav (**Music**, **Books**, **Audiobooks**, **Photos**, **Search**):
 
 | Section | Pages | Entry URL |
 | --- | --- | --- |
-| **Music** | Albums, album detail, artists, artist detail, all-tracks, and a standalone player | `/music` (albums), `/music/artists`, `/music/tracks`, `/music/player` |
-| **Books** | Library grid, book detail, and a built-in reader | `/books`, `/books/{id}`, `/books/{id}/read` |
-| **Audiobooks** | Library grid, detail with chapter list, and the player | `/audiobooks`, `/audiobooks/{id}`, `/audiobooks/{id}/read` |
-| **Photos** | Date-grouped album grid, album view, single-photo view with EXIF, and a slideshow | `/photo/albums`, `/photo/album/{id}`, `/photo/photo/{id}`, `/photo/slideshow` |
+| **Music** | Albums, album detail, artists, artist detail, all-tracks, and a standalone player | `/app/music` (albums), `/app/music/artists`, `/app/music/tracks`, `/app/music/player` |
+| **Books** | Library grid, book detail, and a built-in reader | `/app/books`, `/app/books/{id}`, `/app/books/{id}/read` |
+| **Audiobooks** | Library grid, detail with chapter list, and the player | `/app/audiobooks`, `/app/audiobooks/{id}`, `/app/audiobooks/{id}/play` |
+| **Photos** | Date-grouped album grid, album view, single-photo view with EXIF, and a slideshow | `/app/photo/albums`, `/app/photo/album/{id}`, `/app/photo/photo/{id}`, `/app/photo/slideshow` |
+| **Search** | Cross-library search results | `/app/search` |
+
+> [!NOTE]
+> These media-type pages, plus the **Security** (passkeys/WebAuthn) tab on **Settings**
+> (`/app/settings/security`), are served by the Vue SPA at `/app`. They supersede the older
+> server-rendered (Smarty) equivalents, which remain in place until the migrated `/app` pages are
+> verified live.
 
 Notes:
 

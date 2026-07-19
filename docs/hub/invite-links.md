@@ -10,10 +10,15 @@ Invite links let you share access to a library (or all libraries) on one of your
 
 ## The Invite Links Page
 
-Invite links are managed through the Hub API (the `/api/v1/me/invite-links`
-endpoints below) and the legacy `/invite-links` page. They are not in the current
-SPA top navigation (My Servers / Federation / Shares) — the public acceptance link
-`/invite/{token}` that you send to recipients is unchanged.
+Invite links are managed from the **Invite Links** page in the `/app` SPA
+(`/app/invite-links`, reachable from the top navigation) and backed by the Hub API
+(the `/api/v1/me/invite-links` endpoints below). The public acceptance link
+`/invite/{token}` that you send to recipients now opens the SPA acceptance page at
+`/app/invite/{token}` — a recipient who is not signed in gets Log In / Sign Up buttons
+that return them to the invite after authenticating; a signed-in recipient gets an
+**Accept Invite** button, then a link to their **Shared With Me** libraries.
+(These surfaces were migrated to `/app`; the older Smarty pages remain in place until
+the migration is verified.)
 
 The invite-links view lists every invite link you have created, one card per link:
 

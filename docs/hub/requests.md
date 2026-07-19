@@ -159,10 +159,9 @@ Radarr or Sonarr downloads and imports the media. When the hub is notified (or p
 ## 4. Admin Review
 
 Request approval is performed by admins through the `/api/v1/admin/requests`
-endpoints (see §3.2–§3.3 above) and the legacy server-rendered `/admin/requests`
-page. The Hub's Vue admin console (`/app/admin/*`) does **not** include a Media
-Requests page — its pages are Hub Dashboard, Users, Logs, Settings, and Audit
-Logs. Use the API (or the legacy `/admin/requests` page) to:
+endpoints (see §3.2–§3.3 above). The legacy server-rendered `/admin/requests`
+page and the member-facing `/requests` route have been migrated to the Hub SPA —
+both now redirect to `/app`. Use the API to:
 
 - List and filter requests by status (`pending`, `approved`, `available`, `rejected`)
 - Approve or deny a request

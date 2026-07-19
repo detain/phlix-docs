@@ -482,6 +482,57 @@ Each item carries the same add-only `user_data: { favorite, rating, like_level }
 block as the detail response (with `favorite: true`). The response has **no `total`**
 field (unlike the browse list).
 
+---
+
+### GET /api/v1/users/me/continue-watching
+
+List media items the current user has started but not finished (the **Continue
+Watching** rail on the home screen). Items with `percent_complete >= 90` are
+excluded — they are considered finished.
+
+**Auth:** Required
+
+**Query parameters:**
+- `limit` (optional) — clamped to `1-100` (default `50`).
+- `offset` (optional) — floored at `0` (default `0`).
+
+**Response 200:**
+```json
+{
+  "items": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "name": "Attack on Titan",
+      "type": "episode",
+      "poster_url": "https://image.tmdb.org/t/p/w500/...",
+      "runtime": 1440,
+      "year": 2023,
+      "genres": ["Animation", "Action"],
+      "rating": "TV-MA",
+      "parent_id": "series-uuid",
+      "season_number": 4,
+      "episode_number": 75,
+      "episode_title": "Sparks",
+      "created_at": "2026-01-01T00:00:00+00:00",
+      "updated_at": "2026-01-02T00:00:00+00:00",
+      "user_data": {
+        "position_secs": 420,
+        "percent_complete": 29
+      }
+    }
+  ],
+  "limit": 50,
+  "offset": 0
+}
+```
+
+Each item carries a `user_data` block with playback position and progress fields.
+The response has **no `total`** field.
+
+> **Up Next for series.** When an episode is completed, the next episode in the
+> series is automatically surfaced at the top of Continue Watching (if it exists
+> and is available). See [Recommendations & Discovery → Up Next](../advanced/recommendations.md#up-next).
+
 ## Transcoding Endpoints
 
 Files the browser can't direct-play (non-web containers like MKV, or codecs like

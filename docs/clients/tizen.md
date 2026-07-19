@@ -72,7 +72,7 @@ Hub login means your TV app works anywhere — the Hub relay handles the connect
 
 **Symptom:** During installation, the TV shows "This app is not compatible with this TV" or the installation silently fails.
 
-**Fix:** Confirm your TV model year is **2018 or newer**. Phlix requires Tizen 4.0 or later. Update your TV's firmware in **Settings → Support → Software Update**. If your TV is older, use the web client (`http://your-server:32400/web`) in the TV's browser instead.
+**Fix:** Confirm your TV model year is **2018 or newer**. Phlix requires Tizen 4.0 or later. Update your TV's firmware in **Settings → Support → Software Update**. If your TV is older, use the web client (`http://your-server:32400/app`) in the TV's browser instead.
 
 ### Network isolation preventing server access
 

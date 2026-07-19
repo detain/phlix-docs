@@ -11,13 +11,13 @@
 - **Supported browsers:** Chrome 110+, Firefox 115+, Safari 16+, Edge 110+
 - **Mobile browsers:** Fully functional but optimized for desktop
 
-Bookmark your server's web portal URL:
+Bookmark your server's web portal URL (the root redirects to the `/app` Vue SPA):
 ```
-https://your-server-domain.com/web
+https://your-server-domain.com/app
 ```
 Or for local access:
 ```
-http://192.168.1.100:32400/web
+http://192.168.1.100:32400/app
 ```
 
 ## Platform-Specific Notes
@@ -123,9 +123,10 @@ top-bar nav (**Music**, **Books**, **Audiobooks**, **Photos**, **Search**):
 
 > [!NOTE]
 > These media-type pages, plus the **Security** (passkeys/WebAuthn) tab on **Settings**
-> (`/app/settings/security`), are served by the Vue SPA at `/app`. They supersede the older
-> server-rendered (Smarty) equivalents, which remain in place until the migrated `/app` pages are
-> verified live.
+> (`/app/settings/security`), are served by the Vue SPA at `/app`. The Vue SPA is now the **only** web UI —
+> the older server-rendered (Smarty) page equivalents have been removed, and any legacy page URL
+> (e.g. `/login`, `/library`, `/player/{id}`, `/music`, `/books`, `/audiobooks`, `/photo`) now redirects to
+> its `/app` counterpart.
 
 Notes:
 

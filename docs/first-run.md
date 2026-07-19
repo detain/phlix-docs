@@ -20,10 +20,10 @@ The wizard runs in your browser and presents each step one at a time. Work throu
 When you first access your server, the wizard displays a welcome screen. Open your browser and navigate to:
 
 ```
-http://localhost:32400/web
+http://localhost:32400/app
 ```
 
-Or, if accessing from another machine on your network, replace `localhost` with your server's LAN IP address (e.g., `http://192.168.1.100:32400/web`).
+Or, if accessing from another machine on your network, replace `localhost` with your server's LAN IP address (e.g., `http://192.168.1.100:32400/app`). The bare root (`/`) also redirects to `/app`.
 
 Click **Get Started** to begin.
 

@@ -486,17 +486,28 @@ field (unlike the browse list).
 
 ### GET /api/v1/users/me/continue-watching
 
+_Also available as **`GET /api/v1/me/continue-watching`** — the same handler
+(`PlaybackController::getContinueWatching`) backs both routes and returns the
+identical shape._
+
 List media items the current user has started but not finished (the **Continue
-Watching** rail on the home screen). Items with `percent_complete >= 90` are
-excluded — they are considered finished.
+Watching** rail on the home screen). Items with `percent_complete >= 95` are
+excluded — they are considered finished. The same title watched across several
+sessions/devices is de-duplicated to a single row (the most recently updated) via
+a `ROW_NUMBER()` window before the limit is applied.
 
 **Auth:** Required
 
-**Query parameters:**
-- `limit` (optional) — clamped to `1-100` (default `50`).
-- `offset` (optional) — floored at `0` (default `0`).
-
 **Response 200:**
+
+Each entry is a **shaped media item** (produced by `MediaItemShaper::shape()`,
+the same shape the `/app` SPA `MediaCard` and console clients render), with
+playback-progress fields re-attached at the top level. Top-level `id` is the
+**media item id** (not the playback-state id), so it navigates directly to the
+detail page. For **episodes**, `poster_url` / `poster_srcset` resolve to the
+**series** poster (falling back to the season poster, then the episode's own
+poster) rather than the TMDB still frame, so the rail shows real cover art.
+
 ```json
 {
   "items": [
@@ -504,30 +515,45 @@ excluded — they are considered finished.
       "id": "550e8400-e29b-41d4-a716-446655440003",
       "name": "Attack on Titan",
       "type": "episode",
-      "poster_url": "https://image.tmdb.org/t/p/w500/...",
-      "runtime": 1440,
+      "poster_url": "https://image.tmdb.org/t/p/w500/series-poster.jpg",
+      "poster_srcset": "https://.../w342/series-poster.jpg 342w, https://.../w500/series-poster.jpg 500w",
+      "runtime": 24,
       "year": 2023,
       "genres": ["Animation", "Action"],
       "rating": "TV-MA",
-      "parent_id": "series-uuid",
+      "parent_id": "season-uuid",
       "season_number": 4,
       "episode_number": 75,
       "episode_title": "Sparks",
       "created_at": "2026-01-01T00:00:00+00:00",
       "updated_at": "2026-01-02T00:00:00+00:00",
-      "user_data": {
-        "position_secs": 420,
-        "percent_complete": 29
-      }
+      "media_item_id": "550e8400-e29b-41d4-a716-446655440003",
+      "position_ticks": 4200000000,
+      "duration_ticks": 14400000000,
+      "metadata": { "poster_url": "https://image.tmdb.org/t/p/w500/series-poster.jpg", "...": "..." }
     }
-  ],
-  "limit": 50,
-  "offset": 0
+  ]
 }
 ```
 
-Each item carries a `user_data` block with playback position and progress fields.
-The response has **no `total`** field.
+The response is a bare `{ "items": [...] }` object — there is **no** `limit`,
+`offset`, or `total` field. Key fields:
+
+| Field | Notes |
+| --- | --- |
+| `id` | Media item id (top level). Equals `media_item_id`. Use for detail navigation. |
+| `poster_url` | Series poster for episodes (resolved before shaping); fallback season → own poster. |
+| `poster_srcset` | Responsive `srcset` string when an `ArtworkStorage` cache exists (SV-3.4). |
+| `runtime` | Runtime in **minutes** (from metadata). |
+| `year`, `rating`, `genres` | Standard shaped fields (`rating` = official/content rating). |
+| `parent_id` | Parent container id — the **season** for episodes. |
+| `position_ticks` | Raw playback position in ticks (re-attached; the SPA `useResumeSync` reads this). |
+| `duration_ticks` | Raw total duration in ticks (re-attached). |
+| `media_item_id` | Media item id; the rating gate filters on this key, and the console `fromContinueWatching` mapper reads it. |
+| `metadata` | Full metadata map, preserved (episode entries carry the resolved series `poster_url`). |
+
+> The account-level rating gate is applied per active profile: over-cap titles
+> (by effective rating) are dropped, keyed on `media_item_id`.
 
 > **Up Next for series.** When an episode is completed, the next episode in the
 > series is automatically surfaced at the top of Continue Watching (if it exists

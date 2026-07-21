@@ -22,23 +22,39 @@ new endpoints were added; the page is the UI layer on top of the 0.5 API.
 Navigate to **`/admin/settings`** in the admin console sidebar (entry: **Settings**,
 positioned after **Users**). Requires admin authentication.
 
-### 8 Group Tabs
+### Group Tabs
 
-The page renders all settings keys split across tabbed sections (the **Access**
-tab is shown first):
+The page renders every settings key split across tabbed sections. **Tabs are not
+hardcoded** — `SettingsPage.vue:159-163` builds them from the distinct `group`
+values of the keys the server actually returned, and `humanizeGroup()` derives
+each label by replacing `_`/`-` with spaces and title-casing. Adding a key with a
+new `group` in the schema therefore creates a new tab with no UI change.
 
-| Tab | Keys |
-|-----|------|
-| **Access** | `auth.signup_mode` |
-| **Transcoding** | `hwaccel.enabled`, `hwaccel.prefer_hardware`, `hwaccel.probe_timeout` |
-| **Metadata** | `tmdb.api_key`, `metadata.provider_priority`, `metadata.genres_mode` |
-| **Matching** | `matching.noise_suffixes` |
-| **Markers** | `marker_detection.similarity_threshold`, `marker_detection.intro_max_duration` |
-| **Subtitles** | `subtitles.enabled`, `subtitles.default_language`, `subtitles.burn_in_by_default` |
-| **Discovery** | `discovery.discovery_port` |
-| **Trickplay** | `trickplay.enabled`, `trickplay.interval_seconds` |
-| **Newsletter** | `newsletter.enabled`, `newsletter.send_hour` |
-| **Port Forward** | `port-forward.port_forwarding.upnp_enabled` |
+::: warning Previously documented as "8 Group Tabs" with a hand-written key list
+That section listed ten rows under an "8" heading, named tabs that do not exist
+(**Markers**, **Discovery**, **Port Forward**), and referenced seven keys that
+have since been deleted. Tab names come from the schema's `group` field, not from
+the key prefix — `hwaccel.*` and `transcoding.*` share the `transcoding` group,
+for instance.
+:::
+
+Current groups, from `server-settings.schema.json`:
+
+| Tab | `group` value | Keys |
+|-----|---------------|------|
+| **Auth** | `auth` | 18 |
+| **General** | `general` | 2 |
+| **Infrastructure** | `infrastructure` | 4 |
+| **Integrations** | `integrations` | 1 |
+| **Matching** | `matching` | 1 |
+| **Metadata** | `metadata` | 4 |
+| **Newsletter** | `newsletter` | 2 |
+| **Port Forward** | `port-forward` | 1 |
+| **Scrobblers** | `scrobblers` | 6 |
+| **Subsystem** | `subsystem` | 11 |
+| **Subtitles** | `subtitles` | 1 |
+| **Transcoding** | `transcoding` | 13 |
+| **Trickplay** | `trickplay` | 1 |
 
 ### Field Types
 
@@ -126,18 +142,18 @@ overridden, and the type map.
   "data": {
     "settings": {
       "hwaccel.enabled": true,
-      "hwaccel.probe_timeout": 5,
+      "transcoding.preset": "veryfast",
       "tmdb.api_key": "",
-      "marker_detection.similarity_threshold": 0.85
+      "auth.password.min_length": 8
     },
     "overridden": [
       "hwaccel.enabled"
     ],
     "types": {
       "hwaccel.enabled": "bool",
-      "hwaccel.probe_timeout": "int",
+      "transcoding.preset": "string",
       "tmdb.api_key": "string",
-      "marker_detection.similarity_threshold": "float"
+      "auth.password.min_length": "int"
     }
   }
 }
@@ -158,7 +174,7 @@ Content-Type: application/json
 {
   "settings": {
     "hwaccel.enabled": true,
-    "marker_detection.similarity_threshold": 0.9
+    "transcoding.crf_h264": 20
   }
 }
 ```
@@ -171,8 +187,8 @@ returned:
   "success": true,
   "message": "Settings updated.",
   "data": {
-    "settings": { "hwaccel.enabled": true, "marker_detection.similarity_threshold": 0.9 },
-    "overridden": [ "hwaccel.enabled", "marker_detection.similarity_threshold" ]
+    "settings": { "hwaccel.enabled": true, "transcoding.crf_h264": 20 },
+    "overridden": [ "hwaccel.enabled", "transcoding.crf_h264" ]
   }
 }
 ```
@@ -200,7 +216,7 @@ Example validation-failure response:
   "success": false,
   "error": "Validation failed",
   "errors": {
-    "hwaccel.probe_timeout": "Expected type int.",
+    "transcoding.crf_h264": "Expected type int.",
     "made.up.key": "Unknown setting key."
   }
 }
@@ -208,39 +224,206 @@ Example validation-failure response:
 
 ## Editable Keys
 
-The current allow-list maps each dotted key to its type and the
-`config/<file>.php` default it overrides. As of step 0.7 this allow-list is
-**derived from the shared `server-settings.schema.json`** (bundled in
-`detain/phlix-shared`); see [Shared schemas](../dev/shared-schemas).
+The allow-list is **derived at runtime from the shared
+`server-settings.schema.json`** bundled in `detain/phlix-shared` —
+`AdminSettingsController::allowedKeys()` reads it rather than carrying an inline
+constant. See [Shared schemas](../dev/shared-schemas).
 
-| Key | Type | Backing config |
-|-----|------|----------------|
-| `auth.signup_mode` | `string` (enum) | `config/auth.php` |
-| `hwaccel.enabled` | `bool` | `config/hwaccel.php` |
-| `hwaccel.prefer_hardware` | `bool` | `config/hwaccel.php` |
-| `hwaccel.probe_timeout` | `int` | `config/hwaccel.php` |
-| `tmdb.api_key` | `string` | `config/tmdb.php` |
-| `metadata.provider_priority` | `json` | `config/metadata.php` |
-| `metadata.genres_mode` | `string` (enum) | `config/metadata.php` |
-| `matching.noise_suffixes` | `json` | `config/matching.php` |
-| `marker_detection.similarity_threshold` | `float` | `config/marker_detection.php` |
-| `marker_detection.intro_max_duration` | `int` | `config/marker_detection.php` |
-| `subtitles.enabled` | `bool` | `config/subtitles.php` |
-| `subtitles.default_language` | `string` | `config/subtitles.php` |
-| `subtitles.burn_in_by_default` | `bool` | `config/subtitles.php` |
-| `discovery.discovery_port` | `int` | `config/discovery.php` |
-| `trickplay.enabled` | `bool` | `config/trickplay.php` |
-| `trickplay.interval_seconds` | `int` | `config/trickplay.php` |
-| `newsletter.enabled` | `bool` | `config/newsletter.php` |
-| `newsletter.send_hour` | `int` | `config/newsletter.php` |
-| `port-forward.port_forwarding.upnp_enabled` | `bool` | `config/port-forward.php` |
+::: warning The schema is the source of truth, not this page
+This table is a snapshot, regenerated from the schema. If it disagrees with the
+running server, the schema wins. An earlier version of this page hand-listed
+19 keys and **seven of them had since been deleted** — including
+`hwaccel.probe_timeout`, `discovery.discovery_port` and `trickplay.interval_seconds`,
+all removed for having no consumer. Documenting a setting that does not exist is
+the same class of error as shipping one that nothing reads.
+:::
 
-This is a curated, representative slice of the Phase-1.3 settings groups
-(transcoding/hardware acceleration, metadata providers, marker detection,
-subtitles, discovery, trickplay, newsletter, port-forward/UPnP). The single
-source of truth is the shared `server-settings.schema.json`; the controller's
-`AdminSettingsController::allowedKeys()` derives this map from that schema at
-runtime (replacing the former inline `ALLOWED_KEYS` constant).
+**Tier** controls visibility: `standard` keys are always shown, `advanced` keys
+appear only when the Settings page's **Advanced** switch is on. **Restart** marks
+a key whose value is captured at container-build time and therefore only takes
+effect after the server restarts — the page badges these.
+
+**65 keys** as of `phlix-shared` v0.39.0.
+
+#### `access.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `access.default_concurrent_streams` | `int` | standard | no |
+
+#### `artwork.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `artwork.download_enabled` | `bool` | standard | no |
+
+#### `auth.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `auth.access_ttl` | `int` | advanced | no |
+| `auth.max_profiles` | `int` | standard | no |
+| `auth.password.min_length` | `int` | standard | no |
+| `auth.refresh_ttl` | `int` | advanced | no |
+| `auth.signup_mode` | `string (enum)` | standard | no |
+
+#### `casting.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `casting.airplay.enabled` | `bool` | standard | no |
+| `casting.chromecast.enabled` | `bool` | standard | no |
+| `casting.roku.enabled` | `bool` | standard | no |
+
+#### `dlna.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `dlna.cds_enabled` | `bool` | advanced | yes |
+| `dlna.enabled` | `bool` | standard | yes |
+| `dlna.friendly_name` | `string` | standard | yes |
+
+#### `ffmpeg.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `ffmpeg.max_concurrent_scan_probes` | `int` | advanced | yes |
+| `ffmpeg.max_concurrent_transcodes` | `int` | advanced | yes |
+| `ffmpeg.transcode_timeout` | `int` | advanced | yes |
+
+#### `hwaccel.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `hwaccel.enabled` | `bool` | standard | yes |
+| `hwaccel.prefer_hardware` | `bool` | advanced | yes |
+
+#### `lastfm.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `lastfm.api_key` | `string` | standard | no |
+| `lastfm.enabled` | `bool` | standard | no |
+| `lastfm.shared_secret` | `string` | standard | no |
+
+#### `matching.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `matching.noise_suffixes` | `json` | advanced | no |
+
+#### `metadata.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `metadata.genres_mode` | `string (enum)` | standard | no |
+| `metadata.provider_priority` | `json` | standard | no |
+
+#### `newsletter.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `newsletter.enabled` | `bool` | standard | no |
+| `newsletter.send_hour` | `int` | standard | no |
+
+#### `port-forward.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `port-forward.port_forwarding.upnp_enabled` | `bool` | standard | no |
+
+#### `process.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `process.library-scan.enabled` | `bool` | standard | yes |
+| `process.marker-detection.enabled` | `bool` | standard | yes |
+| `process.media-asset.enabled` | `bool` | standard | yes |
+| `process.plugin-auto-update.enabled` | `bool` | standard | yes |
+| `process.similarity.enabled` | `bool` | standard | yes |
+
+#### `relay.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `relay.ping_interval` | `int` | advanced | no |
+| `relay.reconnect_delay` | `int` | advanced | no |
+
+#### `scanner.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `scanner.ignore_patterns` | `json` | advanced | no |
+
+#### `server.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `server.hls.cache_max_age` | `int` | advanced | yes |
+| `server.hls.cache_max_bytes` | `int` | advanced | yes |
+| `server.hls.max_concurrent_segments` | `int` | advanced | yes |
+| `server.hls.segment_seconds` | `int` | advanced | yes |
+| `server.rate_limit.jwks.max` | `int` | advanced | yes |
+| `server.rate_limit.jwks.window` | `int` | advanced | yes |
+| `server.rate_limit.refresh.max` | `int` | advanced | yes |
+| `server.rate_limit.refresh.window` | `int` | advanced | yes |
+| `server.rate_limit.register.max` | `int` | advanced | yes |
+| `server.rate_limit.register.window` | `int` | advanced | yes |
+| `server.rate_limit.webauthn_finish.max` | `int` | advanced | yes |
+| `server.rate_limit.webauthn_finish.window` | `int` | advanced | yes |
+| `server.rate_limit.webauthn_start.max` | `int` | advanced | yes |
+| `server.rate_limit.webauthn_start.window` | `int` | advanced | yes |
+| `server.rate_limit.ws_connect.max` | `int` | advanced | yes |
+| `server.rate_limit.ws_connect.window` | `int` | advanced | yes |
+
+#### `stats.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `stats.enabled` | `bool` | standard | no |
+
+#### `subtitles.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `subtitles.default_language` | `string` | standard | no |
+
+#### `tmdb.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `tmdb.api_key` | `string` | standard | no |
+
+#### `trakt.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `trakt.client_id` | `string` | standard | no |
+| `trakt.client_secret` | `string` | standard | no |
+| `trakt.redirect_uri` | `string` | standard | no |
+
+#### `transcoding.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `transcoding.audio_bitrate` | `string` | advanced | no |
+| `transcoding.crf_h264` | `int` | advanced | no |
+| `transcoding.prefer_hdr_output` | `bool` | standard | no |
+| `transcoding.preferred_accelerator` | `string (enum)` | advanced | yes |
+| `transcoding.preset` | `string (enum)` | advanced | no |
+| `transcoding.tone_mapping_mode` | `string (enum)` | standard | no |
+
+#### `trickplay.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `trickplay.enabled` | `bool` | standard | no |
+
+#### `webhooks.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `webhooks.enabled` | `bool` | standard | no |
 
 ## Signup mode (`auth.signup_mode`)
 

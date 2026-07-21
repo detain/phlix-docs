@@ -243,7 +243,7 @@ appear only when the Settings page's **Advanced** switch is on. **Restart** mark
 a key whose value is captured at container-build time and therefore only takes
 effect after the server restarts — the page badges these.
 
-**65 keys** as of `phlix-shared` v0.39.0.
+**68 keys** as of `phlix-shared` v0.40.0.
 
 #### `access.*`
 
@@ -319,6 +319,12 @@ effect after the server restarts — the page badges these.
 | `metadata.genres_mode` | `string (enum)` | standard | no |
 | `metadata.provider_priority` | `json` | standard | no |
 
+#### `metrics.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `metrics.enabled` | `bool` | advanced | yes |
+
 #### `newsletter.*`
 
 | Key | Type | Tier | Restart |
@@ -393,6 +399,13 @@ effect after the server restarts — the page badges these.
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `tmdb.api_key` | `string` | standard | no |
+
+#### `theme_music.*`
+
+| Key | Type | Tier | Restart |
+|-----|------|------|---------|
+| `theme_music.enabled` | `bool` | advanced | yes |
+| `theme_music.source` | `string (enum)` | advanced | yes |
 
 #### `trakt.*`
 

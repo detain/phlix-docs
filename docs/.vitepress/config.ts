@@ -149,6 +149,7 @@ export default defineConfig({
             { text: 'Skip Button Protocol', link: '/reference/skip-button-protocol' },
             { text: 'WebAuthn / Passkey API', link: '/reference/api/auth-webauthn' },
             { text: 'Hub Media Requests API', link: '/reference/api/hub-media-requests' },
+            { text: 'JWKS API', link: '/reference/api/hub-jwks' },
           ]
         }
       ],

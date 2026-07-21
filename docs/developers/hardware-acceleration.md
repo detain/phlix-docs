@@ -253,7 +253,7 @@ The hardware acceleration configuration uses a two-file architecture with `HwAcc
 // RECOMMENDED: Get the authoritative merged config at runtime
 $config = \Phlix\Config\HwAccelConfig::get();
 
-// Legacy (deprecated):读取 base config only
+// Legacy (deprecated): reads the base config only
 $baseConfig = require __DIR__ . '/hwaccel_base.php';
 ```
 
@@ -261,21 +261,43 @@ The `HwAccelConfig::get()` method merges settings from both `hwaccel_base.php` a
 
 ### Configuration Options
 
+::: warning Not every key in these files is wired up
+`HwAccelConfig::get()` merges both files, but the merged array only reaches
+`FfmpegRunner::setConfig()`, and `FfmpegRunner` reads just five keys from it.
+The remaining keys are consumed only by `HwaccelRegistry`, which is **always
+constructed with its own hardcoded defaults** — `HwaccelRegistry::getInstance()`
+calls a `private` constructor with no arguments, so nothing can hand it a
+configured value. Editing those keys has no effect. They are listed below as
+*inert* rather than removed, because the files still declare them.
+:::
+
 **From `config/hwaccel_base.php`:**
 
-- `enabled` — Enable/disable hardware acceleration (default: true)
-- `prefer_hardware` — Prefer hardware over software (default: true)
-- `vendor_priority` — Vendor fallback order (lower = higher priority)
-- `probe_timeout` — Timeout for probe operations (default: 30 seconds)
-- `test_clip_path` — Path for acceptance test clip
-- `fallback_to_software` — Allow software fallback (default: true)
+| Key | Status | Notes |
+|---|---|---|
+| `enabled` | **Consumed** | Enable/disable hardware acceleration (default: `true`) |
+| `prefer_hardware` | **Consumed** | Prefer hardware over software (default: `true`) |
+| `vendor_priority` | *Inert* | Vendor fallback order (lower = higher priority). The registry's own default is used instead — and note that default includes `'software' => 100` while this file omits it |
+| `probe_timeout` | *Inert* | The real probe timeouts are the hardcoded `ShellTimeout::FFMPEG_TIMEOUT` (10s) and `ShellTimeout::GPU_TOOL_TIMEOUT` (5s) constants |
+| `test_clip_path` | *Inert* | Path for the acceptance-test clip |
+| `fallback_to_software` | *Inert* | Read at `HwaccelRegistry.php:160,206`, but only ever as the constructor default `true` |
 
 **From `config/transcoding.php`:**
 
-- `preferred_accelerator` — Preferred accelerator (cuda, qsv, vaapi, etc.) or null for auto
-- `tone_mapping_mode` — HDR tone mapping mode ('none', 'zscale', 'libplacebo')
-- `prefer_hdr_output` — Prefer HDR10 output over SDR tone mapping
-- `include_software_fallback` — Include software encoding in accelerator lists
+| Key | Status | Notes |
+|---|---|---|
+| `preferred_accelerator` | **Consumed** | Preferred accelerator (`cuda`, `qsv`, `vaapi`, …) or `null` for auto |
+| `tone_mapping_mode` | **Consumed** | HDR tone-mapping mode (`none`, `zscale`, `libplacebo`) |
+| `prefer_hdr_output` | **Consumed** | Prefer HDR10 output over SDR tone-mapping |
+| `include_software_fallback` | *Inert* | Include software encoding in accelerator lists |
+
+::: danger `include_software_fallback` is not an admin setting
+It was briefly exposed in `server-settings.schema.json` and was **removed in
+phlix-shared v0.27.0** because it is inert in both directions — nothing reads the
+merged value. Do not re-expose it. The separate `hwaccel.fallback_to_software`
+key is the one that is genuinely read, but it too needs wiring before it could be
+exposed, for the `getInstance()` reason above.
+:::
 
 ## Detection Methods by Vendor
 

@@ -70,7 +70,22 @@ mDNS uses DNS-like packets on the local network without a central DNS server.
 | Google Cast/Chromecast | `_googlecast._tcp.local.` |
 | AirPlay 2 | `_airplay._tcp.local.` |
 | AirPlay Audio | `_raop._tcp.local.` |
-| Roku ECP | `_ roku-ecnp._tcp.local.` |
+| Roku ECP | `_ roku-ecnp._tcp.local.` — **broken, see below** |
+
+::: danger Roku discovery does not work
+The Roku entry above is reproduced verbatim from
+`MdnsDiscovery::SERVICE_ROKU` and it is **wrong twice over**: the label contains
+a literal space (`_ roku`) and the protocol name is misspelt `ecnp` instead of
+`ecp`. Both defects are currently asserted by the tests
+(`MdnsDiscoveryTest.php:55`, `RokuDiscoveryTest.php:19-20`), so the test suite
+locks the bug in rather than catching it.
+
+Correcting the string would still not make this work: **Roku does not advertise
+ECP over mDNS at all** — it uses SSDP — and there is no SSDP path for Roku in the
+codebase. `discoverRokuDevices()` therefore can never return a device, and the
+admin Cast Devices page can never list one. Fixing this is a feature, not a typo
+fix.
+:::
 
 ### DNS Record Types
 

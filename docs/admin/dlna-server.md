@@ -1,11 +1,27 @@
 # DLNA Server
 
 The DLNA Server page (`/admin/dlna-server`) in the admin console shows whether the
-built-in UPnP MediaServer is currently running and lets an admin start or stop it on
-demand. The DLNA server announces this Phlix instance on the local network as a
-UPnP MediaServer, enabling DLNA-certified devices (smart TVs, game consoles,
-network media players) to discover and stream media from the Phlix library
-automatically.
+built-in UPnP **ContentDirectory** (CDS) browse service is currently serving and lets
+an admin turn it on or off on demand. The DLNA server announces this Phlix instance on
+the local network as a UPnP MediaServer, enabling DLNA-certified devices (smart TVs,
+game consoles, network media players) to discover and stream media from the Phlix
+library automatically.
+
+::: warning The toggle controls the ContentDirectory browse service — default OFF
+Start/Stop here writes the `dlna.cds_enabled` setting, which gates the SOAP endpoints a
+control point uses to **list and stream your library**. It ships **disabled** because
+DLNA/UPnP has no concept of credentials — enabling it lets any device on the local
+network browse and stream the entire library with **no authentication**. This is
+distinct from the SSDP advertiser (`dlna.enabled`, default ON), which only makes the
+server appear in a TV's source list. See [DLNA Server (advanced)](../advanced/dlna) and
+`config/dlna.php` for the full rationale.
+:::
+
+Because the ContentDirectory routes are registered once per worker at boot (gated on the
+effective `dlna.cds_enabled` value), the toggle does not flip a live in-memory flag — it
+**persists the setting and schedules a graceful reload** so every worker re-reads it and
+registers or drops the routes. There is therefore a brief transitional window between
+saving the change and it taking effect across all workers (see `reloadPending` below).
 
 ---
 
@@ -20,21 +36,26 @@ Server**, positioned in the Admin section). Requires admin authentication.
 
 The page has a single **status card** showing:
 
-- **Running state** — a green indicator (🟢 Running) or red indicator (🔴 Stopped) with
-  the current state label.
+- **Running state** — a green indicator (🟢 Running) or red indicator (🔴 Stopped)
+  reflecting whether **this worker** is actually serving the ContentDirectory routes
+  right now (`running`).
+- **Enabled state** — the persisted intent (`enabled`), i.e. whether the setting says the
+  service should be on. This can differ from **Running** while a change propagates.
+- **Applying…** — a transitional indicator when `reloadPending` is true (`enabled` and
+  `running` disagree because a saved change has not yet been applied by a worker reload).
 - **Friendly name** — the DLNA device name broadcast on the network (e.g. `Phlix
   Media Server`).
-- **Enabled state** — whether the DLNA server is configured and able to start.
 
 Below the status card are two action buttons:
 
 | Button | Behaviour |
 |--------|-----------|
-| **Start** | `POST /api/v1/admin/dlna/start` → spinner during call → success toast → status refreshes to Running |
-| **Stop** | `POST /api/v1/admin/dlna/stop` → spinner during call → success toast → status refreshes to Stopped |
+| **Start** | `POST /api/v1/admin/dlna/start` → persists `dlna.cds_enabled = true` + schedules a graceful reload → success toast ("workers are reloading to apply it") |
+| **Stop** | `POST /api/v1/admin/dlna/stop` → persists `dlna.cds_enabled = false` + schedules a graceful reload → success toast |
 
-When the DLNA server is not configured at all, the page shows an informational
-message and both buttons are hidden.
+Both actions are idempotent: calling Start when already enabled (or Stop when already
+disabled) returns `409` and makes no change. If the settings store is unavailable the
+endpoint returns `503`.
 
 <!-- Screenshot: admin-dlna-server.png -->
 
@@ -51,28 +72,33 @@ non-admin → `403`).
 GET /api/v1/admin/dlna/status
 ```
 
-Returns the current DLNA server state:
+Returns the current ContentDirectory state as a **flat, camelCase** payload (no
+`{success, data}` envelope):
 
 ```json
 {
-  "success": true,
-  "data": {
-    "running": true,
-    "enabled": true,
-    "friendly_name": "Phlix Media Server",
-    "uptime_seconds": 3600
-  }
+  "enabled": true,
+  "running": true,
+  "reloadPending": false,
+  "serverId": "uuid:phlix-server-abc123",
+  "friendlyName": "Phlix Media Server",
+  "port": 8200,
+  "baseUrl": "http://192.168.1.100:8200"
 }
 ```
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `running` | `bool` | Whether the DLNA MediaServer process is currently active |
-| `enabled` | `bool` | Whether the server is configured and able to start |
-| `friendly_name` | `string` | The UPnP device friendly name announced on the network |
-| `uptime_seconds` | `int` | Seconds since the server was started (absent when stopped) |
+| `enabled` | `bool` | Persisted intent — the effective `dlna.cds_enabled` setting, read live from the store |
+| `running` | `bool` | Whether **this worker** is actually serving the ContentDirectory routes right now (frozen at its boot) |
+| `reloadPending` | `bool` | `enabled !== running` — a saved change is not yet applied by a worker reload ("applying…") |
+| `serverId` | `string\|null` | The UPnP device UDN (`null` when no `CdsServer` is wired) |
+| `friendlyName` | `string\|null` | The UPnP device friendly name announced on the network |
+| `port` | `int\|null` | The DLNA HTTP port |
+| `baseUrl` | `string\|null` | The base URL used in DLNA announcements |
 
-When DLNA is not configured at all, `enabled` is `false` and `running` is `false`.
+`serverId`/`friendlyName`/`port`/`baseUrl` are `null` when the container has no `CdsServer`
+registration (degraded DI); `enabled`/`running`/`reloadPending` stay truthful regardless.
 
 ### Start
 
@@ -80,11 +106,21 @@ When DLNA is not configured at all, `enabled` is `false` and `running` is `false
 POST /api/v1/admin/dlna/start
 ```
 
-Starts the DLNA MediaServer. Returns `200` on success, `409` if already running.
+Persists `dlna.cds_enabled = true` and schedules a graceful reload so the ContentDirectory
+routes come up across every worker. Returns `200` on success; `409` if already enabled;
+`503` if the settings store is unavailable; `500` if the persist fails.
 
 ```json
-{ "success": true, "message": "DLNA server started." }
+{
+  "success": true,
+  "enabled": true,
+  "reloadScheduled": true,
+  "message": "DLNA content directory enabled; workers are reloading to apply it."
+}
 ```
+
+`reloadScheduled` is `false` when no automatic reload could be signalled (e.g. running
+outside the Workerman master); the message then asks the operator to restart manually.
 
 ### Stop
 
@@ -92,10 +128,17 @@ Starts the DLNA MediaServer. Returns `200` on success, `409` if already running.
 POST /api/v1/admin/dlna/stop
 ```
 
-Stops the DLNA MediaServer. Returns `200` on success, `409` if not running.
+Persists `dlna.cds_enabled = false` and schedules a graceful reload so the ContentDirectory
+routes are dropped across every worker. Same status codes and response shape as Start
+(`409` when already disabled).
 
 ```json
-{ "success": true, "message": "DLNA server stopped." }
+{
+  "success": true,
+  "enabled": false,
+  "reloadScheduled": true,
+  "message": "DLNA content directory disabled; workers are reloading to apply it."
+}
 ```
 
 ### Error responses
@@ -104,8 +147,9 @@ Stops the DLNA MediaServer. Returns `200` on success, `409` if not running.
 |--------|---------|
 | `401` | Not authenticated |
 | `403` | Not an admin |
-| `409` | Conflict — server already running (start) or already stopped (stop) |
-| `500` | Internal error starting/stopping the server |
+| `409` | Conflict — already enabled (start) or already disabled (stop); no change made |
+| `500` | Internal error persisting the setting |
+| `503` | Settings store unavailable — cannot change CDS state |
 
 ---
 
@@ -115,8 +159,9 @@ Stops the DLNA MediaServer. Returns `200` on success, `409` if not running.
 
 | File | Purpose |
 |------|---------|
-| `src/Server/Http/Controllers/Dlna/AdminDlnaServerController.php` | Handles `status()`, `start()`, `stop()` — wires `CdsServer` from the DI container and delegates to `DlnaServer` |
-| `src/Server/Core/Application.php` | Wires the three routes under `AdminMiddleware` via `loadDlnaAdminRoutes()` |
+| `src/Server/Http/Controllers/Dlna/AdminDlnaServerController.php` | Handles `status()`, `start()`, `stop()` — reads the persisted `dlna.cds_enabled` via `SettingsRepository`, reports per-worker route state via `EffectiveConfig::file('dlna')`, and schedules the reload |
+| `src/Server/Http/Controllers/Admin/AdminRestartController.php` | `scheduleGracefulReload(): bool` — defers a one-shot SIGUSR2 to the Workerman master (reused by Start/Stop) |
+| `src/Server/Core/Application.php` | Wires the three routes under `AdminMiddleware` via `loadDlnaAdminRoutes()`, best-effort injecting the `SettingsRepository` + `AdminRestartController` + `CdsServer` setters; `loadCdsRoutes()` registers the ContentDirectory routes per worker at boot, gated on `dlna.cds_enabled` |
 
 ### Frontend
 
@@ -129,14 +174,24 @@ Stops the DLNA MediaServer. Returns `200` on success, `409` if not running.
 
 ### Design notes
 
+- **Start/Stop persist a setting and reload, they do not flip a live flag.** The
+  ContentDirectory routes are frozen at each worker's `onWorkerStart`, so an honest toggle
+  must (1) persist `dlna.cds_enabled` via `SettingsRepository::set(..., 'bool')` and
+  (2) schedule a graceful SIGUSR2 reload so every worker re-reads the setting. The reload
+  is a Workerman one-shot timer + `posix_kill` probe — no blocking I/O in the request path.
+- A best-effort immediate SSDP announce/teardown is attempted on the request-handling
+  worker to avoid a needless multicast delay; its failure is non-fatal because the reload
+  re-establishes the authoritative state.
 - `useToast()` is destructured as `const { push: pushToast } = useToast()` — the
   stable `push` reference prevents unnecessary re-renders when `pushToast()` is
   called from inside a `useCallback`.
 - Buttons show `aria-busy={acting}` and are disabled during the in-flight request.
 - The page handles `409` from `start()`/`stop()` gracefully with an **info toast**
-  ("Already running" / "Already stopped") without treating it as an error.
-- `CdsServer` is injected via `setCdsServer()` in the controller — if the container
-  has no `CdsServer` registration the controller returns `enabled: false` gracefully.
+  ("Already enabled" / "Already disabled") without treating it as an error.
+- The settings store and reload signaller are injected via `setSettingsRepository()` /
+  `setRestartController()`; `CdsServer` via `setCdsServer()`. When the settings store is
+  unwired, `start()`/`stop()` return `503` and `status()` falls back to this worker's
+  frozen route state so it stays truthful even in a degraded DI state.
 
 ---
 

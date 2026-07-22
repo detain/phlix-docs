@@ -26,11 +26,32 @@ Phlix's DLNA server is implemented in `src/Dlna/` and consists of:
 | DeviceRegistry | `DeviceRegistry.php` | Tracks discovered DLNA renderers |
 | LibraryBridge | `LibraryBridge.php` | Connects ContentDirectory to Phlix media library |
 | CdsServer | `CdsServer.php` | HTTP handler for ContentDirectory SOAP calls |
+| SoapArgumentExtractor | `SoapArgumentExtractor.php` | Namespace-aware, XXE-safe extraction of SOAP action arguments from the action element's direct children |
 | PlayToManager | `PlayToManager.php` | "Play To" feature for casting to renderers |
 
 ## Enabling DLNA
 
-DLNA is enabled by default when Phlix starts. The server announces itself via SSDP multicast every 10 minutes on port 1900/UDP.
+DLNA has **two independent switches**, because they carry very different risk:
+
+| Setting | Governs | Default |
+|---------|---------|---------|
+| `dlna.enabled` | The **SSDP advertiser** — the broadcast that makes this server appear in a TV's source list | **ON** |
+| `dlna.cds_enabled` | The **ContentDirectory browse service** — the SOAP endpoints a control point uses to list and stream your library | **OFF** |
+
+The SSDP advertiser announces itself via multicast every 10 minutes on port 1900/UDP by
+default. The ContentDirectory browse service ships **disabled** and is turned on from the
+admin console — see [DLNA Server (admin)](../admin/dlna-server).
+
+::: danger `cds_enabled` exposes the library with NO authentication
+DLNA/UPnP has no concept of credentials. Turning `cds_enabled` on lets **any** device on
+the local network browse and stream the entire library without logging in, deliberately
+bypassing the auth gate. That is why it ships off — it is the right choice for a trusted
+home LAN and the wrong one for a shared or untrusted network.
+:::
+
+The admin Start/Stop toggle persists `dlna.cds_enabled` and schedules a graceful worker
+reload (the ContentDirectory routes are registered once per worker at boot), so a change
+takes effect across all workers a moment after saving rather than instantly.
 
 ### Configuration
 
@@ -79,7 +100,16 @@ USN: uuid:phlix-server-abc123::urn:schemas-upnp-org:device:MediaServer:1
 
 ## Content Directory
 
-The ContentDirectory service provides Browse and Search actions:
+The ContentDirectory service provides Browse and Search actions. Inbound SOAP control
+requests are parsed by `Phlix\Dlna\SoapArgumentExtractor`, which reads action arguments
+**only from the direct children of the SOAP action element** (namespace-aware, XXE-safe:
+parsed with `LIBXML_NONET` and never `LIBXML_NOENT`). This prevents a same-named element
+nested inside embedded DIDL-Lite metadata — e.g. `<Filter><ObjectID>…</ObjectID></Filter>`
+— from bleeding into a top-level argument such as `ObjectID`. Both live parsers
+(`DlnaContentDirectoryController::parseSoapBody` on `POST /dlna/content_directory` and the
+legacy `CdsControlHandler` on `POST /cds/control`) are direct-child scoped.
+
+
 
 ### Browse Action
 

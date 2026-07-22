@@ -215,6 +215,13 @@ Or use iptables to log dropped egress:
 iptables -A OUTPUT -m limit --limit 5/min -j LOG --log-prefix "EGRESS BLOCKED: "
 ```
 
+> **Note — browser-side TMDB image fetches.** Separate from server egress, the web app's
+> Content-Security-Policy (`img-src`) allowlists the TMDB image CDN hosts `image.tmdb.org` and
+> `tmdb.org`. When poster/backdrop/cast artwork has not yet been cached on your own origin, the
+> **browser** loads it directly from TMDB — a client-side external connection to TMDB, not from the
+> Phlix server. This is a stopgap: once local image caching proxies all remote artwork through your
+> own origin, these hosts will be removed from the policy and no browser-side TMDB call is made.
+
 ## Next Steps
 
 - [First-run setup](first-run.md) — initial server configuration and TLS setup.

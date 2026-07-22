@@ -592,14 +592,17 @@ second FFmpeg. The encode runs detached, so this returns immediately.
   "job_id": "1f2e3d4c-....",
   "master_url": "/hls/1f2e3d4c-..../master.m3u8",
   "hls_url": "/hls/1f2e3d4c-..../master.m3u8",
-  "dash_url": "/dash/1f2e3d4c-..../manifest.mpd",
   "status": "running",
   "reused": false
 }
 ```
 
-One CMAF (fMP4) encode produces **both** the HLS (`master_url`) and DASH
-(`dash_url`) outputs from shared segments — play whichever the client supports.
+The on-demand pipeline currently produces **HLS only** — a multi-variant ABR
+ladder played via hls.js (or native HLS on Safari/iOS). It does **not** emit a
+DASH manifest, so the response no longer includes a `dash_url` (removed in
+updates.md #11 / S11: the advertised `/dash/{job}/manifest.mpd` is never written
+and always 404'd). Real DASH output is tracked for a later milestone
+(updates.md #57 / S56-S60).
 
 **Response 404:** Media item not found
 **Response 503:** Maximum concurrent transcodes reached (retry shortly)
@@ -620,8 +623,7 @@ HLS segments exist, then start playback.
   "segments": 3,
   "playlist_ready": true,
   "progress": 3.0,
-  "master_url": "/hls/1f2e3d4c-..../master.m3u8",
-  "dash_url": "/dash/1f2e3d4c-..../manifest.mpd"
+  "master_url": "/hls/1f2e3d4c-..../master.m3u8"
 }
 ```
 
@@ -630,18 +632,21 @@ once `playlist_ready` is `true` (or `status` is `completed`).
 
 **Response 404:** Job not found
 
-### HLS / DASH delivery routes
+### HLS delivery routes
 
-Served from the transcoded CMAF output on disk (no auth header is required,
-mirroring direct play, so a `<video>` / hls.js / DASH-player request works). HLS
-and DASH share the **same fMP4 segments** from one encode:
+Served from the transcoded HLS output on disk (no auth header is required,
+mirroring direct play, so a `<video>` / hls.js request works):
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /hls/{jobId}/master.m3u8` | HLS master playlist |
-| `GET /hls/{jobId}/{file}` | HLS media playlist / segment (`media_N.m3u8`, `init-N.m4s`, `chunk-*.m4s`) |
-| `GET /dash/{jobId}/manifest.mpd` | DASH manifest |
-| `GET /dash/{jobId}/{file}` | DASH segment (the shared `init-N.m4s` / `chunk-*.m4s`) |
+| `GET /hls/{jobId}/master.m3u8` | HLS master playlist (multi-variant ABR ladder) |
+| `GET /hls/{jobId}/{file}` | HLS media playlist / segment (`media_v{rung}.m3u8`, `seg-v{rung}-NNNNN.ts`) |
+
+> **DASH is not currently available.** The `/dash/{jobId}/manifest.mpd` and
+> `/dash/{jobId}/{file}` routes are registered but the on-demand transcode
+> pipeline does not populate a DASH job directory (it emits HLS only), so those
+> routes return `404` today. The DASH server code is reserved for real DASH
+> support tracked as updates.md #57 / S56-S60. Do not rely on a DASH manifest URL.
 
 ## Playback Endpoints
 

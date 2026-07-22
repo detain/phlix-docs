@@ -238,8 +238,9 @@ places: an explicit `?profile=` query param wins, otherwise it's derived from th
 the transcode-start and playback-info mapping tables stay byte-identical, since a
 pre-flight preview that disagreed with the real job would be actively misleading.
 
-Every streaming URL returned by these endpoints (`master_url`, `dash_url`, each
-variant's `url`, each subtitle track's `url`) is signed via `SignedUrl`, prefix-scoped
+Every streaming URL returned by these endpoints (`master_url`, each
+variant's `url`, each subtitle track's `url` — there is no `dash_url`; DASH is not
+produced on demand, updates.md #11 / S11) is signed via `SignedUrl`, prefix-scoped
 to the job directory — hls.js/`<video>` can't attach a Bearer header to a bare manifest
 request, so one signature on the master authorizes every variant playlist and segment
 underneath it. See [Signed Media URLs](../security/signed-media-urls).
@@ -466,6 +467,6 @@ fallback):
 - [Hardware Acceleration](./hardware-acceleration) — the GPU encoder-detection
   framework; not currently wired into the on-demand ABR segment path (see the CPU
   guardrail above).
-- [Signed Media URLs](../security/signed-media-urls) — how `master_url`/`dash_url`/each
+- [Signed Media URLs](../security/signed-media-urls) — how `master_url`/each
   variant `url` are signed for player consumption without a Bearer header.
 - [Web App](../clients/web) — the player's quality menu from an end-user perspective.

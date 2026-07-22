@@ -82,7 +82,7 @@ already reads:
 | Endpoint | Signed field(s) |
 | --- | --- |
 | `GET /api/v1/media/{id}` | `stream_url` (direct play) |
-| `POST /api/v1/media/{id}/transcode` · `…/status` | `master_url`, `hls_url`, `dash_url`, and each subtitle track `url` |
+| `POST /api/v1/media/{id}/transcode` · `…/status` | `master_url`, `hls_url`, and each subtitle track `url` (no `dash_url` — DASH is not currently produced; see updates.md #57 / S56-S60) |
 | `getBook` / `readBook` | `cover_url`, `read_url`, `download_url` |
 | `getAudiobook` / `readAudiobook` | `stream_url`, `read_url` |
 | `getPhoto` / list / album / slideshow | `thumbnail_url`, `full_url` |

@@ -124,6 +124,72 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /plugins/catalog/channel:
+    get:
+      summary: Read the official catalog release channel
+      description: |
+        Returns the current release channel for the **official**
+        `detain/phlix-plugins` catalog, plus the selectable options with their
+        labels and opt-in/advanced flags. The same object is also embedded under
+        `channel` in `GET /plugins/catalog`.
+      operationId: getPluginCatalogChannel
+      responses:
+        '200':
+          description: The current channel and the selectable options.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogChannel'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    put:
+      summary: Set the official catalog release channel
+      description: |
+        Switches the **official** catalog's release channel. `stable` (default)
+        keeps the audited pinned release tag; `dev` tracks the moving `master`
+        branch to surface the newest, unreleased catalog entries and is
+        **opt-in / advanced**.
+
+        The channel only widens catalog **discovery** — per-entry `ref` +
+        `artifactSha256` verification still gates every install on both channels,
+        so `dev` never moves the trust boundary. The
+        `PHLIX_PLUGINS_CATALOG_REF` env override still takes precedence over this
+        setting. Any value other than `stable`/`dev` (case-insensitive) is
+        rejected with `plugin.catalog.channel.invalid`. The persisted change is
+        audit-logged with the `catalog.channel` action.
+      operationId: setPluginCatalogChannel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [channel]
+              properties:
+                channel:
+                  type: string
+                  enum: [stable, dev]
+                  description: The release channel to activate.
+      responses:
+        '200':
+          description: The persisted channel and the selectable options.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogChannel'
+        '400':
+          description: Missing or non-`stable`/`dev` value (`plugin.catalog.channel.invalid`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWithFields'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /plugins:
     get:
       summary: List installed plugins
@@ -428,6 +494,32 @@ components:
           type: array
           description: The full source list after the change — the default first, then extras.
           items: { type: string, format: uri }
+
+    CatalogChannel:
+      description: |
+        The official catalog's release channel and its selectable options.
+        Returned by `GET`/`PUT /plugins/catalog/channel` and embedded under
+        `channel` in `GET /plugins/catalog`.
+      type: object
+      required: [channel, options]
+      properties:
+        channel:
+          type: string
+          enum: [stable, dev]
+          description: The currently active release channel (`stable` default).
+        options:
+          type: array
+          description: The selectable channels with server-authored labels.
+          items:
+            type: object
+            required: [value, label, description, advanced]
+            properties:
+              value: { type: string, enum: [stable, dev] }
+              label: { type: string, description: Human label for the channel. }
+              description: { type: string, description: Server-authored explanation (the `dev` copy notes it tracks `master` and that installs are still individually verified). }
+              advanced:
+                type: boolean
+                description: '`true` for opt-in/advanced channels (`dev`), so the UI can gate them behind a warning.'
 
     Error:
       type: object

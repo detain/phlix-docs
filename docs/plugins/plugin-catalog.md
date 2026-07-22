@@ -68,6 +68,45 @@ The wire contract for the catalog browser (the `GET /plugins/catalog` and
 `POST`/`DELETE /plugins/catalog/sources` admin endpoints) is documented in the
 [Admin Plugins API](../reference/api/admin-plugins.yaml).
 
+### Release channel (`stable` / `dev`)
+
+The **official** catalog (`detain/phlix-plugins`) is served from a
+**release channel**, so operators can choose between a safe pinned release and
+the newest unreleased entries. Set it from the admin **Plugins** page or with
+the `plugins.catalog.channel` setting:
+
+| Channel | Resolves the official catalog to | For |
+|---------|----------------------------------|-----|
+| **`stable`** _(default)_ | the audited **pinned release tag** (`CatalogSourceResolver::OFFICIAL_PINNED_REF`) | everyone — the recommended channel |
+| **`dev`** | the catalog repo's **moving `master` branch** | **opt-in / advanced** — surfaces the newest, unreleased catalog entries |
+
+`dev` is flagged **opt-in / advanced** in the admin UI (a warning badge plus a
+server-authored description). It only changes which entries are **discovered** on
+the official catalog — it does **not** move the trust boundary (see the note
+below). Operator-added catalogs are unaffected by the channel; they always
+resolve at `HEAD`. Anything other than a literal `dev` (including an empty or
+unknown value) fails **safe to `stable`**.
+
+**Precedence — env > setting > default.** The ref actually used for the official
+catalog is chosen in this order:
+
+1. `PHLIX_PLUGINS_CATALOG_REF` — the environment override, **highest precedence**
+   (pin a specific tag/commit; see [env vars](../reference/env-vars#plugins));
+2. `plugins.catalog.channel` — `dev` → `master`, `stable` → the pinned tag;
+3. `OFFICIAL_PINNED_REF` — the built-in default when neither of the above is set.
+
+**Discovery only — installs are still verified on both channels.** Switching to
+`dev` widens *what is listed*, never *what is trusted*. Every actual install is
+still gated by the catalog entry's per-entry pin — its `ref` **and**
+`artifactSha256` — regardless of channel, so a `dev`-only, un-pinned entry cannot
+be installed. See [Trusted Plugin List](./trusted-plugin-list.md) for the trust
+model. Choosing "always latest" via the GitHub Releases API is a deferred
+follow-up, not part of this channel setting.
+
+The read/write wire contract (`GET`/`PUT /api/v1/admin/plugins/catalog/channel`,
+returning `{ channel, options: [{ value, label, description, advanced }] }`) is
+documented in the [Admin Plugins API](../reference/api/admin-plugins.yaml).
+
 ## Official Plugins (Maintained by Phlix)
 
 The first-party plugins below are published in the default

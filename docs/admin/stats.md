@@ -83,6 +83,18 @@ GET /api/v1/admin/stats/top-media?limit=10&since=-30%20days
 }
 ```
 
+::: tip Deleted items and users are excluded
+The Top Media and Top Users leaderboards only rank items and users that still
+exist. `StatsCollector::getTopMedia()` / `getTopUsers()` `INNER JOIN media_items` /
+`users`, so playback events whose media item or user has since been deleted are
+dropped at the query level (with a defense-in-depth null-skip in `DashboardService`).
+Orphaned rows are **hidden**, not shown as a "(deleted item)" placeholder, so you no
+longer see blank-title / blank-username rows carrying an old play count. Watch-time
+and play-count totals for surviving items/users are unchanged. The historical
+`stats_playback_events` rows for deleted items/users are retained (not purged) — they
+are only omitted from the leaderboards.
+:::
+
 ### Storage Snapshots
 
 ```http

@@ -46,6 +46,13 @@ changes the `days` query param. Empty state: "No user data yet for this period."
 badge, **Play Count**, **Total Duration**. Date range filter applies here too. Empty
 state: "No media has been played in this period."
 
+::: tip Deleted items/users are excluded
+Both leaderboards only list items and users that still exist — plays of a since-deleted
+item (or activity from a deleted user) are hidden rather than shown as a blank-title /
+blank-username row. See [Stats → Top Media/Top Users](./stats.md#top-users-by-watch-time)
+for the JOIN-based mechanism.
+:::
+
 ### Storage
 
 Breakdown cards per media type (movie / series / music / photo / video) showing:

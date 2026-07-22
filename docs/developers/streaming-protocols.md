@@ -11,8 +11,16 @@ Phlix Media Server supports two adaptive streaming protocols: **HLS** (HTTP Live
 > [Stream Quality / ABR](./stream-quality-abr) for the current, authoritative
 > description of that pipeline — including the real segment/playlist naming, the
 > per-variant dedup/cap/cache-sweep behavior, the hub relay's streaming pass-through,
-> and client (web/native) ABR support. DASH is unaffected by that work and still uses
-> the single-CMAF-job pipeline described in this page.
+> and client (web/native) ABR support.
+>
+> **DASH is not currently produced or served on demand.** The single-CMAF-job
+> pipeline described in this page is the reserved **target** design — the CMAF DASH
+> muxer (`FfmpegRunner::buildCmafCommand()` / `startCmafTranscode()`) exists but is
+> **not** wired into the live `ensureHlsJob()` flow, so no `manifest.mpd` is written
+> and `GET /dash/{job}/manifest.mpd` always 404s. Accordingly the transcode/status
+> responses no longer advertise a `dash_url` (removed in updates.md #11 / S11). Real
+> DASH support is tracked for a later milestone (updates.md #57 / S56-S60); the DASH
+> sections below document that reserved design, not a shipping feature.
 
 ## Overview
 
@@ -159,7 +167,9 @@ protocol is served by a generic per-job file handler (plus a JSON info route):
 > storage — the same `.m4s` segments are served under both the `/hls` and `/dash`
 > prefixes. The web player uses HLS via hls.js; DASH clients use `manifest.mpd`.
 >
-> **This is DASH's actual pipeline today.** For HLS, `master.m3u8`/`media_N.m3u8` are
+> **This CMAF path is the reserved DASH design — it is NOT currently wired into
+> on-demand transcode** (see the status note at the top of this page; DASH is tracked
+> for updates.md #57 / S56-S60). For HLS, `master.m3u8`/`media_N.m3u8` are
 > now **multi-variant** (one `media_v{renditionId}.m3u8` per ABR rung, segments named
 > `seg-v{renditionId}-NNNNN.ts`) and segments are plain `.ts`, not shared `.m4s` — see
 > [Stream Quality / ABR](./stream-quality-abr#on-demand-per-variant-segments-d2-a5-a6-s1-s3)
@@ -170,9 +180,10 @@ protocol is served by a generic per-job file handler (plus a JSON info route):
 When a file can't be direct-played, the client drives this flow:
 
 1. **Start** — `POST /api/v1/media/{id}/transcode?profile=web` (or the resolved
-   `X-Phlix-Device-Type` profile). Returns a `job_id`, `master_url` (HLS),
-   `dash_url` (DASH, still CMAF-based per above), and — for HLS — a `variants[]`
-   quality-ladder array (see [Stream Quality / ABR](./stream-quality-abr)). Idempotent
+   `X-Phlix-Device-Type` profile). Returns a `job_id`, `master_url` (HLS), and a
+   `variants[]` quality-ladder array (see [Stream Quality / ABR](./stream-quality-abr)).
+   There is **no** `dash_url` — DASH is not produced on demand (removed in
+   updates.md #11 / S11; see the status note at the top of this page). Idempotent
    — a still-valid job for the same item + profile is reused. Segments themselves are
    generated **on demand** as each is first requested, not all up front; see
    [Stream Quality / ABR](./stream-quality-abr#on-demand-per-variant-segments-d2-a5-a6-s1-s3)
@@ -181,9 +192,9 @@ When a file can't be direct-played, the client drives this flow:
    (`master.m3u8` exists on disk). Completion/failure is detected from
    `.complete` / `.failed` markers FFmpeg's wrapper writes on exit, so readiness
    survives worker reloads.
-3. **Play** — point hls.js (native HLS on Safari/iOS) at `master_url`, or a DASH
-   player at `dash_url`. For HLS, `master_url` now resolves to a multi-variant master;
-   hls.js (or native HLS) performs ABR across its rungs automatically.
+3. **Play** — point hls.js (native HLS on Safari/iOS) at `master_url`, which resolves
+   to a multi-variant master; hls.js (or native HLS) performs ABR across its rungs
+   automatically. (No DASH playback path today — DASH is not produced on demand.)
 
 ### Getting the Correct Manifest URL
 

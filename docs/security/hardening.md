@@ -126,6 +126,7 @@ See [/security/signed-media-urls](/security/signed-media-urls) for full details.
 - **Use a strong admin password** — minimum 12 characters, unique, stored in a password manager.
 - **Limit admin sessions** — active sessions can be reviewed in **Admin → Server Settings → Sessions**. Revoke any that are unknown.
 - **Consider IP allowlisting** — if your reverse proxy supports it, restrict the `/admin/` path to known IP ranges.
+- **Autofill is suppressed on admin secret fields.** Every credential input in the admin UI (API keys, tokens, client secrets, HMAC signing secrets, LDAP bind passwords, PINs) opts out of browser and password-manager autofill (`autocomplete="new-password"` plus LastPass/1Password/Bitwarden ignore hints), so a stored-credential autofill offer cannot silently overwrite a saved key the next time you open a settings form. User-facing login and sign-up fields are left autofillable, so you can still store your own admin login in a password manager.
 
 ---
 

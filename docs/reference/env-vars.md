@@ -23,6 +23,7 @@ that consumes it.
 | `PHLIX_PLUGINS_ALLOW_HTTP`            | `0`     | When truthy (`1`, `true`, `yes`, `on`) lets the plugin loader accept plain `http://` source URLs. Default off — HTTPS or `file://` only. See `Phlix\Plugins\Installer\HttpInstaller`. |
 | `PHLIX_PLUGINS_REQUIRE_SIGNATURE`     | `0`     | When truthy, the plugin loader refuses to install unsigned plugins and refuses signatures missing from the trusted-key allowlist. Default off, which means unsigned plugins install with a warning on the `plugins` log channel. See `Phlix\Plugins\Signature\SignatureVerifier`. |
 | `PHLIX_PLUGINS_COMPOSER_TIMEOUT`      | `120`   | Hard timeout (seconds) on the per-plugin `composer install --no-dev` subprocess. See `Phlix\Plugins\Installer\ComposerRunner`. |
+| `PHLIX_PLUGINS_CATALOG_REF`           | _(unset)_ | Overrides the git ref the **official** catalog (`detain/phlix-plugins`) resolves to — a release tag or commit. **Highest precedence:** wins over the `plugins.catalog.channel` setting and over the built-in `OFFICIAL_PINNED_REF` default (precedence: env > setting > default). Use it to pin a newer catalog release or roll back without a code change. See [Plugin Catalog → Release channel](../plugins/plugin-catalog#release-channel-stable-dev) and `Phlix\Plugins\Catalog\CatalogSourceResolver`. |
 
 ## Auth
 

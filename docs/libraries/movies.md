@@ -116,7 +116,7 @@ Place `movie.nfo` alongside the video file:
 | 3 | TVDB | Fallback when TMDB has no match |
 | 4 | Filename parsing | Year and title extracted from file/folder name as last resort |
 
-Remote metadata is cached for 24 hours to avoid rate limiting. To refresh metadata immediately, click **Refresh Metadata** on any item in the UI. Adding a TMDB API key in library settings raises the rate limit.
+Remote metadata is cached for 24 hours to avoid rate limiting. To refresh metadata immediately, click **Match metadata** on any item in the UI (admins only). Adding a TMDB API key in library settings raises the rate limit.
 
 ## 5. Scanner Behavior
 
@@ -185,7 +185,7 @@ Each user profile has a rating filter set in **Settings → Profiles**: G / PG /
 
 **Cause:** TMDB API rate limit exceeded, or the server cannot reach TMDB.
 
-**Fix:** Wait 10 seconds and click **Refresh Metadata** on the item. For large initial scans, add a TMDB API key in library settings. Check server network connectivity to `api.themoviedb.org`.
+**Fix:** Wait 10 seconds and click **Match metadata** on the item. For large initial scans, add a TMDB API key in library settings. Check server network connectivity to `api.themoviedb.org`.
 
 ---
 

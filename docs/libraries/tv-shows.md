@@ -140,7 +140,7 @@ for how to set the option.
 | 4 | TMDB | Fallback; limited episode data but strong show-level |
 | 5 (lowest) | Filename parsing | Season/episode numbers and title as last resort |
 
-All remote metadata is cached for 24 hours. Click **Refresh Metadata** on any item to force an immediate re-fetch.
+All remote metadata is cached for 24 hours. Click **Match metadata** on any item (admins only) to force an immediate re-fetch.
 
 ### NFO File Formats
 

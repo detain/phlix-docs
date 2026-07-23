@@ -390,6 +390,50 @@ with no stored row it defaults to `{ "favorite": false, "rating": null, "like_le
 
 **Response 404:** Media item not found
 
+---
+
+### GET /api/v1/media/most-watched
+
+The **Most Watched** rail — the media items most-watched across the **whole
+server**. This is a **global "trending"** list (server-wide popularity), **not a
+per-user history**: every signed-in user sees the same list. It reuses the same
+all-time, cross-user aggregate the admin **Top Media** report reads, ordered by
+play count (descending). Playback events are counted from the finish signal
+(`POST /api/v1/sessions/{id}/complete`) and progress reporting.
+
+**Auth:** Required (Bearer token) — same audience as `GET /api/v1/media`.
+
+**Query parameters:**
+- `limit` (optional) — number of items to return. Default `20`, clamped to a hard
+  ceiling of `100`.
+
+**Response 200:**
+```json
+{
+  "items": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "name": "The Popular One",
+      "type": "movie",
+      "poster_url": "https://…"
+    }
+  ],
+  "total": 1,
+  "limit": 20,
+  "offset": 0
+}
+```
+
+Items are shaped exactly like `GET /api/v1/media` (poster/artwork signed URLs are
+re-minted at response time and the `type` is the item's real media type).
+Since-deleted items are silently dropped, so the rail never references a missing
+row. `offset` is always `0` (this is a fixed top-N rail, not a paginated list) and
+`total` reflects the number of returned items.
+
+> The endpoint is available for any client to render a Most Watched row. Wiring it
+> into the web home screen as a visible rail is a separate, forthcoming step; until
+> then this endpoint can be consumed directly.
+
 ## User Item Data Endpoints
 
 Per-user favorites, personal ratings, and the multi-level **Love** value for any
@@ -495,6 +539,15 @@ Watching** rail on the home screen). Items with `percent_complete >= 95` are
 excluded — they are considered finished. The same title watched across several
 sessions/devices is de-duplicated to a single row (the most recently updated) via
 a `ROW_NUMBER()` window before the limit is applied.
+
+> **How an item leaves this rail.** Besides crossing the 95% threshold, a title
+> also drops out the moment the player sends the explicit finish signal
+> ([`POST /api/v1/sessions/{id}/complete`](#post-api-v1-sessions-id-complete)) — the
+> web SPA player and mini-player fire this automatically on the media `ended`
+> event, so a fully-watched title clears itself with no manual "mark watched"
+> step. **Native clients (Roku, mobile, Tizen, Windows) do not yet send this
+> signal**, so a title finished on those clients may linger until it independently
+> crosses 95% on a progress tick. This is a tracked follow-up.
 
 **Auth:** Required
 
@@ -675,6 +728,62 @@ Report playback progress for resume-from-position support.
   "ok": true
 }
 ```
+
+---
+
+### POST /api/v1/sessions/`{id}`/complete
+
+Explicit **playback-finished** signal. Progress ticks alone only ever leave a
+session in a `playing`/`paused` state, so a finished title would otherwise linger
+in Continue Watching and its watch-time stats would never finalize. A client
+player POSTs here when the media reaches its natural end (or is deliberately
+stopped) to run the server-side finalize path: the item is removed from Continue
+Watching and its `duration_seconds` + playback-stats event are finalized (feeding
+Top Users watch time and the [Most Watched](#get-api-v1-media-most-watched) rail).
+
+**Auth:** Required (Bearer token) — the authenticated user must own the session
+(same posture as `POST .../progress`).
+
+**Parameters:**
+- `id` (path) — Session ID (from `POST /api/v1/sessions`)
+
+**Request body:**
+```json
+{
+  "media_item_id": "550e8400-e29b-41d4-a716-446655440003",
+  "reached_end": true
+}
+```
+- `media_item_id` (string, **required**) — the media item that just finished.
+- `reached_end` (bool, optional, default `true`):
+  - `true` — mark the item **watched**: the `playback_state` row is set to
+    `stopped` with `position_ticks = 0`, the item leaves Continue Watching, and the
+    stats event is recorded as completed.
+  - `false` — clear the resume point: the `playback_state` row is deleted and the
+    stats event is recorded as not completed (also removes the item from Continue
+    Watching).
+
+**Response 200:**
+```json
+{
+  "message": "Playback completed",
+  "reached_end": true
+}
+```
+
+**Response 400:** `{"error": "Missing required field: media_item_id"}`
+**Response 403:** `{"error": "Forbidden"}` — the session belongs to another user
+**Response 404:** `{"error": "Session not found"}`
+
+::: tip Which clients send this today
+The web SPA sends this automatically: both the full player and the persistent
+mini-player POST `/complete` (with `reached_end: true`) on the browser `ended`
+event, so a title watched to the end in the web app leaves Continue Watching on
+its own. **Native clients (Roku, mobile, Tizen, Windows) do not call this endpoint
+yet** — titles finished on those clients will still linger in Continue Watching and
+will not finalize watch-time until each client is updated to POST `/complete`.
+This is a tracked follow-up.
+:::
 
 ## Session Endpoints
 

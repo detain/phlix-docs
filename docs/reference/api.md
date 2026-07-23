@@ -155,6 +155,16 @@ Create a new library.
 
 **Response 400:** Missing required fields or invalid type
 
+**Movie-library option — `autoCollections`:** movie libraries accept an optional
+`autoCollections` field (a bare boolean, or `{ "enabled": bool }`) at the body top
+level — or nested in `options` — that gates the scanner's TMDB box-set
+auto-collection generation. It is normalised to `{ "enabled": bool }`, stored in the
+library's `options` blob, and **defaults to enabled when absent**. The same field is
+accepted on the library update (`PUT /api/v1/libraries/{id}`), where it is merged into
+the existing options. Every library object returned by `GET /api/v1/libraries` carries
+the effective value under a top-level `auto_collections: { "enabled": bool }` block.
+See [Auto-generated collections](../admin/library-management#auto-generated-collections-movie-libraries).
+
 ---
 
 ### POST /api/v1/libraries/`{id}`/scan

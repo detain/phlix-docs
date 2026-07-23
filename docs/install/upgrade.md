@@ -22,6 +22,9 @@ sudo -u phlix composer install --no-dev
 # 4. Run database migrations
 sudo -u phlix php scripts/run-migrations.php
 
+# 4b. Some releases add a ONE-TIME post-migration cleanup script that is NOT
+#     run automatically — see "One-time post-migration cleanup scripts" below.
+
 # 5. Rescan library if needed (see below)
 sudo -u phlix php scripts/run-library-scan-worker.php --full-rescan
 
@@ -68,6 +71,29 @@ sudo -u phlix php scripts/run-migrations.php
 If the migration fails with a schema error, restore the backup and investigate before proceeding. Common causes:
 - Skipped an intermediate version (always upgrade incrementally through consecutive releases, not jumps).
 - The `phlix` MySQL user lacks `ALTER` permission — grant it: `GRANT ALTER ON phlix.* TO 'phlix'@'127.0.0.1';`
+
+### One-time post-migration cleanup scripts (run once after upgrading)
+
+A few releases ship a **one-time** cleanup script alongside a migration. These scripts first
+de-duplicate existing rows and then add a `UNIQUE KEY` — a step that would fail if run inline as a
+plain migration on any database that already holds duplicates. **The migration reserves the change;
+the cleanup script performs it.** Neither `scripts/install.sh` nor the Docker entrypoint runs these
+scripts automatically, so you must run them manually **once** after the migration that introduces
+them. They are idempotent — re-running is safe, and you should re-run one if it reports that
+duplicates remain.
+
+Run each from the install directory (e.g. `/opt/phlix-server`) as the `phlix` user:
+
+| Since | Migration | Run once after upgrading | What it does |
+|-------|-----------|--------------------------|--------------|
+| media-path dedupe | `072_media_items_path_hash.sql` | `sudo -u phlix php migrations/cleanup_072.php` | Merges duplicate-path `media_items` rows, then adds the `(library_id, path_hash)` unique index. |
+| playback-progress dedupe (updates.md #29 / S29) | `090_playback_state_session_media_unique.sql` | `sudo -u phlix php migrations/cleanup_090.php` | Merges duplicate `(session_id, media_item_id)` rows in `playback_state` (keeping the most recently updated), then adds the `uq_playback_state_session_media` unique key. **Until this runs, playback-progress writes keep inserting a new row every ~15 seconds instead of updating in place, which bloats the table and undermines resume / Continue Watching.** |
+
+::: warning Run these before considering the upgrade complete
+If you skip a one-time cleanup script, the associated migration's unique key never gets created and
+the duplicate-row behaviour it fixes continues. Running the script late is fine (it dedupes whatever
+has accumulated), but do it as part of the upgrade so the fix actually takes effect.
+:::
 
 ---
 

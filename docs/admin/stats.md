@@ -22,6 +22,15 @@ The `StatsCollector` service records events into `stats_*` tables (`stats_playba
 
 Playback completion is marked when a user watches ≥90% of a media item.
 
+::: tip `media_type` is now type-correct
+Each `stats_playback_events` row records the media item's **real** type (`movie`,
+`episode`, `track`, `photo`, …) read from `media_items.type`. Earlier builds
+hardcoded `movie` for every start event, so type-partitioned stats and the
+[Most Watched](../reference/api#get-api-v1-media-most-watched) rail mis-attributed
+episodes, tracks, etc. as movies. The value is stored verbatim (no remap); it falls
+back to `movie` only when the item row is missing.
+:::
+
 ## How to Access
 
 ### Playback Stats (Time-Series)
@@ -93,6 +102,15 @@ longer see blank-title / blank-username rows carrying an old play count. Watch-t
 and play-count totals for surviving items/users are unchanged. The historical
 `stats_playback_events` rows for deleted items/users are retained (not purged) — they
 are only omitted from the leaderboards.
+:::
+
+::: info Also exposed to end users as a "Most Watched" endpoint
+This same global, all-time Top Media aggregate is available to signed-in end users
+(not just admins) via the public
+[`GET /api/v1/media/most-watched`](../reference/api#get-api-v1-media-most-watched)
+endpoint — a server-wide trending list ordered by play count. The admin
+`GET /api/v1/admin/stats/top-media` endpoint is unchanged. Rendering it as a
+visible home-screen rail in the clients is a separate, forthcoming step.
 :::
 
 ### Storage Snapshots

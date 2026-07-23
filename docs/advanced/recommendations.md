@@ -67,6 +67,8 @@ For each user-media pair, Phlix records:
 
 The Continue Watching row on the home screen surfaces unwatched or partially-watched content, sorted by most recently played. Items where `percent_complete >= 90` are excluded (considered "finished").
 
+An item also drops out immediately when the player sends an explicit **finish signal** — the web player and the persistent mini-player POST [`/api/v1/sessions/{id}/complete`](../reference/api#post-api-v1-sessions-id-complete) when playback reaches its natural end, so a fully-watched title clears itself from Continue Watching without any manual "mark watched" step. Native clients (Roku, mobile, Tizen, Windows) do not send this signal yet, so a title finished on those clients only leaves the row once it independently crosses the completion threshold on a progress tick.
+
 ### Up Next
 
 For TV shows, the Up Next feature links episodes in a series. When a user finishes Episode N, Episode N+1 is promoted to the top of Continue Watching. The server considers:

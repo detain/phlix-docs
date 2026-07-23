@@ -53,6 +53,33 @@ The admin Start/Stop toggle persists `dlna.cds_enabled` and schedules a graceful
 reload (the ContentDirectory routes are registered once per worker at boot), so a change
 takes effect across all workers a moment after saving rather than instantly.
 
+### Access control
+
+Even with `cds_enabled` on, the ContentDirectory (browse/stream) routes are guarded by an
+**IP allowlist middleware** — DLNA carries no credentials, so an IP gate is the only thing
+standing between a caller and the whole library. Two settings control it (both take effect
+immediately, no restart):
+
+| Setting | Default | Governs |
+|---------|---------|---------|
+| `dlna.allowed_cidrs` | `[]` | An array of CIDR ranges (e.g. `192.168.1.0/24`, `192.168.1.50/32`, `fd00::/8`) explicitly permitted to reach the DLNA CDS routes. A matching entry always wins. |
+| `dlna.restrict_to_lan` | `true` | When on, a caller matching no explicit CIDR is still allowed if it is on the local network (loopback, RFC1918, IPv4 link-local, IPv6 loopback/ULA/link-local). When off, an explicit `allowed_cidrs` match is the only way in. |
+
+::: danger An empty allowlist is never "allow all"
+With the shipped defaults (`allowed_cidrs = []`, `restrict_to_lan = true`), DLNA CDS is
+**LAN-only** — off-LAN callers are denied. Turning `restrict_to_lan` off while the
+allowlist is empty **denies everyone** (a valid, deliberate lockdown, not a way to open
+DLNA up). No combination of these two keys ever results in "anyone can reach DLNA".
+:::
+
+The client IP is taken **spoof-resistantly** (`getTrustedClientIp()`; trusted proxies are
+loopback by default), so a forged `X-Forwarded-For` from off-LAN cannot smuggle a LAN
+identity past the gate. **If you front DLNA with a reverse proxy that is not on loopback,
+add it to `TRUSTED_PROXIES`** — otherwise every request appears to come from the proxy and
+the allowlist/LAN check runs against the proxy's IP, not the real client's. See
+[Reverse proxy](./reverse-proxy) and
+[Server Settings → DLNA access control](../admin/server-settings#dlna-access-control).
+
 ### Configuration
 
 | Setting | Default | Description |
@@ -227,9 +254,12 @@ Some DLNA clients cache credentials incorrectly. Try:
 
 ## Security Considerations
 
-- DLNA operates on the local network only — not exposed to the internet
+- The ContentDirectory browse/stream routes are gated by an **IP allowlist** and are
+  **LAN-only by default** (`dlna.restrict_to_lan = true`, `dlna.allowed_cidrs = []`) — an
+  empty allowlist is never "allow all". See [Access control](#access-control) above.
 - SSDP uses UDP port 1900 — ensure firewall rules are appropriate
-- No authentication on DLNA discovery — anyone on the network can discover Phlix
+- DLNA/UPnP itself has **no authentication** — anything the IP gate admits can browse and
+  stream the whole library without signing in; that is why the IP allowlist matters
 - Media streaming uses HTTP — consider using a VPN for sensitive content
 - See [Privacy & Security](../privacy-security.md) for more information
 

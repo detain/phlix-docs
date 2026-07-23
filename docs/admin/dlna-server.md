@@ -23,6 +23,15 @@ effective `dlna.cds_enabled` value), the toggle does not flip a live in-memory f
 registers or drops the routes. There is therefore a brief transitional window between
 saving the change and it taking effect across all workers (see `reloadPending` below).
 
+::: tip Enabling the CDS does not expose it to everyone
+Even when `dlna.cds_enabled` is on, the browse/stream routes are guarded by an **IP
+allowlist** — **LAN-only by default** (`dlna.restrict_to_lan = true`, `dlna.allowed_cidrs
+= []`). An empty allowlist is never "allow all". Configure who may reach DLNA under
+**Settings → Subsystem** (`dlna.allowed_cidrs`, `dlna.restrict_to_lan`); see
+[DLNA access control](./server-settings#dlna-access-control)
+and [DLNA Server (advanced) → Access control](../advanced/dlna#access-control).
+:::
+
 ---
 
 ## Access

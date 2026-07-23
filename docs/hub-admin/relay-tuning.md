@@ -1,13 +1,14 @@
 ---
 title: Relay Tuning
-description: Rate limiting, per-user bandwidth quotas, and relay observability metrics for the Phlix Hub
+description: Rate limiting, per-user bandwidth quotas and throttle, and relay observability metrics for the Phlix Hub
 ---
 
 # Relay Tuning
 
 The Hub protects its abuse-prone entry points with per-surface rate limiters, enforces
-per-user relay bandwidth quotas and a concurrent-stream cap, and records relay observability
-metrics you can query for capacity planning. All of it is operator-configurable.
+per-user relay bandwidth quotas, a concurrent-stream cap, and a per-user bandwidth throttle, and
+records relay observability metrics you can query for capacity planning. All of it is
+operator-configurable.
 
 ## Rate limiting
 
@@ -93,10 +94,64 @@ Byte-cap accounting, by contrast, is persisted to the DB and is global.
 `PUT .../quota` validates its body (non-negative integers; byte caps ≤ 1 PiB;
 `max_concurrent_streams` ≤ 1000; `0` = unlimited) and records the change in the audit log
 (`user.quota.set`). The response is the user's rollup
-(`{user_id, bytes_in, bytes_out, quota_bytes_in, quota_bytes_out, max_concurrent_streams}`) —
-a zeroed rollup with unlimited caps if the user has no row yet.
+(`{user_id, bytes_in, bytes_out, quota_bytes_in, quota_bytes_out, max_concurrent_streams, throttle_bps}`) —
+a zeroed rollup with unlimited caps if the user has no row yet. (`throttle_bps` reflects the
+[per-user throttle](#per-user-bandwidth-throttle) documented below; the two `bandwidth` GETs
+surface it too.)
 
 Requires migration `038_relay_user_quotas_concurrency` (adds `max_concurrent_streams`).
+
+## Per-user bandwidth throttle
+
+Independent of the monthly byte caps above, each user has a **relay bandwidth throttle** — a hard
+cap on the *rate* (not the monthly total) at which the Hub relays their native-client stream.
+Enforcement is a **per-connection token bucket** on the native-client WebSocket relay path (:8803
+client mount): frames are paced to the user's cap as they are delivered. Because the bucket is
+per client channel, other users multiplexed over the **same** server tunnel are unaffected — one
+throttled viewer never slows anyone else on that tunnel.
+
+| Level | `throttle_bps` |
+| --- | --- |
+| Unlimited | `0` (bypasses throttling entirely — no token bucket, no pacing) |
+| 1 Mbps | `1000000` |
+| 3 Mbps | `3000000` **(default)** |
+| 5 Mbps | `5000000` |
+| 10 Mbps | `10000000` |
+| 20 Mbps | `20000000` |
+| 50 Mbps | `50000000` |
+
+Every user starts at the **3 Mbps** default; `0` = **Unlimited** turns the throttle off for that
+user completely (the relay send path is byte-identical to an unthrottled connection).
+
+::: warning Durable per-user setting — not a monthly quota
+The throttle is a **durable per-user setting** stored in its own table (`relay_user_settings`,
+migration `043_relay_user_settings`). It persists indefinitely and **does not reset each month**.
+This is deliberately distinct from the monthly byte-cap **quota** above, which is period-scoped
+(rolled up per calendar month in `relay_user_quotas`). Setting a throttle never touches a user's
+quota, and setting a quota never touches the throttle.
+:::
+
+::: tip Raise the cap for HD / 4K viewers
+Because 3 Mbps is the *enforced* default, an unconfigured user's remote stream is capped at
+3 Mbps — comfortable for SD/720p but tight for 1080p and too low for 4K. Raise the level (or set
+Unlimited) per user for viewers who need higher quality.
+:::
+
+### Managing the throttle over HTTP
+
+| Method | Path | Who | Notes |
+| --- | --- | --- | --- |
+| `PUT` | `/api/v1/admin/users/{id}/throttle` | Admin | Set a user's relay bandwidth throttle level |
+
+`PUT .../throttle` is admin-gated and records the change in the audit log (`user.throttle.set`).
+Its body is `{"throttle_bps": <level>}` where `<level>` must be one of the allow-listed values in
+the table above (`0`, or 1/3/5/10/20/50 Mbps expressed in bps); any other value — negative,
+fractional, non-numeric, or off-list — is rejected with **400** `invalid_throttle`. On success it
+returns the same bandwidth rollup as `GET .../bandwidth` (now including `throttle_bps`). The
+current throttle is also surfaced on both `GET /api/v1/admin/users/{id}/bandwidth` and
+`GET /api/v1/me/bandwidth`.
+
+Requires migration `043_relay_user_settings` (the durable per-user throttle store).
 
 ## Relay observability metrics
 

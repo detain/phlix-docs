@@ -541,6 +541,24 @@ season/episode subtree. A season- or episode-level apply only enriches that node
 depends on the item already knowing its season/episode number.
 :::
 
+### The item ⋯ menu metadata actions
+
+On every media card (Browse, Library, Explore, Recommendations) and on the
+detail/series page, the admin **⋯ ("More actions")** menu exposes three
+metadata-related actions. All three are **admin-only**:
+
+- **Match metadata** — opens the metadata-match modal described above.
+- **Edit metadata** — opens the **same** metadata-match modal. There is no
+  separate metadata-editing API surface, so "Edit metadata" and "Match metadata"
+  are currently functionally identical: both auto-search TMDB and let you apply a
+  match.
+- **Explore item data** — opens a **read-only inspector** that shows the item's
+  stored data as indented JSON, with a **Copy JSON** button. This is a purely
+  **client-side** view of the data already loaded in the browser — it makes **no
+  network request** and never changes anything. Use it to see exactly which fields
+  (ids, art URLs, tags, provider ids, season/episode structure) the app holds for
+  an item when diagnosing a wrong match or missing artwork.
+
 ## Merging duplicate series & movies
 
 A series container is found-or-created by a synthetic path, and there is **no DB

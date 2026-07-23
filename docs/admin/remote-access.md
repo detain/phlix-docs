@@ -252,6 +252,42 @@ POST /api/v1/admin/remote/relay/ping
 { "success": true, "latency_ms": 45, "relay_id": "relay-1" }
 ```
 
+#### Relay tunnel TLS
+
+The server↔hub relay tunnel is a separate connection from the server's public
+HTTP/HTTPS endpoint, and its TLS is configured independently.
+
+- **The default is plaintext `ws://`.** The relay scheme is derived from the
+  enrollment's hub base URL and defaults to **plaintext**, matching the hub's
+  plaintext-by-default relay listener (`:8802`). This is a change from earlier
+  builds, which always forced `wss://`+TLS and would silently hang against a
+  plaintext hub relay port.
+- **To run the relay tunnel over TLS, enable it on both ends together:** set
+  `PHLIX_RELAY_TLS=1` on the server **and** `HUB_RELAY_TLS=true` on the hub. Only
+  then does the derived scheme become `wss://` and the tunnel open with TLS.
+- **Self-signed hub relay certificate:** set `PHLIX_RELAY_TLS_VERIFY=0` on the
+  server to accept it (this turns off peer verification and allows self-signed
+  certs, mirroring the hub's permissive relay context). Production should use a
+  CA-signed certificate and leave verification on. Use `PHLIX_RELAY_TLS_CAFILE`
+  to point at a custom CA bundle (default: the system bundle at
+  `/etc/ssl/certs/ca-certificates.crt`).
+- **Explicit endpoint override:** `PHLIX_RELAY_HUB_WS_URL` (config
+  `relay.hub_relay_ws_url`) is the highest-precedence setting and overrides the
+  derived scheme. If you point it at a `wss://` URL, also set `PHLIX_RELAY_TLS=1`
+  so the cert/verify variables apply and the start-time TLS-mismatch heads-up
+  warning stays quiet.
+
+If the resolved relay URL is `wss://` while `PHLIX_RELAY_TLS` is off, the server
+logs a once-per-process warning on the `hub` channel at boot explaining the likely
+hang and which variables to set. These variables are listed in
+[Environment variables → Relay tunnel](../reference/env-vars#relay-tunnel) and
+[Config files → `config/relay.php`](../reference/config-files#config-relay-php).
+
+> The tunnel worker also persists its last connect state (connected/active,
+> reconnect attempts, last disconnect, last connect-error reason/time) to
+> `config/relay-tunnel.state.json`. This is an internal groundwork file consumed
+> by the Network Health panel; operators do not edit it directly.
+
 ---
 
 ### Port Forward

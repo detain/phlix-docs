@@ -54,6 +54,7 @@ Click **Add library** to open a modal with a form:
 | **Type** | A select of the **five DB-valid types**: `movie`, `series`, `music`, `photo`, `video`. |
 | **Paths** | One or more directories chosen via the **PathPicker** (see below). At least one path is required. |
 | **Series per directory** | (series libraries only) Toggle the `series_per_directory` option — see [Per-series-directory libraries](#per-series-directory-libraries) below. |
+| **Automatically generate collections from TMDB box sets** | (movie libraries only) Toggle whether the scanner auto-creates collections from TMDB box sets — see [Auto-generated collections](#auto-generated-collections-movie-libraries) below. Default **on**. |
 
 Submitting `POST`s `{ name, type, paths, options? }` to `/api/v1/libraries`. On `201` the
 modal closes, a success toast appears, and the list refreshes. A `400` (validation error)
@@ -111,6 +112,29 @@ The `libraries.type` ENUM in migration `001_initial_schema.sql` is exactly
 *also lists* `book` in its `$validTypes`, but a `book` insert would `500` at the DB
 ENUM — so the UI excludes it. The controller/DB mismatch is a known pre-existing
 backend bug tracked as a carry-over for a later step.
+:::
+
+### Auto-generated collections (movie libraries)
+
+A **movie** library can toggle whether the scanner **automatically generates
+collections from TMDB box sets**. When enabled (the default), each scanned film
+that TMDB places in a box set — e.g. *The Lord of the Rings Collection* — is
+grouped into the matching collection during the scan. Turning it off stops that
+generation from the **next scan onward** (existing collections are left as-is).
+
+The switch appears in the add/edit form **only for movie libraries** — TMDB box
+sets are a movie concept, and the scanner only syncs collections for movie items.
+
+::: tip Setting the option
+The flag can be sent at the top level of the create/update body — as a bare boolean
+(`autoCollections: true`) or a map (`autoCollections: { "enabled": false }`) — or
+nested inside `options`; either way it is normalised to the canonical
+`{ "enabled": bool }` shape and merged into the library's `options` blob (so it
+coexists with `series_per_directory`, `metadata_priority`, and `image_types`). It
+**defaults to enabled when absent**, so libraries created before this option existed
+keep generating collections until you explicitly turn it off — only an explicit
+stored `false` disables generation. The library payload surfaces the effective value
+under a top-level `auto_collections: { "enabled": bool }` block.
 :::
 
 ### The PathPicker

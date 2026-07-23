@@ -612,6 +612,100 @@ The response is a bare `{ "items": [...] }` object — there is **no** `limit`,
 > series is automatically surfaced at the top of Continue Watching (if it exists
 > and is available). See [Recommendations & Discovery → Up Next](../advanced/recommendations.md#up-next).
 
+### GET /api/v1/users/me/next-up
+
+The **Next Up** rail — a sibling to Continue Watching. Where Continue Watching
+lists the _in-progress_ items you can resume, Next Up lists, **for each series you
+have started, the single next episode to play**: the fresh episode to begin next
+rather than one already part-watched. It is the classic Plex/Jellyfin "Next Up"
+row.
+
+**Auth:** Required
+
+**Query parameters:**
+- `limit` (optional) — number of series to return a next episode for. Default `20`,
+  clamped to `1-50`. (Internally the server scans up to `max(limit × 3, 50)` of the
+  most-recently-touched started series so a run of finished series does not starve
+  the rail; the returned list is still capped at `limit`.)
+
+**How the next episode is chosen.** For each series the profile has started
+(most-recently watched series first), the server looks at the profile's playback
+history for that series and picks one episode:
+
+- An **in-progress** episode (playing/paused, between 0% and 95% of its duration)
+  resumes _that_ episode.
+- A **finished** episode (stopped at position 0, or watched to ≥95% of its
+  duration) advances to the **next numbered episode**, rolling into the next
+  numbered season when the current season is exhausted.
+- A series whose episodes are **all watched** yields **no entry** (nothing is left
+  to play next).
+- Only **numbered seasons** are walked — Specials / season-less content are
+  excluded from the ordering.
+
+The watched/in-progress signal comes **only** from playback state (the same source
+the live Continue Watching rail reads) — the manual "mark watched" flag and the
+legacy watch-history table are deliberately not consulted. Results pass the active
+profile's parental **rating gate**: over-cap episodes (by effective rating) are
+dropped for a gated profile, while the account owner sees the unfiltered list.
+
+**Response 200:**
+
+Each entry is a **shaped media item** (produced by `MediaItemShaper::shape()`, the
+same shape Continue Watching returns), so S37's home rail can render it identically.
+For episodes, `poster_url` / `poster_srcset` resolve to the **series** poster
+(falling back to the season poster, then the episode's own poster). Because a
+Next-Up pick is a fresh episode, `position_ticks` and `duration_ticks` are always
+`0`. Two extra keys carry the series context so the rail can label
+"Next Up: _\<Series\>_ S02E01".
+
+```json
+{
+  "items": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440007",
+      "name": "The Wolf and the Lion",
+      "type": "episode",
+      "poster_url": "https://image.tmdb.org/t/p/w500/series-poster.jpg",
+      "poster_srcset": "https://.../w342/series-poster.jpg 342w, https://.../w500/series-poster.jpg 500w",
+      "runtime": 55,
+      "year": 2011,
+      "genres": ["Drama", "Fantasy"],
+      "rating": "TV-MA",
+      "parent_id": "season-uuid",
+      "season_number": 1,
+      "episode_number": 5,
+      "episode_title": "The Wolf and the Lion",
+      "created_at": "2026-01-01T00:00:00+00:00",
+      "updated_at": "2026-01-02T00:00:00+00:00",
+      "media_item_id": "550e8400-e29b-41d4-a716-446655440007",
+      "position_ticks": 0,
+      "duration_ticks": 0,
+      "series_id": "series-uuid",
+      "series_name": "Game of Thrones",
+      "metadata": { "poster_url": "https://image.tmdb.org/t/p/w500/series-poster.jpg", "...": "..." }
+    }
+  ]
+}
+```
+
+The response is a bare `{ "items": [...] }` object — there is **no** `limit`,
+`offset`, or `total` field. In addition to every field the Continue Watching item
+carries, Next Up adds:
+
+| Field | Notes |
+| --- | --- |
+| `series_id` | Id of the parent **series** the episode belongs to. |
+| `series_name` | Display name of the parent series (for the rail label). |
+| `position_ticks` | Always `0` — a Next-Up pick is a fresh episode, not a resume. |
+| `duration_ticks` | Always `0` for the same reason. |
+| `media_item_id` | The episode's media item id; the rating gate filters on this key. |
+
+**Response (no active profile):** `200` with an empty list — `{ "items": [] }`.
+
+**Response 401:** unauthenticated (no Bearer token).
+
+**Response 503:** the watch-history service is not configured on this server.
+
 ## Transcoding Endpoints
 
 Files the browser can't direct-play (non-web containers like MKV, or codecs like

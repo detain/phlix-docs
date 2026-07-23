@@ -76,6 +76,8 @@ For TV shows, the Up Next feature links episodes in a series. When a user finish
 - User's auto-play settings
 - Whether the show is still actively airing (new episodes get higher priority)
 
+A dedicated **Next Up** rail is also exposed as its own endpoint, [`GET /api/v1/users/me/next-up`](../reference/api#get-api-v1-users-me-next-up): for each series the profile has started, it returns the single next unwatched episode (resuming an in-progress episode, or advancing to the next numbered episode/season once one is finished). It reads only playback state and walks numbered seasons in order, excluding Specials.
+
 ---
 
 ## 3. Similar / Because You Watched (BYW)

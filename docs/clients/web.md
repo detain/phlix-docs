@@ -121,6 +121,11 @@ top-bar nav (**Music**, **Books**, **Audiobooks**, **Photos**, **Search**):
 | **Photos** | Date-grouped album grid, album view, single-photo view with EXIF, and a slideshow | `/app/photo/albums`, `/app/photo/album/{id}`, `/app/photo/photo/{id}`, `/app/photo/slideshow` |
 | **Search** | Cross-library search results | `/app/search` |
 
+The **Music**, **Books**, **Audiobooks**, and **Photos** nav entries only appear when your
+server has at least one library of that type — for example, the **Books** link is hidden until a
+Books library exists. While the library list is still loading right after sign-in these entries
+stay hidden (rather than flashing in and then disappearing), and **Search** is always available.
+
 > [!NOTE]
 > These media-type pages, plus the **Security** (passkeys/WebAuthn) tab on **Settings**
 > (`/app/settings/security`), are served by the Vue SPA at `/app`. The Vue SPA is now the **only** web UI —

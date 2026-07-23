@@ -304,7 +304,10 @@ Relay tunnel settings for the Hub connection.
 ```php
 'enabled'          => true,
 'hub_wss_url'      => 'wss://hub.example.com/api/v1/servers/{id}/relay',  // Legacy template (not used if hub_relay_ws_url set)
-'hub_relay_ws_url' => 'ws://127.0.0.1:8802',                   // Use 127.0.0.1 when co-located with hub; wss:// for remote
+'hub_relay_ws_url' => '',                                       // Explicit endpoint; empty = derive from enrollment (highest-precedence override when set)
+'relay_tls'        => false,                                    // PHLIX_RELAY_TLS — TLS (wss://) for the DERIVED scheme; default plaintext ws:// (mirrors hub HUB_RELAY_TLS)
+'relay_tls_verify' => true,                                     // PHLIX_RELAY_TLS_VERIFY — verify hub relay cert; set false to accept a self-signed cert
+'relay_tls_cafile' => '/etc/ssl/certs/ca-certificates.crt',    // PHLIX_RELAY_TLS_CAFILE — CA bundle used when verifying
 'local_http_address' => '127.0.0.1:8096',                      // Where relay pipes relayed bytes locally
 'local_address'    => '127.0.0.1:0',                           // Local bind address for the tunnel
 'tunnel_hostname'  => '',                                       // Optional override
@@ -312,6 +315,14 @@ Relay tunnel settings for the Hub connection.
 'ping_interval'   => 30,                                        // Keep-alive ping interval
 'ping_timeout'    => 10,                                        // Seconds to wait for pong before dropping
 ```
+
+The relay tunnel's TLS is **independent** of the server's public HTTP TLS and is
+**off by default** — the derived relay scheme is plaintext `ws://`, matching the
+hub's plaintext-by-default relay listener (`:8802`). A TLS relay tunnel requires
+`relay_tls`/`PHLIX_RELAY_TLS=1` on the server **together with** `HUB_RELAY_TLS=true`
+on the hub. An explicit `hub_relay_ws_url` (or `PHLIX_RELAY_HUB_WS_URL`) wins over
+the derived scheme; when it is a `wss://` URL, pair it with `PHLIX_RELAY_TLS=1`. See
+[Remote Access → Relay tunnel TLS](../admin/remote-access#relay-tunnel-tls).
 
 ---
 

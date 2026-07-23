@@ -243,7 +243,8 @@ appear only when the Settings page's **Advanced** switch is on. **Restart** mark
 a key whose value is captured at container-build time and therefore only takes
 effect after the server restarts — the page badges these.
 
-**68 keys** as of `phlix-shared` v0.40.0.
+**72 keys** in `phlix-shared` v0.45.0. This table is a regenerated snapshot and
+may lag the schema for a release or two; the schema is the source of truth.
 
 #### `access.*`
 
@@ -279,9 +280,11 @@ effect after the server restarts — the page badges these.
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
+| `dlna.allowed_cidrs` | `json` | advanced | no |
 | `dlna.cds_enabled` | `bool` | advanced | yes |
 | `dlna.enabled` | `bool` | standard | yes |
 | `dlna.friendly_name` | `string` | standard | yes |
+| `dlna.restrict_to_lan` | `bool` | advanced | no |
 
 #### `ffmpeg.*`
 
@@ -543,6 +546,41 @@ match hit-rate.
 - Both the movie filename normalizer (`SceneFilenameNormalizer`) and the series
   parser (`EpisodeFilenameParser::cleanSeries()`) consume the same effective list
   via the shared `TitleSuffixStripper` (single source of truth).
+
+## DLNA access control (`dlna.allowed_cidrs`, `dlna.restrict_to_lan`) {#dlna-access-control}
+
+The DLNA ContentDirectory (browse/stream) routes carry **no authentication** — the
+protocol has no concept of credentials — so once `dlna.cds_enabled` is on, these two
+keys are the gate that decides who can reach the whole library over DLNA. Both take
+effect **immediately** (no restart).
+
+| Key | Type | Default | Meaning |
+|-----|------|---------|---------|
+| `dlna.allowed_cidrs` | `json` (array of CIDR strings) | `[]` | IP ranges explicitly permitted to reach the DLNA CDS routes. A matching entry always wins, even with the LAN restriction off. |
+| `dlna.restrict_to_lan` | `bool` | `true` | When on, a caller that matches no explicit CIDR is still allowed if it is on the local network (loopback, RFC1918, IPv4 link-local, IPv6 loopback/ULA/link-local). When off, an explicit `allowed_cidrs` match is the *only* way in. |
+
+::: danger An empty allowlist is NEVER "allow all"
+No combination of these settings ever means "anyone can reach DLNA":
+
+- **Defaults (`allowed_cidrs = []`, `restrict_to_lan = true`)** → DLNA CDS is
+  **LAN-only**. Only loopback and the private/local ranges are admitted; everything
+  off-LAN is denied.
+- **`restrict_to_lan = false` with no matching CIDR** → **everything is denied**. An
+  empty allowlist with the LAN restriction off locks DLNA down completely — a valid,
+  deliberate state, not a way to open it up.
+- Add a `/32` host or a subnet/VPN range to `allowed_cidrs` to permit a specific
+  address the LAN default would not already cover.
+:::
+
+**Trusted-proxy / spoofing caveat.** The client IP is resolved spoof-resistantly via
+`getTrustedClientIp()`, so a forged `X-Forwarded-For` from an off-LAN caller cannot
+smuggle a LAN identity past the gate — only trusted proxies (loopback by default) may
+set the forwarded address. If you front DLNA with a reverse proxy that is **not** on
+loopback, add that proxy's address to `TRUSTED_PROXIES`, otherwise every request will
+appear to originate from the proxy and the allowlist/LAN check will be evaluated
+against the proxy's IP instead of the real client. See
+[DLNA Server (advanced)](../advanced/dlna#access-control) and
+[Reverse proxy](../advanced/reverse-proxy).
 
 ## Storage
 

@@ -130,13 +130,13 @@ the current user is read from the validated session (Bearer token / session
 cookie), never from the request body — and none of them create a new account or
 mint a new session.
 
-::: warning What linking does *not* do yet
-S45 **records and lists** a link. **Unlinking** an identity, and **logging in *via*
-a linked identity** (repointing the login lookup onto the `user_identities` store),
-arrive in a **later release**. For now, external login still uses the flows in
-[How users log in](#how-users-log-in); a freshly-linked identity becomes usable for
-login in that later release. Multiple *instances* of the same provider are also a
-later step.
+::: tip Linking is now a full round-trip
+As of S47 you can **link** an external identity, **list** what is linked,
+**unlink** one you no longer want, and **log in *via* a linked identity**. A
+freshly-linked identity resolves to your **existing** account on the next
+OIDC/LDAP login — it no longer creates a duplicate. Multiple *instances* of the
+same provider (e.g. two OIDC issuers) are supported at the platform level; an
+admin UI for configuring named instances is a later step.
 :::
 
 ### The security guarantee: verified links only
@@ -207,6 +207,40 @@ linked to you — see idempotency below). A failed bind links nothing and return
 generic `401 "Invalid credentials"` (no account-enumeration oracle); a genuine
 directory/config failure returns `503`.
 
+### Unlink an identity
+
+```
+DELETE /auth/identities/{id}        (authenticated)
+```
+
+Removes one external identity from **your own** account. The `{id}` is the `id`
+field from [List your linked identities](#list-your-linked-identities). On success
+it returns `200 { success, message }`. Your local password and every other linked
+identity are left untouched.
+
+Two guards protect you:
+
+- **Own-identity-only.** You can only unlink an identity that belongs to your
+  account. The target is resolved within your own identity list (keyed on your
+  authenticated session, never on the request body), so an `id` that belongs to
+  another account — or that does not exist — returns an indistinguishable
+  **`404 identity_not_found`**, never a cross-account removal.
+- **Never your last sign-in method.** If removing the identity would leave your
+  account with **no local password *and* no other linked identity**, the request is
+  refused with **`409 last_sign_in_method`** so you can't lock yourself out. Set a
+  local password, or keep at least one other identity, first.
+
+### Logging in with a linked identity
+
+Once you've linked an identity you can **log in with it directly**. The next time
+you authenticate through that provider — the OIDC flow or an `ldap:` login (see
+[How users log in](#how-users-log-in)) — Phlix resolves the identity to your
+**existing** account instead of creating a new one: the login read path now looks
+the identity up in the `user_identities` store first. No extra step is needed;
+linking and logging-in target the same account.
+
+Existing and legacy external users keep logging in exactly as before.
+
 ### Conflicts and idempotency
 
 - **Already linked to *another* account →** `409 identity_already_linked`. An
@@ -239,9 +273,11 @@ link attempts resolve to exactly one row (a genuine server error is surfaced as 
   connection failure returns `503` (so operators can tell a config problem from a
   bad password without leaking which usernames exist).
 - **Distinct identities per provider.** External identities are stored with their
-  real provider (`oidc` / `ldap`) and looked up by `(provider, external_id)`, so
-  the same `sub`/DN presented by two different providers maps to two distinct
-  users — never a silent account merge.
+  real provider (`oidc` / `ldap`) and resolved on login by
+  `(provider, provider_instance, external_id)` via the `user_identities` store
+  (with a legacy `users` fallback), so the same `sub`/DN presented by two different
+  providers — or by two instances of the same provider — maps to distinct users,
+  never a silent account merge.
 
 ## Operational notes
 
@@ -251,15 +287,22 @@ link attempts resolve to exactly one row (a genuine server error is surfaced as 
   migration runner on upgrade — **no manual step**. Users whose IdP supplies no
   email/username are still created (Phlix assigns a deterministic placeholder
   derived from the provider + external ID).
-- **Migration 092 applies automatically (forward-looking, no behaviour change).**
-  `092_user_identities.sql` adds a `user_identities` join table — the future home
-  for multiple external identities per account (account-linking and multi-instance
-  providers) — and backfills a row for every existing external-identity user,
-  deriving the real provider (`oidc` / `ldap`) and de-duplicating any legacy
-  duplicates. It is applied by the migration runner on upgrade — **no manual step**.
-  This is internal foundation only: `users.provider` / `users.external_id` remain
-  the **authoritative login-lookup columns**, so login behaviour (including the
-  distinct-identities-per-provider guarantee above) is unchanged.
+- **Migration 092 applies automatically.** `092_user_identities.sql` adds a
+  `user_identities` join table — the home for multiple external identities per
+  account (account-linking and multi-instance providers) — and backfills a row for
+  every existing external-identity user, deriving the real provider (`oidc` /
+  `ldap`) and de-duplicating any legacy duplicates. It is applied by the migration
+  runner on upgrade — **no manual step**. As of S47 the login read path resolves
+  the owning account through this table first (falling back to `users.provider` /
+  `users.external_id` for any un-backfilled row), which is what makes a linked
+  identity usable for login; existing and legacy external users log in unchanged.
+- **Multiple providers of the same family.** The auth provider registry can hold
+  more than one instance of the same family (e.g. two OIDC issuers) without a
+  name collision — the platform foundation for configuring multiple OIDC/OAuth
+  providers. Each identity records which instance it belongs to
+  (`user_identities.provider_instance`, `''` for the default single instance).
+  Configuring/seeding additional named instances from the admin console is a later
+  step.
 - **Non-blocking OIDC I/O.** OIDC discovery, token exchange, userinfo, and JWKS
   fetches use a non-blocking HTTP client so they don't stall the worker. LDAP
   binds remain a bounded (5 s) blocking call — the `ext-ldap` extension has no
@@ -281,6 +324,7 @@ link attempts resolve to exactly one row (a genuine server error is surfaced as 
 | `GET` | `/auth/identities` | List the current user's linked identities (**authenticated**) |
 | `GET` | `/auth/identities/link/oidc` | Start linking an OIDC identity to the current account (**authenticated**) |
 | `POST` | `/auth/identities/link/ldap` | Link an LDAP identity via a live bind (**authenticated**); body `{username, password}` |
+| `DELETE` | `/auth/identities/{id}` | Unlink one of the current user's identities (**authenticated**); `404` if not yours, `409` if it's your last sign-in method |
 
 The admin config UI and its endpoints are also covered in
 [Integrations → Auth providers](../admin/integrations#auth-providers).

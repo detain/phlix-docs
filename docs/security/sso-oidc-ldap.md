@@ -154,6 +154,15 @@ prefix is always treated as a local account.
   migration runner on upgrade — **no manual step**. Users whose IdP supplies no
   email/username are still created (Phlix assigns a deterministic placeholder
   derived from the provider + external ID).
+- **Migration 092 applies automatically (forward-looking, no behaviour change).**
+  `092_user_identities.sql` adds a `user_identities` join table — the future home
+  for multiple external identities per account (account-linking and multi-instance
+  providers) — and backfills a row for every existing external-identity user,
+  deriving the real provider (`oidc` / `ldap`) and de-duplicating any legacy
+  duplicates. It is applied by the migration runner on upgrade — **no manual step**.
+  This is internal foundation only: `users.provider` / `users.external_id` remain
+  the **authoritative login-lookup columns**, so login behaviour (including the
+  distinct-identities-per-provider guarantee above) is unchanged.
 - **Non-blocking OIDC I/O.** OIDC discovery, token exchange, userinfo, and JWKS
   fetches use a non-blocking HTTP client so they don't stall the worker. LDAP
   binds remain a bounded (5 s) blocking call — the `ext-ldap` extension has no

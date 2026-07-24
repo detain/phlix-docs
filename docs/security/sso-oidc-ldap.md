@@ -122,6 +122,103 @@ Phlix strips the `ldap:` prefix, binds against the configured directory, and —
 success — mints a session exactly like a local login. A user without the `ldap:`
 prefix is always treated as a local account.
 
+## Account linking
+
+An **already-signed-in** account can attach one or more external identities to
+itself, and list what is linked. All three endpoints below are **authenticated** —
+the current user is read from the validated session (Bearer token / session
+cookie), never from the request body — and none of them create a new account or
+mint a new session.
+
+::: warning What linking does *not* do yet
+S45 **records and lists** a link. **Unlinking** an identity, and **logging in *via*
+a linked identity** (repointing the login lookup onto the `user_identities` store),
+arrive in a **later release**. For now, external login still uses the flows in
+[How users log in](#how-users-log-in); a freshly-linked identity becomes usable for
+login in that later release. Multiple *instances* of the same provider are also a
+later step.
+:::
+
+### The security guarantee: verified links only
+
+Linking **always proves you actually control the external identity** — a
+client-claimed identifier is never trusted:
+
+- **OIDC** is verified by a full round-trip to your IdP (authorization-code + PKCE
+  flow and id-token validation, exactly like login). The linked identity is the
+  IdP-verified subject (`sub`); any `external_id` in the request is ignored.
+- **LDAP** is verified by a **live bind** with the supplied credentials. Only a
+  successful bind links the directory identity; the linked identity is the
+  directory's own DN, not anything from the request.
+
+Because the OIDC link carries the initiating user in **server-side** state (not a
+client-visible parameter), an attacker cannot forge or swap the target account —
+you can only ever link an identity you can authenticate as, onto your own account.
+Linking never changes your primary login and never issues a new session.
+
+### List your linked identities
+
+```
+GET /auth/identities        (authenticated)
+```
+
+Returns the identities linked to the current user:
+
+```json
+{
+  "identities": [
+    {
+      "id": "…",
+      "provider": "oidc",
+      "provider_instance": "",
+      "external_id": "oidc.<sub>",
+      "linked_at": "2026-07-24 00:00:00"
+    }
+  ]
+}
+```
+
+`provider_instance` is `""` for the default single instance. Provider secrets and
+internal `provider_data` are **never** returned.
+
+### Link an OIDC identity
+
+```
+GET /auth/identities/link/oidc        (authenticated)
+```
+
+Starts the OIDC authorization-code + PKCE flow with a server-side **link intent**.
+The browser is redirected to your IdP; after you authenticate, the existing
+`GET /auth/oidc/callback` attaches the IdP-verified `sub` to your account and
+`302`s back to the same-origin app with a `?linked=oidc` marker. **No login session
+is minted** — you stay logged in as yourself.
+
+### Link an LDAP identity
+
+```
+POST /auth/identities/link/ldap        (authenticated)
+Body: { "username": "jdoe", "password": "…" }
+```
+
+Performs a live LDAP bind with the supplied credentials. On success the directory
+identity is linked and the endpoint returns `200`
+`{ success, provider, created, message }` (`created:false` means it was already
+linked to you — see idempotency below). A failed bind links nothing and returns a
+generic `401 "Invalid credentials"` (no account-enumeration oracle); a genuine
+directory/config failure returns `503`.
+
+### Conflicts and idempotency
+
+- **Already linked to *another* account →** `409 identity_already_linked`. An
+  external identity can belong to only one Phlix account; Phlix never silently
+  re-homes it.
+- **Already linked to *your* account →** idempotent **success** (LDAP returns
+  `created:false`; OIDC redirects back with `?linked=oidc`). Linking twice is safe.
+
+The `user_identities` table's UNIQUE index is the race backstop, so two concurrent
+link attempts resolve to exactly one row (a genuine server error is surfaced as a
+`5xx`, never mislabeled as a `409`).
+
 ## Security posture
 
 - **Session cookies, not URL tokens.** A successful OIDC login delivers the
@@ -179,8 +276,11 @@ prefix is always treated as a local account.
 | `GET`/`POST` | `/api/v1/admin/auth-providers/ldap/config` | Read / save LDAP config |
 | `POST` | `/api/v1/admin/auth-providers/ldap/test` | Dry-run an LDAP bind |
 | `GET` | `/auth/oidc/authorize` | Start the OIDC flow (unauthenticated) |
-| `GET` | `/auth/oidc/callback` | OIDC callback from the IdP (unauthenticated) |
+| `GET` | `/auth/oidc/callback` | OIDC callback from the IdP (unauthenticated; also handles the account-link branch) |
 | `POST` | `/auth/login` | Local login, or LDAP with an `ldap:`-prefixed username |
+| `GET` | `/auth/identities` | List the current user's linked identities (**authenticated**) |
+| `GET` | `/auth/identities/link/oidc` | Start linking an OIDC identity to the current account (**authenticated**) |
+| `POST` | `/auth/identities/link/ldap` | Link an LDAP identity via a live bind (**authenticated**); body `{username, password}` |
 
 The admin config UI and its endpoints are also covered in
 [Integrations → Auth providers](../admin/integrations#auth-providers).

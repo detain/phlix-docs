@@ -156,6 +156,32 @@ current throttle is also surfaced on both `GET /api/v1/admin/users/{id}/bandwidt
 
 Requires migration `043_relay_user_settings` (the durable per-user throttle store).
 
+### From the admin console (Users page)
+
+Both the monthly quota and the throttle are editable without touching the API, from the **Users**
+page of the Hub's web admin console (**`/app/admin/users`**). Every user row has a **Relay** action
+that opens a **Relay limits** dialog with two sections:
+
+- **Bandwidth throttle** — a dropdown of the fixed levels above (Unlimited / 1 / 3 / 5 / 10 / 20 /
+  50 Mbps). Choosing **Unlimited** sends `throttle_bps = 0`.
+- **Monthly quota** — download and upload caps entered in **GiB** (converted to bytes at `1024³`;
+  `0` = unlimited), plus a **max concurrent streams** field (`0` = unlimited). The dialog also shows
+  the bytes already used this period.
+
+**Save** issues only the PUTs for the section(s) you actually changed (`PUT …/throttle` and/or
+`PUT …/quota`), so an unchanged section is never re-written or re-audited. The client enforces the
+same bounds as the API (byte caps ≤ 1 PiB, streams ≤ 1000; the throttle is limited to the allow-listed
+levels) and blocks an out-of-range save before it reaches the Hub.
+
+::: warning Hub-only control — needs an up-to-date SPA pin
+The **Relay** action renders only in the **Hub** admin console (`phlixConfig.app === 'hub'`); the
+media server does not serve these endpoints, so the control never appears in the server's admin UI.
+It shipped in **`@phlix/ui` 0.98.30**, so it reaches a *deployed* Hub only once the Hub's
+`web-ui/package.json` pins `@phlix/ui` to **≥ 0.98.30** and the SPA bundle under
+`public/assets/app/` is rebuilt. The underlying HTTP API (above) works regardless of the SPA
+version.
+:::
+
 ## Relay observability metrics
 
 The Hub records relay metrics into the time-bucketed `metrics_rollup` table (there is **no**

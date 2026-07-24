@@ -1279,6 +1279,14 @@ The hub admin API is mounted under `/api/v1/admin/*`. Most read shapes follow th
 | `POST` | `/api/v1/admin/users/{id}/set-admin` | Grant/revoke admin. |
 | `POST` | `/api/v1/admin/users/{id}/reset-password` | Reset a user's password. |
 | `GET` | `/api/v1/admin/users/{id}/profiles` | Per-user profiles — always returns `[]` on the hub (no profiles subsystem; present for SPA parity). |
+| `GET` | `/api/v1/admin/users/{id}/bandwidth` | Read a user's current-period relay usage + caps (includes `throttle_bps`). |
+| `PUT` | `/api/v1/admin/users/{id}/quota` | Set a user's monthly byte caps + concurrent-stream cap (`0` = unlimited). |
+| `PUT` | `/api/v1/admin/users/{id}/throttle` | Set a user's durable relay bandwidth throttle (`throttle_bps`; `0` = Unlimited). |
+
+> The per-user relay **bandwidth** endpoints above (`/bandwidth`, `/quota`, `/throttle`) plus the
+> self endpoint `GET /api/v1/me/bandwidth` are documented in full — bodies, allow-listed throttle
+> levels, `0` = Unlimited semantics, and the durable-vs-monthly distinction — in
+> [Relay Tuning](../hub-admin/relay-tuning#per-user-bandwidth-quotas-concurrent-stream-cap).
 
 ### Dashboard
 

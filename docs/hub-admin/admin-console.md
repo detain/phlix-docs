@@ -58,6 +58,13 @@ CRUD over Hub accounts: list, view, create, edit, and delete users; toggle the a
 password. The Hub has no profiles subsystem, so the per-user **profiles list is always empty** (the
 shared page hides profile UI when there are none). You cannot remove the last remaining admin.
 
+Each user row also has a **Relay** action (Hub console only) that opens a **Relay limits** dialog for
+setting that user's per-user relay **bandwidth throttle** (a rate cap) and **monthly quota** (byte
+caps + a concurrent-stream cap) — see
+[Relay Tuning → From the admin console](./relay-tuning#from-the-admin-console-users-page). This
+control shipped in `@phlix/ui` 0.98.30 and reaches a deployed Hub only once `web-ui/package.json`
+pins `@phlix/ui` to ≥ 0.98.30.
+
 ### Logs
 
 Lists the Hub's on-disk log files and tails them — a single file, or all files merged into one

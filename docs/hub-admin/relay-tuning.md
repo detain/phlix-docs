@@ -104,11 +104,14 @@ Requires migration `038_relay_user_quotas_concurrency` (adds `max_concurrent_str
 ## Per-user bandwidth throttle
 
 Independent of the monthly byte caps above, each user has a **relay bandwidth throttle** — a hard
-cap on the *rate* (not the monthly total) at which the Hub relays their native-client stream.
-Enforcement is a **per-connection token bucket** on the native-client WebSocket relay path (:8803
-client mount): frames are paced to the user's cap as they are delivered. Because the bucket is
-per client channel, other users multiplexed over the **same** server tunnel are unaffected — one
-throttled viewer never slows anyone else on that tunnel.
+cap on the *rate* (not the monthly total) at which the Hub relays their remote stream.
+Enforcement is a **per-connection token bucket** applied on **both** relay transports: the
+native-client WebSocket relay path (:8803 client mount), where frames are paced to the user's cap
+as they are delivered, **and** the browser HTTP-over-relay proxy (streaming response) path, where
+response-body fragments are paced through the same bucket before each `send()`. The **same** durable
+per-user cap and the **same** `0` = Unlimited bypass (no token bucket, no pacing) apply on both
+paths. Because the bucket is per connection/channel, other users multiplexed over the **same**
+server tunnel are unaffected — one throttled viewer never slows anyone else on that tunnel.
 
 | Level | `throttle_bps` |
 | --- | --- |

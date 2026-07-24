@@ -78,11 +78,20 @@ The Arr sync section (`/admin/integrations#arr-sync`) connects to TRaSH-Guides-c
 
 The Auth providers section (`/admin/integrations#auth-providers`) lets admins configure external authentication backends — **OIDC** (OpenID Connect) and **LDAP** — so users can log in with their corporate or identity-provider credentials instead of local Phlix accounts.
 
+::: tip Full SSO guide
+This page covers the admin **configuration** UI. For the end-to-end login flow, the
+OIDC redirect/callback URL to register with your IdP, the `ldap:`-prefix login
+convention, cookie-based sessions, and the security posture, see
+[Single Sign-On (OIDC & LDAP)](../security/sso-oidc-ldap).
+:::
+
 ### What it does
 
 - Lists all registered auth providers (OIDC, LDAP) with an enable/disable toggle per provider.
 - Expanding a provider reveals its configuration form, pre-filled from the current server settings.
 - LDAP additionally exposes a **Test connection** button that fires a dry-run `POST` with the current form values and reports success or failure.
+
+The enable/disable toggle persists a server setting (`auth.oidc.enabled` / `auth.ldap.enabled`) **and** registers or unregisters the provider so the login flow goes live immediately — no server restart needed. A provider only becomes live when it is both enabled **and** configured: enabling one that has no saved configuration is rejected with `409 not_configured`, so the "Enabled" badge always means "provider live", not merely "setting saved".
 
 ### Managing auth providers in the UI
 
@@ -99,7 +108,7 @@ The Auth providers section (`/admin/integrations#auth-providers`) lets admins co
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/api/v1/admin/auth-providers` | Lists all providers `{ providers: [{ name, supports_authentication }] }` |
-| `POST` | `/api/v1/admin/auth-providers/{name}/enable` | Enables a provider |
+| `POST` | `/api/v1/admin/auth-providers/{name}/enable` | Enables a provider — `200` with `{enabled, live}`, `409 not_configured` if it has no saved config, `404 unknown_provider` for an unknown name |
 | `POST` | `/api/v1/admin/auth-providers/{name}/disable` | Disables a provider |
 | `GET` | `/api/v1/admin/auth-providers/{name}/config-schema` | Returns the provider's JSON schema for form rendering |
 | `GET` | `/api/v1/admin/auth-providers/oidc/config` | Returns `{ provider_url, client_id, scopes, configured }` |

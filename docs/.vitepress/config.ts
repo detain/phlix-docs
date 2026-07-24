@@ -293,6 +293,7 @@ export default defineConfig({
           text: 'Security',
           items: [
             { text: 'Passkeys', link: '/security/passkeys' },
+            { text: 'SSO (OIDC & LDAP)', link: '/security/sso-oidc-ldap' },
             { text: 'Signed Media URLs', link: '/security/signed-media-urls' },
             { text: 'Hardening Checklist', link: '/security/hardening' },
           ]

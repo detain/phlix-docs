@@ -76,13 +76,14 @@ The Arr sync section (`/admin/integrations#arr-sync`) connects to TRaSH-Guides-c
 
 ## Auth providers
 
-The Auth providers section (`/admin/integrations#auth-providers`) lets admins configure external authentication backends — **OIDC** (OpenID Connect) and **LDAP** — so users can log in with their corporate or identity-provider credentials instead of local Phlix accounts.
+The Auth providers section (`/admin/integrations#auth-providers`) lets admins configure external authentication backends — **OIDC** (OpenID Connect) and **LDAP** — so users can log in with their corporate or identity-provider credentials instead of local Phlix accounts. A third provider, **GitHub** (plain OAuth 2.0), is available over the admin API but has **no card in this UI yet**.
 
 ::: tip Full SSO guide
 This page covers the admin **configuration** UI. For the end-to-end login flow, the
-OIDC redirect/callback URL to register with your IdP, the `ldap:`-prefix login
-convention, cookie-based sessions, and the security posture, see
-[Single Sign-On (OIDC & LDAP)](../security/sso-oidc-ldap).
+callback URL to register with your IdP / GitHub OAuth App (and the `PHLIX_DOMAIN`
+requirement behind it), the `ldap:`-prefix login convention, cookie-based sessions,
+GitHub setup over the API, and the security posture, see
+[Single Sign-On (OIDC, LDAP & GitHub)](../security/sso-oidc-ldap).
 :::
 
 ### What it does
@@ -91,7 +92,22 @@ convention, cookie-based sessions, and the security posture, see
 - Expanding a provider reveals its configuration form, pre-filled from the current server settings.
 - LDAP additionally exposes a **Test connection** button that fires a dry-run `POST` with the current form values and reports success or failure.
 
-The enable/disable toggle persists a server setting (`auth.oidc.enabled` / `auth.ldap.enabled`) **and** registers or unregisters the provider so the login flow goes live immediately — no server restart needed. A provider only becomes live when it is both enabled **and** configured: enabling one that has no saved configuration is rejected with `409 not_configured`, so the "Enabled" badge always means "provider live", not merely "setting saved".
+The enable/disable toggle persists a server setting (`auth.oidc.enabled` / `auth.ldap.enabled` / `auth.github.enabled`) **and** registers or unregisters the provider so the login flow goes live immediately — no server restart needed. Other workers pick a change up on their next sign-in request, by comparing a fingerprint of the persisted settings, so a settings save is also effective without a restart. A provider only becomes live when it is both enabled **and** configured: enabling one that has no saved configuration is rejected with `409 not_configured`, so the "Enabled" badge always means "provider live", not merely "setting saved".
+
+Provider configuration is stored in the database — one row per provider in the `plugin_settings` table (migration `093_plugin_settings.sql`) — not in a per-plugin `settings.json`. An existing file is imported automatically, once, the first time the provider is read; there is no manual migration step.
+
+::: warning A save preserves the fields it does not send (OIDC and GitHub)
+The save endpoints replace the whole stored settings document. The OIDC and GitHub
+endpoints therefore deliberately re-emit any optional key that is **absent** from
+the request body, clearing only what is sent as empty. That is why saving from the
+OIDC form here — which has no `redirect_uri` field — does not erase a `redirect_uri`
+set through the API. Send `""` to clear a field on purpose.
+
+The LDAP endpoint is the exception: apart from `bind_pw` it rebuilds the document
+from the body alone, so a scripted partial save resets omitted keys to their
+defaults. This UI's LDAP form always sends the full set, so it is unaffected — but
+send the complete map if you call that endpoint yourself.
+:::
 
 ### Managing auth providers in the UI
 
@@ -111,9 +127,12 @@ The enable/disable toggle persists a server setting (`auth.oidc.enabled` / `auth
 | `POST` | `/api/v1/admin/auth-providers/{name}/enable` | Enables a provider — `200` with `{enabled, live}`, `409 not_configured` if it has no saved config, `404 unknown_provider` for an unknown name |
 | `POST` | `/api/v1/admin/auth-providers/{name}/disable` | Disables a provider |
 | `GET` | `/api/v1/admin/auth-providers/{name}/config-schema` | Returns the provider's JSON schema for form rendering |
-| `GET` | `/api/v1/admin/auth-providers/oidc/config` | Returns `{ provider_url, client_id, scopes, configured }` |
-| `POST` | `/api/v1/admin/auth-providers/oidc/config` | Body `{ provider_url, client_id, client_secret?, scopes }` |
+| `GET` | `/api/v1/admin/auth-providers/oidc/config` | Returns `{ provider_url, client_id, scopes, redirect_uri, configured }` (never the secret) |
+| `POST` | `/api/v1/admin/auth-providers/oidc/config` | Body `{ provider_url, client_id, client_secret?, scopes?, redirect_uri? }` — omitted optional keys keep their stored value; `redirect_uri` must be an absolute `http(s)` URL or `400 invalid_redirect_uri` |
 | `GET` | `/api/v1/admin/auth-providers/oidc/schema` | Returns the OIDC config schema |
+| `GET` | `/api/v1/admin/auth-providers/github/config` | Returns `{ client_id, scopes, redirect_uri, configured }` (never the secret; `configured` = id **and** secret present) |
+| `POST` | `/api/v1/admin/auth-providers/github/config` | Body `{ client_id, client_secret?, scopes?, redirect_uri? }` — same absent-key and absolute-URL rules as OIDC |
+| `GET` | `/api/v1/admin/auth-providers/github/schema` | Returns the GitHub config schema |
 | `GET` | `/api/v1/admin/auth-providers/ldap/config` | Returns `{ host, port, ssl, base_dn, bind_dn, user_filter, admin_group, configured }` |
 | `POST` | `/api/v1/admin/auth-providers/ldap/config` | Body `{ host, port, ssl, base_dn, bind_dn, bind_pw?, user_filter, admin_group }` |
 | `POST` | `/api/v1/admin/auth-providers/ldap/test` | Body same as LDAP save; returns `{ success, message }` |

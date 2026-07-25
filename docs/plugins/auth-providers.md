@@ -2,8 +2,26 @@
 
 Phlix supports external authentication providers via a plugin-based
 architecture. This allows integration with OIDC providers (Keycloak, Authelia,
-Authentik, Google, GitHub), LDAP directories, SAML IdPs, and passkey
+Authentik, Google), GitHub OAuth Apps, LDAP directories, SAML IdPs, and passkey
 services without modifying the core authentication system.
+
+::: warning OIDC, LDAP and GitHub are BUILT IN — nothing to install
+This page describes the provider *contract* and each provider's options. The OIDC,
+LDAP and GitHub providers ship **with the server** (`src/Plugins/{Oidc,Ldap,Github}`)
+— they are not downloads, they never appear in the plugin catalog, and the
+"Install from URL" steps below do not apply to them. Enable them with the
+`auth.oidc.enabled` / `auth.ldap.enabled` / `auth.github.enabled` server settings
+(the admin console's **Integrations → Auth providers** toggles do this).
+
+Their configuration lives in the **database** — one row per provider in the
+`plugin_settings` table (migration `093_plugin_settings.sql`) — not in a
+`settings.json` file. An existing file is imported once, automatically, on first
+read.
+
+For operator-facing setup — the callback URL to register, the `PHLIX_DOMAIN`
+requirement, and what a misconfiguration looks like — use
+[Single Sign-On (OIDC, LDAP & GitHub)](../security/sso-oidc-ldap).
+:::
 
 ## Overview
 
@@ -62,9 +80,9 @@ new AuthResult(
 );
 ```
 
-## OIDC Provider Plugin (`phlix-plugin-oidc`)
+## OIDC Provider (built in)
 
-The OIDC plugin supports any OIDC-compliant identity provider using the
+The OIDC provider supports any OIDC-compliant identity provider using the
 Authorization Code flow with PKCE.
 
 ### Features
@@ -77,22 +95,29 @@ Authorization Code flow with PKCE.
 
 ### Configuration
 
-1. Install `phlix-plugin-oidc` via the admin UI (Plugins → Install from URL)
-2. Navigate to **Admin → Auth Providers → OIDC**
-3. Configure:
+1. Navigate to **Admin → Integrations → Auth providers → OIDC**
+2. Configure:
    - **Provider URL**: Base URL of your OIDC provider (e.g., `https://keycloak.example.com`)
    - **Client ID**: Registered client ID with the provider
    - **Client Secret**: Registered client secret
    - **Scopes**: Space-separated scopes (default: `openid profile email`)
-4. Save settings
+   - **`redirect_uri`** (optional, API-only today): an absolute callback URL. Leave
+     empty to derive it from the request host, which requires `PHLIX_DOMAIN`.
+3. Save settings, then flip the **Enable** toggle
 
 ### Callback URLs
 
 Register the following callback URL with your OIDC provider:
 
 ```
-https://your-phlix-server/auth/oidc/callback
+https://<your PHLIX_DOMAIN>/auth/oidc/callback
 ```
+
+It must match **exactly** — scheme, host, port and path. Phlix only derives that
+URL from a request whose `Host` equals `PHLIX_DOMAIN`, and **fails closed** with
+`503 callback_url_not_configured` when neither `PHLIX_DOMAIN` nor an absolute
+`redirect_uri` setting is configured. See
+[Callback URLs and `PHLIX_DOMAIN`](../security/sso-oidc-ldap#callback-urls-and-phlix-domain).
 
 ### Keycloak Configuration
 
@@ -100,7 +125,7 @@ https://your-phlix-server/auth/oidc/callback
    - Client ID: `phlix`
    - Client Protocol: `openid-connect`
    - Access Type: `confidential`
-   - Valid Redirect URIs: `https://your-phlix-server/auth/oidc/callback`
+   - Valid Redirect URIs: `https://<your PHLIX_DOMAIN>/auth/oidc/callback`
 2. Under Credentials, copy the Client Secret
 3. In Phlix admin:
    - Provider URL: `https://keycloak.example.com/realms/your-realm`
@@ -119,7 +144,7 @@ identity_providers:
         description: Phlix Media Server
         secret: your-client-secret
         redirect_uris:
-          - https://your-phlix-server/auth/oidc/callback
+          - https://<your PHLIX_DOMAIN>/auth/oidc/callback
         scopes:
           - openid
           - profile
@@ -133,7 +158,7 @@ Provider URL would be: `https://your-authelia.example.com`
 1. Create a project in Google Cloud Console
 2. Enable the Google+ API
 3. Create OAuth 2.0 credentials (Web application type)
-4. Add redirect URI: `https://your-phlix-server/auth/oidc/callback`
+4. Add redirect URI: `https://<your PHLIX_DOMAIN>/auth/oidc/callback`
 5. In Phlix admin:
    - Provider URL: `https://accounts.google.com`
    - Client ID: (from Google Console)
@@ -141,20 +166,27 @@ Provider URL would be: `https://your-authelia.example.com`
 
 ### GitHub OAuth App
 
-1. Create a new OAuth App in GitHub Settings
-2. Homepage URL: `https://your-phlix-server`
-3. Authorization callback URL: `https://your-phlix-server/auth/oidc/callback`
-4. In Phlix admin:
-   - Provider URL: `https://github.com`
-   - Client ID: (from GitHub)
-   - Client Secret: (from GitHub)
+GitHub is **not** an OIDC provider — it has no discovery document and issues no
+`id_token` — so do **not** configure it through the OIDC provider. Phlix ships a
+dedicated, built-in **GitHub** provider (`Phlix\Plugins\Github\GithubOAuthProvider`)
+that speaks plain OAuth 2.0 + PKCE and reads the profile from
+`GET https://api.github.com/user`.
 
-Note: GitHub is not a true OIDC provider but supports OAuth 2.0. The plugin
-will extract basic profile information from the `/userinfo` endpoint.
+1. Create a new OAuth App in GitHub Settings → Developer settings → OAuth Apps
+2. Homepage URL: `https://<your PHLIX_DOMAIN>`
+3. Authorization callback URL: `https://<your PHLIX_DOMAIN>/auth/github/callback`
+4. Save the client ID + secret through
+   `POST /api/v1/admin/auth-providers/github/config` and enable the provider with
+   `POST /api/v1/admin/auth-providers/github/enable` (there is no admin-console card
+   for GitHub yet).
 
-## LDAP Provider Plugin (`phlix-plugin-ldap`)
+Full walkthrough, including the settings keys, the `PHLIX_DOMAIN` requirement behind
+the callback URL, and what a misconfiguration looks like:
+[Single Sign-On → GitHub settings](../security/sso-oidc-ldap#github-settings).
 
-The LDAP plugin supports authentication against OpenLDAP directories and
+## LDAP Provider (built in)
+
+The LDAP provider supports authentication against OpenLDAP directories and
 Active Directory via the LDAP protocol (RFC 4510). Users bind with their
 LDAP credentials; the plugin maps LDAP attributes to Phlix user fields.
 
@@ -172,9 +204,8 @@ LDAP credentials; the plugin maps LDAP attributes to Phlix user fields.
 
 ### Configuration
 
-1. Install `phlix-plugin-ldap` via the admin UI (Plugins → Install from URL)
-2. Navigate to **Admin → Auth Providers → LDAP**
-3. Configure:
+1. Navigate to **Admin → Integrations → Auth providers → LDAP**
+2. Configure:
    - **Host**: LDAP server hostname or IP
    - **Port**: 389 (plain/StartTLS) or 636 (SSL)
    - **SSL**: Enable for direct SSL connections
@@ -183,7 +214,7 @@ LDAP credentials; the plugin maps LDAP attributes to Phlix user fields.
    - **Bind Password**: Optional bind password
    - **User Filter**: LDAP filter for user search
    - **Admin Group**: Optional group DN for admin promotion
-4. Save settings and use "Test Connection" to verify
+3. Save settings and use "Test Connection" to verify, then flip the **Enable** toggle
 
 ### OpenLDAP Configuration
 
@@ -221,8 +252,13 @@ Recommended settings:
 - LDAP passwords are never stored locally; they are only used to bind
   at authentication time.
 - SSL/TLS is strongly recommended for production deployments.
-- The bind password (if configured) is stored encrypted in the plugin
-  settings file.
+- The service-account bind password (if configured) is stored in the
+  `plugin_settings` database row for the `ldap` provider. It is **write-only over
+  the API** — the read endpoint never returns it, and saving with the field blank
+  keeps the stored value — but it is **not encrypted at rest**, so treat database
+  backups and dumps as containing a credential. (An earlier version of this page
+  claimed it was "stored encrypted in the plugin settings file"; both halves of that
+  were wrong.)
 - Admin group membership is checked on every login; no cached group
   membership.
 

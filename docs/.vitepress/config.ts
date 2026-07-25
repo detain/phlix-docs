@@ -20,6 +20,7 @@ export default defineConfig({
       { text: 'Clients', link: '/clients/overview' },
       { text: 'Advanced', link: '/advanced/hardware-transcoding' },
       { text: 'Developers', link: '/dev/architecture-server' },
+      { text: 'Reference', link: '/reference' },
       { text: 'Integrations', link: '/integrations/lastfm' },
       { text: 'Security', link: '/security/passkeys' },
       { text: 'Admin', link: '/admin/webhooks' },
@@ -43,6 +44,40 @@ export default defineConfig({
         {
           text: 'First Run',
           link: '/first-run'
+        }
+      ],
+      // Section landing pages. These live at /<section> (no trailing slash), so
+      // they do NOT match the '/<section>/' sidebar keys below — hence their own
+      // entries. Longest-prefix matching means '/hub-admin/' still wins over
+      // '/hub' for pages inside hub-admin/.
+      '/reference': [
+        {
+          text: 'Reference',
+          link: '/reference'
+        }
+      ],
+      '/developers': [
+        {
+          text: 'Developer Docs',
+          link: '/developers'
+        }
+      ],
+      '/hub-admin': [
+        {
+          text: 'Hub Admin',
+          link: '/hub-admin'
+        }
+      ],
+      '/hub': [
+        {
+          text: 'The Hub',
+          link: '/hub'
+        }
+      ],
+      '/dev': [
+        {
+          text: 'Engineering Docs',
+          link: '/dev'
         }
       ],
       '/faq': [

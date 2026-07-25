@@ -79,7 +79,29 @@ of env vars named for the surface. `<SURFACE>` ∈ `REGISTER`, `REFRESH`,
 | `PHLIX_HUB_HEARTBEAT_INTERVAL`  | `60`    | Interval in seconds between hub heartbeat calls. Must be between 30 and 3600. See `Phlix\Hub\HubClient::startHeartbeatLoop()` and `config/hub.php`. |
 | `PHLIX_SUBDOMAIN_AUTO_CLAIM`    | `1`     | When truthy (`1`, `true`, `yes`, `on`) automatically claims a *.phlix.media subdomain from the hub after enrollment. See `Phlix\Hub\SubdomainClient` and `config/hub.php`. |
 | `PHLIX_TLS_ENABLED`            | `1`     | When truthy enables TLS/HTTPS for the server's public hostname. Requires a subdomain to be allocated. See `config/hub.php`. |
-| `PHLIX_DOMAIN`                 | `phlix.media` | The base domain for server subdomains (e.g. `abc12345.phlix.media`). See `config/hub.php`. |
+| `PHLIX_DOMAIN`                 | _unset_ (`config/hub.php` substitutes `phlix.media` for its own `hub.domain`) | This server's public **authority** — a host, optionally with a port (`media.example.com`, `media.example.com:8443`). No scheme, no path, no trailing dot. `scripts/install.sh --domain <domain>` writes it to the env file the systemd unit reads. Two jobs: (1) the base domain for server subdomains (e.g. `abc12345.phlix.media`) that `config/hub.php` composes into `hub.domain` / `hub.public_url`; (2) the **allowlist for deriving the OAuth2/OIDC `redirect_uri`** — see below. |
+
+### `PHLIX_DOMAIN` and external sign-in
+
+`/auth/oidc/authorize` and `/auth/github/authorize` must send the provider an
+**absolute** `redirect_uri`. Phlix builds `<scheme>://<Host><callback path>` from
+the request **only** when the request's `Host` equals `PHLIX_DOMAIN` — the port is
+part of the comparison, with the scheme's default port (`:443` https, `:80` http)
+normalised away on both sides. `Host` is client-supplied, so an unvouched-for value
+could otherwise be turned into a `redirect_uri` pointing at an attacker's host.
+
+**It fails closed.** If `PHLIX_DOMAIN` is unset *or* malformed, nothing is derived
+and the authorize endpoint answers `503 callback_url_not_configured` — no
+`Location`, no cookie, no OAuth state row. A malformed value is treated as
+*unconfigured*, never as an allowlist that cannot match: `https://media.example.com/`,
+`media.example.com/app`, `media.example.com:`, `media.example.com.`,
+`media.example.com:99999`, `media.example.com:https` and whitespace all mean "no
+derivation".
+
+The escape hatch is a per-provider **absolute `redirect_uri` setting**, which takes
+priority and works with `PHLIX_DOMAIN` unset. Full setup, the misconfiguration
+response and when to prefer each option:
+[Single Sign-On → Callback URLs and `PHLIX_DOMAIN`](../security/sso-oidc-ldap#callback-urls-and-phlix-domain).
 
 ## Hub / Server (phlix-hub)
 

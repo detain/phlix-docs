@@ -172,8 +172,11 @@ CREATE TABLE media_extras (
 Trailer and extra data is cached in the `media_extras` table with a **24-hour TTL**. Cache is refreshed:
 
 1. When the TTL expires (on next request)
-2. When `FolderWatcher` detects changes in `Trailers/` folders
-3. When `MediaScanner` rescans the library
+2. When `MediaScanner` rescans the library
+
+`FolderWatcher` does **not** contribute a third trigger: its change-detection method
+`checkForChanges()` has no production caller, so nothing watches `Trailers/` folders
+at runtime. See [Scan triggering](/libraries/movies#scan-triggering).
 
 ## TMDB Integration
 
@@ -192,12 +195,20 @@ return [
 
 ## Folder Watcher Integration
 
-The `FolderWatcher` detects changes in:
+`FolderWatcher` is *intended* to detect changes in:
 
 - `Trailers/` directories
 - Files with `-trailer`, `-teaser`, `-clip`, `-featurette` suffixes
 
-When detected, it signals that extras should be rescanned for the affected media item.
+and to signal that extras should be rescanned for the affected media item.
+
+::: warning Inert at runtime
+Creating a library registers its roots with `FolderWatcher`, but nothing ever calls
+`FolderWatcher::checkForChanges()`, which is the only method that compares directory
+checksums and reacts. No change is detected and no `LibraryUpdated` event is
+dispatched. New or changed extras are picked up by the next scan/rescan, not by the
+watcher. See [Scan triggering](/libraries/movies#scan-triggering).
+:::
 
 ## Architecture
 

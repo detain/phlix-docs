@@ -46,10 +46,10 @@ A job row (the `ScanJobRepository::decodeRow()` shape) carries:
 |-------|-------|
 | `id` | Job UUID. |
 | `library_id` | The library being scanned. |
-| `type` | `scan`, `rescan`, or `metadata` (match-metadata). |
+| `type` | The `library_scan_jobs.type` ENUM: `scan`, `rescan`, `metadata` (match-metadata), `metadata_refresh`, `prune`, `clear_metadata`, `clear_artwork`, `delete_all`. |
 | `status` | `queued` → `running` → `completed` \| `failed`. |
-| `items_found`, `items_updated` | Live progress: total media files (denominator) / processed (numerator) for `scan` / `rescan` / `metadata` — see [Real per-file progress](#real-per-file-progress). |
-| `items_added`, `items_removed` | Defined on the row but **not** part of the streamed progress; stay `0`. |
+| `items_found`, `items_updated` | Live progress: total (denominator) / processed (numerator). Media files for `scan` / `rescan`; library items for `clear_metadata` / `clear_artwork`. `prune` and `delete_all` report through `items_removed` instead. For `metadata` / `metadata_refresh` the two sides are counted differently and **the denominator is not a count of matchable items**: `LibraryMetadataMatcher::countMatchable()` queries the library's *top-level* rows (`['topLevel' => true]`, plus `'match' => 'unmatched'` when not forcing) **without** applying the `movie` / `video` / `series` type filter, while `items_updated` accumulates only the rows that filter admitted. That mismatch is the tell described under [The metadata denominator is not a matchable-item count](#match-metadata-denominator). See [Real per-file progress](#real-per-file-progress). |
+| `items_added`, `items_removed`, `items_failed` | Outcome tallies, **not** part of the streamed percentage. `items_added` / `items_failed` ride along on the sink and are stamped authoritatively by `markCompleted()`; `items_removed` is the prune count. |
 | `current_path` | The file currently being processed (the progress hint); populated during a `scan` / `rescan`. |
 | `error` | The exception message when `status = failed`, else `null`. |
 | `queued_at`, `started_at`, `completed_at` | Lifecycle timestamps (nullable until reached). |
@@ -72,10 +72,44 @@ Processes **at most one** job:
    the race), return `false` — the scan engine is never touched.
 2. Otherwise dispatch on `type`, passing a **progress sink** so the job row
    streams a live percentage:
-   - `metadata` → `LibraryMetadataMatcher::matchLibrary($id, fn(processed, total) => …)`,
-     writing `items_found`/`items_updated`;
+   - `metadata` **and** `metadata_refresh` → `LibraryMetadataMatcher::matchLibrary($id,
+     fn(processed, total) => …)`, writing `items_found`/`items_updated`. The two
+     differ only by `setForceRefresh($type === 'metadata_refresh')`: `metadata`
+     skips items that already carry a `metadata_refreshed_at` stamp,
+     `metadata_refresh` re-processes them. See
+     [Enqueue a metadata match](../admin/library-management#enqueue-a-metadata-match);
    - `rescan` → `rescanLibrary($id, $this->scanProgressSink($jobId))`;
+   - `prune` → `pruneLibrary($id)`, recording the count in `items_removed`;
+   - `clear_metadata` → `clearMetadata($id, …)`, streaming
+     `items_updated`/`items_found`;
+   - `clear_artwork` → `clearArtwork($id, …)`, same progress shape;
+   - `delete_all` → `deleteAllItems($id)`, recording `items_removed` — the one
+     destructive branch, gated on `confirm=true` in the controller;
    - otherwise (`scan`) → `scanLibrary($id, $this->scanProgressSink($jobId))`.
+
+   ⚠ `matchLibrary()`'s per-item filter admits only `movie`, `video` and `series`
+   rows; every other type is `continue`d before a provider is consulted. So a
+   `metadata` / `metadata_refresh` job on a music, photo, book or audiobook library
+   reaches `completed` having processed **zero** items, with no error. See
+   [what Match metadata skips](../admin/library-management#what-match-metadata-skips).
+
+   The progress columns make that visible, because the two sides are counted from
+   different sets — see [the denominator note](#match-metadata-denominator) below.
+
+   `rescanLibrary()` differs from `scanLibrary()` in one thing: it passes
+   `readEveryFile: true`, which unloads the music scanner's unchanged-file skip
+   index so every file is opened and tag-read. Every other scanner ignores the
+   flag — none of them has a skip index. It then runs the prune pass. It does
+   **not** delete items first; see
+   [Scan vs Rescan](../admin/library-management#scan-vs-rescan-vs-match-metadata).
+
+   The consequence for non-music types is that `rescan` and `scan` do the same
+   work per file: `MediaScanner` keys on *path*, so an already-indexed path takes
+   the existing-item branch (`backfillItemSourceMetadata()`, then `return false
+   // Already scanned`) under both job types. Nothing re-parses the filename or
+   re-matches the row — that is what the `metadata` / `metadata_refresh` job types
+   are for, **on `movie` / `video` / `series` rows only**. For a `photo`, `book` or
+   `audiobook` row nothing re-derives it at any point after the insert.
 3. On success → `markCompleted()`, return `true`.
 4. On any `\Throwable` → `markFailed($jobId, $e->getMessage())` + an error log,
    return `true`. A failed job is **never** marked completed.
@@ -137,6 +171,25 @@ The pipeline is end-to-end:
 4. The **`metadata`** branch streams the same `items_found`/`items_updated`
    percentage straight from `LibraryMetadataMatcher::matchLibrary()`'s
    `(processed, total)` callback (no `current_path`).
+
+### The metadata denominator is not a matchable-item count {#match-metadata-denominator}
+
+For `scan` / `rescan` both sides of the fraction come from the same walk, so the
+percentage reaches 100 %. For `metadata` / `metadata_refresh` they do not:
+
+- **Denominator** — `LibraryMetadataMatcher::countMatchable()` runs
+  `$this->items->query(['topLevel' => true, 'limit' => 1], $libraryId)`, adding
+  `'match' => 'unmatched'` only when `forceRefresh` is off. It counts **every**
+  top-level row of the library, of any `type`.
+- **Numerator** — `$processed` accumulates only the items that survived
+  `matchBatchConcurrently()`'s per-item filter, i.e. `movie`, `video` and
+  (with a series resolver present) `series`.
+
+So `items_found` is a count of *top-level rows*, not of *matchable items*, and the
+gap between the two sets is exactly the diagnostic: a `metadata` job on a photo,
+book or audiobook library reports a non-zero `items_found` with `items_updated`
+stuck at `0` for its whole life, and then completes. Do not "fix" a `0 / n` reading
+by assuming the counter is broken.
 
 ::: warning Specialised scanners stay coarse
 `LibraryManager::scanLibrary()` early-returns into the specialised
@@ -203,22 +256,90 @@ It carries **plain settings**, NOT Webman's `handler`/`constructor`
 instantiation contract — that contract cannot supply this worker's DI
 dependencies, and `start.php` resolves the worker from the container itself.
 
-### Double-run safety
+### Double-run safety {#double-run-safety}
 
-The two run paths are mutually exclusive by default, but **running both at once
-is safe**. Because `claimNext()` is an atomic conditional `UPDATE` and each
-worker is `count: 1`, at most one claimer wins each job — there is no
-double-processing even if the managed worker and the standalone service run side
-by side. This is a deliberate property, not a coincidence.
+::: danger Never run both spawners at once
+An earlier revision of this page said running the managed worker and
+`scripts/run-library-scan-worker.php` side by side was "safe". **That was wrong,
+and it was corrected in the code in S96(c).**
 
-## The CLI stays synchronous
+*Claiming* is safe — `claimNext()` is an atomic conditional `UPDATE`, so at most
+one claimer wins each job. The **startup reaper** is not.
+`LibraryScanWorker::start()` calls `ScanJobRepository::reapStaleJobs()`, which
+fails **every** `running` row in `library_scan_jobs` — no `library_id` filter and
+no age guard. Booting a second consumer therefore stamps the first consumer's
+in-flight job `failed` with `error = 'Interrupted by server restart'` (a lie in
+that scenario) while that scan carries on unaware, because nothing re-reads the
+job row mid-scan.
 
-The console command `php bin/phlix library:scan {libraryId} [--rescan]` is
-**unchanged** and stays **synchronous/direct** — it calls `LibraryManager`
-straight through its lazy factory and blocks until the scan finishes. An operator
-running the CLI wants the synchronous behaviour, not an enqueue. Only the HTTP
-`scan`/`rescan` endpoints became asynchronous. See the
-[CLI reference](../reference/cli#library-scan).
+`count: 1` is load-bearing for the same reason and must stay `1`. Either run the
+standalone script with the managed entry disabled in `config/process.php`, or run
+the managed worker and not the script — never both. An age guard was considered
+and rejected; see the comment block in `LibraryScanWorker::start()` for why.
+:::
+
+## The CLI is synchronous — but no longer invisible
+
+The console command `php bin/phlix library:scan {libraryId} [--rescan] [--force]`
+stays **synchronous/direct** — it calls `LibraryManager` straight through its lazy
+factory and blocks until the scan finishes. It does not enqueue; only the HTTP
+`scan`/`rescan` endpoints are asynchronous.
+
+**S150 — the CLI now writes to `library_scan_jobs` too.** It used to write nothing
+there, so a live CLI scan was invisible to the admin Libraries page, which kept
+showing whatever the last web-enqueued job had left behind. (Measured on
+production during a healing rescan: a healthy scan running ~45 minutes and
+demonstrably repairing rows, while the page showed a **red `failed` badge** from a
+job that had ended hours earlier. A stale `failed` badge is worse than no badge —
+an absent status reads as "idle"; a stale failure reads as "the last thing that
+happened, broke".)
+
+The command now:
+
+- mints the job id and installs its signal/shutdown handlers **before** inserting
+  the row, so no signal can strand a `running` row that nothing will ever fail;
+- opens a `running` row with the correct `scan` / `rescan` type via
+  `ScanJobRepository::startRunningIfIdle()`, an `INSERT … SELECT … WHERE NOT
+  EXISTS` that folds the "is one already in flight?" predicate into the insert
+  (closing the check-then-insert race);
+- streams `items_found` / `items_updated` / `current_path` through
+  `ScanProgressSink` — the **same** throttled sink the worker uses, extracted so
+  there is one copy. It is a static factory taking the repository, not a method on
+  it, because `LibraryScanWorkerTest` mocks `ScanJobRepository` and asserts on the
+  `updateProgress()` calls the sink makes; a sink built by a method on that mock
+  would return `null` and those assertions would silently observe nothing;
+- stamps `markCompleted()` / `markFailed()` on the success and throw paths, on
+  `SIGTERM`/`SIGINT`/`SIGHUP`, and on a fatal-error shutdown.
+
+Job tracking is **observability and must never refuse an operator's scan**: an
+absent or unreachable job store degrades to the pre-S150 behaviour with a warning
+on stderr.
+
+### The CLI refuses to start when a job is already in flight
+
+Nothing previously stopped a CLI scan and a worker scan running concurrently over
+one library. Two scanners interleave find-or-create on every file, and they share
+one job row's worth of UI, so the badge would report one scan's progress under the
+other's counters. The command therefore exits `FAILURE` when the library has any
+non-terminal (`queued`/`running`) job. `--force` overrides it, for the one case
+the check cannot distinguish: a row stranded `running` by a `kill -9` or a power
+loss, which no in-process handler can clean up.
+
+Two residual behaviours, stated rather than glossed:
+
+- `reapStaleJobs()` is unscoped and has no age guard (see
+  [Double-run safety](#double-run-safety)), so a `phlix-server` restart during a
+  long CLI scan marks that row `failed` while the CLI keeps running. Bounding it
+  needs per-job worker ownership — a schema change, deliberately not done here.
+  The failure mode is a false badge, never a lost scan or a stuck row.
+- `SIGKILL` cannot be trapped by anyone, so it leaves the row `running` until the
+  next server boot reaps it.
+
+A false-`failed` row also makes the "is a job in flight?" check report *idle*, so
+a second scan can start.
+
+See the [CLI reference](../reference/cli#library-scan) for the flags and exit
+codes.
 
 ## See Also
 

@@ -41,7 +41,7 @@ are available.
 | --- | --- | --- |
 | `migrate` | — | Apply database migrations (`migrations/*.sql`). |
 | `library:list` | — | List all configured media libraries. |
-| `library:scan` | `{libraryId}` `[--rescan]` | Scan (or rescan) a media library for new content. |
+| `library:scan` | `{libraryId}` `[--rescan]` `[--force]` | Scan (or, with `--rescan`, fully re-read) a media library. |
 | `plugin:list` | — | List installed plugins and their enabled state. |
 | `plugin:enable` | `{name}` | Enable an installed plugin by name. |
 | `plugin:disable` | `{name}` | Disable an enabled plugin by name. |
@@ -78,8 +78,7 @@ php bin/phlix library:list
 
 ### `library:scan`
 
-Scans a library for new content. Pass `--rescan` to clear existing items and
-rescan from the filesystem.
+Scans a library for new content.
 
 This command runs **synchronously** and blocks until the scan completes. (The
 HTTP `POST /api/v1/libraries/{id}/scan` endpoint is asynchronous instead — it
@@ -88,12 +87,120 @@ queues a job; see the [Library Scan Worker](../dev/library-scan-worker).)
 | Argument / option | Description |
 | --- | --- |
 | `libraryId` (required) | The library identifier to scan. |
-| `--rescan` | Clear existing items and rescan from scratch. |
+| `--rescan` | Full rescan: re-walk the tree, index files at paths not yet in the catalogue, backfill missing source metadata on `video` / `movie` / `episode` / `audio` / `audiobook` rows, then prune items whose file is gone. User data is preserved — **except** for a top-level item whose file was *moved*, which the prune deletes; see [Moving a file](../admin/library-management#moving-a-file). On a **music** library it additionally re-reads every track's tags (this can take hours) and is what repairs tracks filed under the wrong album/artist; on every other library type the re-read flag is ignored. |
+| `--force` | Start even when the library already has a `queued`/`running` scan job. |
 
 ```bash
 php bin/phlix library:scan 3
 php bin/phlix library:scan 3 --rescan
 ```
+
+#### `--rescan` does not purge the library
+
+`--rescan` never purged, and the old description of this flag ("clear existing
+items and rescan from scratch") was wrong in both halves. What it does is re-walk
+the library tree, index files at paths that are not yet in the catalogue, backfill
+missing source metadata on the already-existing rows whose type is `video`,
+`movie`, `episode`, `audio` or `audiobook` (`photo` and `book` rows get nothing),
+and then prune the items whose source file has disappeared. Use a plain scan for an
+incremental refresh.
+
+::: danger One exception: a file that was MOVED
+A parent-less item — `movie`, `video`, `photo`, `book`, `audiobook` — whose file
+was **moved without being renamed** is matched by a path-independent canonical key,
+so the scanner reuses the existing row without updating its `path`, and the prune in
+the same run then deletes that row and its `user_item_data`. It comes back on the
+*next* `--rescan` as a new row with a **new UUID** and no watch state. Episodes are
+unaffected. There is no flag that avoids this — see
+[Moving a file](../admin/library-management#moving-a-file). Tracked as **S158**.
+:::
+
+#### `--rescan` re-reads every file on MUSIC libraries only
+
+The flag reaches the scanner as `readEveryFile`, and **only the music scanner
+consumes it** — the other scanners have no skip index for it to switch off:
+
+- On a **music** library it leaves the unchanged-file skip index unloaded, so
+  every track is opened and tag-read. That is what repairs a track filed under the
+  wrong album or artist after a retag: the incremental skip normally fires before
+  the file is opened, so a plain scan does not see the corrected tags.
+- On a **movie, TV, photo, book or audiobook** library a path that is already in
+  the catalogue is **not** re-parsed and **not** re-matched. The scan does a
+  missing-source-metadata backfill on that row and moves on — and even that is
+  type-gated to `video` / `movie` / `episode` / `audio` / `audiobook`, so on a
+  **photo** or **book** library the existing-item branch does nothing at all.
+  `--rescan` will not fix a wrong or duplicated match on those types.
+
+There is **no CLI command for metadata matching** at all — `bin/phlix` ships
+`library:scan` and `library:list` and nothing else for libraries, so the remedies
+below are HTTP-only:
+
+- **Movie / TV** — [`match-metadata`](../admin/library-management#enqueue-a-metadata-match)
+  for an item that was never matched, the
+  [single-item match](../admin/library-management#fixing-a-single-items-match) for one
+  that matched the wrong title. A wrong match is **not** fixed by
+  `refresh-metadata` on its own; see
+  [Fixing a wrong match](../admin/library-management#fixing-a-wrong-match).
+- **Photo / book / audiobook** — nothing. The metadata jobs skip every row of those
+  types and complete having processed zero items; see
+  [what Match metadata skips](../admin/library-management#what-match-metadata-skips).
+
+#### A CLI scan is visible in the admin UI
+
+The command creates its own `library_scan_jobs` row up front (typed `scan` or
+`rescan`), streams `items_found` / `items_updated` / `current_path` onto it
+through the same throttled sink the background worker uses, and stamps
+`completed` / `failed` on exit — including when it is killed by `SIGTERM`,
+`SIGINT` or `SIGHUP`, so a cancelled run never strands a permanently-`running`
+row. The admin **Libraries** page therefore shows a live badge and progress bar
+for a CLI scan just as it does for a web-triggered one.
+
+Job tracking is observability only and never blocks the scan: if the job store is
+absent or unreachable the command warns on stderr and scans anyway.
+
+::: warning It refuses to start when a scan is already in flight
+If the library has **any** job in `queued` or `running` — not merely its newest
+one — the command **exits with a failure code and does not scan**. The check is an
+existence test over the whole set (`WHERE library_id = ? AND status IN ('queued',
+'running') LIMIT 1`), which is deliberate: "newest" reports idle for a library that
+is actively being scanned whenever a newer terminal job sits alongside an older
+live one (say a `metadata` job that completed while a CLI `rescan` from ten minutes
+earlier is still `running`). Two scanners over one library race on every per-file
+lookup, and they share one job row's worth of UI, so the badge would report one
+scan's progress under the other's counters.
+
+⚠ This can therefore disagree with the admin **Libraries** badge, which *does* show
+the newest row. That is intended — the badge answers "what happened last", the
+refusal answers "is it safe to start another scan". A library showing a
+`completed` badge can still be refused because of an older stranded `running` row.
+
+`--force` overrides the refusal. Use it only to get past a row left `running` by
+a `kill -9` or a power loss, which no in-process handler can clean up. (Restarting
+`phlix-server` also clears such rows — the scan worker reaps every `running` row
+at boot.)
+
+Two residual behaviours, stated rather than glossed: a `phlix-server` restart
+during a long CLI scan marks that row `failed` while the CLI keeps running (the
+worker's boot reaper is unscoped and has no age guard), and `SIGKILL` cannot be
+trapped by anyone, so it leaves the row `running` until the next server boot reaps
+it. Both are false badges, never a lost scan.
+:::
+
+#### Exit codes
+
+| Code | Meaning |
+| --- | --- |
+| `0` | The scan completed and indexed every file it read. |
+| `1` | The scan did **not** run (unknown library, the scan threw, or it refused because a job was already in flight). |
+| `3` | The scan **completed** but could not index every file it read — the library is now missing *N* files. |
+
+Exit `3` is deliberately not `2`: Symfony reserves `2` for invalid input/usage,
+which is the meaning code `1` already covers here. A wrapper switching on the exit
+code can therefore tell "fix your arguments" from "files were silently lost".
+
+On exit `3` the job row stays `completed`, not `failed` — the *scan* completed;
+the lost files are reported through the row's `items_failed` counter, matching
+what the background worker does for the same case.
 
 ### `plugin:list`
 

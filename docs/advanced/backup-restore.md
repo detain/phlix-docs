@@ -187,12 +187,28 @@ php public/index.php
 
 5. **Verify**
 
-Log in, check your library items are visible, confirm watch history is present. If metadata images are missing, trigger a full library rescan from the admin UI, or via the API:
+Log in, check your library items are visible, confirm watch history is present.
+
+If *items* are missing, trigger a library rescan from the admin UI or via the API — it re-walks the tree and indexes every file at a path that is not yet in the catalogue:
 
 ```bash
 curl -X POST http://localhost:32400/api/v1/libraries/{id}/rescan \
   -H "Authorization: Bearer $TOKEN"
 ```
+
+If the items are there but *metadata images* are missing, a rescan will not help — see [Failure 3](#failure-3-metadata-not-re-fetched-after-restore) below.
+
+::: danger Do not rescan if you restored the media to a different path
+A parent-less item — `movie`, `video`, `photo`, `book`, `audiobook` — whose file now
+sits at a different path under the **same filename** is not re-indexed there. The
+scanner reuses the old row by a path-independent canonical key without updating its
+`path`, and the prune in the same rescan then deletes that row together with its
+watch history and resume position. A second rescan re-creates it with a **new UUID**
+and no watch state, which defeats the point of restoring the backup. Episodes are
+unaffected. Restore the media to its **original paths** before rescanning; if you
+cannot, read [Moving a file](../admin/library-management#moving-a-file) — there is no
+workaround today. Tracked as **S158**.
+:::
 
 ---
 
@@ -270,21 +286,37 @@ grep JWT_SECRET /path/to/phlix/config/server.php
 
 ---
 
-### Failure 3 — Media Not Re-Scanning After Restore (Stale mtime)
+### Failure 3 — Metadata Not Re-Fetched After Restore
 
-**Symptom:** Library shows items but poster/fanart missing; rescan doesn't re-download metadata.
+**Symptom:** Library shows items but poster/fanart missing, and a rescan does not re-download them.
 
-**Cause:** `FolderWatcher` uses mtime as its checksum. If the backup was restored to the same filesystem paths, mtimes are preserved and the watcher sees "no change."
+**Cause:** A rescan is a *filesystem* operation, not a metadata one. Only the
+music scanner acts on its "read every file" flag; on a movie, TV, photo, book or
+audiobook library an already-indexed path is skipped over, so nothing re-resolves
+the item's metadata or re-downloads its artwork. (Nothing else picks it up in the
+background either — there is no scheduled or filesystem-triggered scan.)
 
-**Fix:** Force a full rescan after restore from the admin UI or the API:
+**Fix (movie / TV libraries):** Queue a forced metadata re-match, which re-resolves
+items that already carry metadata and re-downloads the artwork for them:
 
 ```bash
-curl -X POST http://localhost:32400/api/v1/libraries/{id}/rescan \
+curl -X POST http://localhost:32400/api/v1/libraries/{id}/refresh-metadata \
   -H "Authorization: Bearer $TOKEN"
-
-# OR touch all media files to update mtime, then rescan
-find /path/to/media -type f -exec touch {} \;
 ```
+
+If only the *local artwork cache* was lost, `POST /api/v1/libraries/{id}/clear-artwork`
+purges the cached files (metadata text and user data untouched) so the next match
+re-downloads them. See
+[Force a metadata re-match](../admin/library-management#force-a-metadata-re-match).
+
+There is no need to `touch` your media files first — neither operation looks at
+mtime, and neither deletes anything.
+
+**Photo, book and audiobook libraries have no fix here.** Those types have no
+metadata provider, and both metadata jobs skip their rows, so a `metadata_refresh`
+job on such a library completes having processed zero items. Restore the item rows
+from the database backup — re-running a job will not rebuild them. See
+[what Match metadata skips](../admin/library-management#what-match-metadata-skips).
 
 ---
 

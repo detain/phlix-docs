@@ -17,9 +17,33 @@ See [/advanced/hardware-transcoding](/advanced/hardware-transcoding) for hardwar
 ### A library item is unmatched / not found — how do I fix it?
 
 1. Check the file naming convention. Phlix matches movies by `MovieName (Year).ext` and TV by `ShowName S01E01.ext`. See [/libraries/movies](/libraries/movies) and [/libraries/tv-shows](/libraries/tv-shows) for exact patterns.
-2. Run a manual rescan: **Admin → Library → Rescan** or use `php scripts/run-library-scan-worker.php` on the command line.
-3. If metadata is still wrong, delete the item from the library and re-add it after checking the filename matches the expected pattern.
-4. For TV shows, verify season/episode folders are named correctly — nested folders with an `S01E01` file inside a `Season 1` folder are supported.
+2. **Fix one title:** use the per-item **Match metadata** action (admin-only, on the media card's ⋯ menu and on the detail page hero). It searches TMDB and applies the result you pick, and for a series it enriches the whole season/episode subtree. This is the most reliable remedy for a single wrong or missing match. See [Fixing a single item's match](/admin/library-management#fixing-a-single-items-match).
+3. **Fix a whole library:** `POST /api/v1/libraries/{id}/match-metadata` queues a background match over every item that has **no** metadata yet. It is the tool for *unmatched* items; it will **not** correct an item that matched the *wrong* title, and neither will `refresh-metadata` on its own — see [Fixing a wrong match](/admin/library-management#fixing-a-wrong-match). Both jobs visit `movie`, `video` and `series` rows only. See [Enqueue a metadata match](/admin/library-management#enqueue-a-metadata-match).
+4. If the filename itself is wrong, rename it to match the expected pattern first — the matcher works from the title and year parsed out of the path, so nothing downstream can recover from a name it cannot parse. After renaming, run a **Rescan** (**Admin → Libraries → Rescan**, or `php bin/phlix library:scan {libraryId} --rescan`; `php bin/phlix library:list` prints the ids) so the renamed file is indexed as a new row, then run the metadata match from step 3. Note that this leaves the old row to be pruned, so the item's watch history and resume position do not survive the rename. Rename in place — do **not** also move the file, or the item disappears for a rescan; see [Moving a file](/admin/library-management#moving-a-file).
+5. For TV shows, verify season/episode folders are named correctly — nested folders with an `S01E01` file inside a `Season 1` folder are supported.
+
+::: warning A rescan will not re-match an already-indexed movie or episode
+Only the **music** scanner acts on a rescan's "read every file" flag. On a movie,
+TV, photo, book or audiobook library a path that is already in the catalogue is
+not re-parsed and not re-matched — the rescan does a missing-source-metadata
+backfill on that row and moves on (and not even that on a `photo` or `book` row,
+where the backfill is skipped by type). For a **movie or TV** library, reach for the
+metadata-match actions above rather than Rescan. See
+[Scan vs Rescan vs Match metadata](/admin/library-management#scan-vs-rescan-vs-match-metadata).
+:::
+
+::: danger Photo, book and audiobook items cannot be re-matched at all
+The steps above are TMDB-backed and apply to movies and TV only. The server ships
+no metadata-fetching provider for `photo`, `book` or `audiobook` items, and both
+`match-metadata` and `refresh-metadata` skip those rows outright — the job reaches
+`completed` having processed **zero** items, with no error to tell you so. Such an
+item keeps whatever the scanner wrote when it was first indexed; the only way to
+change it is to **rename** the file (or delete the item) and scan again, which
+creates a **new row** and loses the old row's watch state. **Moving** the file is
+not an alternative — it creates no new row at all and the next rescan prunes the
+existing one; see [Moving a file](/admin/library-management#moving-a-file). See also
+[what Match metadata skips](/admin/library-management#what-match-metadata-skips).
+:::
 
 ### Why does playback not resume where I left off?
 
@@ -67,14 +91,26 @@ Without a GPU, 4K HEVC transcoding will be slow and CPU-intensive. See [/advance
 
 ### I updated Phlix and now library items are missing or playback fails
 
-Metadata shapes change between releases. After a major upgrade, run a full library rescan:
+For **missing items**, re-walk the library so every file at a path that is not yet in
+the catalogue is indexed and anything whose file is gone is pruned:
 
 ```bash
-# Preserve your env file (DB_PASSWORD, PHLIX_SECRET_KEY survive if you skip this step)
-sudo -u phlix php scripts/run-library-scan-worker.php --full-rescan
+sudo -u phlix php bin/phlix library:list                       # get the library ids
+sudo -u phlix php bin/phlix library:scan {libraryId} --rescan  # one library at a time
 ```
 
-See [/install/upgrade](/install/upgrade) for the full upgrade procedure including migration steps.
+This is non-destructive for items still sitting at their recorded path. It is **not** safe if you moved media files as part of the upgrade — a top-level item whose file moved without being renamed is pruned rather than re-indexed; see [Moving a file](/admin/library-management#moving-a-file). See [/install/upgrade](/install/upgrade) for the full upgrade procedure including migration steps.
+
+For **metadata** that changed shape between releases, a rescan is the wrong tool: it does not re-fetch metadata for rows that are already indexed. Queue a forced re-match instead, which re-resolves items that already carry metadata:
+
+```bash
+curl -X POST http://localhost:32400/api/v1/libraries/{id}/refresh-metadata \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+This applies to **movie and TV** libraries — the job visits `movie`, `video` and
+`series` rows only. See
+[Force a metadata re-match](/admin/library-management#force-a-metadata-re-match).
 
 ### Can I use a remote MySQL database instead of localhost?
 

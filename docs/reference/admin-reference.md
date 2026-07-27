@@ -38,7 +38,7 @@ Ongoing operation is driven by the `php bin/phlix <command>` console. Run `php b
 | Command | Description |
 | --- | --- |
 | `php bin/phlix library:list` | List configured media libraries. |
-| `php bin/phlix library:scan {libraryId} [--rescan]` | Scan (or, with `--rescan`, clear and rescan) a library for new content. |
+| `php bin/phlix library:scan {libraryId} [--rescan] [--force]` | Scan a library for new content. `--rescan` re-walks the tree and prunes items whose file is gone — non-destructive, **except** for a top-level item whose file was *moved* without being renamed, which the prune deletes ([Moving a file](../admin/library-management#moving-a-file)). On a **music** library it also re-reads every file's tags, which is what repairs a track filed under the wrong album/artist after a retag; on other library types the re-read flag is ignored and already-indexed rows are not re-matched. Refuses to start when the library has any queued/running scan job unless `--force` is given. See [CLI reference](./cli#library-scan). |
 | `php bin/phlix plugin:list` | List installed plugins and their enabled state. |
 | `php bin/phlix plugin:enable {name}` / `plugin:disable {name}` | Enable / disable an installed plugin by manifest name. |
 | `php bin/phlix plugin:install {source}` / `plugin:uninstall {name}` | Install from an HTTPS / `file://` source, or uninstall by name. |

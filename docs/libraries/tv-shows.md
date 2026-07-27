@@ -140,7 +140,23 @@ for how to set the option.
 | 4 | TMDB | Fallback; limited episode data but strong show-level |
 | 5 (lowest) | Filename parsing | Season/episode numbers and title as last resort |
 
-All remote metadata is cached for 24 hours. Click **Match metadata** on any item (admins only) to force an immediate re-fetch.
+Click **Match metadata** on a series (admins only) to re-fetch and re-enrich its
+whole season/episode subtree — see
+[Fixing a single item's match](/admin/library-management#fixing-a-single-items-match).
+
+**Provider responses are cached in memory for one hour.** Every TVDB, TMDB and
+Fanart.tv call goes through a shared HTTP client that stores each successful `2xx`
+JSON body against the endpoint and its query parameters, with a **1-hour TTL**
+(`MetadataHttpClient::CACHE_TTL_MS`) and LRU eviction at 4096 entries. The provider
+objects are container singletons, so that cache lives for the life of the worker
+process — it spans requests **and** jobs. A re-match issued within the hour can
+therefore return byte-identical data without any HTTP request being made; restarting
+the server clears it.
+
+There is no *item*-level freshness window on this path: the match visits whichever
+items you ask it to and calls the resolver each time. (The 24-hour rule that exists
+elsewhere in the tree, `MetadataManager::hasRecentMetadata()`, is a per-provider gate
+on a different refresh path that series items do not take.)
 
 ### NFO File Formats
 
@@ -186,13 +202,45 @@ Files matching the wrong library type are logged and skipped with a warning in t
 
 ### Scan Triggering
 
-- **Manual**: Click **Scan Library** in the library's UI settings
-- **Automatic**: Folder watcher detects `mtime` changes and queues an incremental rescan
-- **First add**: Full recursive scan of the library root
+- **Manual**: Click **Scan** (or **Rescan**) on the library's row in **Admin → Libraries**, or `POST /api/v1/libraries/{id}/scan`, or `php bin/phlix library:scan {libraryId}`
+- **First add**: Creating a library queues a full recursive scan of its roots in the background
 
-### Incremental Rescans
+There is **no scheduled or filesystem-triggered scan**. Creating a library registers
+its roots with `FolderWatcher`, but the method that would actually compare directory
+checksums and act on a change — `FolderWatcher::checkForChanges()` — has **no
+production caller**, so it never runs. Nothing polls the filesystem, nothing queues a
+scan from a change on disk, and the `LibraryUpdated` event that would refresh smart
+playlists is never dispatched. New episodes appear after you scan.
 
-mtime-based checksum — only files whose modification time changed since the last scan are reprocessed. Show-level metadata (poster, fanart) is re-fetched only when `metadata_refreshed_at` is older than 24 hours.
+### What a rescan does — and does not — do
+
+The TV scanner has **no per-file skip index and does not look at mtime at all**.
+It decides by *path*: an episode file whose path is already in the catalogue takes
+the existing-item branch, which backfills any missing source technical metadata
+(duration, the `metadata_json['source']` summary, `media_streams` rows) and then
+moves on. A file whose path is new is parsed for show/season/episode, probed and
+inserted. Afterwards the prune pass removes items whose source file has
+disappeared, plus any series/season container left empty by that removal.
+
+The `--rescan` / **Rescan** "re-read every file" flag is consumed by the **music**
+scanner only; on a TV library it is inert. So a rescan is the right tool after
+episodes are **added, moved, renamed or deleted**, and the wrong tool for a
+**wrong or missing match** — it will not re-parse the filename or re-fetch
+metadata for a row that already exists.
+
+For a match problem, which remedy you want depends on which problem it is:
+
+- **Never matched** (no metadata at all) —
+  [`match-metadata`](/admin/library-management#enqueue-a-metadata-match). Note that
+  it visits `series` rows, not `season` or `episode` rows: seasons and episodes are
+  enriched as part of their parent series, so a series that never matched leaves its
+  whole subtree bare.
+- **Matched to the wrong show** — apply a
+  [per-item match](/admin/library-management#fixing-a-single-items-match) to the
+  parent series, which re-enriches the whole season/episode subtree from the TMDB id
+  you pick. `refresh-metadata` will **not** correct it: the series resolver always
+  searches by the item's stored title and year, so re-running it returns the same
+  record. See [Fixing a wrong match](/admin/library-management#fixing-a-wrong-match).
 
 ## 6. Content Rating and Parental Controls
 

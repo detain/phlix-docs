@@ -75,7 +75,39 @@ ARR applications interact with Phlix through the standard media library API:
 | List library items | `GET` | `/api/v1/libraries/{libraryId}/items` |
 | Get media item | `GET` | `/api/v1/media/{id}` |
 | Get download health | `GET` | `/api/v1/system/status` |
-| Trigger rescan | `POST` | `/api/v1/admin/library/rescan` |
+| Trigger incremental scan | `POST` | `/api/v1/libraries/{libraryId}/scan` |
+| Trigger full rescan (re-walk + prune) | `POST` | `/api/v1/libraries/{libraryId}/rescan` |
+| Match metadata for unmatched items | `POST` | `/api/v1/libraries/{libraryId}/match-metadata` |
+| Force re-match of already-matched items | `POST` | `/api/v1/libraries/{libraryId}/refresh-metadata` |
+
+::: warning Rescan does not re-match a movie or episode
+ARR libraries are movie/TV, and on those types a rescan does **not** revisit a
+path that is already indexed — the "re-read every file" behaviour is consumed by
+the music scanner only. Use `rescan` after an ARR **adds, renames or deletes** a
+file, and `match-metadata` when an item is **unmatched**.
+:::
+
+::: danger An ARR that MOVES a movie file without renaming it loses the item
+Radarr's "Movie Editor → root folder change" and any other operation that relocates
+a file while keeping its filename hits a scanner defect (**S158**): the rescan
+matches the file to its existing row by a path-independent canonical key, reuses
+that row **without updating its `path`**, and the prune in the same run then deletes
+it — cascading the watch history and resume position. The movie reappears only on
+the *next* rescan, as a new row with a **new UUID**. Episodes are unaffected. See
+[Moving a file](../admin/library-management#moving-a-file); there is no way to avoid
+it today, so prefer letting an ARR rename-in-place over relocating files.
+:::
+
+::: warning `refresh-metadata` will not correct a wrong match
+
+`refresh-metadata` is for backfilling fields or picking up a changed provider
+priority — **not** for correcting an item that matched the wrong title. It re-seeds
+a movie resolve from the item's own stored `external_ids` and re-runs a series
+resolve against the same stored title, so the same record comes back. Fix those with
+the [per-item match](../admin/library-management#fixing-a-single-items-match); see
+[Fixing a wrong match](../admin/library-management#fixing-a-wrong-match) and
+[Scan vs Rescan vs Match metadata](../admin/library-management#scan-vs-rescan-vs-match-metadata).
+:::
 
 ---
 

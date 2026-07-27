@@ -144,11 +144,18 @@ ls -la /media/movies
 ls -la /media/tv
 ```
 
-**Trigger a manual library rescan via CLI:**
+**Trigger a manual library scan via CLI:**
 
 ```bash
-php public/index.php library:scan --all
+php bin/phlix library:list                  # get the library ids
+php bin/phlix library:scan {libraryId}      # one library at a time — there is no --all flag
 ```
+
+Add `--rescan` to re-walk the whole tree and prune items whose file is gone. Do not
+use it straight after relocating media — a top-level item whose file was moved
+without being renamed is pruned rather than re-indexed
+([Moving a file](/admin/library-management#moving-a-file)). See the
+[CLI reference](/reference/cli#library-scan).
 
 **View DLNA server status:**
 

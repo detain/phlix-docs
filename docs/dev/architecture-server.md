@@ -145,8 +145,8 @@ Every `Phlix\*` namespace, its key classes, and the role each plays:
 | Namespace | Key classes | Role |
 |----------|-------------|------|
 | `Phlix\Auth\*` | `JwtHandler`, `UserRepository`, `AuthManager`, `UserProfileManager` | JWT auth (HS256, 1h access / 7d refresh), user management, profiles (≤5), parental PIN and rating filter |
-| `Phlix\Media\Library\*` | `LibraryManager`, `MediaScanner`, `FolderWatcher`, `ItemRepository` | Media library scanning, filesystem watching (mtime checksum), `metadata_json` persistence |
-| `Phlix\Media\Metadata\*` | `MetadataManager`, `TmdbProvider`, `TvdbProvider`, `FanartProvider`, `LocalNfoProvider` | Metadata fetching with provider priority (`tmdb→local` for movies, `tvdb→fanart→local` for series), 24 h cache |
+| `Phlix\Media\Library\*` | `LibraryManager`, `MediaScanner`, `FolderWatcher`, `ItemRepository` | Media library scanning, `metadata_json` persistence. `FolderWatcher` holds the mtime-checksum watching code but is inert — its `checkForChanges()` has no production caller, so scanning is entirely on-demand ([Scan triggering](/libraries/movies#scan-triggering)) |
+| `Phlix\Media\Metadata\*` | `MetadataManager`, `TmdbProvider`, `TvdbProvider`, `FanartProvider`, `LocalNfoProvider` | Metadata fetching with provider priority (`tmdb→local` for movies, `tvdb→fanart→local` for series); provider HTTP responses cached in-process for **1 h** (`MetadataHttpClient::CACHE_TTL_MS`, LRU-capped at 4096 entries) |
 | `Phlix\Media\Streaming\*` | `HlsStreamer`, `QualitySelector`, `StreamManager` | HLS master/variant `.m3u8` packaging, quality profiles (generic / mobile-low / mobile-high / web / tv-4k), stream selection (direct-play vs transcode) |
 | `Phlix\Media\Transcoding\*` | `FfmpegRunner`, `EncodingHelper`, `TranscodeManager` | FFmpeg probe / transcode / thumbnail, CRF 23/28, libx264 / libx265, hardware acceleration |
 | `Phlix\Session\*` | `SessionManager`, `PlaybackController`, `SyncPlay\*` | Device sessions, continue-watched (marks complete at 95 %), SyncPlay NTP-style time-sync (`OFFSET_SAMPLE_COUNT=5`, weighted-mean offset) |

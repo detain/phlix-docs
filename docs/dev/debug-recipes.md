@@ -68,13 +68,38 @@ tail -f .logs/media.log
 
 Look for `Scanning` entries showing progress and `Matched` or `Unmatched` for each file.
 
-### 2. Force a single-threaded rescan to see errors
+### 2. Force a foreground rescan to see errors
 
 ```bash
-sudo -u phlix php scripts/run-library-scan-worker.php --full-rescan 2>&1
+sudo -u phlix php bin/phlix library:scan {libraryId} --rescan 2>&1
 ```
 
-This runs the scan synchronously and prints errors to stdout that may not appear in the log.
+This runs the scan **synchronously** in your shell and prints errors that may not
+appear in the log.
+
+⚠ `--rescan` also runs the prune, so it is not a read-only diagnostic. Do not reach
+for it as a debugging step straight after relocating media: a top-level item whose
+file was moved without being renamed is deleted rather than re-indexed — see
+[Moving a file](../admin/library-management#moving-a-file). A plain
+`library:scan {libraryId}` does not prune.
+
+What `--rescan` buys you depends on the library type. On a **music** library it
+leaves the unchanged-file skip index unloaded, so every track is opened and
+tag-read — exactly what you want when hunting a file the incremental scan is
+silently passing over. On **every other type** the flag is inert (those scanners
+have no skip index), and a path that is already indexed is stepped over either
+way. On a **movie or TV** library, the way to make something look at such a row
+again is [`match-metadata` / `refresh-metadata`](../admin/library-management#enqueue-a-metadata-match)
+— but note their limits ([what they skip](../admin/library-management#what-match-metadata-skips),
+[wrong vs missing match](../admin/library-management#fixing-a-wrong-match)). On a
+**photo, book or audiobook** library nothing revisits the row at all: those job
+types skip it, so the only option is to remove the row and let a scan re-add it.
+
+The command exits `0` on a clean scan, `1` if the scan did not run at all, and
+`3` if it completed but could not index every file it read. It **refuses to
+start** (exit `1`) while the library already has a `queued`/`running` job — pass
+`--force` only when you know the existing row is stranded. See the
+[CLI reference](../reference/cli#library-scan).
 
 ### 3. Check file permissions
 

@@ -2,7 +2,11 @@
 
 **Since:** 0.14.0
 
-Smart playlists auto-populate based on JSON DSL rules evaluated against the media library at scan time and on folder-watch events. Unlike manual playlists, smart playlists dynamically update as content changes.
+Smart playlists populate from JSON DSL rules evaluated against the media library. Unlike manual playlists, their membership is derived from the rules rather than curated by hand.
+
+::: warning Evaluation is request-driven, not automatic
+`SmartPlaylistEngine::evaluateOnScan()` is reached from the smart-playlist endpoints and from `CollectionManager::refreshSmartCollection()` (itself reached from `POST /api/v1/collections/{id}/refresh`) — i.e. when something asks for it. It is **not** triggered by a library scan, and it is not triggered by a folder-watch cycle: nothing calls `FolderWatcher::checkForChanges()` in production, so the `LibraryUpdated` event below is never dispatched, and `SmartPlaylistRefreshHandler::register()` — which is what would subscribe the handler to it — has no caller either. See [Scan triggering](/libraries/movies#scan-triggering).
+:::
 
 ## Architecture
 
@@ -177,7 +181,11 @@ CREATE TABLE smart_playlists (
 
 ### LibraryUpdated
 
-Fired when folder watcher detects library changes:
+Intended to be fired when the folder watcher detects library changes. **It is never
+dispatched in production** — its only construction site is
+`FolderWatcher::dispatchLibraryUpdated()`, reachable only from
+`FolderWatcher::checkForChanges()`, which has no caller. Treat the shape below as the
+contract for the event, not as something you can rely on receiving:
 
 ```php
 final class LibraryUpdated

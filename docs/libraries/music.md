@@ -68,8 +68,21 @@ When a music library is first created or rescanned:
 
 1. **Discovery** — Scanner finds all audio files matching supported extensions
 2. **Tag Harvesting** — Each file is parsed for ID3v2/Vorbis/MP4 tags
-3. **Metadata Enrichment** — MusicBrainz/AudioDB providers enrich missing data
-4. **Upsert** — Items are created or updated in the database
+3. **Upsert** — Items are created or updated in the database
+4. **Enrichment event** — a *genuinely new* track publishes a `MediaItemAdded`
+   event, which the optional `musicbrainz` plugin subscribes to. It only runs if
+   that plugin is installed and enabled, and only for tracks that were just
+   inserted.
+
+::: warning A rescan does not re-enrich existing tracks
+There is no host-side MusicBrainz or AudioDB provider — `MusicBrainzProvider` /
+`AudioDbProvider` were removed, and `MetadataManager` deliberately registers no
+providers for the `artist` / `album` / `track` types, so a music metadata refresh
+through it is a no-op. The only music-enrichment trigger left is the
+`MediaItemAdded` event, and the scanner publishes it **only for a track it just
+inserted**. A rescan of a library whose tracks already exist re-reads tags from
+the files and re-parents them; it fetches nothing from any provider.
+:::
 
 ### Scan vs Rescan
 
@@ -78,10 +91,10 @@ a music library that difference is everything.
 
 | | **Scan** | **Rescan** |
 |---|---|---|
-| Files opened | Only those whose `(mtime, size)` changed since the last scan | **Every** file |
-| Repairs a track filed under the wrong album/artist after a retag | ❌ No | ✅ Yes |
+| Files opened | Usually only those whose `(mtime, size)` changed since the last scan — but see [when the skip does not fire](#when-a-plain-scan-still-opens-every-file) | **Every** file, always |
+| Repairs a track filed under the wrong album/artist after a retag | ❌ Not reliably | ✅ Yes |
 | Deletes items | No | No — it prunes **only** items whose source file is gone |
-| Cost on a large library | Minutes | Hours (see below) |
+| Cost on a large library | Usually minutes | Hours (see below) |
 
 ### Rescan
 
@@ -93,12 +106,16 @@ watch history, favourites and fetched metadata are preserved. If the library's
 configured roots are not present on disk, the prune is skipped entirely rather
 than treating the whole library as removed.
 
-::: warning A rescan is the ONLY way to fix a mis-filed track
+::: warning A rescan is what fixes a mis-filed track
 If you edit a file's `ARTIST` or `ALBUM` tag *after* it has been indexed, a plain
-**Scan** can never move the track to the right album or artist. The incremental
-skip fires before the file is opened — the file's `(mtime, size)` is checked, the
-file is skipped, and the corrected tags are never read. Only a rescan opens it
-again.
+**Scan** normally cannot move the track to the right album or artist. The
+incremental skip fires before the file is opened — the file's `(mtime, size)` is
+checked, the file is skipped, and the corrected tags are never read.
+
+A Scan *will* open the file when the skip index is not in play (see
+[below](#when-a-plain-scan-still-opens-every-file)), but that depends on unrelated
+database state you have no control over, so it is not something to rely on. A
+rescan opens the file unconditionally.
 :::
 
 Because every file is opened and tag-read, a rescan costs the whole library rather
@@ -117,14 +134,47 @@ from roughly 90 files/sec at the start to roughly 1.3 files/sec in the tail, so
 dividing the total by the track count describes no part of the run. Your storage,
 tag sizes and hardware will give a different number.
 
-A rescan is interruptible and idempotent — the scanner flushes per album and
-stamps only files it actually read — so re-running one after an interruption
-continues rather than starting over.
+An interrupted rescan loses no committed work: the scanner writes each album out
+as it goes, so everything indexed before the interruption stays indexed, and
+re-running is idempotent (rows are upserted by path).
+
+⚠ **It does not resume, though.** A re-run starts again from the first file and
+pays the whole wall clock a second time. Full-read mode is implemented by leaving
+the unchanged-file skip index *unloaded*, and an unloaded index reports every file
+as changed — so a rescan has nothing to skip, including the files the interrupted
+run had already read and stamped. The stamps it left behind only speed up a later
+plain **Scan**.
 
 Trigger one from **Admin → Libraries → Rescan**, from
 `POST /api/v1/libraries/{id}/rescan`, or from the CLI with
 `php bin/phlix library:scan {libraryId} --rescan` (see the
 [CLI reference](../reference/cli#library-scan)).
+
+### When a plain Scan still opens every file
+
+The unchanged-file skip is not unconditional. `MusicLibraryScanner::scanDirectory()`
+loads the skip index only when **all three** of `!$readEveryFile && !$mayAdopt &&
+!$needsHealing` hold, and an unloaded index reports every file as changed:
+
+- **`$readEveryFile`** — the operator asked for a rescan. This is the only one of
+  the three you control.
+- **`$mayAdopt`** — the library owns at least one orphaned `artist`/`album`
+  `media_items` row that no `music_artists`/`music_albums` row references yet. The
+  scan must flush albums so that orphan can be adopted. The flag is re-read *per
+  file*, so an orphan created by a caught write failure part-way through switches
+  the fast path off for the remainder of that scan.
+- **`$needsHealing`** — some `music_artists` or `music_albums` row still has
+  `media_item_id IS NULL`, awaiting the S96(e) backfill. That query is **not scoped
+  to one library** — neither table has a `library_id` column — so a single unhealed
+  row anywhere on the box disables the fast path for every music library on it.
+
+Both gates **fail open**: if either query throws, the scanner logs a warning and
+assumes the worst ("do not skip"), on the reasoning that an unjustified skip could
+silently miss a change while an unnecessary probe is merely slow.
+
+So a plain Scan on a music library can occasionally cost hours rather than minutes.
+When you need a guaranteed full re-read, ask for one — use **Rescan**. The measured
+figures above are **rescan** measurements; they are not the cost of a plain Scan.
 
 ### Generator-based Processing
 `AudioScanner::scanMusicLibrary()` uses a PHP Generator to process tracks one
@@ -132,12 +182,21 @@ at a time, avoiding memory issues with large libraries (10,000+ tracks).
 
 ## Metadata Provider Priority
 
-Music items are enriched using a provider cascade:
+Music enrichment is **not** a host-side provider cascade. The server ships no
+music metadata provider at all: `MetadataManager` omits `artist` / `album` /
+`track` from its provider-priority map on purpose, so a music refresh through it
+finds no providers and returns without fetching anything.
 
-1. **MusicBrainz** — Primary source; requires User-Agent header per their
-   requirements, rate-limited to 1 request/second.
-2. **AudioDB** — Fallback; provides album artwork and additional data.
-3. **Local Tags** — Always used as the base; providers add missing data.
+- **Local tags** are the base, and on a stock server they are the *only* source.
+- **MusicBrainz** enrichment comes from the optional `musicbrainz` plugin, which
+  subscribes to `MediaItemAdded` and therefore only ever sees newly inserted
+  tracks.
+- **AudioDB** is not wired to anything on the server.
+
+The library-wide `match-metadata` / `refresh-metadata` jobs are no help either: they
+visit `movie`, `video` and `series` rows only, so `artist`, `album` and `track` rows
+are skipped before any provider is consulted. See
+[what Match metadata skips](/admin/library-management#what-match-metadata-skips).
 
 ## API Endpoints
 

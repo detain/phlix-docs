@@ -48,7 +48,7 @@ A job row (the `ScanJobRepository::decodeRow()` shape) carries:
 | `library_id` | The library being scanned. |
 | `type` | The `library_scan_jobs.type` ENUM: `scan`, `rescan`, `metadata` (match-metadata), `metadata_refresh`, `prune`, `clear_metadata`, `clear_artwork`, `delete_all`. |
 | `status` | `queued` → `running` → `completed` \| `failed`. |
-| `items_found`, `items_updated` | Live progress: total media files (denominator) / processed (numerator) for `scan` / `rescan` / `metadata` — see [Real per-file progress](#real-per-file-progress). |
+| `items_found`, `items_updated` | Live progress: total (denominator) / processed (numerator). Media files for `scan` / `rescan`; library items for `clear_metadata` / `clear_artwork`. `prune` and `delete_all` report through `items_removed` instead. For `metadata` / `metadata_refresh` the two sides are counted differently and **the denominator is not a count of matchable items**: `LibraryMetadataMatcher::countMatchable()` queries the library's *top-level* rows (`['topLevel' => true]`, plus `'match' => 'unmatched'` when not forcing) **without** applying the `movie` / `video` / `series` type filter, while `items_updated` accumulates only the rows that filter admitted. That mismatch is the tell described under [The metadata denominator is not a matchable-item count](#match-metadata-denominator). See [Real per-file progress](#real-per-file-progress). |
 | `items_added`, `items_removed`, `items_failed` | Outcome tallies, **not** part of the streamed percentage. `items_added` / `items_failed` ride along on the sink and are stamped authoritatively by `markCompleted()`; `items_removed` is the prune count. |
 | `current_path` | The file currently being processed (the progress hint); populated during a `scan` / `rescan`. |
 | `error` | The exception message when `status = failed`, else `null`. |
@@ -72,10 +72,29 @@ Processes **at most one** job:
    the race), return `false` — the scan engine is never touched.
 2. Otherwise dispatch on `type`, passing a **progress sink** so the job row
    streams a live percentage:
-   - `metadata` → `LibraryMetadataMatcher::matchLibrary($id, fn(processed, total) => …)`,
-     writing `items_found`/`items_updated`;
+   - `metadata` **and** `metadata_refresh` → `LibraryMetadataMatcher::matchLibrary($id,
+     fn(processed, total) => …)`, writing `items_found`/`items_updated`. The two
+     differ only by `setForceRefresh($type === 'metadata_refresh')`: `metadata`
+     skips items that already carry a `metadata_refreshed_at` stamp,
+     `metadata_refresh` re-processes them. See
+     [Enqueue a metadata match](../admin/library-management#enqueue-a-metadata-match);
    - `rescan` → `rescanLibrary($id, $this->scanProgressSink($jobId))`;
+   - `prune` → `pruneLibrary($id)`, recording the count in `items_removed`;
+   - `clear_metadata` → `clearMetadata($id, …)`, streaming
+     `items_updated`/`items_found`;
+   - `clear_artwork` → `clearArtwork($id, …)`, same progress shape;
+   - `delete_all` → `deleteAllItems($id)`, recording `items_removed` — the one
+     destructive branch, gated on `confirm=true` in the controller;
    - otherwise (`scan`) → `scanLibrary($id, $this->scanProgressSink($jobId))`.
+
+   ⚠ `matchLibrary()`'s per-item filter admits only `movie`, `video` and `series`
+   rows; every other type is `continue`d before a provider is consulted. So a
+   `metadata` / `metadata_refresh` job on a music, photo, book or audiobook library
+   reaches `completed` having processed **zero** items, with no error. See
+   [what Match metadata skips](../admin/library-management#what-match-metadata-skips).
+
+   The progress columns make that visible, because the two sides are counted from
+   different sets — see [the denominator note](#match-metadata-denominator) below.
 
    `rescanLibrary()` differs from `scanLibrary()` in one thing: it passes
    `readEveryFile: true`, which unloads the music scanner's unchanged-file skip
@@ -83,6 +102,14 @@ Processes **at most one** job:
    flag — none of them has a skip index. It then runs the prune pass. It does
    **not** delete items first; see
    [Scan vs Rescan](../admin/library-management#scan-vs-rescan-vs-match-metadata).
+
+   The consequence for non-music types is that `rescan` and `scan` do the same
+   work per file: `MediaScanner` keys on *path*, so an already-indexed path takes
+   the existing-item branch (`backfillItemSourceMetadata()`, then `return false
+   // Already scanned`) under both job types. Nothing re-parses the filename or
+   re-matches the row — that is what the `metadata` / `metadata_refresh` job types
+   are for, **on `movie` / `video` / `series` rows only**. For a `photo`, `book` or
+   `audiobook` row nothing re-derives it at any point after the insert.
 3. On success → `markCompleted()`, return `true`.
 4. On any `\Throwable` → `markFailed($jobId, $e->getMessage())` + an error log,
    return `true`. A failed job is **never** marked completed.
@@ -144,6 +171,25 @@ The pipeline is end-to-end:
 4. The **`metadata`** branch streams the same `items_found`/`items_updated`
    percentage straight from `LibraryMetadataMatcher::matchLibrary()`'s
    `(processed, total)` callback (no `current_path`).
+
+### The metadata denominator is not a matchable-item count {#match-metadata-denominator}
+
+For `scan` / `rescan` both sides of the fraction come from the same walk, so the
+percentage reaches 100 %. For `metadata` / `metadata_refresh` they do not:
+
+- **Denominator** — `LibraryMetadataMatcher::countMatchable()` runs
+  `$this->items->query(['topLevel' => true, 'limit' => 1], $libraryId)`, adding
+  `'match' => 'unmatched'` only when `forceRefresh` is off. It counts **every**
+  top-level row of the library, of any `type`.
+- **Numerator** — `$processed` accumulates only the items that survived
+  `matchBatchConcurrently()`'s per-item filter, i.e. `movie`, `video` and
+  (with a series resolver present) `series`.
+
+So `items_found` is a count of *top-level rows*, not of *matchable items*, and the
+gap between the two sets is exactly the diagnostic: a `metadata` job on a photo,
+book or audiobook library reports a non-zero `items_found` with `items_updated`
+stuck at `0` for its whole life, and then completes. Do not "fix" a `0 / n` reading
+by assuming the counter is broken.
 
 ::: warning Specialised scanners stay coarse
 `LibraryManager::scanLibrary()` early-returns into the specialised

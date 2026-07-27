@@ -190,17 +190,49 @@ background worker performs the scan. Poll `GET .../scan-status` for progress.
 
 ### POST /api/v1/libraries/`{id}`/rescan
 
-Enqueue a **full rescan**: re-read **every** file from disk (no incremental
-skipping), then prune only the items whose source file is gone. Same contract as
-`scan`, with a `rescan`-typed job.
+Enqueue a **full rescan**: re-walk the library tree, index files at paths that are
+not yet in the catalogue, backfill missing source metadata on the already-existing
+rows whose type is `video`, `movie`, `episode`, `audio` or `audiobook` (`photo`
+and `book` rows get nothing), then prune the items whose source file is gone. Same
+contract as `scan`, with a `rescan`-typed job.
 
-A rescan is **non-destructive** — it does not delete items, watch history or
-fetched metadata. It is also the only operation that repairs a music track filed
-under the wrong album or artist after its tags were edited, because the
-incremental scan skips an unchanged file before it is ever opened. Expect it to
-take far longer than a `scan` on a music library; see
-[Scan vs Rescan](../admin/library-management#scan-vs-rescan-vs-match-metadata)
-for the measured figures.
+A rescan is **non-destructive** for items whose file is still where the catalogue
+says it is — it does not delete them, their watch history or their fetched
+metadata.
+
+::: danger It is destructive for a file that was MOVED
+A parent-less item — `movie`, `video`, `photo`, `book`, `audiobook` — whose file
+was **moved without being renamed** is matched by a path-independent canonical key,
+so the scanner reuses the existing row and never updates its `path`. The prune in
+the same job then deletes that row, cascading its `user_item_data`. The item
+returns on the *next* rescan as a new row with a **new UUID** and no watch state.
+Episodes are unaffected. Full detail and the (absent) alternatives:
+[Moving a file](../admin/library-management#moving-a-file). Tracked as **S158**.
+:::
+
+::: warning The "re-read every file" half applies to music libraries only
+`rescan` passes a `readEveryFile` flag that **only the music scanner consumes**;
+every other scanner has no skip index for it to switch off. On a **music**
+library the flag makes the scan open and tag-read every track, which is what
+repairs a track filed under the wrong album or artist after a retag — and it can
+take hours. On a **movie, TV, photo, book or audiobook** library an
+already-indexed path is not re-parsed or re-matched at all; the scan does a
+missing-source-metadata backfill on that row and moves on — and even that backfill
+is type-gated to `video` / `movie` / `episode` / `audio` / `audiobook`, so on a
+**photo** or **book** library the existing-item branch does nothing at all.
+
+On a **movie or TV** library, use
+[`match-metadata`](../admin/library-management#enqueue-a-metadata-match) for an item that was never
+matched and the [single-item match](../admin/library-management#fixing-a-single-items-match)
+for one that matched the wrong title — see
+[Fixing a wrong match](../admin/library-management#fixing-a-wrong-match). On a
+**photo, book or audiobook** library there is no re-match operation at all; those
+job types skip every row of those types. See
+[what Match metadata skips](../admin/library-management#what-match-metadata-skips).
+:::
+
+See [Scan vs Rescan](../admin/library-management#scan-vs-rescan-vs-match-metadata)
+for measured music-library figures.
 
 **Auth:** Admin (Bearer token)
 
@@ -210,6 +242,115 @@ for the measured figures.
   "job_id": "550e8400-e29b-41d4-a716-446655440100",
   "status": "queued",
   "message": "Library rescan queued: every file will be re-read. This repairs tracks filed under the wrong album or artist and can take hours on a large music library. Use Scan for an incremental refresh."
+}
+```
+
+**Response 404:** Library not found
+
+---
+
+### POST /api/v1/libraries/`{id}`/match-metadata
+
+Enqueue a background metadata match as a `metadata`-typed job. Resolves details
+from each item's stored name/year/external ids and, on a hit, merges the result
+into `metadata_json` and stamps `metadata_refreshed_at`. **Items that already
+carry that stamp are skipped**, so this is the operation for *unmatched* items —
+including on movie and TV libraries, where a `rescan` does not revisit an
+already-indexed row.
+
+::: warning It visits `movie`, `video` and `series` rows only
+Every other `media_items.type` — `season`, `episode`, `artist`, `album`, `track`,
+`photo`, `book`, `audiobook` — is skipped before any provider is consulted. Seasons
+and episodes are still enriched, but through their parent `series`. On a photo, book
+or audiobook library this job reaches `completed` having processed **zero** items.
+See [what Match metadata skips](../admin/library-management#what-match-metadata-skips).
+:::
+
+**Auth:** Admin (Bearer token)
+
+**Response 202:**
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440101",
+  "status": "queued",
+  "message": "Metadata match queued"
+}
+```
+
+**Response 404:** Library not found
+
+---
+
+### POST /api/v1/libraries/`{id}`/refresh-metadata
+
+Enqueue a **forced** re-match as a `metadata_refresh`-typed job: the same matcher
+with force-refresh enabled, so items that were already matched
+(`metadata_refreshed_at IS NOT NULL`) are re-processed rather than skipped. Use it
+to backfill fields added by a newer release, or to pick up a changed provider
+priority. An addition to `match-metadata`, not a replacement.
+
+It runs the **same per-item filter** as `match-metadata`: `movie`, `video` and
+`series` rows only.
+
+::: danger It does not undo a match that resolved to the wrong title
+For a **movie** the matcher re-seeds the resolve from the item's own stored
+`external_ids` — the ids the bad match wrote — and the movie resolver searches by
+title *only* when no IMDb id is present, resolving by the id when one is. For a
+**series** the resolver takes no ids but re-runs the same title/year search, so it
+returns the same record. Either way the job reports success and the wrong title
+comes back.
+
+Use `POST /api/v1/media/{id}/match/apply` for one item, or
+`clear-metadata` → `match-metadata` for a movie library seeded off bad ids. See
+[Fixing a wrong match](../admin/library-management#fixing-a-wrong-match).
+:::
+
+If the `metadata.overwrite_existing` setting is **off**, an item that already has
+metadata is skipped wholesale (there is no per-field provenance to merge against).
+At the shipped default it is on and nothing is skipped.
+
+**Auth:** Admin (Bearer token)
+
+**Response 202:**
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440102",
+  "status": "queued",
+  "message": "Metadata refresh queued"
+}
+```
+
+**Response 404:** Library not found
+
+---
+
+### POST /api/v1/libraries/`{id}`/clear-metadata
+
+Enqueue a `clear_metadata`-typed job. For **every** item in the library it strips the
+provider-fetched keys from `metadata_json` — artwork/trailer URLs, overview and
+tagline, cast/crew, genres and tags, ratings and votes, provider dates and alternate
+titles, and the external identifiers (`tmdb_id`, `imdb_id`, `tvdb_id`,
+`external_ids`) — and NULLs `metadata_refreshed_at` so the item counts as un-matched
+again.
+
+No rows are deleted. Paths, filename-derived titles, types, the series/season
+hierarchy, `user_item_data` and watch history are preserved, as are the
+filesystem/probe-derived keys (name, year, season, episode, `canonical_key`,
+`source`, duration, streams).
+
+Pair it with `match-metadata` to re-match a movie library that was seeded off bad
+external ids. It is library-wide with no dry run, so it discards correct matches
+along with the wrong ones. See
+[Clear a library's metadata](../admin/library-management#clear-a-librarys-metadata).
+
+**Auth:** Admin (Bearer token)
+
+**Response 202:**
+```json
+{
+  "job_id": "550e8400-e29b-41d4-a716-446655440103",
+  "status": "queued",
+  "message": "Metadata clear queued"
 }
 ```
 

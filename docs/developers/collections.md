@@ -127,10 +127,16 @@ The client first searches for items, then passes the resolved IDs to bulk-add. T
 
 ## Smart Collection Sync Algorithm
 
-Smart collections auto-sync from saved playlist rules when:
+Smart collections sync from saved playlist rules when a user manually triggers a
+refresh via `POST /api/v1/collections/{id}/refresh`.
 
-1. A library scan completes (`LibraryUpdated` event)
-2. A user manually triggers refresh via `POST /api/v1/collections/{id}/refresh`
+::: warning There is no automatic sync
+The `LibraryUpdated` path described under
+[Integration with SmartPlaylistRefreshHandler](#integration-with-smartplaylistrefreshhandler)
+is dead code: nothing calls `FolderWatcher::checkForChanges()` in production, so
+`LibraryUpdated` is never dispatched, and `SmartPlaylistRefreshHandler::register()`
+is never called either. A library scan does **not** re-sync smart collections.
+:::
 
 **Sync uses diff (not wipe-and-rebuild)**:
 
@@ -165,7 +171,7 @@ This approach preserves curator-applied sort orders on retained items while addi
 
 ## Integration with SmartPlaylistRefreshHandler
 
-When `SmartPlaylistRefreshHandler::onLibraryUpdated()` re-evaluates a smart playlist, it also calls `refreshSmartCollection()` for any collection linked to that playlist:
+When `SmartPlaylistRefreshHandler::onLibraryUpdated()` re-evaluates a smart playlist, it also calls `refreshSmartCollection()` for any collection linked to that playlist. ⚠ This handler is **not reached in production** — see the warning above; the code path is described here for completeness only:
 
 ```php
 private function refreshCollectionsForPlaylist(string $smartPlaylistId): void

@@ -100,7 +100,10 @@ has accumulated), but do it as part of the upgrade so the fix actually takes eff
 
 ## 3. Post-upgrade library rescan
 
-After a major version upgrade, metadata provider behaviour may change (e.g. TVDb → TMDb priority shifts). A full rescan re-reads **every** file from disk instead of skipping unchanged ones:
+A full rescan re-walks each library, indexes files at paths that are not yet in the
+catalogue, backfills missing source metadata on the existing rows whose type is
+`video`, `movie`, `episode`, `audio` or `audiobook` (`photo` and `book` rows get
+nothing), and prunes items whose source file is gone:
 
 ```bash
 # List the libraries to get their ids
@@ -117,12 +120,43 @@ The equivalent from the admin UI is **Admin → Libraries → Rescan**, or
 `POST /api/v1/libraries/{id}/rescan`; those queue the job for the background
 worker instead of blocking your shell.
 
-::: tip A rescan does not delete anything
-It re-reads every file, then prunes **only** items whose source file is gone.
-Items, watch history and fetched metadata are preserved. On a large **music**
-library, expect it to take substantially longer than a plain scan — see
+::: tip A rescan prunes only what is gone from disk
+Items still present at their recorded path, their watch history and their fetched
+metadata are all preserved. On a large **music** library `--rescan` also re-reads
+every file's tags and takes substantially longer than a plain scan — see
 [Scan vs Rescan](../admin/library-management#scan-vs-rescan-vs-match-metadata)
 for measured figures.
+:::
+
+::: danger Do not rescan straight after moving media files
+A parent-less item — `movie`, `video`, `photo`, `book`, `audiobook` — whose file was
+**moved without being renamed** is not re-indexed at its new path; the scanner reuses
+the old row by a path-independent canonical key and leaves its `path` stale, and the
+prune then deletes that row along with its watch history and resume position. It
+returns on the *next* rescan as a new row with a **new UUID**. Episodes are
+unaffected. There is no option that avoids this — read
+[Moving a file](../admin/library-management#moving-a-file) first. Tracked as **S158**.
+:::
+
+::: warning A rescan is not the tool for a metadata change
+Only the **music** scanner acts on the "read every file" flag. On a movie, TV,
+photo, book or audiobook library an already-indexed path is not re-parsed and not
+re-matched, so a rescan will not pick up a provider behaviour change (e.g. a
+TVDb → TMDb priority shift) for items you already have. For a **movie or TV**
+library, queue a forced re-match instead, which re-resolves items that already carry
+metadata:
+
+```bash
+curl -X POST http://localhost:32400/api/v1/libraries/{id}/refresh-metadata \
+  -H "Authorization: Bearer $ADMIN_TOKEN"
+```
+
+See [Force a metadata re-match](../admin/library-management#force-a-metadata-re-match).
+
+**Photo, book and audiobook libraries have no equivalent.** Both metadata jobs skip
+those rows entirely and complete having processed zero items, and the server ships no
+metadata-fetching provider for them, so there is nothing to re-run after an upgrade. See
+[what Match metadata skips](../admin/library-management#what-match-metadata-skips).
 :::
 
 ### When is a full rescan required?
@@ -130,10 +164,21 @@ for measured figures.
 | Upgrade type | Rescan needed? |
 |-------------|----------------|
 | Patch (e.g. 0.18.0 → 0.18.1) | No — migrations handle schema changes |
-| Minor (e.g. 0.17.x → 0.18.x) | Recommended — metadata provider updates may change match behaviour |
-| Major (e.g. 0.x → 1.x) | Yes — review breaking changes first |
+| Minor (e.g. 0.17.x → 0.18.x) | Only if files were added or deleted. For provider/match changes, run a metadata refresh instead |
+| Major (e.g. 0.x → 1.x) | Review breaking changes first; rescan for added/deleted files, metadata refresh for match changes |
 
-If items that were previously matched are now unmatched after a rescan, the item's metadata shape changed in the upstream provider. Delete and re-add the item to force a fresh metadata fetch.
+(Files that were **moved** are the one filesystem change a rescan handles badly —
+see [Moving a file](../admin/library-management#moving-a-file).)
+
+If movie or TV items that were previously matched show no metadata after an upgrade,
+run a
+[metadata match](../admin/library-management#enqueue-a-metadata-match) — it visits
+exactly the items that carry no `metadata_refreshed_at` stamp — or fix a single title
+with the
+[per-item match action](../admin/library-management#fixing-a-single-items-match). If
+an item instead matched to the **wrong** title, neither library-wide job will correct
+it on its own; see
+[Fixing a wrong match](../admin/library-management#fixing-a-wrong-match).
 
 ---
 
@@ -143,7 +188,7 @@ Phlix uses [Semantic Versioning](https://semver.org). Minor version bumps are ba
 
 After every major or minor upgrade, check:
 
-1. **Library item metadata** — If a metadata provider changed its response shape, previously matched items may need re-matching. Run a full rescan and check the `media.log` for mismatches.
+1. **Library item metadata** — If a metadata provider changed its response shape, previously matched **movie / TV** items may need re-matching. Queue a [forced metadata re-match](../admin/library-management#force-a-metadata-re-match) (`POST /api/v1/libraries/{id}/refresh-metadata`) and check the `media.log` for mismatches. A rescan will not do this — it does not revisit an already-indexed row. Photo, book and audiobook libraries are unaffected: they have no metadata-fetching provider, and the job skips their rows.
 2. **FFmpeg version** — A newer FFmpeg may change default codec behaviour. If hardware-accelerated transcoding stopped working, verify encoder availability: `ffmpeg -hide_banner -encoders 2>&1 | grep nvenc`.
 3. **Config file keys** — New config keys are added in minor releases; old keys are never removed without a deprecation warning in the release notes. Check `config/*.php` against the release's default templates.
 4. **Plugin compatibility** — If you run plugins from the catalog, check the plugin catalog for version requirements before upgrading.
@@ -152,7 +197,7 @@ After every major or minor upgrade, check:
 
 | Change | Required action |
 |--------|----------------|
-| Metadata provider priority change | Full library rescan |
+| Metadata provider priority change | Forced metadata re-match (`POST /api/v1/libraries/{id}/refresh-metadata`) — **not** a rescan |
 | New required env var added | Set before startup; check release notes |
 | Database schema change | Migrations run automatically (or manually via `run-migrations.php`) |
 | FFmpeg codec deprecation | Update FFmpeg; check `config/ffmpeg.php` hwaccel paths |

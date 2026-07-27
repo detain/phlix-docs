@@ -75,7 +75,8 @@ ARR applications interact with Phlix through the standard media library API:
 | List library items | `GET` | `/api/v1/libraries/{libraryId}/items` |
 | Get media item | `GET` | `/api/v1/media/{id}` |
 | Get download health | `GET` | `/api/v1/system/status` |
-| Trigger rescan | `POST` | `/api/v1/admin/library/rescan` |
+| Trigger incremental scan | `POST` | `/api/v1/libraries/{libraryId}/scan` |
+| Trigger full rescan (re-reads every file) | `POST` | `/api/v1/libraries/{libraryId}/rescan` |
 
 ---
 

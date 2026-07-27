@@ -25,8 +25,9 @@ sudo -u phlix php scripts/run-migrations.php
 # 4b. Some releases add a ONE-TIME post-migration cleanup script that is NOT
 #     run automatically — see "One-time post-migration cleanup scripts" below.
 
-# 5. Rescan library if needed (see below)
-sudo -u phlix php scripts/run-library-scan-worker.php --full-rescan
+# 5. Rescan a library if needed (see below) — one library id at a time
+sudo -u phlix php bin/phlix library:list
+sudo -u phlix php bin/phlix library:scan {libraryId} --rescan
 
 # 6. Restart the server
 sudo systemctl restart phlix-server
@@ -99,15 +100,30 @@ has accumulated), but do it as part of the upgrade so the fix actually takes eff
 
 ## 3. Post-upgrade library rescan
 
-After a major version upgrade, metadata provider behaviour may change (e.g. TVDb → TMDb priority shifts). A full rescan forces every item to be re-evaluated against current metadata:
+After a major version upgrade, metadata provider behaviour may change (e.g. TVDb → TMDb priority shifts). A full rescan re-reads **every** file from disk instead of skipping unchanged ones:
 
 ```bash
-# Full rescan (all libraries, all items)
-sudo -u phlix php scripts/run-library-scan-worker.php --full-rescan
+# List the libraries to get their ids
+sudo -u phlix php bin/phlix library:list
+
+# Full rescan — one library at a time (there is no "all libraries" flag)
+sudo -u phlix php bin/phlix library:scan {libraryId} --rescan
 
 # Watch the scan progress
 tail -f .logs/media.log
 ```
+
+The equivalent from the admin UI is **Admin → Libraries → Rescan**, or
+`POST /api/v1/libraries/{id}/rescan`; those queue the job for the background
+worker instead of blocking your shell.
+
+::: tip A rescan does not delete anything
+It re-reads every file, then prunes **only** items whose source file is gone.
+Items, watch history and fetched metadata are preserved. On a large **music**
+library, expect it to take substantially longer than a plain scan — see
+[Scan vs Rescan](../admin/library-management#scan-vs-rescan-vs-match-metadata)
+for measured figures.
+:::
 
 ### When is a full rescan required?
 

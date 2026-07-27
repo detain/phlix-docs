@@ -281,10 +281,11 @@ grep JWT_SECRET /path/to/phlix/config/server.php
 ```bash
 curl -X POST http://localhost:32400/api/v1/libraries/{id}/rescan \
   -H "Authorization: Bearer $TOKEN"
-
-# OR touch all media files to update mtime, then rescan
-find /path/to/media -type f -exec touch {} \;
 ```
+
+A `rescan` re-reads **every** file regardless of mtime, so there is no need to
+`touch` your media first — and it deletes nothing, pruning only items whose source
+file is gone.
 
 ---
 

@@ -68,13 +68,22 @@ tail -f .logs/media.log
 
 Look for `Scanning` entries showing progress and `Matched` or `Unmatched` for each file.
 
-### 2. Force a single-threaded rescan to see errors
+### 2. Force a foreground rescan to see errors
 
 ```bash
-sudo -u phlix php scripts/run-library-scan-worker.php --full-rescan 2>&1
+sudo -u phlix php bin/phlix library:scan {libraryId} --rescan 2>&1
 ```
 
-This runs the scan synchronously and prints errors to stdout that may not appear in the log.
+This runs the scan **synchronously** in your shell and prints errors that may not
+appear in the log. `--rescan` re-reads every file rather than skipping unchanged
+ones, which is what you want when hunting a file the incremental scan is silently
+passing over.
+
+The command exits `0` on a clean scan, `1` if the scan did not run at all, and
+`3` if it completed but could not index every file it read. It **refuses to
+start** (exit `1`) while the library already has a `queued`/`running` job — pass
+`--force` only when you know the existing row is stranded. See the
+[CLI reference](../reference/cli#library-scan).
 
 ### 3. Check file permissions
 

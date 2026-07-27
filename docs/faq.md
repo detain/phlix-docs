@@ -17,7 +17,7 @@ See [/advanced/hardware-transcoding](/advanced/hardware-transcoding) for hardwar
 ### A library item is unmatched / not found — how do I fix it?
 
 1. Check the file naming convention. Phlix matches movies by `MovieName (Year).ext` and TV by `ShowName S01E01.ext`. See [/libraries/movies](/libraries/movies) and [/libraries/tv-shows](/libraries/tv-shows) for exact patterns.
-2. Run a manual rescan: **Admin → Library → Rescan** or use `php scripts/run-library-scan-worker.php` on the command line.
+2. Run a manual rescan: **Admin → Libraries → Rescan**, or `php bin/phlix library:scan {libraryId} --rescan` on the command line (`php bin/phlix library:list` prints the ids). A rescan re-reads every file from disk; it does not delete anything.
 3. If metadata is still wrong, delete the item from the library and re-add it after checking the filename matches the expected pattern.
 4. For TV shows, verify season/episode folders are named correctly — nested folders with an `S01E01` file inside a `Season 1` folder are supported.
 
@@ -70,8 +70,8 @@ Without a GPU, 4K HEVC transcoding will be slow and CPU-intensive. See [/advance
 Metadata shapes change between releases. After a major upgrade, run a full library rescan:
 
 ```bash
-# Preserve your env file (DB_PASSWORD, PHLIX_SECRET_KEY survive if you skip this step)
-sudo -u phlix php scripts/run-library-scan-worker.php --full-rescan
+sudo -u phlix php bin/phlix library:list                       # get the library ids
+sudo -u phlix php bin/phlix library:scan {libraryId} --rescan  # one library at a time
 ```
 
 See [/install/upgrade](/install/upgrade) for the full upgrade procedure including migration steps.

@@ -102,8 +102,8 @@ The option can be sent at the top level of the create/update body (`series_per_d
 or nested inside `options`; either way it is coerced to a real boolean and stored
 canonically inside `options`. It is ignored (and stripped) for non-series library
 types. Activating it on an already-scanned library and re-scanning stamps the
-folder-derived title/year onto existing series rows, so a plain rescan is enough —
-a full purge is not required.
+folder-derived title/year onto existing series rows, so re-scanning is enough —
+nothing has to be deleted first.
 :::
 
 ::: warning `book` is deliberately not offered
@@ -175,14 +175,56 @@ which one you want:
 
 | Action | What it does | When to use |
 |--------|--------------|-------------|
-| **Scan** | Adds new files and updates changed ones, **keeping** existing items. | The routine, everyday update after dropping in new media. |
-| **Rescan** | **Deletes all** of the library's items, then runs a full scan from scratch. | After **moving files** around, or to repair bad/duplicated matches — anything where the existing rows are wrong. |
+| **Scan** | Adds new files and updates changed ones, **keeping** existing items. For a music library it **skips** any file whose `(mtime, size)` is unchanged since the last scan, without opening it. | The routine, everyday update after dropping in new media. |
+| **Rescan** | Re-reads **every** file from disk — no skipping — then prunes only the items whose source file has disappeared. **Non-destructive.** | After **retagging** files, after **moving files** around, or to repair bad/duplicated matches — anything where the existing rows are wrong. |
 | **Match metadata** | Re-fetches posters / details for items **already** in the library (no filesystem changes). | When art or details are missing or stale but the items themselves are fine. |
 
-::: warning Rescan is destructive
-**Rescan** purges every item in the library before rebuilding — continue-watching
-positions and any per-item state tied to the old rows are lost. Reach for **Scan**
-unless you specifically need the clean rebuild.
+::: tip Rescan is NOT destructive
+A rescan does **not** delete the library's items first. It has been
+non-destructive since the DELETE-then-rescan data-loss fix: a file that still
+exists updates its **existing** row in place — same UUID, so every watch-history
+and `user_item_data` row that references it survives — and the pass that follows
+removes **only** items whose source file is gone (plus any series/season container
+left empty by that removal). Watch history, continue-watching positions,
+favourites and fetched metadata are all preserved.
+
+The prune is guarded: if the library's configured roots are not present on disk
+(an unmounted vault, a permissions fault), pruning is **skipped entirely** rather
+than treating the whole library as deleted.
+
+If you really do want every item removed, that is a separate, explicitly-confirmed
+action — `POST /api/v1/libraries/{id}/delete-all` with `confirm=true`, which
+returns `400` without the flag.
+:::
+
+::: warning Rescan is the ONLY thing that fixes a mis-filed music track
+If a track's `ARTIST` or `ALBUM` tag was edited after it was indexed, **only a
+rescan can move it to the right album/artist**. A plain **Scan** cannot: the
+incremental skip fires *before* the file is ever opened, so the corrected tags are
+never read and the row is never re-parented. This is the single most common reason
+to reach for Rescan on a music library.
+:::
+
+::: warning Rescan of a music library takes far longer than a scan
+Every file is opened and tag-read, so the cost scales with the whole library, not
+with what changed.
+
+**Measured example — the production music library, 61,135 tracks, one box:**
+
+| when | job | wall clock |
+|---|---|---|
+| before the scan-lookup fix (2026-07-25) | `d8e21a1b` | **9 h 55 m** |
+| after it (2026-07-27) | `238ba78d` | **28 m 41 s** (`items_failed: 0`) |
+
+⚠ **Treat 28 m 41 s as one measurement, not a guarantee, and do not divide it by
+the track count to get a rate.** Throughput within that same run fell from roughly
+90 files/sec at the start to roughly 1.3 files/sec in the tail, so a per-track
+figure derived from the average describes no part of the run. Your own library,
+storage and box will differ.
+
+A rescan is interruptible and idempotent — the scanner flushes per album and
+stamps only the files it actually read — so re-running one continues rather than
+starting over.
 :::
 
 **Match metadata** is the per-library counterpart of the single-item
@@ -197,7 +239,8 @@ page shows a "queued" toast with the returned message and starts polling status 
 library.
 
 - **Scan** runs an **incremental** scan (new + changed files).
-- **Rescan** runs a **full** purge + rescan.
+- **Rescan** runs a **full re-read** of every file, then prunes items whose file is
+  gone. It does not delete anything else.
 
 Neither button blocks — the work happens in the background
 [Library Scan Worker](../dev/library-scan-worker). You can navigate away; the next time
@@ -383,21 +426,28 @@ Queues an **incremental** scan. Returns `202 Accepted` with the new job id:
 POST /api/v1/libraries/{id}/rescan
 ```
 
-Queues a **full rescan** (purge + rescan). Identical contract to `scan`, with a
-`rescan`-typed job and the message `"Library rescan queued"`:
+Queues a **full re-read** of every file, followed by the prune pass. Identical
+contract to `scan`, with a `rescan`-typed job. The `message` is operator-facing
+help text that the admin console renders verbatim, so it spells out the cost:
 
 ```json
 {
   "job_id": "550e8400-e29b-41d4-a716-446655440100",
   "status": "queued",
-  "message": "Library rescan queued"
+  "message": "Library rescan queued: every file will be re-read. This repairs tracks filed under the wrong album or artist and can take hours on a large music library. Use Scan for an incremental refresh."
 }
 ```
 
-::: tip CLI is still synchronous
-The `php bin/phlix library:scan {libraryId} [--rescan]` console command is
-**unchanged** — it scans synchronously and blocks until done. Only the HTTP
-endpoints became asynchronous.
+::: tip The CLI is synchronous, but no longer invisible
+`php bin/phlix library:scan {libraryId} [--rescan]` still scans **synchronously**
+and blocks until done — it does not enqueue. What changed is that the command now
+creates and maintains its own `library_scan_jobs` row, so a CLI scan shows up on
+this page with a live *running* badge and advancing progress exactly like a
+web-triggered one, and lands `completed` / `failed` when it exits.
+
+It also **refuses to start** when the library already has a `queued` or `running`
+job, exiting non-zero with an explanatory message; `--force` overrides that. See
+the [CLI reference](../reference/cli#library-scan).
 :::
 
 ### Scan status {#scan-status}

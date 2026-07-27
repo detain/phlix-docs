@@ -71,9 +71,60 @@ When a music library is first created or rescanned:
 3. **Metadata Enrichment** — MusicBrainz/AudioDB providers enrich missing data
 4. **Upsert** — Items are created or updated in the database
 
+### Scan vs Rescan
+
+The two actions differ in exactly one thing — **which files get opened** — and for
+a music library that difference is everything.
+
+| | **Scan** | **Rescan** |
+|---|---|---|
+| Files opened | Only those whose `(mtime, size)` changed since the last scan | **Every** file |
+| Repairs a track filed under the wrong album/artist after a retag | ❌ No | ✅ Yes |
+| Deletes items | No | No — it prunes **only** items whose source file is gone |
+| Cost on a large library | Minutes | Hours (see below) |
+
 ### Rescan
-A rescan updates existing items with fresh tag data and re-enriches metadata
-from providers. Items that no longer exist on disk are marked as unavailable.
+
+A rescan re-reads every file from disk, re-derives each track's album and artist
+from its tags, and then prunes the items whose source file has disappeared. It is
+**non-destructive**: a file that still exists updates its existing row in place
+(same UUID, so all referencing user data survives), nothing else is deleted, and
+watch history, favourites and fetched metadata are preserved. If the library's
+configured roots are not present on disk, the prune is skipped entirely rather
+than treating the whole library as removed.
+
+::: warning A rescan is the ONLY way to fix a mis-filed track
+If you edit a file's `ARTIST` or `ALBUM` tag *after* it has been indexed, a plain
+**Scan** can never move the track to the right album or artist. The incremental
+skip fires before the file is opened — the file's `(mtime, size)` is checked, the
+file is skipped, and the corrected tags are never read. Only a rescan opens it
+again.
+:::
+
+Because every file is opened and tag-read, a rescan costs the whole library rather
+than just what changed.
+
+**Measured example — the production music library, 61,135 tracks, one box:**
+
+| when | job | wall clock |
+|---|---|---|
+| before the scan-lookup fix (2026-07-25) | `d8e21a1b` | **9 h 55 m** |
+| after it (2026-07-27) | `238ba78d` | **28 m 41 s**, `items_failed: 0` |
+
+⚠ **That is one measurement of one library on one machine, not a guarantee, and it
+should not be turned into a per-track rate.** Throughput inside that same run fell
+from roughly 90 files/sec at the start to roughly 1.3 files/sec in the tail, so
+dividing the total by the track count describes no part of the run. Your storage,
+tag sizes and hardware will give a different number.
+
+A rescan is interruptible and idempotent — the scanner flushes per album and
+stamps only files it actually read — so re-running one after an interruption
+continues rather than starting over.
+
+Trigger one from **Admin → Libraries → Rescan**, from
+`POST /api/v1/libraries/{id}/rescan`, or from the CLI with
+`php bin/phlix library:scan {libraryId} --rescan` (see the
+[CLI reference](../reference/cli#library-scan)).
 
 ### Generator-based Processing
 `AudioScanner::scanMusicLibrary()` uses a PHP Generator to process tracks one

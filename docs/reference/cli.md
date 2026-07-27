@@ -41,7 +41,7 @@ are available.
 | --- | --- | --- |
 | `migrate` | — | Apply database migrations (`migrations/*.sql`). |
 | `library:list` | — | List all configured media libraries. |
-| `library:scan` | `{libraryId}` `[--rescan]` | Scan (or rescan) a media library for new content. |
+| `library:scan` | `{libraryId}` `[--rescan]` `[--force]` | Scan (or, with `--rescan`, fully re-read) a media library. |
 | `plugin:list` | — | List installed plugins and their enabled state. |
 | `plugin:enable` | `{name}` | Enable an installed plugin by name. |
 | `plugin:disable` | `{name}` | Disable an enabled plugin by name. |
@@ -78,8 +78,7 @@ php bin/phlix library:list
 
 ### `library:scan`
 
-Scans a library for new content. Pass `--rescan` to clear existing items and
-rescan from the filesystem.
+Scans a library for new content.
 
 This command runs **synchronously** and blocks until the scan completes. (The
 HTTP `POST /api/v1/libraries/{id}/scan` endpoint is asynchronous instead — it
@@ -88,12 +87,72 @@ queues a job; see the [Library Scan Worker](../dev/library-scan-worker).)
 | Argument / option | Description |
 | --- | --- |
 | `libraryId` (required) | The library identifier to scan. |
-| `--rescan` | Clear existing items and rescan from scratch. |
+| `--rescan` | Full rescan: re-read **every** file rather than skipping unchanged ones, then prune items whose file is gone. **Non-destructive** — user data is preserved. For a music library this re-reads every track's tags and can take hours; it is what repairs tracks filed under the wrong album/artist. |
+| `--force` | Start even when the library already has a `queued`/`running` scan job. |
 
 ```bash
 php bin/phlix library:scan 3
 php bin/phlix library:scan 3 --rescan
 ```
+
+#### `--rescan` does not delete anything
+
+`--rescan` never purged, and the old description of this flag ("clear existing
+items and rescan from scratch") was wrong in both halves. What it does now is
+bypass the incremental skip index so **every** file is opened and re-read, and
+then prune the items whose source file has disappeared. Use a plain scan for an
+incremental refresh.
+
+For a music library it is the **only** way to repair a track filed under the
+wrong album or artist after a retag — the incremental skip fires before the file
+is opened, so a plain scan can never see the corrected tags.
+
+#### A CLI scan is visible in the admin UI
+
+The command creates its own `library_scan_jobs` row up front (typed `scan` or
+`rescan`), streams `items_found` / `items_updated` / `current_path` onto it
+through the same throttled sink the background worker uses, and stamps
+`completed` / `failed` on exit — including when it is killed by `SIGTERM`,
+`SIGINT` or `SIGHUP`, so a cancelled run never strands a permanently-`running`
+row. The admin **Libraries** page therefore shows a live badge and progress bar
+for a CLI scan just as it does for a web-triggered one.
+
+Job tracking is observability only and never blocks the scan: if the job store is
+absent or unreachable the command warns on stderr and scans anyway.
+
+::: warning It refuses to start when a scan is already in flight
+If the library's newest job is `queued` or `running`, the command **exits with a
+failure code and does not scan**. Two scanners over one library race on every
+per-file lookup, and they share one job row's worth of UI, so the badge would
+report one scan's progress under the other's counters.
+
+`--force` overrides the refusal. Use it only to get past a row left `running` by
+a `kill -9` or a power loss, which no in-process handler can clean up. (Restarting
+`phlix-server` also clears such rows — the scan worker reaps every `running` row
+at boot.)
+
+Two residual behaviours, stated rather than glossed: a `phlix-server` restart
+during a long CLI scan marks that row `failed` while the CLI keeps running (the
+worker's boot reaper is unscoped and has no age guard), and `SIGKILL` cannot be
+trapped by anyone, so it leaves the row `running` until the next server boot reaps
+it. Both are false badges, never a lost scan.
+:::
+
+#### Exit codes
+
+| Code | Meaning |
+| --- | --- |
+| `0` | The scan completed and indexed every file it read. |
+| `1` | The scan did **not** run (unknown library, the scan threw, or it refused because a job was already in flight). |
+| `3` | The scan **completed** but could not index every file it read — the library is now missing *N* files. |
+
+Exit `3` is deliberately not `2`: Symfony reserves `2` for invalid input/usage,
+which is the meaning code `1` already covers here. A wrapper switching on the exit
+code can therefore tell "fix your arguments" from "files were silently lost".
+
+On exit `3` the job row stays `completed`, not `failed` — the *scan* completed;
+the lost files are reported through the row's `items_failed` counter, matching
+what the background worker does for the same case.
 
 ### `plugin:list`
 

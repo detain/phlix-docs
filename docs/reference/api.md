@@ -190,8 +190,17 @@ background worker performs the scan. Poll `GET .../scan-status` for progress.
 
 ### POST /api/v1/libraries/`{id}`/rescan
 
-Enqueue a **full rescan** (purge + rescan). Same contract as `scan` with a
-`rescan`-typed job and the message `"Library rescan queued"`.
+Enqueue a **full rescan**: re-read **every** file from disk (no incremental
+skipping), then prune only the items whose source file is gone. Same contract as
+`scan`, with a `rescan`-typed job.
+
+A rescan is **non-destructive** — it does not delete items, watch history or
+fetched metadata. It is also the only operation that repairs a music track filed
+under the wrong album or artist after its tags were edited, because the
+incremental scan skips an unchanged file before it is ever opened. Expect it to
+take far longer than a `scan` on a music library; see
+[Scan vs Rescan](../admin/library-management#scan-vs-rescan-vs-match-metadata)
+for the measured figures.
 
 **Auth:** Admin (Bearer token)
 
@@ -200,7 +209,7 @@ Enqueue a **full rescan** (purge + rescan). Same contract as `scan` with a
 {
   "job_id": "550e8400-e29b-41d4-a716-446655440100",
   "status": "queued",
-  "message": "Library rescan queued"
+  "message": "Library rescan queued: every file will be re-read. This repairs tracks filed under the wrong album or artist and can take hours on a large music library. Use Scan for an incremental refresh."
 }
 ```
 

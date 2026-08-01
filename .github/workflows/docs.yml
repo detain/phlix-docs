@@ -28,6 +28,7 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - run: npm test
       - run: npm run docs:build
       - uses: actions/upload-pages-artifact@v5
         with:

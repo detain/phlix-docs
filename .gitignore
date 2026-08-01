@@ -7,3 +7,4 @@ docs/.vitepress/cache/
 .claude/
 CALIBER_LEARNINGS.md
 docs/old/
+coverage/

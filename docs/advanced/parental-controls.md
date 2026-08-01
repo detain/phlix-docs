@@ -10,7 +10,7 @@ Phlix provides three layers of household control: **Access Schedules** restrict 
 
 ## 1. Access Schedules
 
-### Overview
+### Access Schedules Overview
 
 Access schedules define time windows during which a user (or user group) is allowed to stream. Outside of permitted hours, playback requests are denied with an appropriate error message.
 
@@ -65,7 +65,7 @@ Clients should display the `next_available` timestamp to inform users when acces
 
 ## 2. Tag Blocking
 
-### Overview
+### Tag Blocking Overview
 
 Tag blocking prevents content with specific metadata tags from appearing in search results, Explore, recommendations, or being played by users who are blocked from seeing that content.
 
@@ -101,7 +101,7 @@ When tag blocking is active for a user, all related surfaces are filtered:
 
 ## 3. Stream Limits
 
-### Overview
+### Stream Limits Overview
 
 Stream limits cap the number of simultaneous active streams per user or per household. This prevents a single account from being shared beyond its intended number of simultaneous viewers.
 

@@ -56,13 +56,13 @@ Returns an acquisition feed listing all books in a library with pagination suppo
 
 Books should be named to facilitate metadata extraction:
 
-### EPUB
+### EPUB Filename Format
 ```
 Author - Title.epub
 Title (Year).epub
 ```
 
-### PDF
+### PDF Filename Format
 ```
 Author - Title.pdf
 Title.pdf
@@ -76,7 +76,7 @@ Series Name 2020 Issue #01.cbz
 
 ## Metadata Fields Extracted
 
-### EPUB
+### EPUB Metadata Fields
 | Field | Description |
 |-------|-------------|
 | `title` | Book title from dc:title |
@@ -88,7 +88,7 @@ Series Name 2020 Issue #01.cbz
 | `description` | Description from dc:description |
 | `cover_path` | Path to extracted cover image |
 
-### PDF
+### PDF Metadata Fields
 | Field | Description |
 |-------|-------------|
 | `title` | Document title |

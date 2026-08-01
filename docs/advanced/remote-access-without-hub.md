@@ -160,7 +160,7 @@ PersistentKeepalive = 25
 
 Import this config into the WireGuard app on the client. Connect before accessing Phlix.
 
-### Access Phlix
+### Access Phlix (WireGuard)
 
 With the VPN active, access your server at `http://10.0.0.1:32400` (VPN tunnel address) or by LAN IP if on the same network.
 
@@ -184,7 +184,7 @@ tailscale up --accept-routes
 
 This opens a browser for authentication. After auth, your device joins your tailnet.
 
-### Access Phlix
+### Access Phlix (Tailscale)
 
 Once connected, access your server at:
 

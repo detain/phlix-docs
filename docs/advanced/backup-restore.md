@@ -286,7 +286,7 @@ grep JWT_SECRET /path/to/phlix/config/server.php
 
 ---
 
-### Failure 3 — Metadata Not Re-Fetched After Restore
+### Failure 3 - Metadata Not Re-Fetched After Restore
 
 **Symptom:** Library shows items but poster/fanart missing, and a rescan does not re-download them.
 

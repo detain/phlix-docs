@@ -993,7 +993,7 @@ in Continue Watching and its watch-time stats would never finalize. A client
 player POSTs here when the media reaches its natural end (or is deliberately
 stopped) to run the server-side finalize path: the item is removed from Continue
 Watching and its `duration_seconds` + playback-stats event are finalized (feeding
-Top Users watch time and the [Most Watched](#get-api-v1-media-most-watched) rail).
+Top Users watch time and the [Most Watched](#most-watched) rail).
 
 **Auth:** Required (Bearer token) — the authenticated user must own the session
 (same posture as `POST .../progress`).

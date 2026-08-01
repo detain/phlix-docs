@@ -147,7 +147,7 @@ and the HLS playlists plus the shared fMP4 segments. The controllers serve those
 files directly — playlists/manifest reference segments by relative filename, so
 no rewriting is needed and the same `.m4s` segments back both protocols.
 
-### Routes
+### CMAF Routes
 
 Both protocols are produced by one **CMAF (fMP4)** encode into a single job
 directory and cross-reference their segments by relative filename, so each
@@ -291,7 +291,7 @@ Trickplay (also called "scrub preview" or "thumbnail seek") allows users to prev
 
 The `offset` and `length` attributes enable byte-range requests, allowing clients to download only the portion of the grid image needed for a single thumbnail.
 
-### Server-Side Implementation
+### Server-Side Implementation (Trickplay)
 
 ```
 StreamManager
@@ -300,14 +300,14 @@ StreamManager
 └── TrickplayGenerator → generates BIF thumbnail grids + index XML
 ```
 
-### Routes
+### Trickplay Routes
 
 | Endpoint | Description |
 |---------|-------------|
 | `GET /trickplay/{jobId}/thumb-{index}.jpg` | Thumbnail grid image |
 | `GET /trickplay/{jobId}/index.xml` | BIF index XML |
 
-### Configuration
+### Trickplay Configuration
 
 ```php
 // config/trickplay.php

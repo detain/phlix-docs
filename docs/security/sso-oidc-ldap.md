@@ -190,7 +190,7 @@ The LDAP form also has a **Test connection** button
 (`POST /api/v1/admin/auth-providers/ldap/test`) that dry-runs a bind with the
 current form values before you save.
 
-## Callback URLs and `PHLIX_DOMAIN`
+## Callback URLs and PHLIX_DOMAIN
 
 This section applies to the two **browser** flows (OIDC and GitHub). LDAP has no
 callback and is unaffected.

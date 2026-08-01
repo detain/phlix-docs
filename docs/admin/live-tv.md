@@ -17,7 +17,7 @@ endpoints are under `/api/v1/admin/livetv` and require admin authentication.
 The Live TV / DVR SPA page at `/admin/live-tv` is the UI complement to the
 step 2.4 API. It is organized into **four collapsible sections**:
 
-### Tuners
+### Tuner Cards
 
 Lists all registered TV tuners as a card grid. Each card shows the tuner's
 type badge (e.g. `IPTV`), a status dot (green = online, red = offline), the
@@ -93,7 +93,7 @@ To schedule a recording from the Guide:
 
 ---
 
-## Tuners
+## Tuner API
 
 ### List tuners
 
@@ -248,7 +248,7 @@ Triggers an EPG guide refresh.
 
 ---
 
-## Recordings
+## Recording API
 
 ### List recordings
 

@@ -34,7 +34,7 @@ rather than `fetch()` for the OAuth redirect endpoints.
 | Connect | Click **Connect** → `window.location.href = '/api/v1/oauth/trakt'` → browser navigates to Trakt authorization |
 | Disconnect | Click **Disconnect** → `POST /api/v1/admin/services/trakt/disconnect` → success toast → status refreshes |
 
-### API contract
+### Trakt API contract
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -67,7 +67,7 @@ during playback.
 | Connect | Click **Connect** → `window.location.href = '/admin/lastfm'` → existing Last.fm OAuth page |
 | Disconnect | Click **Disconnect** → `POST /api/v1/admin/services/lastfm/disconnect` → status refreshes |
 
-### API contract
+### Last.fm API contract
 
 | Method | Path | Description |
 |--------|------|-------------|

@@ -3205,7 +3205,7 @@ export const notificationService = new NotificationService();
 
 ### 11.1 iOS Features
 
-#### Picture-in-Picture
+#### iOS Picture-in-Picture
 
 ```swift
 // Enable PiP in AppDelegate
@@ -3251,7 +3251,7 @@ routePickerView.activeTintColor = .blue
 
 ### 11.2 Android Features
 
-#### Picture-in-Picture
+#### Android Picture-in-Picture
 
 ```kotlin
 // Enable PiP in AndroidManifest.xml already done

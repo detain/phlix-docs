@@ -52,7 +52,7 @@ are available.
 | `hwaccel:probe` | — | Probe for available hardware-acceleration encoders. |
 | `user:reset-password` | `{user}` `[--password=]` | Reset a user's password by username or email. |
 
-### `migrate`
+### Server `migrate`
 
 Applies every `migrations/*.sql` file in sorted order. Idempotent: it has **no
 migration-tracking table** and is safe to run repeatedly — duplicate-column /
@@ -302,9 +302,9 @@ available.
 | Command | Arguments / options | Description |
 | --- | --- | --- |
 | `migrate` | — | Apply database migrations (`migrations/*.sql`). |
-| `smoke:jwt` | — | Smoke-test the JWT create/validate round-trip. |
+| `smoke:jwt` | — | Smoke-test the JWT create-validate round-trip. |
 
-### `migrate`
+### Hub `migrate`
 
 Applies the hub's pending `migrations/*.sql`. Unlike the server's `migrate`,
 the hub uses a real migration-tracking table (`Phlix\Hub\Common\Database\MigrationRunner`),

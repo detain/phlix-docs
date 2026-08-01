@@ -93,7 +93,7 @@ Authorization Code flow with PKCE.
 - Account linking: creates local user on first login, links on subsequent
 - Settings UI: Provider URL, Client ID, Client Secret, Scopes
 
-### Configuration
+### OIDC Configuration
 
 1. Navigate to **Admin → Integrations → Auth providers → OIDC**
 2. Configure:
@@ -202,7 +202,7 @@ LDAP credentials; the plugin maps LDAP attributes to Phlix user fields.
 - Connection caching per request to avoid repeated bind overhead
 - Test-connection action for admin UI
 
-### Configuration
+### LDAP Configuration
 
 1. Navigate to **Admin → Integrations → Auth providers → LDAP**
 2. Configure:
@@ -247,7 +247,7 @@ Recommended settings:
 | `displayName` / `cn` | `display_name` |
 | `jpegPhoto` / `thumbnailPhoto` | `avatar_url` (base64 data URI) |
 
-### Security Considerations
+### LDAP Security Considerations
 
 - LDAP passwords are never stored locally; they are only used to bind
   at authentication time.
@@ -325,7 +325,7 @@ No plugin installation required — passkeys are available for all users.
 | GET | `/api/v1/me/webauthn/credentials` | List user's credentials |
 | DELETE | `/api/v1/me/webauthn/credentials/{id}` | Delete a credential |
 
-### Configuration
+### Passkeys Configuration
 
 Server-side RP configuration in `config/server.php`:
 
@@ -338,7 +338,7 @@ Server-side RP configuration in `config/server.php`:
 ],
 ```
 
-### Security Considerations
+### Passkeys Security Considerations
 
 - Challenges are 32 bytes of cryptographic randomness
 - Challenges expire after 60 seconds

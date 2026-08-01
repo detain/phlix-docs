@@ -437,7 +437,7 @@ wrapped in `useCallback` inside `ToastProvider`, so its reference is stable acro
 renders; depending on the whole `toast` object would cause `useCallback`
 dependencies to shift on every toast push and re-trigger `useEffect` calls.
 
-### Backend controller
+### DLNA Server Backend Controller
 
 `AdminDlnaServerController` (`src/Server/Http/Controllers/Dlna/AdminDlnaServerController.php`)
 exposes `status()`, `start()`, and `stop()` wired under `AdminMiddleware` in
@@ -552,7 +552,7 @@ stable across renders; depending on the whole `toast` object would cause
 `useCallback` dependencies to shift on every toast push and re-trigger
 `useEffect` calls.
 
-### Backend controller
+### Remote Access Backend Controller
 
 `AdminHubController` (`src/Server/Http/Controllers/Admin/AdminHubController.php`)
 exposes all 16 endpoints. Each method is gated by `AdminMiddleware` and
@@ -585,7 +585,7 @@ layer (from 2.5) that sits on top of it.
 The 20 endpoints are wired under `AdminMiddleware` in
 `Application::loadLiveTvAdminRoutes()`.
 
-### Backend controller
+### Live TV Backend Controller
 
 `AdminLiveTvController` (`src/Server/Http/Controllers/Admin/AdminLiveTvController.php`)
 exposes all 20 endpoints. Uses the existing `LiveTvManager`, `ChannelManager`,

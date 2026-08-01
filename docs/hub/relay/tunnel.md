@@ -47,7 +47,7 @@ PENDING → ACTIVE → CLOSING → CLOSED
 
 Represents a bidirectional WebSocket tunnel between the hub and a server. Manages the server-side connection, all client connections multiplexed through this tunnel, frame sequencing, and session lifecycle.
 
-### Construction
+### Tunnel Construction
 
 ```php
 use Phlix\Hub\Relay\Tunnel;
@@ -164,7 +164,7 @@ if ($tunnel->isStale(90)) {
 
 Manages all active relay tunnels between the hub and servers. Provides registration of new server tunnels, lookup by server ID, client connection routing, and tunnel lifecycle management.
 
-### Construction
+### TunnelManager Construction
 
 ```php
 use Phlix\Hub\Relay\TunnelManager;
@@ -281,7 +281,7 @@ $count = $manager->getActiveTunnelCount();
 
 Represents a single client WebSocket connection multiplexed through a tunnel. Each remote client connects to the hub via WSS and is tracked as a `ClientConnection` attached to a specific server `Tunnel`.
 
-### Construction
+### ClientConnection Construction
 
 ```php
 use Phlix\Hub\Relay\ClientConnection;

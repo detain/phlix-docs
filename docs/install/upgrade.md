@@ -2,7 +2,7 @@
 
 **Since:** 0.18.0
 
-Guide for updating an existing Phlix installation to a newer version. Read the [Breaking changes](#breaking-changes) section before every upgrade.
+Guide for updating an existing Phlix installation to a newer version. Read the [Known breaking-change patterns](#known-breaking-change-patterns) section before every upgrade.
 
 ---
 

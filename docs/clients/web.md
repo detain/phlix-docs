@@ -115,10 +115,10 @@ top-bar nav (**Music**, **Books**, **Audiobooks**, **Photos**, **Search**):
 
 | Section | Pages | Entry URL |
 | --- | --- | --- |
-| **Music** | Albums, album detail, artists, artist detail, all-tracks, and a standalone player | `/app/music` (albums), `/app/music/artists`, `/app/music/tracks`, `/app/music/player` |
+| **Music** | Artists → albums → tracks browser (opens on the **artists** grid), plus standalone artist, album, all-tracks and player pages | `/app/music` (artists), `/app/music/artists`, `/app/music/artist/{name}`, `/app/music/album/{title}`, `/app/music/tracks`, `/app/music/player` |
 | **Books** | Library grid, book detail, and a built-in reader | `/app/books`, `/app/books/{id}`, `/app/books/{id}/read` |
 | **Audiobooks** | Library grid, detail with chapter list, and the player | `/app/audiobooks`, `/app/audiobooks/{id}`, `/app/audiobooks/{id}/play` |
-| **Photos** | Date-grouped album grid, album view, single-photo view with EXIF, and a slideshow | `/app/photo/albums`, `/app/photo/album/{id}`, `/app/photo/photo/{id}`, `/app/photo/slideshow` |
+| **Photos** | Date-grouped album grid, album view, single-photo view, and a slideshow. The photo view has an EXIF panel, but it is rendered only when the photo has EXIF data and [a scan never extracts any](/libraries/photos), so today it never appears. | `/app/photo/albums`, `/app/photo/album/{id}`, `/app/photo/photo/{id}`, `/app/photo/slideshow` |
 | **Search** | Cross-library search results | `/app/search` |
 
 The **Music**, **Books**, **Audiobooks**, and **Photos** nav entries only appear when your

@@ -1860,146 +1860,244 @@ Returns the book file for download.
 
 ## Music Endpoints
 
-Music library browsing with ID3v2/MP4/Vorbis tag harvesting and MusicBrainz metadata enrichment.
+Music library browsing, served from the normalized `music_artists` / `music_albums` /
+`music_tracks` tables (`MusicLibraryService`).
+
+::: danger There are no MusicBrainz IDs in these payloads
+This section previously documented every music entity as being keyed by an `mbid`, and
+an `artist_mbid` / `album_mbid` filter on the listings. **None of that exists.** No
+music response emits an `mbid` field, and an unknown query parameter is silently
+ignored — so a client that sends `?artist_mbid=…` gets a **200 with unfiltered
+results**, which is indistinguishable from a working filter until you check the data.
+
+- **Artists are keyed by their display name**, albums by their **title**, tracks by
+  their `media_items` **UUID**.
+- The route placeholder is literally spelled `{mbid}` in the server's route table
+  (`Application::loadMusicRoutes()`), but the value it receives is the artist name /
+  album title. The placeholder name is a leftover; the identity is not.
+- The one server-side filter that does exist is **`?artist=`** on
+  `GET /api/v1/music/albums` (and on `GET /api/v1/music/albums/{album_title}` for
+  disambiguation).
+
+Verified against `phlix-server` `96dbb3a4`:
+`src/Server/Http/Controllers/MusicController.php:632-647` (`formatArtist()` — emits no
+`mbid`), `:667-683` (`formatAlbum()`), `:709-737` (`formatTrack()`),
+`src/Server/Core/Application.php:1925-1933` (the live route table).
+:::
+
+### Paging applies to all three listings
+
+`/music/artists`, `/music/albums` and `/music/tracks` are **all** offset-paged and all
+return a real `total`.
+
+| Parameter | Behaviour |
+| --- | --- |
+| `limit` | Clamped server-side into `[1, 100]`. **100 is both the default and the hard ceiling** — it is not raisable by a client. A non-numeric or absent value becomes 100; a larger value is silently clamped down to 100. |
+| `offset` | Clamped to `>= 0`. No upper bound. |
+
+`total` is a real `COUNT(*)` over the whole matching set, not the page length, so
+`offset + limit < total` is the correct "there is another page" test.
+
+The ceiling is `PageLimit::MAX` (`src/Common/Http/PageLimit.php:51`), applied by
+`Request::queryPageSize()` / `queryOffset()` (`src/Server/Http/Request.php:545-563`);
+the controllers pass `PageLimit::MAX` as the default at
+`MusicController.php:119-120`, `:258-259` and `:398-399`. The ceiling exists because
+the server is a **resident Workerman process** — an unclamped `limit` is a
+memory-exhaustion vector against a worker that is concurrently serving everyone else.
+
+**Auth:** every route in this section is registered inside an `AuthMiddleware` group
+(`Application.php:1923-1934`), so all of them require a signed-in user.
+
+---
 
 ### GET /api/v1/music/artists
 
-List all music artists.
+List a page of artists across **all** music libraries. `music_*` rows carry no
+`library_id`, so there is no `library_id` parameter on any `/music/*` route.
 
 **Auth:** Required (Bearer token)
 
 **Query parameters:**
-- `limit` (optional) — Maximum items (default: 50)
-- `offset` (optional) — Pagination offset (default: 0)
+- `limit` (optional) — Page size, clamped to `[1, 100]` (default: 100)
+- `offset` (optional) — Row offset, clamped to `>= 0` (default: 0)
 
 **Response 200:**
 ```json
 {
   "artists": [
     {
-      "mbid": "550e8400-e29b-41d4-a716-446655440001",
       "name": "Artist Name",
+      "image_url": null,
       "album_count": 5,
-      "track_count": 42
+      "track_count": 42,
+      "albums_truncated": false,
+      "albums": ["Album 1", "Album 2"]
     }
   ],
-  "limit": 50,
+  "total": 2197,
+  "limit": 100,
   "offset": 0
 }
 ```
+
+`albums` is the artist's embedded album **titles**, capped at 100 per artist on this
+listing. `album_count` is always the true total, so `albums_truncated` tells you the
+two disagree rather than leaving a short list to look complete.
 
 ---
 
 ### GET /api/v1/music/artists/`{mbid}`
 
-Get artist details with albums.
+Get one artist with the titles of their albums.
 
 **Auth:** Required (Bearer token)
 
 **Parameters:**
-- `mbid` (path) — MusicBrainz ID for the artist
+- `{mbid}` (path) — **The artist's display name**, URL-encoded. Despite the
+  placeholder's name this is *not* a MusicBrainz ID; `music_artists` has an
+  AUTO_INCREMENT primary key that is never exposed to clients. Matching is exact
+  (`WHERE a.name = ?`) and case-insensitive, because `music_artists` is
+  `COLLATE=utf8mb4_unicode_ci` (`migrations/065_music_library.sql:36`). The path
+  segment is **not** trimmed — only the `?artist=` query filter is.
 
 **Response 200:**
 ```json
 {
   "artist": {
-    "mbid": "550e8400-e29b-41d4-a716-446655440001",
     "name": "Artist Name",
-    "sort_name": "Artist Name",
-    "albums": [
-      {
-        "mbid": "550e8400-e29b-41d4-a716-446655440002",
-        "name": "Album Name",
-        "year": 2024,
-        "track_count": 10
-      }
-    ]
+    "image_url": null,
+    "album_count": 5,
+    "track_count": 42,
+    "albums_truncated": false,
+    "albums": ["Album 1", "Album 2"]
   }
 }
 ```
 
+The detail view raises the embedded-album cap to 2000, so a long discography is not
+truncated here the way it is in the listing.
+
+**Response 400:** Empty artist name
 **Response 404:** Artist not found
 
 ---
 
 ### GET /api/v1/music/albums
 
-List all music albums.
+List a page of albums, optionally restricted to one artist.
 
 **Auth:** Required (Bearer token)
 
 **Query parameters:**
-- `artist_mbid` (optional) — Filter by artist MusicBrainz ID
-- `limit` (optional) — Maximum items (default: 50)
-- `offset` (optional) — Pagination offset (default: 0)
+- `artist` (optional) — **Exact artist name**, case-insensitive. The value is trimmed;
+  an absent, empty or whitespace-only value means *no filter* (never "the artist whose
+  name is the empty string"). This is the only filter on this endpoint.
+- `limit` (optional) — Page size, clamped to `[1, 100]` (default: 100)
+- `offset` (optional) — Row offset, clamped to `>= 0` (default: 0)
 
 **Response 200:**
 ```json
 {
   "albums": [
     {
-      "mbid": "550e8400-e29b-41d4-a716-446655440002",
       "name": "Album Name",
-      "artist_mbid": "550e8400-e29b-41d4-a716-446655440001",
-      "artist_name": "Artist Name",
+      "artist": "Artist Name",
       "year": 2024,
-      "track_count": 10
+      "album_art_url": null,
+      "track_count": 12,
+      "tracks_truncated": false,
+      "tracks": ["… track objects, see below …"]
     }
   ],
-  "limit": 50,
-  "offset": 0
+  "total": 5091,
+  "limit": 100,
+  "offset": 0,
+  "artist": null
 }
 ```
+
+The top-level `artist` key **echoes the filter the server actually applied** (`null`
+when none was). Read it: it is how you tell a server-side filter from a server that
+ignored your parameter. `total` is counted within the same filter, so it describes the
+set the page came from.
+
+Each album embeds its `tracks` (the same objects as
+[`/music/tracks`](#get-api-v1-music-tracks)), capped at 100 per album on this listing;
+`track_count` stays the true indexed count and `tracks_truncated` flags the disagreement.
 
 ---
 
 ### GET /api/v1/music/albums/`{mbid}`
 
-Get album details with track listing.
+Get one album with its full track listing.
 
 **Auth:** Required (Bearer token)
 
 **Parameters:**
-- `mbid` (path) — MusicBrainz ID for the album
+- `{mbid}` (path) — **The album title**, URL-encoded. Not a MusicBrainz ID.
+
+**Query parameters:**
+- `artist` (optional) — Exact artist name (case-insensitive, trimmed) disambiguating a
+  shared title.
+
+::: warning A title is not an identity
+Album titles are not unique — on a real 5,091-album library, 2,622 of them share a
+title with another album. Without `?artist=` the server returns a **deterministic first
+match**, which is reproducible but not necessarily the album the user clicked. Pass
+`?artist=` whenever you have it.
+:::
 
 **Response 200:**
 ```json
 {
   "album": {
-    "mbid": "550e8400-e29b-41d4-a716-446655440002",
     "name": "Album Name",
-    "artist_mbid": "550e8400-e29b-41d4-a716-446655440001",
-    "artist_name": "Artist Name",
+    "artist": "Artist Name",
     "year": 2024,
-    "genre": "Rock",
+    "album_art_url": null,
+    "track_count": 12,
+    "tracks_truncated": false,
     "tracks": [
       {
         "id": "550e8400-e29b-41d4-a716-446655440003",
-        "title": "Track Title",
+        "name": "Track Title",
+        "artist": "Artist Name",
+        "album": "Album Name",
+        "album_artist": "Artist Name",
+        "year": 2024,
+        "genre": null,
         "track_number": 1,
+        "disc_number": 1,
         "duration_secs": 245,
-        "path": "/mnt/media/music/Artist/Album/01 - Track Title.flac"
+        "composer": null,
+        "stream_url": "/media/550e8400-.../stream?exp=...&sig=..."
       }
     ]
   }
 }
 ```
 
+The detail view raises the embedded-track cap to 2000, so a long compilation is not
+truncated here.
+
+**Response 400:** Empty album title
 **Response 404:** Album not found
 
 ---
 
 ### GET /api/v1/music/tracks
 
-List all music tracks (paginated).
+List a page of tracks across all music libraries.
 
 **Auth:** Required (Bearer token)
 
 **Query parameters:**
-- `album_mbid` (optional) — Filter by album MusicBrainz ID
-- `artist_mbid` (optional) — Filter by artist MusicBrainz ID
-- `limit` (optional) — Maximum items (default: 50)
-- `offset` (optional) — Pagination offset (default: 0)
+- `limit` (optional) — Page size, clamped to `[1, 100]` (default: 100)
+- `offset` (optional) — Row offset, clamped to `>= 0` (default: 0)
+
+There is **no** artist or album filter on this endpoint. To list one album's tracks,
+read the embedded `tracks` array from
+[`/music/albums/{album_title}`](#get-api-v1-music-albums-mbid).
 
 **Response 200:**
 ```json
@@ -2007,84 +2105,98 @@ List all music tracks (paginated).
   "tracks": [
     {
       "id": "550e8400-e29b-41d4-a716-446655440003",
-      "title": "Track Title",
-      "artist_name": "Artist Name",
-      "album_name": "Album Name",
+      "name": "Track Title",
+      "artist": "Artist Name",
+      "album": "Album Name",
+      "album_artist": "Artist Name",
+      "year": 2024,
+      "genre": null,
       "track_number": 1,
-      "duration_secs": 245
+      "disc_number": 1,
+      "duration_secs": 245,
+      "composer": null,
+      "stream_url": "/media/550e8400-.../stream?exp=...&sig=..."
     }
   ],
-  "limit": 50,
-  "offset": 0
+  "limit": 100,
+  "offset": 0,
+  "total": 29245
 }
 ```
+
+**The track object** (identical everywhere a track appears — listing, track detail, and
+embedded inside an album):
+
+| Field | Notes |
+| --- | --- |
+| `id` | The track's `media_items` **UUID** — the same id `GET /media/{id}/stream` accepts. `null` only if the row has no `media_item_id`. |
+| `name` | Track title. Note: `name`, **not** `title`. |
+| `artist` | Artist display name, or `null`. |
+| `album` | Album title, or `null`. |
+| `album_artist` | Mirrors `artist` — `music_tracks.artist_id` is the scanner's denormalization of the *album's* artist, so there is no separate value to report. |
+| `year` | The album's year, or `null`. |
+| `genre` | **Always `null`.** There is no genre column in the music schema; the key is kept only so the response shape does not change. |
+| `track_number`, `disc_number` | Integers, or `null` when unknown (distinguished from `0`). |
+| `duration_secs` | Integer seconds, or `null`. |
+| `composer` | **Always `null`**, same reason as `genre`. |
+| `stream_url` | A freshly minted **signed** `/media/{id}/stream` URL. This is the only locator a client needs. |
+
+There is deliberately **no `path` key** — it used to expose the server's absolute
+filesystem layout, and this payload is reachable over the internet-facing hub relay.
+There is also no `bitrate` / `sample_rate` / `channels` / nested `metadata` object.
 
 ---
 
 ### GET /api/v1/music/tracks/`{id}`
 
-Get single track details.
+Get a single track.
 
 **Auth:** Required (Bearer token)
 
 **Parameters:**
-- `id` (path) — Track ID
+- `{id}` (path) — The track's `media_items` UUID (matched against
+  `music_tracks.media_item_id`, which is UNIQUE).
 
-**Response 200:**
-```json
-{
-  "track": {
-    "id": "550e8400-e29b-41d4-a716-446655440003",
-    "title": "Track Title",
-    "artist_name": "Artist Name",
-    "album_name": "Album Name",
-    "track_number": 1,
-    "disc_number": 1,
-    "duration_secs": 245,
-    "bitrate": 1411,
-    "sample_rate": 44100,
-    "channels": 2,
-    "path": "/mnt/media/music/Artist/Album/01 - Track Title.flac",
-    "metadata": {
-      "title": "Track Title",
-      "artist": "Artist Name",
-      "album": "Album Name",
-      "year": 2024,
-      "genre": "Rock"
-    }
-  }
-}
-```
+**Response 200:** `{ "track": { … } }` — the same track object documented above.
 
+**Response 400:** Empty track id
 **Response 404:** Track not found
 
 ---
 
 ### GET /api/v1/music/now-playing
 
-Get current playback state.
+Get the current music playback state for the signed-in user.
 
 **Auth:** Required (Bearer token)
+
+::: danger This endpoint always answers `{"now_playing": null}` today
+The handler reads `current_media_id`, `position_ticks` and `playback_state` off a row
+from the **`sessions`** table (`MusicController::nowPlaying()` at
+`MusicController.php:487-501`, via `SessionManager::getUserSessions()` →
+`SELECT * FROM sessions`). The `sessions` table has **none of those three columns** —
+it is `id`, `user_id`, `profile_id`, `device_id`, `device_name`, `device_type`,
+`last_activity`, `created_at` (`migrations/001_initial_schema.sql:73-84`, plus
+`profile_id` from `migrations/002_user_profiles_and_parental_controls.sql:56`; no
+later migration alters it). Live playback position lives in the separate
+`playback_state` table, which this handler never reads.
+
+So the `current_media_id === null` early return at `MusicController.php:497-501` fires
+unconditionally and **no other branch is reachable**. Do not build against a non-null
+response from this route. Use the session/playback endpoints instead.
+:::
 
 **Response 200:**
 ```json
 {
-  "now_playing": {
-    "track_id": "550e8400-e29b-41d4-a716-446655440003",
-    "title": "Track Title",
-    "artist_name": "Artist Name",
-    "album_name": "Album Name",
-    "position_secs": 120,
-    "duration_secs": 245,
-    "playing": true
-  }
+  "now_playing": null
 }
 ```
 
-**Notes:**
-- Returns `now_playing: null` when nothing is playing
-- `position_secs` indicates current playback position
-- `playing` is `true` for playing, `false` for paused
+For completeness, the shape the handler *would* emit if `sessions` carried those
+columns is `{"now_playing": {"track": { …track object… }, "position": <int>,
+"state": "playing"|"paused"|"stopped", "session_id": "…"}}` — note `track` (a full
+track object), not `track_id`, and `position`, not `position_secs`.
 
 ---
 

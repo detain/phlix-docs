@@ -1118,7 +1118,9 @@ function createWindow(): void {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    // Production: use app:// protocol for packaged renderer
+    // This avoids webSecurity issues with module fetches from file:// origin
+    mainWindow.loadURL('app://-/app');
   }
 
   // Show when ready

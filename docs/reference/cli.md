@@ -120,10 +120,13 @@ unaffected. There is no flag that avoids this — see
 The flag reaches the scanner as `readEveryFile`, and **only the music scanner
 consumes it** — the other scanners have no skip index for it to switch off:
 
-- On a **music** library it leaves the unchanged-file skip index unloaded, so
+- On a **music** library it makes the scanner refuse every unchanged-file skip, so
   every track is opened and tag-read. That is what repairs a track filed under the
   wrong album or artist after a retag: the incremental skip normally fires before
-  the file is opened, so a plain scan does not see the corrected tags.
+  the file is opened, so a plain scan does not see the corrected tags. (The skip
+  index is still *loaded* during a rescan — it is consulted only to avoid rewriting
+  identity stamps that are already correct, never to suppress a read. See
+  [Rescan loads the index on purpose](../libraries/music#rescan-loads-the-index-on-purpose).)
 - On a **movie, TV, photo, book or audiobook** library a path that is already in
   the catalogue is **not** re-parsed and **not** re-matched. The scan does a
   missing-source-metadata backfill on that row and moves on — and even that is

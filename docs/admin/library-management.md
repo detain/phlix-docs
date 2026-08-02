@@ -311,8 +311,9 @@ storage and box will differ.
 An interrupted rescan loses no committed work — the scanner writes each album out
 as it goes, and re-running is idempotent. But it does **not** resume: a re-run
 starts again from the first file and pays the whole wall clock again, because
-full-read mode works by leaving the unchanged-file skip index unloaded and an
-unloaded index has nothing to skip.
+full-read mode refuses every skip for the whole scan. The identity stamps the
+interrupted run left behind spare the re-run those rows' `UPDATE`s, but not their
+reads — every file is opened and tag-read again.
 :::
 
 **Match metadata** is the per-library counterpart of the single-item
@@ -327,10 +328,15 @@ either on any other kind of library.
 
 #### When a plain music Scan still opens every file
 
-The unchanged-file skip is not unconditional. `MusicLibraryScanner::scanDirectory()`
-loads the skip index only when **three** conditions all hold —
-`!$readEveryFile && !$mayAdopt && !$needsHealing` — and an unloaded index reports
-every file as changed, so a plain Scan then costs the same as a rescan:
+The unchanged-file skip is not unconditional, and two separate things have to line
+up for it to fire: the skip index has to be **loaded**, and `canSkip()` —
+`!$mayAdopt && !$readEveryFile` — has to allow a skip.
+
+`MusicLibraryScanner::scanDirectory()` loads the index when `$readEveryFile` is set,
+**or** when neither `$mayAdopt` nor `$needsHealing` holds. So on a plain Scan
+(`$readEveryFile` false) either of the two database-state flags below leaves the
+index unloaded, an unloaded index reports every file as changed, and the Scan then
+costs the same as a rescan:
 
 - **`$mayAdopt`** — the library owns at least one orphaned `artist`/`album`
   `media_items` row that no `music_artists`/`music_albums` row references yet, so

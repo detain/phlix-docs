@@ -97,10 +97,13 @@ Processes **at most one** job:
    different sets — see [the denominator note](#match-metadata-denominator) below.
 
    `rescanLibrary()` differs from `scanLibrary()` in one thing: it passes
-   `readEveryFile: true`, which unloads the music scanner's unchanged-file skip
-   index so every file is opened and tag-read. Every other scanner ignores the
-   flag — none of them has a skip index. It then runs the prune pass. It does
-   **not** delete items first; see
+   `readEveryFile: true`, which makes the music scanner's `canSkip()` answer false
+   for the whole scan, so every file is opened and tag-read. The skip index itself
+   is still loaded — it is consulted only for the identity-stamp decision, never to
+   suppress a read
+   ([why](../libraries/music#rescan-loads-the-index-on-purpose)). Every other
+   scanner ignores the flag — none of them has a skip index. It then runs the prune
+   pass. It does **not** delete items first; see
    [Scan vs Rescan](../admin/library-management#scan-vs-rescan-vs-match-metadata).
 
    The consequence for non-music types is that `rescan` and `scan` do the same

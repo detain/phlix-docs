@@ -139,11 +139,14 @@ as it goes, so everything indexed before the interruption stays indexed, and
 re-running is idempotent (rows are upserted by path).
 
 ⚠ **It does not resume, though.** A re-run starts again from the first file and
-pays the whole wall clock a second time. Full-read mode is implemented by leaving
-the unchanged-file skip index *unloaded*, and an unloaded index reports every file
-as changed — so a rescan has nothing to skip, including the files the interrupted
-run had already read and stamped. The stamps it left behind only speed up a later
-plain **Scan**.
+pays the whole wall clock a second time. Full-read mode refuses every skip for the
+whole scan, so a rescan has nothing to skip — including the files the interrupted
+run had already read.
+
+What the interrupted run's work *does* buy is fewer writes, not fewer reads. The
+identity stamps it left behind are honoured by the re-run, which therefore does not
+re-write the rows it already stamped; it still opens and tag-reads every one of
+their files.
 
 Trigger one from **Admin → Libraries → Rescan**, from
 `POST /api/v1/libraries/{id}/rescan`, or from the CLI with
@@ -152,12 +155,21 @@ Trigger one from **Admin → Libraries → Rescan**, from
 
 ### When a plain Scan still opens every file
 
-The unchanged-file skip is not unconditional. `MusicLibraryScanner::scanDirectory()`
-loads the skip index only when **all three** of `!$readEveryFile && !$mayAdopt &&
-!$needsHealing` hold, and an unloaded index reports every file as changed:
+The unchanged-file skip is not unconditional. Two separate things have to line up:
+the skip index has to be **loaded**, and the scanner has to be **allowed to skip**.
+
+`MusicLibraryScanner::scanDirectory()` loads the index when `$readEveryFile` is
+set, **or** when neither `$mayAdopt` nor `$needsHealing` holds. It is then allowed
+to skip a file only when `canSkip()` — `!$mayAdopt && !$readEveryFile` — is true
+*and* the loaded index reports the file unchanged. An index that was never loaded
+reports every file as changed, so leaving it unloaded also forces a full read.
+
+That splits the three flags into two different roles:
 
 - **`$readEveryFile`** — the operator asked for a rescan. This is the only one of
-  the three you control.
+  the three you control, and it is the one that does **not** work by unloading the
+  index. See [Rescan loads the index on purpose](#rescan-loads-the-index-on-purpose)
+  below.
 - **`$mayAdopt`** — the library owns at least one orphaned `artist`/`album`
   `media_items` row that no `music_artists`/`music_albums` row references yet. The
   scan must flush albums so that orphan can be adopted. The flag is re-read *per
@@ -175,6 +187,29 @@ silently miss a change while an unnecessary probe is merely slow.
 So a plain Scan on a music library can occasionally cost hours rather than minutes.
 When you need a guaranteed full re-read, ask for one — use **Rescan**. The measured
 figures above are **rescan** measurements; they are not the cost of a plain Scan.
+
+### Rescan loads the index on purpose
+
+A rescan **loads** the skip index rather than leaving it unloaded, and that is not
+an oversight — it is the point.
+
+Both designs re-read every file. The difference is what they do to the database
+afterwards. The scanner records an identity stamp — the file's `(mtime, size)` — on
+each row it processes. With the index unloaded, nothing can tell that a stamp is
+already correct, so every single file read issued a stamp `UPDATE` that changed no
+byte: on the production library that is **61,135 no-op row rewrites per rescan**.
+
+Loading the index costs one `SELECT` and about **10.90 MiB** held for the walk, and
+buys back all of those writes: a stamp is only written when the recorded identity
+actually differs.
+
+⚠ **This cannot weaken the full-read guarantee, and the reason is worth
+understanding before changing anything here.** Reach and stamping are decided by
+two different questions. `canSkip()` is `!$mayAdopt && !$readEveryFile`, so during a
+rescan it is false for the entire scan and **no index entry can suppress a read** —
+the loaded index is consulted only for the stamping decision. The same `canSkip()`
+also gates the read-ahead, so the prefetcher and the main walk cannot disagree about
+which files get opened.
 
 ### Generator-based Processing
 `AudioScanner::scanMusicLibrary()` uses a PHP Generator to process tracks one

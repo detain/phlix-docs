@@ -235,15 +235,42 @@ are skipped before any provider is consulted. See
 
 ## API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/music/artists` | GET | List all artists |
-| `/music/artists/{mbid}` | GET | Get artist details with albums |
-| `/music/albums` | GET | List all albums |
-| `/music/albums/{mbid}` | GET | Get album details with track listing |
-| `/music/tracks` | GET | List all tracks (paginated) |
-| `/music/tracks/{id}` | GET | Get single track details |
-| `/music/now-playing` | GET | Get current playback state |
+All seven routes sit under `/api/v1` and all require a signed-in user
+(`Application::loadMusicRoutes()` registers the whole group behind `AuthMiddleware` —
+`src/Server/Core/Application.php:1923-1934`).
+
+| Endpoint | Method | Query parameters | Description |
+|----------|--------|------------------|-------------|
+| `/music/artists` | GET | `limit`, `offset` | Page of artists, with `total` |
+| `/music/artists/{artist_name}` | GET | — | One artist plus their album titles |
+| `/music/albums` | GET | `artist`, `limit`, `offset` | Page of albums, with `total` |
+| `/music/albums/{album_title}` | GET | `artist` | One album plus its track listing |
+| `/music/tracks` | GET | `limit`, `offset` | Page of tracks, with `total` |
+| `/music/tracks/{id}` | GET | — | One track, by `media_items` UUID |
+| `/music/now-playing` | GET | — | Current playback state — see the warning below |
+
+**All three listings are paged, not just tracks.** `limit` is clamped server-side into
+`[1, 100]`, where **100 is both the default and the hard ceiling** (`PageLimit::MAX`,
+`src/Common/Http/PageLimit.php:51`); `offset` is clamped to `>= 0`. Each listing returns
+a real `total` counted over the whole matching set, so `offset + limit < total` is the
+"there is another page" test.
+
+::: warning These are name-keyed routes — there is no `mbid` anywhere
+`music_artists` and `music_albums` have AUTO_INCREMENT primary keys that no client ever
+sees. The detail routes take the artist **display name** and the album **title** (exact,
+case-insensitive) — the server's route table spells the placeholder `{mbid}`, but no
+music response contains an `mbid` field and no MusicBrainz ID is accepted. Tracks are
+keyed by their `media_items` UUID. The only server-side filter is `?artist=`; an
+unknown query parameter is silently ignored and returns **unfiltered** results.
+
+Full field-by-field reference: [Music Endpoints](/reference/api#music-endpoints).
+:::
+
+::: danger `/music/now-playing` always returns `{"now_playing": null}`
+The handler looks for `current_media_id` / `position_ticks` / `playback_state` on a
+`sessions` row, and the `sessions` table has none of those columns. See
+[the API reference](/reference/api#get-api-v1-music-now-playing) for the citation.
+:::
 
 ## Library Type Plugin
 

@@ -1106,10 +1106,10 @@ function createWindow(): void {
     backgroundColor: '#1a1a2e',
     show: false,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: true
     }
   });
 
@@ -1118,7 +1118,9 @@ function createWindow(): void {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    // Production: use app:// protocol for packaged renderer
+    // This avoids webSecurity issues with module fetches from file:// origin
+    mainWindow.loadURL('app://-/app');
   }
 
   // Show when ready
@@ -1139,9 +1141,18 @@ function createWindow(): void {
     mainWindow = null;
   });
 
-  // Handle external links
+  // Guard against renderer-side navigation to untrusted schemes
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (!validateExternalUrl(url)) {
+      event.preventDefault();
+    }
+  });
+
+  // Handle external links — validate URL before opening
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    if (validateExternalUrl(url)) {
+      shell.openExternal(url);
+    }
     return { action: 'deny' };
   });
 }

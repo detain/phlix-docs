@@ -1,23 +1,64 @@
-name: Deploy Docs
+name: Docs
 on:
   push:
     branches: [master]
+  pull_request:
   workflow_dispatch:
 
+# Least privilege at the workflow level. The Pages scopes (pages: write,
+# id-token: write) are granted ONLY to the deploy job below, so a
+# pull_request build can never obtain them.
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
+  # Runs the same three commands the deploy job runs, so a broken docs build
+  # goes red BEFORE merge instead of after it.
+  #
+  # Deliberately has NO `if:` condition. A job that is skipped reports the
+  # `skipped` conclusion, which GitHub counts as SUCCESS for a required status
+  # check — so a gate guarded by an `if:` can pass by not running. Making this
+  # job unconditional means it must produce a real green or a real red on every
+  # push, pull request and manual dispatch. The cost is that a master push
+  # builds twice (here and in `deploy`); that is ~1 minute and is the price of
+  # not touching the publishing path.
+  build:
+    name: Build Docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    concurrency:
+      group: docs-build-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run docs:build
+
+  # Publishing path. Steps are unchanged; the Pages permissions and the
+  # `pages` concurrency group moved from the workflow level into this job so
+  # they cannot leak to the pull_request build, and the branch guard is now
+  # explicit rather than implied by the `push` filter alone.
   deploy:
+    name: Deploy Docs
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

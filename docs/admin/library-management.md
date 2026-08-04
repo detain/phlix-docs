@@ -912,7 +912,7 @@ This mirrors the canonical path-jail pattern used elsewhere in the server (e.g.
 `AudiobookController::validateMediaPath()`), so the browse endpoint cannot be
 used to read directory structure outside the allowed roots.
 
-## Fixing a single item's match
+## Fixing a single item's match {#fixing-a-single-items-match}
 
 When a single movie, series, season, or episode is matched to the wrong metadata —
 or never matched at all — an admin can correct it without re-scanning the whole

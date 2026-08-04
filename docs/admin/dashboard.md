@@ -144,4 +144,4 @@ passing tests).
 - [Stats](./stats) — detailed statistics API reference
 - [Webhooks](./webhooks) — get notified on playback and library events
 - [Backup](./backup) — backup dashboard data and server state
-- [Admin SPA dev guide](../dev/admin-spa#14-the-dashboard-page-step-16) — internal implementation details
+- [Admin SPA dev guide](../dev/admin-spa#the-dashboard-page) — internal implementation details

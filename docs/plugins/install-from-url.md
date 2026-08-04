@@ -72,7 +72,7 @@ Steps: paste → Install → toggle Enable → confirm in the plugins table. The
 
 ## 5. Plugin Settings
 
-After install, click **Configure** next to any plugin to open its per-plugin settings form. Settings are persisted in `plugins.settings_json`. Each plugin exposes its own fields (API keys, endpoint URLs, etc.) as declared in its `plugin.json` `settings` block; secret fields are masked and preserved unless you change them. See [Managing Plugins in the Admin UI](./admin-management#configure) for the full configure workflow.
+After install, click **Configure** next to any plugin to open its per-plugin settings form. Settings are persisted in `plugins.settings_json`. Each plugin exposes its own fields (API keys, endpoint URLs, etc.) as declared in its `plugin.json` `settings` block; secret fields are masked and preserved unless you change them. See [Managing Plugins in the Admin UI](./admin-management#_6-configure) for the full configure workflow.
 
 ---
 
@@ -136,7 +136,7 @@ Then contact the plugin author.
 - [Browse the plugin catalog](install-from-catalog.md) — for curated, signature-verified plugins in one click
 - [Trusted plugin list](trusted-plugin-list.md) — add an author's signing key to the allowlist
 - [Plugin developer guide](developer-guide.md) — for plugin authors; understand what types exist and how to implement them
-- [Troubleshooting](developer-guide.md#faq--troubleshooting) — common plugin errors and `.logs/` exploration
+- [Verifying the install](developer-guide.md#verifying-the-install) — common plugin errors and `.logs/` exploration
 
 ---
 

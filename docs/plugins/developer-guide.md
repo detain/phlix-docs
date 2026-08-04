@@ -14,18 +14,18 @@ explicitly.
 
 ## Table of contents
 
-1. [Overview](#1-overview)
-2. [Plugin types](#2-plugin-types)
-3. [Manifest reference](#3-manifest-reference)
-4. [Lifecycle reference](#4-lifecycle-reference)
-5. [Event subscription](#5-event-subscription)
-6. [Settings](#6-settings)
-7. [Walkthrough: the example plugin](#7-walkthrough-the-example-plugin)
-8. [Packaging your plugin](#8-packaging-your-plugin)
-9. [Signing](#9-signing)
-10. [Testing your plugin locally](#10-testing-your-plugin-locally)
-11. [Publishing](#11-publishing)
-12. [Reference](#12-reference)
+1. [Overview](#_1-overview)
+2. [Plugin types](#_2-plugin-types)
+3. [Manifest reference](#_3-manifest-reference)
+4. [Lifecycle reference](#_4-lifecycle-reference)
+5. [Event subscription](#_5-event-subscription)
+6. [Settings](#_6-settings)
+7. [Walkthrough: the example plugin](#_7-walkthrough-the-example-plugin)
+8. [Packaging your plugin](#_8-packaging-your-plugin)
+9. [Signing](#_9-signing)
+10. [Testing your plugin locally](#_10-testing-your-plugin-locally)
+11. [Publishing](#_11-publishing)
+12. [Reference](#_12-reference)
 
 ---
 
@@ -160,7 +160,7 @@ authoritative shape of a plugin manifest:
   server's `Phlix\Common\Version::STRING` is older than this value.
   Start at `0.10.0` (the release that introduced the plugin system).
 - `type` — one of the eleven values from
-  [§2](#2-plugin-types).
+  [§2](#_2-plugin-types).
 - `entry` — fully-qualified class name of your plugin's entry class.
   Must match `^[A-Z][A-Za-z0-9_]*(?:\\[A-Z][A-Za-z0-9_]*)+$`. The
   loader resolves this through the host PSR-11 container, so the
@@ -178,9 +178,9 @@ authoritative shape of a plugin manifest:
   informational — the dispatcher only reacts to what
   `subscribedEvents()` returns).
 - `settings` — keyed object describing operator-facing knobs. See
-  [§6](#6-settings).
+  [§6](#_6-settings).
 - `signature` — `sha256:<64-hex>` digest, or `null` for unsigned
-  plugins. See [§9](#9-signing).
+  plugins. See [§9](#_9-signing).
 
 For full field-level details, validation rules, and error codes
 returned from `Manifest::validate()`, read
@@ -261,7 +261,7 @@ entry class through the host PSR-11 container.
   that `Phlix\Common\Container\ContainerFactory` produces is
   resolvable, including loggers, the DB connection, the listener
   registry, and the `AuthManager` / `ItemRepository` services. See
-  [`docs/dev/plugin-sdk.md`](../dev/plugin-sdk.md#1-container-bindings-plugins-can-resolve)
+  [`docs/dev/plugin-sdk.md`](../dev/plugin-sdk.md#_1-container-bindings-plugins-can-resolve)
   for the catalog of container IDs.
 - Throwing from `onEnable()` aborts enabling — the loader wraps the
   throwable in
@@ -598,7 +598,7 @@ A **byte-compatible** stub of the shared `Phlix\Shared\Plugin\LifecycleInterface
 suite can run on developer machines that don't have a phlix-server
 checkout on the include path. `tests/bootstrap.php` autoloads this
 stub when the canonical class isn't already loaded. See
-[§10](#10-testing-your-plugin-locally) for the pattern.
+[§10](#_10-testing-your-plugin-locally) for the pattern.
 
 ### Install it on a running server
 

@@ -5,20 +5,20 @@
 
 ## Table of Contents
 
-1. [Overview](#1-overview)
-2. [Development Environment](#2-development-environment)
-3. [Project Structure](#3-project-structure)
-4. [API Client Implementation](#4-api-client-implementation)
-5. [Video Player Implementation](#5-video-player-implementation)
-6. [Navigation & UI](#6-navigation--ui)
-7. [Authentication & Security](#7-authentication--security)
-8. [Background Playback & Media Session](#8-background-playback--media-session)
-9. [Offline Support & Downloads](#9-offline-support--downloads)
-10. [Push Notifications](#10-push-notifications)
-11. [Platform-Specific Features](#11-platform-specific-features)
-12. [Testing](#12-testing)
-13. [App Store Submission](#13-app-store-submission)
-14. [Implementation Checklist](#14-implementation-checklist)
+1. [Overview](#_1-overview)
+2. [Development Environment](#_2-development-environment)
+3. [Project Structure](#_3-project-structure)
+4. [API Client Implementation](#_4-api-client-implementation)
+5. [Video Player Implementation](#_5-video-player-implementation)
+6. [Navigation & UI](#_6-navigation-ui)
+7. [Authentication & Security](#_7-authentication-security)
+8. [Background Playback & Media Session](#_8-background-playback-media-session)
+9. [Offline Support & Downloads](#_9-offline-support-downloads)
+10. [Push Notifications](#_10-push-notifications)
+11. [Platform-Specific Features](#_11-platform-specific-features)
+12. [Testing](#_12-testing)
+13. [App Store Submission](#_13-app-store-submission)
+14. [Implementation Checklist](#_14-implementation-checklist)
 
 ---
 

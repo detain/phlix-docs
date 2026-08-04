@@ -5,16 +5,16 @@
 
 ## Table of Contents
 
-1. [Overview](#1-overview)
-2. [Development Environment](#2-development-environment)
-3. [Project Structure](#3-project-structure)
-4. [API Client Implementation](#4-api-client-implementation)
-5. [Player Implementation](#5-player-implementation)
-6. [System Integration](#6-system-integration)
-7. [User Interface](#7-user-interface)
-8. [Testing](#8-testing)
-9. [Microsoft Store Submission](#9-microsoft-store-submission)
-10. [Implementation Checklist](#10-implementation-checklist)
+1. [Overview](#_1-overview)
+2. [Development Environment](#_2-development-environment)
+3. [Project Structure](#_3-project-structure)
+4. [API Client Implementation](#_4-api-client-implementation)
+5. [Player Implementation](#_5-player-implementation)
+6. [System Integration](#_6-system-integration)
+7. [User Interface](#_7-user-interface)
+8. [Testing](#_8-testing)
+9. [Microsoft Store Submission](#_9-microsoft-store-submission)
+10. [Implementation Checklist](#_10-implementation-checklist)
 
 ---
 

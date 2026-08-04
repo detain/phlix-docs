@@ -1,0 +1,271 @@
+#!/usr/bin/env node
+//
+// Heading-anchor link gate for the VitePress docs site.
+//
+// WHY THIS EXISTS
+// ---------------
+// `docs/.vitepress/config.ts` sets `ignoreDeadLinks: false`, which makes
+// VitePress fail the build on a dead internal *page path*. Measured 2026-08-03
+// (S192), four mutations, each built and each restored by file copy + md5sum:
+//
+//   [dead page]        /reference/s192-no-such-page                     -> exit 1
+//   [cross-page anchor] /reference/api#s192-no-such-anchor              -> exit 0
+//   [same-page anchor]  #s192-no-such-anchor                            -> exit 0
+//   [dead page+anchor] /reference/s192-no-such-page#s192-no-such-anchor -> exit 1
+//
+// The fourth case rules out the competing explanation that a `#` suppresses
+// checking of the whole link: the page half of `page#anchor` IS validated (and
+// the fragment is stripped from VitePress's own report); the fragment half is
+// never validated in either form. This script closes that half.
+//
+// HOW IT WORKS
+// ------------
+// It runs AFTER `vitepress build` and reads the emitted HTML, not the markdown
+// source. That is deliberate: the emitted `id=` attributes are the actual anchor
+// targets the browser will resolve, so the check never has to re-implement
+// VitePress's slugify rules and cannot drift from them. Two of those rules are
+// genuinely surprising and each produced real broken links in this repo:
+//
+//   `## 1. Overview`                 -> id="_1-overview"        (NOT "1-overview")
+//   `## Fixing a single item's match` -> id="fixing-a-single-item-s-match"
+//                                                     (the apostrophe becomes `-`)
+//
+// Scanning rendered HTML also makes the link side strictly broader than the rule
+// it enforces: it sees every `<a href>` that actually ships, including links
+// emitted by theme components, not only the ones a markdown regex would find.
+//
+// FAILING LOUD
+// ------------
+// A checker that finds nothing because it scanned nothing is worse than no
+// checker. If the dist tree is missing, or has no HTML, or yields no
+// fragment-bearing links at all, this exits non-zero saying the gate could not
+// run rather than reporting success.
+//
+// Usage:
+//   node scripts/check-anchor-links.mjs
+//   node scripts/check-anchor-links.mjs --dist=<dir> --base=</prefix/>
+//
+// The two flags exist so the gate's own behaviour can be tested against a
+// synthetic fixture tree (see tests/anchor-gate.test.ts). Without them the base
+// is read from docs/.vitepress/config.ts, so it can never disagree with the
+// site's real base.
+
+import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
+import { join, dirname, resolve, relative } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const DEFAULT_DIST = join(REPO_ROOT, 'docs', '.vitepress', 'dist');
+const SRC_DIR = join(REPO_ROOT, 'docs');
+
+/** An `id` attribute sitting inside a real element tag. Escaped code samples
+ *  render `<` as `&lt;`, so `id="…"` shown in a fenced example is not counted
+ *  as a live anchor target. */
+const ID_IN_TAG = /<[a-zA-Z][^>]*?\sid="([^"]+)"/g;
+const A_HREF = /<a\b[^>]*?\shref="([^"]*)"/g;
+
+/** Schemes and protocol-relative URLs we do not own. */
+const OFF_SITE = /^(?:[a-zA-Z][a-zA-Z0-9+.-]*:|\/\/)/;
+
+function parseArgs(argv) {
+  const out = {};
+  for (const a of argv) {
+    const m = /^--([a-z-]+)=(.*)$/.exec(a);
+    if (m) out[m[1]] = m[2];
+  }
+  return out;
+}
+
+async function readBaseFromConfig() {
+  const cfgPath = join(REPO_ROOT, 'docs', '.vitepress', 'config.ts');
+  const mod = await import(pathToFileURL(cfgPath).href);
+  const cfg = mod.default ?? mod;
+  const base = cfg?.base ?? '/';
+  if (typeof base !== 'string' || !base.startsWith('/') || !base.endsWith('/')) {
+    throw new Error(
+      `docs/.vitepress/config.ts exported base=${JSON.stringify(base)}; ` +
+        'expected a string like "/" or "/prefix/"'
+    );
+  }
+  return base;
+}
+
+function walkHtml(dir, out = []) {
+  for (const entry of readdirSync(dir)) {
+    const p = join(dir, entry);
+    if (statSync(p).isDirectory()) walkHtml(p, out);
+    else if (p.endsWith('.html')) out.push(p);
+  }
+  return out;
+}
+
+/** dist/reference/api.html -> docs/reference/api.md (best effort, for the
+ *  error message only; a miss degrades the report, never the verdict). */
+function guessSource(distFile, distRoot) {
+  const rel = relative(distRoot, distFile);
+  const asMd = join(SRC_DIR, rel.replace(/\.html$/, '.md'));
+  if (existsSync(asMd)) return asMd;
+  const asIndex = join(SRC_DIR, rel.replace(/index\.html$/, 'index.md'));
+  if (existsSync(asIndex)) return asIndex;
+  return null;
+}
+
+function findSourceLine(srcFile, fragment) {
+  if (!srcFile) return null;
+  const lines = readFileSync(srcFile, 'utf8').split('\n');
+  const needle = '#' + fragment;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].includes(needle)) return i + 1;
+  }
+  return null;
+}
+
+/** Resolve an on-site href to the dist HTML file it targets. */
+function resolveTarget(href, fromFile, distRoot, base, pages) {
+  const hash = href.indexOf('#');
+  let path = href.slice(0, hash);
+  const q = path.indexOf('?');
+  if (q >= 0) path = path.slice(0, q);
+  if (path === '') return fromFile;
+
+  let file;
+  if (path.startsWith('/')) {
+    let rel = path;
+    if (base !== '/') {
+      if (!rel.startsWith(base)) return null; // root-absolute but outside our base
+      rel = rel.slice(base.length);
+    } else {
+      rel = rel.slice(1);
+    }
+    file = resolve(distRoot, rel);
+  } else {
+    file = resolve(dirname(fromFile), path);
+  }
+
+  if (pages.has(file)) return file;
+  for (const candidate of [file + '.html', join(file, 'index.html')]) {
+    if (pages.has(candidate)) return candidate;
+  }
+  return null;
+}
+
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const distRoot = args.dist ? resolve(args.dist) : DEFAULT_DIST;
+  const base = args.base ?? (await readBaseFromConfig());
+
+  if (!existsSync(distRoot)) {
+    console.error(
+      `[anchor-gate] cannot run: no build output at ${distRoot}. ` +
+        'Run `vitepress build docs` first.'
+    );
+    return 1;
+  }
+
+  const htmlFiles = walkHtml(distRoot);
+  if (htmlFiles.length === 0) {
+    console.error(`[anchor-gate] cannot run: no .html files under ${distRoot}.`);
+    return 1;
+  }
+
+  /** dist file -> Set of live anchor targets on that page. */
+  const pages = new Map();
+  /** deduped by from+href, because nav/sidebar/outline links repeat per page. */
+  const candidates = new Map();
+
+  for (const file of htmlFiles) {
+    const html = readFileSync(file, 'utf8');
+    const ids = new Set();
+    for (const m of html.matchAll(ID_IN_TAG)) ids.add(m[1]);
+    pages.set(file, ids);
+  }
+
+  let offSite = 0;
+  let noFragment = 0;
+  let bareHash = 0;
+
+  for (const file of htmlFiles) {
+    const html = readFileSync(file, 'utf8');
+    for (const m of html.matchAll(A_HREF)) {
+      const href = m[1];
+      if (OFF_SITE.test(href)) { offSite++; continue; }
+      const hash = href.indexOf('#');
+      if (hash < 0) { noFragment++; continue; }
+      if (hash === href.length - 1) { bareHash++; continue; } // href="…#"
+      // Key on a JSON-encoded pair, not `file + separator + href`. JSON escaping
+      // makes the encoding injective, so two distinct (file, href) pairs can never
+      // collapse into one key no matter what characters a path or an href contains.
+      // Do not "simplify" this back to string concatenation: a colliding key would
+      // silently drop a link from the check, which is the one failure this gate
+      // must never have.
+      candidates.set(JSON.stringify([file, href]), { file, href, fragment: href.slice(hash + 1) });
+    }
+  }
+
+  if (candidates.size === 0) {
+    console.error(
+      `[anchor-gate] cannot run: scanned ${htmlFiles.length} page(s) and found no ` +
+        'on-site link with a #fragment. The scanner is broken, not the docs.'
+    );
+    return 1;
+  }
+
+  const failures = [];
+  let checked = 0;
+
+  for (const { file, href, fragment } of candidates.values()) {
+    const target = resolveTarget(href, file, distRoot, base, pages);
+    if (target === null) {
+      // VitePress's own ignoreDeadLinks:false already fails the build on a dead
+      // page path, so reaching here means this resolver disagrees with it.
+      // That is a defect to surface, not to skip.
+      failures.push({ file, href, fragment, reason: 'target page not found in build output' });
+      continue;
+    }
+    checked++;
+    const ids = pages.get(target);
+    let decoded = fragment;
+    try { decoded = decodeURIComponent(fragment); } catch { /* keep raw */ }
+    if (ids.has(fragment) || ids.has(decoded)) continue;
+    failures.push({
+      file,
+      href,
+      fragment,
+      reason: `no element with id="${decoded}" on ${relative(distRoot, target)}`
+    });
+  }
+
+  console.log(
+    `[anchor-gate] ${htmlFiles.length} page(s), ${candidates.size} unique #fragment link(s) ` +
+      `checked (${offSite} off-site, ${noFragment} without a fragment, ${bareHash} bare "#" skipped).`
+  );
+
+  if (failures.length === 0) {
+    console.log('[anchor-gate] 0 dead anchor(s) found.');
+    return 0;
+  }
+
+  failures.sort((a, b) => (a.file + a.href).localeCompare(b.file + b.href));
+  for (const f of failures) {
+    const src = guessSource(f.file, distRoot);
+    const line = findSourceLine(src, f.fragment);
+    const where = src
+      ? `${relative(REPO_ROOT, src)}${line ? ':' + line : ''}`
+      : `${relative(distRoot, f.file)} (built page)`;
+    console.error(`(!) Dead anchor ${f.href} in ${where} — ${f.reason}`);
+  }
+  console.error(`[anchor-gate] ${failures.length} dead anchor(s) found.`);
+  console.error(
+    'Anchor ids come from the emitted HTML. Check the target page\'s real ids: ' +
+      `grep -oE '<h[1-6] id="[^"]+"' docs/.vitepress/dist/<page>.html`
+  );
+  return 1;
+}
+
+main().then(
+  (code) => process.exit(code),
+  (err) => {
+    console.error('[anchor-gate] crashed:', err?.stack ?? err);
+    process.exit(1);
+  }
+);

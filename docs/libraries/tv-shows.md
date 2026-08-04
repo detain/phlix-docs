@@ -296,7 +296,7 @@ series. See
 
 **Cause:** TVDB and TMDB use different IDs for some shows; country-specific variants (e.g., "The Office" UK vs. US) can cross-match incorrectly.
 
-**Fix:** Create a `show.nfo` in the show root with the correct `tmdbid` to lock metadata to the correct provider record, then re-scan to apply. Alternatively, use the per-item **Match metadata** action (see [section 8](#8-fixing-a-wrong-or-missing-match)) to pick the right TMDB record interactively.
+**Fix:** Create a `show.nfo` in the show root with the correct `tmdbid` to lock metadata to the correct provider record, then re-scan to apply. Alternatively, use the per-item **Match metadata** action (see [section 8](#_8-fixing-a-wrong-or-missing-match)) to pick the right TMDB record interactively.
 
 ::: tip TMDB is the active TV metadata provider
 Phlix resolves TV series, season, and episode metadata through **TheMovieDB (TMDB)** — configure a TMDB API key under [Server Settings → Metadata](../admin/server-settings). TheTVDB is a separate service and is not used by the current matcher; for per-series-directory libraries the folder name (`Series Title (Year)`) drives the TMDB TV search.

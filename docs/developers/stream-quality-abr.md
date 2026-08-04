@@ -133,7 +133,7 @@ force a keyframe at an arbitrary segment boundary). Hardware-accelerated encoder
 [Hardware Acceleration](./hardware-acceleration)) but are **not currently wired into
 the on-demand HLS segment path** — see the CPU-multiplication risk below.
 
-## On-demand per-variant segments (D2, A5/A6, S1–S3)
+## On-demand per-variant segments (D2, A5/A6, S1–S3) {#on-demand-per-variant-segments-d2-a5-a6-s1-s3}
 
 The segment path from before this program (dedup, in-flight cap, cache sweep) is
 **extended with a variant dimension**, not replaced:

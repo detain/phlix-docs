@@ -169,7 +169,7 @@ mapping (null → allow, 401/403 → 302 `/login`).
 
 ---
 
-## 8. The Libraries page (step 1.1c — the first feature page)
+## 8. The Libraries page (step 1.1c — the first feature page) {#the-libraries-page}
 
 `LibrariesPage` (`admin-ui/src/pages/LibrariesPage.tsx`) is the **first real
 feature page** built on top of the 0.4 scaffold. It mounts at
@@ -298,7 +298,7 @@ Overall SPA: **98.73%** statements (2255/2284), 93.98% branches. The 95.62% floo
 
 ---
 
-## 14. The Dashboard page (step 1.6 — stats & dashboard SPA)
+## 14. The Dashboard page (step 1.6 — stats & dashboard SPA) {#the-dashboard-page}
 
 `DashboardPage` (`admin-ui/src/pages/DashboardPage.tsx`) is the admin console's
 **stats dashboard** at `/admin/dashboard`. It replaces the Phase-0 placeholder
@@ -432,7 +432,7 @@ not error toasts — the no-op case is expected user behaviour, not an error con
 
 The page destructures `useToast()` as `const { push: pushToast } = useToast()`,
 following the same stable-reference pattern documented in the [Libraries page
-(#8)](#8-the-libraries-page-step-11c--the-first-feature-page) section. `push` is
+(#8)](#the-libraries-page) section. `push` is
 wrapped in `useCallback` inside `ToastProvider`, so its reference is stable across
 renders; depending on the whole `toast` object would cause `useCallback`
 dependencies to shift on every toast push and re-trigger `useEffect` calls.
@@ -546,7 +546,7 @@ Buttons set `aria-busy={acting}` and disable during the in-flight request.
 
 The page destructures `useToast()` as `const { push: pushToast } = useToast()`,
 following the same stable-reference pattern documented in the [Libraries page
-(#8)](#8-the-libraries-page-step-11c--the-first-feature-page) section. `push`
+(#8)](#the-libraries-page) section. `push`
 is wrapped in `useCallback` inside `ToastProvider`, so its reference is
 stable across renders; depending on the whole `toast` object would cause
 `useCallback` dependencies to shift on every toast push and re-trigger

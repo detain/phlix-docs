@@ -271,7 +271,7 @@ try {
 
 ---
 
-## Architecture note — why I/O in phlix-shared
+## Architecture note — why I/O in phlix-shared {#architecture-note-why-i-o-in-phlix-shared}
 
 The `phlix-shared` package maintains a **"Zero I/O" policy**: no filesystem
 reads, no network calls, no database, no logging side-effects. It ships

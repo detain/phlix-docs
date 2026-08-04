@@ -2,7 +2,7 @@
 
 **Since:** 0.18.0
 
-Reference for every `config/*.php` file in phlix-server and what each key controls. All connection parameters in `database.php` are environment-variable-driven — see the [Database](#database-php) section for the full list.
+Reference for every `config/*.php` file in phlix-server and what each key controls. All connection parameters in `database.php` are environment-variable-driven — see the [Database](#config-database-php) section for the full list.
 
 For environment variables that control runtime behaviour, see [/reference/env-vars](/reference/env-vars).
 

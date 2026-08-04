@@ -272,4 +272,6 @@ When `auto_backup_interval_days > 0`, the server schedules backups automatically
 - [Dashboard](./dashboard) — verify backup success in the activity feed
 - [Stats](./stats) — storage usage over time
 - [Webhooks](./webhooks) — receive alerts on backup failures
-- [Admin SPA dev docs](../dev/admin-spa#13-the-backup-page-step-15) — technical implementation details
+- [Admin SPA dev docs](../dev/admin-spa) — technical implementation details. There is no
+  dedicated backup-page section: `dev/admin-spa.md` documents sections 1–8, 14 and 16–18, and
+  the backup page is not among them.

@@ -12,7 +12,7 @@ plugin authors. Step B.1 hoists the most important ones
 (`LifecycleInterface`, `ManifestType`, the manifest value object) into
 a separate `phlix-shared` package so plugins can depend on the
 contracts without dragging in the whole server — see
-[§4](#4-phlix-shared-namespace-migration-plan).
+[§4](#_4-phlix-shared-migration).
 
 ---
 

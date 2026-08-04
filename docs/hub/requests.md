@@ -49,7 +49,7 @@ User submits request
 
 ### Environment variables
 
-Radarr and Sonarr are configured via environment variables on the Hub. See [Hub environment variables](../reference/env-vars.md#hub--arr-integration) for the full list.
+Radarr and Sonarr are configured via environment variables on the Hub. See [Hub environment variables](../reference/env-vars.md#hub-arr-integration) for the full list.
 
 | Variable | Required | Default | Description |
 |---|---|---|---|

@@ -602,11 +602,9 @@ are **account-level** (keyed on `user_id`, like user settings) — **not per-pro
 Each write returns a `{ "message": "..." }` envelope.
 
 > **Hub relay caveat:** when a server is browsed through the hub's relay proxy,
-> these **write** endpoints degrade — the relay proxy allowlists `GET`/`HEAD` only,
-> so `POST .../favorite` returns `403 proxy.scope_denied` and `PUT .../like` +
-> `DELETE .../favorite` are not routed. Favorites and Love writes only persist over
-> a **direct** session to the server. Tracked as phlix-hub issue
-> [#122](https://github.com/detain/phlix-hub/issues/122).
+> all HTTP verbs are forwarded — `POST .../favorite`, `PUT .../rating`, and
+> `DELETE .../favorite` all reach the server normally. The relay proxy no longer
+> restrictively allowlists `GET`/`HEAD` only (phlix-hub `Application.php` lines 479–495).
 
 ### POST /api/v1/media/`{id}`/favorite
 

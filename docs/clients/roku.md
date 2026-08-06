@@ -2,6 +2,9 @@
 
 **Since:** 0.18.0
 
+> [!NOTE]
+> **Device verification status:** The Roku channel was remediated in 2026 (phases R0–R9) but has **never been tested on physical hardware** due to no device being available. Static analysis (brighterscript `bsc`, `make verify-runtime`) is the only automated quality bar. Functional testing requires a physical Roku device or emulator.
+
 > [!TIP]
 > The Phlix channel for Roku brings your media library to any Roku streaming device. Add the channel from the Roku Channel Store, open it, enter your server URL (or sign in with Hub), and start streaming. Works on all Roku models running OS 10 or later.
 
@@ -48,6 +51,9 @@ On first open, the Phlix channel shows a server URL entry screen:
 5. After authentication, the Hub auto-populates your server URL if you have a server claimed. No manual entry required.
 
 Hub login also enables remote playback when you are away from home — the Hub relay handles the connection without any router configuration.
+
+> [!NOTE]
+> **SyncPlay / Watch Together:** This feature uses WebSocket (`ws://`) and requires a **direct server connection** — it is disabled in Hub mode because the Hub relay strips the `Upgrade` header required for WebSocket.
 
 ## What Can Go Wrong
 

@@ -15,6 +15,7 @@
 8. [Testing](#_8-testing)
 9. [Roku Store Submission](#_9-roku-store-submission)
 10. [Implementation Checklist](#_10-implementation-checklist)
+11. [Device Verification Status](#_11-device-verification-status)
 
 ---
 
@@ -127,44 +128,46 @@ ui_resolutions=hd
 ## 3. Project Structure
 
 ```
-phlix-roku/
+phlix-roku-client/
 ├── source/
-│   ├── main.brs              # Main entry point
+│   ├── main.brs              # Entry point — boots PhlixApp scene
 │   ├── lib/
-│   │   ├── ApiClient.brs     # API client
+│   │   ├── ApiClient.brs     # HTTP transport (all /api/v1 routes)
 │   │   ├── AuthManager.brs   # Authentication
 │   │   ├── SessionManager.brs # Session management
 │   │   ├── LibraryManager.brs # Library browsing
-│   │   ├── Storage.brs       # Persistent storage
-│   │   ├── TaskManager.brs   # Background tasks
-│   │   └── Utilities.brs     # Helper functions
-│   ├── components/
-│   │   ├── PhlixApp.brs      # Main app component
-│   │   ├── HomeScene.brs     # Home screen
-│   │   ├── LibraryScene.brs  # Library browser
-│   │   ├── DetailScene.brs   # Item detail
-│   │   ├── PlayerScene.brs   # Video player
-│   │   ├── LoginScene.brs    # Login screen
-│   │   └── GridItem.brs      # Grid item component
-│   ├── pages/
-│   │   ├── HomePage.brs
-│   │   ├── LibraryPage.brs
-│   │   └── SettingsPage.brs
+│   │   ├── Storage.brs       # Registry-backed key/value (use GetStorage() factory)
+│   │   ├── AppContext.brs    # Server URL, connection kind, Hub detection
+│   │   ├── SyncPlayProtocol.brs # WebSocket protocol (ws:// only, direct mode)
+│   │   └── Theme.brs        # Theme constants
 │   └── data/
-│       └── Theme.brs         # Theme constants
-├── images/
-│   ├── icon-focus-hd.png
-│   ├── icon-side-hd.png
-│   ├── splash-sd.png
-│   ├── splash-hd.png
-│   ├── splash-fhd.png
-│   └── placeholder.png
+│       └── Theme.brs
+├── components/               # SceneGraph scenes (XML + .brs pairs)
+│   ├── PhlixApp.brs/.xml     # Root scene — manages screen stack
+│   ├── ConnectScene.brs/.xml # First-run server URL entry
+│   ├── LoginScene.brs/.xml   # Username/password login
+│   ├── HomeScene.brs/.xml    # Main library view
+│   ├── LibraryScene.brs/.xml # Browse with paging
+│   ├── DetailScene.brs/.xml  # Item detail + playback
+│   ├── PlayerScene.brs/.xml  # Video player with SyncPlay overlay
+│   ├── SettingsScene.brs/.xml # Settings (6 sections)
+│   ├── AudiobookScene.brs/.xml # Audiobook library
+│   ├── AudiobookPlayerScene.brs/.xml # Audiobook playback
+│   └── SyncPlayTask.brs/.xml  # WebSocket task (off render thread)
 ├── tests/
-│   ├── unit/
-│   └── integration/
-├── manifest
+│   ├── unit/                 # 12 unit tests (need device to run)
+│   └── integration/           # 1 integration test
+├── scripts/
+│   ├── verify-runtime.sh     # 11 grep-based static checks
+│   └── package-signed.sh     # Signed .pkg build script
+├── docs/
+│   ├── debugging.md          # Telnet + error dictionary
+│   ├── architecture-apitask.md # ApiTask op-dispatch docs
+│   ├── static-checks.md      # What verify-runtime.sh checks
+│   └── publishing.md         # Store submission guide
 ├── Makefile
-└── README.md
+├── bsconfig.json
+└── manifest
 ```
 
 ---
@@ -782,16 +785,27 @@ end sub
 
 ## 6. Remote Control Handling
 
-### 6.1 Key Event Handling
+### 6.1 Key Event Handling (R6.9)
 
-Roku remote handling is built into the Scene's `OnKeyEvent` method:
+Roku remote handling is built into the Scene's `OnKeyEvent` method. Each button maps to a specific behaviour:
+
+| Button | Action |
+|--------|--------|
+| **Left / Right** | ±10 seconds — fine scrub through the timeline |
+| **Rewind / Fast Forward** | ±30 seconds — transport key skip |
+| **Instant Replay** | Back 10 s; if captions are off, flash the caption icon to prompt the user |
+| **Info** | Show item title + position overlay |
+| **Options (\*)** | Open Watch Together / SyncPlay overlay |
+| **Up** | Quality picker (server-A7-dependent — server sends `MediaStreams` for the item) |
+| **Down** | Audio / Subtitles track selection panel |
+| **Skip (forward)** | Jump past intro/outro markers if `Chapters` are present on the item |
 
 ```brightscript
 ' Key handling in scene or component
 
 ' Remote button codes:
 ' "up" - Up arrow
-' "down" - Down arrow  
+' "down" - Down arrow
 ' "left" - Left arrow
 ' "right" - Right arrow
 ' "select" - OK button
@@ -800,17 +814,18 @@ Roku remote handling is built into the Scene's `OnKeyEvent` method:
 ' "pause" - Pause button
 ' "rewind" - Rewind button
 ' "fastforward" - Fast forward button
-' "replay" - Replay button
+' "replay" - Instant Replay
 ' "info" - Info button
-' "options" - Options button
+' "options" - Options button (*)
+' "forward" - Skip forward (intro/outro markers)
 
 function OnKeyEvent(key as String, press as Boolean) as Boolean
     handled = false
-    
+
     if not press then
         return false
     end if
-    
+
     if key = "back" then
         HandleBack()
         handled = true
@@ -824,31 +839,37 @@ function OnKeyEvent(key as String, press as Boolean) as Boolean
         HandleStop()
         handled = true
     else if key = "rewind" then
-        HandleSeek(-10)
+        HandleSeek(-30)
         handled = true
     else if key = "fastforward" then
-        HandleSeek(10)
+        HandleSeek(30)
         handled = true
     else if key = "left" then
-        HandleNavLeft()
+        HandleFineScrub(-10)
         handled = true
     else if key = "right" then
-        HandleNavRight()
+        HandleFineScrub(10)
+        handled = true
+    else if key = "replay" then
+        HandleReplay()
         handled = true
     else if key = "up" then
-        HandleNavUp()
+        HandleQualityPicker()
         handled = true
     else if key = "down" then
-        HandleNavDown()
+        HandleAudioSubPicker()
         handled = true
     else if key = "info" then
         HandleToggleInfo()
         handled = true
-    else if key = "replay" then
-        HandleSeekToStart()
+    else if key = "options" then
+        HandleSyncPlayOverlay()
+        handled = true
+    else if key = "forward" then
+        HandleChapterSkip()
         handled = true
     end if
-    
+
     return handled
 end function
 ```
@@ -1077,5 +1098,24 @@ make package
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 2026-05-14  
+## 11. Device Verification Status
+
+> [!IMPORTANT]
+> This channel has **never been tested on physical hardware** — no Roku device has been available during development. The only automated quality gate is static analysis:
+> - `npx bsc --project bsconfig.json` — zero diagnostics required
+> - `make verify-runtime` — 11 grep-based runtime-defect checks
+> - `make validate-manifest` — manifest fields present
+> - `make validate-xml` — all XML files valid
+>
+> Functional testing requires a physical Roku device or emulator. The following features are **unverified** without a device:
+> - Boot flow (R1) — auth check on startup
+> - Playback (R2) — actual video rendering
+> - SyncPlay (R4.1) — WebSocket group sync
+> - Paging (R5) — pagination of large libraries
+
+For real-time diagnostics during development, connect via Telnet on port 8085 — see `docs/debugging.md` and `docs/architecture-apitask.md` in the phlix-roku-client repo for the full opcode-dispatch reference.
+
+---
+
+**Document Version:** 2.0
+**Last Updated:** 2026-08-06  

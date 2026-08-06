@@ -161,22 +161,6 @@ Allows users to set their personal rating:
 - `save` — Emitted with new rating value when user saves
 - `cancel` — Emitted when user dismisses modal
 
-### UserRatingPicker
-
-Interactive star-based rating input:
-
-```vue
-<UserRatingPicker v-model="userRating" :max="10" @change="onRatingChange" />
-```
-
-**Props:**
-- `modelValue` (number|null) — Current rating
-- `max` (number) — Maximum stars (default: 10)
-
-**Events:**
-- `update:modelValue` — Two-way binding update
-- `change` — Emitted when rating changes
-
 ## API Reference
 
 ### Set User Rating

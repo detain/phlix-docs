@@ -88,6 +88,16 @@ describe('Config Module Loading', () => {
     expect(configModule.default.ignoreDeadLinks).toBe(false)
   })
 
+  // Asserted against the RESOLVED export, not the file text. A
+  // `configContent.toContain('srcExclude')` check would also be satisfied by
+  // the explanatory comment sitting directly above the option, so it could not
+  // tell a live setting apart from a description of one.
+  it('should exclude docs/old from the build via srcExclude', async () => {
+    const configModule = await import('../docs/.vitepress/config.ts')
+    expect(configModule.default).toHaveProperty('srcExclude')
+    expect(configModule.default.srcExclude).toEqual(['old/**'])
+  })
+
   it('should have dark mode enabled', async () => {
     const configModule = await import('../docs/.vitepress/config.ts')
     expect(configModule.default.themeConfig).toHaveProperty('darkModeSwitch')

@@ -8,8 +8,7 @@ The Phlix Windows Client is an Electron-based desktop application that serves as
 
 - **Shell**: Electron 42
 - **Renderer**: Vue 3 with Pinia (state management), vue-router, and Vite 7
-- **UI Library**: `@phlix/ui` (pinned via `github:detain/phlix-ui#<tag>`)
-- **Media Playback**: hls.js for HLS streaming, integrated via `@phlix/ui`
+- **UI Library**: `@phlix/ui` (pinned via `github:detain/phlix-ui#<tag>` — the renderer imports pages, components, and stores from this package; it owns zero UI of its own)
 - **Testing**: Vitest 3, Playwright (smoke tests)
 - **Build**: electron-builder (NSIS and APPX targets)
 

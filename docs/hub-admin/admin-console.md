@@ -62,8 +62,8 @@ Each user row also has a **Relay** action (Hub console only) that opens a **Rela
 setting that user's per-user relay **bandwidth throttle** (a rate cap) and **monthly quota** (byte
 caps + a concurrent-stream cap) — see
 [Relay Tuning → From the admin console](./relay-tuning#from-the-admin-console-users-page). This
-control shipped in `@phlix/ui` 0.98.30 and reaches a deployed Hub only once `web-ui/package.json`
-pins `@phlix/ui` to ≥ 0.98.30.
+control shipped in `@phlix/ui` 0.98.30; the Hub's `web-ui/package.json` now pins a later release, so
+a Hub built from current sources has it.
 
 ### Logs
 

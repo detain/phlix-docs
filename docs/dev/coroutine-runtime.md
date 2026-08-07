@@ -42,12 +42,26 @@ What that buys us:
 |---|---|
 | `Worker::$eventLoop = \Workerman\Events\Swoole::class` | Workerman uses Swoole's reactor instead of its own select-based loop. Required for coroutines. |
 | `Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL)` | PHP's blocking I/O (`file_get_contents`, `curl_exec`, `PDO`, `sleep`/`usleep`/`time_nanosleep`, DNS, sockets, streams, …) is transparently rewritten to yield to the coroutine scheduler instead of blocking the worker thread. |
-| Per-request handlers in coroutines | Concurrent requests on the same worker can interleave; a slow webhook fetch in request A no longer stalls request B. |
+| Per-request handlers in coroutines | Concurrent requests on the same worker can interleave, so a slow request generally no longer stalls its neighbours. **Not universally** — see the exceptions register below. |
 
 The graceful-fallback `else` branch keeps `composer install` + the test
 suite working on dev hosts that haven't compiled `ext-swoole` yet. Once
 `ext-swoole` is missing, the daemon degrades to single-blocking-request
 behavior **per worker** — correctness is preserved, throughput drops.
+
+::: warning "Non-blocking" is the rule, not a guarantee — there is a closed exceptions register
+Two blocking calls are knowingly accepted in the resident worker, each named,
+bounded by an enforced timeout, and costed. They are **LDAP bind/search**
+(`ext-ldap` has no Swoole-hookable async client; bounded at 5 s) and **https
+fetches routed to cURL** by `EventLoopTls` (bounded by `CURLOPT_TIMEOUT`).
+A blocking syscall freezes *every* coroutine on that worker process, not just
+the caller's connection.
+
+The authoritative list is `docs/dev/BLOCKING_IO_EXCEPTIONS.md` in the
+phlix-server repository. Treat it as closed: an exception is only legitimate if
+it is named there, bounded with the bound *measured firing*, and blast-radius
+costed. Do not add one for a call you have not measured.
+:::
 
 ---
 
@@ -231,7 +245,11 @@ or `phlix-hub/src/Http/`:
   process — never inline in an HTTP handler.
 - [ ] All new HTTP / DB / Redis I/O is non-blocking. Use
   `workerman/http-client` for outgoing HTTP, the existing async DB
-  pool for queries, and `webman/redis ~2.1` for Redis.
+  pool for queries, and `webman/redis ~2.1` for Redis. The only
+  legitimate exceptions are the ones already named in
+  `docs/dev/BLOCKING_IO_EXCEPTIONS.md` (phlix-server); adding a new
+  one requires naming it there with a **measured** bound and a stated
+  blast radius, not a comment beside the call.
 - [ ] If you add a new piece of per-request state, publish it via the
   repo-appropriate `RequestContext` wrapper (`Phlix\Server\Http\RequestContext`
   in the server, `Phlix\Hub\Http\RequestContext` in the hub) — not on a

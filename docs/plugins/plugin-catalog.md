@@ -81,11 +81,11 @@ the `plugins.catalog.channel` setting:
 | **`dev`** | the catalog repo's **moving `master` branch** | **opt-in / advanced** — surfaces the newest, unreleased catalog entries |
 
 `dev` is flagged **opt-in / advanced** in the admin UI (a warning badge plus a
-server-authored description). It only changes which entries are **discovered** on
-the official catalog — it does **not** move the trust boundary (see the note
-below). Operator-added catalogs are unaffected by the channel; they always
-resolve at `HEAD`. Anything other than a literal `dev` (including an empty or
-unknown value) fails **safe to `stable`**.
+server-authored description). It changes which entries are **discovered** on the
+official catalog, and it changes **which document those entries are read from** —
+read the note below before enabling it. Operator-added catalogs are unaffected by
+the channel; they always resolve at `HEAD`. Anything other than a literal `dev`
+(including an empty or unknown value) fails **safe to `stable`**.
 
 **Precedence — env > setting > default.** The ref actually used for the official
 catalog is chosen in this order:
@@ -95,13 +95,34 @@ catalog is chosen in this order:
 2. `plugins.catalog.channel` — `dev` → `master`, `stable` → the pinned tag;
 3. `OFFICIAL_PINNED_REF` — the built-in default when neither of the above is set.
 
-**Discovery only — installs are still verified on both channels.** Switching to
-`dev` widens *what is listed*, never *what is trusted*. Every actual install is
-still gated by the catalog entry's per-entry pin — its `ref` **and**
-`artifactSha256` — regardless of channel, so a `dev`-only, un-pinned entry cannot
-be installed. See [Trusted Plugin List](./trusted-plugin-list.md) for the trust
-model. Choosing "always latest" via the GitHub Releases API is a deferred
-follow-up, not part of this channel setting.
+**The verification path is the same on both channels — but the trust anchor is
+not.** Switching to `dev` does not switch a check off. An install is still gated
+by the catalog entry's per-entry pin — its `ref` **and** `artifactSha256` — on
+either channel, and a remote entry that carries no pinned digest is refused by
+default.
+
+What changes is **who asserts that pin**. Both `ref` and `artifactSha256` are
+self-asserted *by the catalog document itself*, so the digest check proves only
+that the downloaded artifact matches what that document claimed — never that the
+document was audited. On `stable` the document is an audited, pinned release tag.
+On `dev` it is whatever the catalog repository's `master` branch says right now,
+so anyone able to push `master` can name their own commit **and** the digest that
+matches it, and the install will verify normally.
+
+So read `dev` as *"I continuously trust the catalog repository's `master`
+branch"* — not as *"this is checked the same way `stable` is"*. The integrity
+check survives the channel switch; the thing it anchors to does not.
+
+::: warning Two ways an un-pinned install is still allowed
+The default-deny on un-pinned artifacts has two documented exemptions, on both
+channels: `file://` (and scheme-less) sources are treated as operator-local bytes
+rather than a supply-chain artifact, and setting `PHLIX_PLUGINS_ALLOW_UNVERIFIED`
+opts back into installing un-pinned remote sources with only a warning logged.
+:::
+
+See [Trusted Plugin List](./trusted-plugin-list.md) for the signature trust
+model, which is a separate control. Choosing "always latest" via the GitHub
+Releases API is a deferred follow-up, not part of this channel setting.
 
 The read/write wire contract (`GET`/`PUT /api/v1/admin/plugins/catalog/channel`,
 returning `{ channel, options: [{ value, label, description, advanced }] }`) is

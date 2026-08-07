@@ -173,13 +173,13 @@ that opens a **Relay limits** dialog with two sections:
 same bounds as the API (byte caps ≤ 1 PiB, streams ≤ 1000; the throttle is limited to the allow-listed
 levels) and blocks an out-of-range save before it reaches the Hub.
 
-::: warning Hub-only control — needs an up-to-date SPA pin
+::: info Hub-only control
 The **Relay** action renders only in the **Hub** admin console (`phlixConfig.app === 'hub'`); the
 media server does not serve these endpoints, so the control never appears in the server's admin UI.
-It shipped in **`@phlix/ui` 0.98.30**, so it reaches a *deployed* Hub only once the Hub's
-`web-ui/package.json` pins `@phlix/ui` to **≥ 0.98.30** and the SPA bundle under
-`public/assets/app/` is rebuilt. The underlying HTTP API (above) works regardless of the SPA
-version.
+It shipped in **`@phlix/ui` 0.98.30**, and the Hub's `web-ui/package.json` now pins a later release,
+so a Hub built from current sources has it. If you are running an older deployment, it appears once
+the pin is **≥ 0.98.30** and the SPA bundle under `public/assets/app/` is rebuilt. The underlying
+HTTP API (above) works regardless of the SPA version.
 :::
 
 ## Relay observability metrics

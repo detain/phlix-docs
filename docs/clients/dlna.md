@@ -11,7 +11,7 @@ For the complete server-side DLNA documentation, including architecture, configu
 ## Quick Status Check
 
 ```bash
-curl http://localhost:32400/api/v1/system/dlna
+curl http://localhost:8096/api/v1/system/dlna
 ```
 
 ## See Also

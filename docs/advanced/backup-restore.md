@@ -192,7 +192,7 @@ Log in, check your library items are visible, confirm watch history is present.
 If *items* are missing, trigger a library rescan from the admin UI or via the API — it re-walks the tree and indexes every file at a path that is not yet in the catalogue:
 
 ```bash
-curl -X POST http://localhost:32400/api/v1/libraries/{id}/rescan \
+curl -X POST http://localhost:8096/api/v1/libraries/{id}/rescan \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -300,7 +300,7 @@ background either — there is no scheduled or filesystem-triggered scan.)
 items that already carry metadata and re-downloads the artwork for them:
 
 ```bash
-curl -X POST http://localhost:32400/api/v1/libraries/{id}/refresh-metadata \
+curl -X POST http://localhost:8096/api/v1/libraries/{id}/refresh-metadata \
   -H "Authorization: Bearer $TOKEN"
 ```
 

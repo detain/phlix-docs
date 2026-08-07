@@ -36,10 +36,10 @@ tail -f .logs/auth.log                # Channel-specific tail (one file per chan
 ### Server status checks
 
 ```bash
-curl -s http://localhost:32400/api/v1/system/status   # Is server responding?
-systemctl status phlix                                # systemd service status (Linux)
-ps aux | grep -E 'phlix|workerman' | grep -v grep     # Running processes
-lsof -i :32400                                        # Is port 32400 bound?
+curl -s http://localhost:8096/api/v1/system/status  # Is server responding?
+systemctl status phlix                              # systemd service status (Linux)
+ps aux | grep -E 'phlix|workerman' | grep -v grep   # Running processes
+lsof -i :8096                                       # Is port 8096 bound?
 ```
 
 ### Library / filesystem checks
@@ -96,9 +96,9 @@ the same algorithm.
 
 ## What Can Go Wrong
 
-### A. Connection refused on port 32400
+### A. Connection refused on port 8096
 
-**Symptom:** Browser shows "Connection refused" or "Unable to connect" when accessing `http://server:32400`.
+**Symptom:** Browser shows "Connection refused" or "Unable to connect" when accessing `http://server:8096`.
 
 **Cause 1 — Server not running:** The Phlix Workerman process is not started.
 
@@ -115,15 +115,15 @@ systemctl start phlix
 
 **Fix:** Check the `port` key in `config/server.php` and ensure your URL uses the same port.
 
-**Cause 3 — Firewall blocking:** Port 32400 is not open on the host firewall.
+**Cause 3 — Firewall blocking:** Port 8096 is not open on the host firewall.
 
 **Fix:**
 ```bash
 # ufw (Debian/Ubuntu)
-sudo ufw allow 32400
+sudo ufw allow 8096
 
 # firewalld (RHEL/CentOS)
-sudo firewall-cmd --add-port=32400/tcp
+sudo firewall-cmd --add-port=8096/tcp
 ```
 
 ---

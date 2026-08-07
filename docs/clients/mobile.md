@@ -33,7 +33,7 @@
 
 On first launch, the app presents two options:
 
-- **Enter Server URL** — type your server's address directly (e.g., `http://192.168.1.100:32400` for local access or `https://your-domain.com` for remote access)
+- **Enter Server URL** — type your server's address directly (e.g., `http://192.168.1.100:8096` for local access or `https://your-domain.com` for remote access)
 - **Sign in with Hub** — authenticate via your Phlix Hub account, which auto-discovers all servers linked to your hub
 
 Choose one and proceed. You can switch methods later in **Settings → Account**.
@@ -69,7 +69,7 @@ The Hub connection allows you to access all of your Hub-linked servers without m
 
 **Symptom:** The app times out or shows "Server unreachable" when you are on mobile data or a different Wi-Fi network, even though it works fine at home.
 
-**Fix:** Use the Hub relay URL (from the sign-in-with-Hub flow) for remote access — the Hub relay handles the connection tunnel automatically. For direct access, configure port forwarding on your router for TCP port 32400, or set up a Tailscale VPN to create a private tunnel between your mobile device and your home network.
+**Fix:** Use the Hub relay URL (from the sign-in-with-Hub flow) for remote access — the Hub relay handles the connection tunnel automatically. For direct access, configure port forwarding on your router for TCP port 8096, or set up a Tailscale VPN to create a private tunnel between your mobile device and your home network.
 
 ### Hub login fails
 

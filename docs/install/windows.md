@@ -6,7 +6,7 @@ phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time 
 
 **Minimum requirements:** Windows 10 21H2+ or Windows 11, 2 CPU / 4 GB RAM.
 
-**Quick one-liner (XAMPP):** Download XAMPP → `git clone` → `composer install` → start Apache → open `http://localhost:32400`
+**Quick one-liner (XAMPP):** Download XAMPP → `git clone` → `composer install` → start Apache → open `http://localhost:8096`
 
 **Recommendation:** Use **WSL2 + Ubuntu** for production. Use **XAMPP** for quick dev / non-Docker users.
 
@@ -101,7 +101,6 @@ copy .env.example .env
 Edit `.env`:
 
 ```env
-APP_URL=http://localhost:32400
 DB_HOST=localhost
 DB_DATABASE=phlix
 DB_USERNAME=phlix
@@ -138,10 +137,10 @@ php public\index.php
 ### 2j. Firewall configuration
 
 ```powershell
-New-NetFirewallRule -DisplayName "Phlix HTTP" -Direction Inbound -Protocol TCP -LocalPort 32400 -Action Allow
+New-NetFirewallRule -DisplayName "Phlix HTTP" -Direction Inbound -Protocol TCP -LocalPort 8096 -Action Allow
 ```
 
-Or via Windows Defender Firewall UI: Inbound Rule → New Rule → Port → 32400 → Allow.
+Or via Windows Defender Firewall UI: Inbound Rule → New Rule → Port → 8096 → Allow.
 
 ---
 
@@ -227,7 +226,6 @@ nano .env
 Set:
 
 ```env
-APP_URL=http://localhost:32400
 DB_HOST=localhost
 DB_DATABASE=phlix
 DB_USERNAME=phlix
@@ -262,12 +260,12 @@ php /opt/phlix/public/index.php
 ### 3n. Firewall configuration (from PowerShell on Windows host)
 
 ```powershell
-New-NetFirewallRule -DisplayName "Phlix HTTP" -Direction Inbound -Protocol TCP -LocalPort 32400 -Action Allow
+New-NetFirewallRule -DisplayName "Phlix HTTP" -Direction Inbound -Protocol TCP -LocalPort 8096 -Action Allow
 ```
 
 ### 3o. Access from Windows browser
 
-Open `http://localhost:32400` in your Windows browser.
+Open `http://localhost:8096` in your Windows browser.
 
 ---
 
@@ -300,7 +298,7 @@ In `C:\phlix\public\web.config`:
           <conditions>
             <add input="{CACHE_URL}" pattern="^(https?)://" />
           </conditions>
-          <action type="Rewrite" url="http://127.0.0.1:32400/{R:1}" />
+          <action type="Rewrite" url="http://127.0.0.1:8096/{R:1}" />
         </rule>
       </rules>
     </rewrite>
@@ -321,7 +319,7 @@ php C:\phlix\public\index.php
 Open your browser:
 
 ```
-http://localhost:32400
+http://localhost:8096
 ```
 
 Expected: phlix-server index page loads (HTTP 200).
@@ -361,10 +359,10 @@ Expected: phlix-server index page loads (HTTP 200).
 - **Fix:** Ensure all paths in `.env` use Windows-style separators or that the app handles `DIRECTORY_SEPARATOR` correctly; avoid hardcoded `/` in file paths
 - **Verify:** Set `git config --global core.autocrlf true` to handle line endings
 
-### Port 32400 already in use
+### Port 8096 already in use
 
 - **Symptom:** `bind(): Address already in use`
-- **Fix:** `netstat -ano | findstr :32400` to find the conflicting process; stop it or change phlix port via `APP_URL` env var
+- **Fix:** `netstat -ano | findstr :8096` to find the conflicting process; stop it, or change the port by editing `server.port` in `config/server.php` and restarting. There is no environment variable for the HTTP port — `APP_URL` was named here in earlier revisions and is not read by phlix-server at all.
 
 ### XAMPP Apache won't start (port 80/443 conflict)
 
@@ -375,7 +373,7 @@ Expected: phlix-server index page loads (HTTP 200).
 
 ## Next steps
 
-- [First-run wizard](/first-run) — complete the browser-based setup at `http://your-server:32400`
+- [First-run wizard](/first-run) — complete the browser-based setup at `http://your-server:8096`
 - [Docker install](/install/docker) — alternative install method using containers
 - [Hardware transcoding](/advanced/hardware-transcoding) — configure NVENC/VAAPI for better performance (WSL2+Ubuntu only)
 - [Linux install](/install/linux) — for mixed Windows/Linux environments

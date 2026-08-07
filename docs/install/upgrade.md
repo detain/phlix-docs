@@ -147,7 +147,7 @@ library, queue a forced re-match instead, which re-resolves items that already c
 metadata:
 
 ```bash
-curl -X POST http://localhost:32400/api/v1/libraries/{id}/refresh-metadata \
+curl -X POST http://localhost:8096/api/v1/libraries/{id}/refresh-metadata \
   -H "Authorization: Bearer $ADMIN_TOKEN"
 ```
 

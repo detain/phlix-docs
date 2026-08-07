@@ -186,13 +186,46 @@ See [`docs/hub/requests.md`](../hub/requests.md) for the full media-request work
 | `PHLIX_STUN_SERVER`          | `stun.l.google.com` | STUN server hostname for discovering the server's public IP address. See `Phlix\Network\StunClient` and `config/port-forward.php`. |
 | `PHLIX_STUN_PORT`            | `19302`       | STUN server port. See `Phlix\Network\StunClient` and `config/port-forward.php`. |
 
+::: warning The port-forwarding default does not match the port the server listens on
+`PHLIX_EXTERNAL_PORT` defaults to `32400` and is used as **both** the external and
+the internal port of the UPnP/NAT-PMP mapping — the router is told to forward
+WAN `32400` to `<server-lan-ip>:32400`. phlix-server listens on **`8096`**
+(`config/server.php` `server.port`), so with both defaults left alone the mapping
+points at a port nothing is bound to and direct remote access will not work.
+
+Set `PHLIX_EXTERNAL_PORT` to the port the server actually listens on:
+
+```bash
+PHLIX_EXTERNAL_PORT=8096
+```
+
+The same value is what `phlix portforward status` advertises to the Hub as this
+server's hostname candidates, so getting it wrong makes those candidates
+unreachable too.
+:::
+
 ## Server
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `PHLIX_HTTP_PORT` | `32400` | HTTP port the server listens on. Overridden by `config/server.php` `server.port` at runtime. See `config/server.php`. |
 | `PHLIX_PUBLIC_URL` | _unset_ | Public URL used in Hub relay and DLNA announcements. Must be set if the server is behind a reverse proxy. See `Phlix\Server\Core\Application`. |
 | `PHLIX_LOG_LEVEL` | `info` | Minimum log level for application logs written to `.logs/app.log`. Valid values (in order of verbosity): `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`. See `config/logger.php`. |
+
+::: danger `PHLIX_HTTP_PORT` does not exist — if you have it set, it is doing nothing
+Earlier revisions of this page listed `PHLIX_HTTP_PORT` as the way to change the
+HTTP listen port. **It was never implemented.** The name appears nowhere in
+phlix-server — not in the current source and not in any commit in its history —
+so exporting it, or putting it in a `.env` file, has no effect whatsoever. The
+server is still listening on whatever `config/server.php` says.
+
+There is no environment variable for the HTTP port. To change it:
+
+- edit `server.port` in `config/server.php` — the default is `8096`; or
+- pass `--http-port PORT` to `scripts/install.sh` at install time, which writes
+  that value into the config and into the generated HAProxy backend.
+
+Both take effect on the next server restart.
+:::
 
 ## Database
 

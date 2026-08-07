@@ -80,12 +80,12 @@ Environment=JWT_SECRET=$(openssl rand -hex 32)
 
 ### 2. Use TLS (reverse proxy with a valid cert)
 
-HTTP port 32400 transmits credentials in clear text when not behind TLS.
+HTTP port 8096 transmits credentials in clear text when not behind TLS.
 
 ```bash
 # Example Caddyfile
 phlix.example.com {
-  reverse_proxy localhost:32400
+  reverse_proxy localhost:8096
   tls admin@example.com
 }
 ```
@@ -103,18 +103,18 @@ server {
     ssl_certificate /etc/letsencrypt/live/phlix.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/phlix.example.com/privkey.pem;
     location / {
-        proxy_pass http://127.0.0.1:32400;
+        proxy_pass http://127.0.0.1:8096;
     }
 }
 ```
 
 ### 3. Firewall — only expose what is needed
 
-Default: expose 32400 (HTTP API) + 1900 (DLNA, optional). Block everything else from ingress.
+Default: expose 8096 (HTTP API) + 1900 (DLNA, optional). Block everything else from ingress.
 
 ```bash
 # Allow only HTTP and optional DLNA
-ufw allow 32400/tcp comment "Phlix HTTP API"
+ufw allow 8096/tcp comment "Phlix HTTP API"
 ufw allow 1900/udp comment "DLNA discovery (optional)"
 ufw enable
 ```
@@ -173,11 +173,11 @@ The server validates Hub JWTs using the Hub's JWKS endpoint — no shared secret
 
 ---
 
-### 2. Port 32400 exposed without TLS
+### 2. Port 8096 exposed without TLS
 
 **Symptom:** Login credentials, session tokens, and media streaming data are visible in clear text on the network.
 
-**Cause:** No TLS-terminating reverse proxy in front of port 32400; direct HTTP access allowed.
+**Cause:** No TLS-terminating reverse proxy in front of port 8096; direct HTTP access allowed.
 
 **Fix:** Configure a TLS-terminating reverse proxy (nginx, Caddy, or Traefik). Force all clients to use HTTPS. Revoke affected sessions and force re-authentication.
 

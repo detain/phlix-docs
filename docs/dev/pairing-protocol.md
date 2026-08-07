@@ -121,8 +121,8 @@ The server **self-hosts** its JWKS. This is the canonical and preferred
 approach — it avoids the hub having to store and proxy keys.
 
 ```
-https://<server-hostname>:32400/.well-known/jwks.json
-https://<server-hostname>:32400/.well-known/jwks.json?kty=OKP&alg=Ed25519
+https://<server-hostname>:8096/.well-known/jwks.json
+https://<server-hostname>:8096/.well-known/jwks.json?kty=OKP&alg=Ed25519
 ```
 
 The path `/.well-known/jwks.json` is **always relative to the server's
@@ -255,6 +255,14 @@ Content-Type: application/json
 | `public_keys` | `object` | Yes | JWK of the server's Ed25519 public key (kid references current active key) |
 | `hostname_candidates` | `list<string>` | Yes | Hostnames/IPs the server believes it is reachable at. Hub uses the first publicly reachable one; falls back to relay |
 | `protocol_version` | `string` | Yes | Fixed at `"v1"`. Hub validates this header value |
+
+> **Why `:32400` in the candidates but `:8096` for JWKS.** The LAN, mDNS and
+> public candidates are built by `PortForwardService::discoverHostnameCandidates()`
+> from the **port-forwarding** port (`PHLIX_EXTERNAL_PORT`, default `32400`), not
+> from the port the HTTP server binds (`config/server.php` `server.port`, default
+> `8096`). With both defaults left alone the advertised candidates point at a port
+> nothing is listening on — set `PHLIX_EXTERNAL_PORT` to match `server.port`. See
+> [Environment variables](/reference/env-vars).
 
 ### Hub Validation on Claim Request
 

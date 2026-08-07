@@ -104,7 +104,7 @@ This is non-destructive for items still sitting at their recorded path. It is **
 For **metadata** that changed shape between releases, a rescan is the wrong tool: it does not re-fetch metadata for rows that are already indexed. Queue a forced re-match instead, which re-resolves items that already carry metadata:
 
 ```bash
-curl -X POST http://localhost:32400/api/v1/libraries/{id}/refresh-metadata \
+curl -X POST http://localhost:8096/api/v1/libraries/{id}/refresh-metadata \
   -H "Authorization: Bearer $ADMIN_TOKEN"
 ```
 

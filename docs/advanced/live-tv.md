@@ -248,7 +248,7 @@ du -sh /var/recordings/* | sort -rh | head -20
 
 ```bash
 # Check the Live TV tuner status
-curl http://localhost:32400/api/v1/livetv/tuners
+curl http://localhost:8096/api/v1/livetv/tuners
 
 # Look for a tuner that was busy (status: recording) during the missed show's time slot
 ```

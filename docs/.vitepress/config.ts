@@ -364,5 +364,24 @@ export default defineConfig({
     }
   },
   cleanUrls: false,
+  // `docs/old/` is a scratch archive of superseded planning notes. It is
+  // gitignored (.gitignore:9) and untracked, so `actions/checkout` never
+  // materialises it and the PUBLISHED site has never contained those pages —
+  // this exclusion is therefore not a fix to what ships.
+  //
+  // What it does fix is the local-vs-CI divergence. On a developer checkout the
+  // two files are present, VitePress happily builds them, and every locally
+  // measured figure silently disagrees with CI: 159 pages locally vs 157 in a
+  // clean checkout, with the anchor gate's link corpus inflated to match. That
+  // gap has already cost review time, because a local corpus number cannot be
+  // compared against the CI one. Excluding the directory makes a local
+  // `npm run docs:build` produce the same corpus CI does.
+  //
+  // Scoped deliberately to `old/**` only. `archive/` sits at the repository
+  // root, outside VitePress's `docs` srcDir, so it is already unreachable by
+  // the build and needs no exclusion. No live page links into `old/**`
+  // (verified against both the markdown source and the emitted HTML), so
+  // excluding it creates no dead links for the anchor gate to trip over.
+  srcExclude: ['old/**'],
   ignoreDeadLinks: false
 })

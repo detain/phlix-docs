@@ -83,5 +83,12 @@ itself block a merge.
 
 Doc PRs are welcome! Please keep changes focused on the markdown content in `docs/`.
 
+Authoring conventions — sidebar registration, section landing-page keys, the
+anchor-slug rules above, and the OpenAPI-sibling convention for pages under
+`docs/reference/api/` — are kept in
+[`.claude/rules/docs-authoring.md`](.claude/rules/docs-authoring.md). That file
+is tracked deliberately: it is repo knowledge, not per-machine agent config.
+The rest of `.claude/` stays ignored.
+
 For developer docs, see the [Developer Documentation](https://detain.github.io/phlix-docs/dev/architecture-server).
 For hub admin guides, see the [Hub Admin Documentation](https://detain.github.io/phlix-docs/hub-admin/install).

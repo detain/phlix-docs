@@ -3,6 +3,12 @@
 > Developer build spec for the Phlix Windows desktop app — Electron + Vue 3.
 > For end-user install and setup, see [Windows Desktop App](/clients/windows).
 
+## Minimum Server Version
+
+**Phlix Media Server 1.1.0** or later is required. All key client features (skip-intro markers, SyncPlay groups, media facets, schema-driven settings) depend on server 1.1.0 or later.
+
+> **Hub relay limitation:** The Hub relay supports DELETE but not PUT — this is a server-side gap; a future server release will add PUT support.
+
 ## Table of Contents
 
 1. [Architectural Rule](#1-architectural-rule)

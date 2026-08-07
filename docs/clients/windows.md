@@ -5,6 +5,12 @@
 > [!TIP]
 > The Phlix Windows app is a full-featured Electron desktop client with system tray integration and media key support. Download the installer, run it, enter your server URL, and start streaming. No admin privileges required for per-user installs.
 
+## Requirements
+
+- **Phlix Media Server 1.1.0** or later required
+- **Key features:** skip-intro markers (server 1.1.0+), SyncPlay groups (1.1.0+), media facets (1.1.0+)
+- **Hub relay limitation:** Hub relay supports DELETE but not PUT — this is a server-side gap; a future server release will add PUT support
+
 ## Install / Store Links
 
 - **Installer (.exe):** [github.com/detain/phlix-windows-client/releases](https://github.com/detain/phlix-windows-client/releases) — download the latest `.exe` installer

@@ -477,14 +477,21 @@ so each can be decorated or replaced in tests and forks:
 | `Phlix\Plugins\PluginLoader`                      | Public orchestrator                                   | Avoid subclassing — wrap with a façade if you need new operations.|
 | `Phlix\Common\Container\Providers\PluginsProvider`| Container wiring                                      | Append your own provider to the `ContainerFactory` stack.         |
 
-The `PluginsProvider` reads three env vars at provider-register time:
+The `PluginsProvider` reads two env vars at provider-register time:
 
 - `PHLIX_PLUGINS_COMPOSER_TIMEOUT` — integer seconds, default
-  `ComposerRunner::DEFAULT_TIMEOUT_SECONDS`.
+  `ComposerRunner::DEFAULT_TIMEOUT_SECONDS` (120).
 - `PHLIX_PLUGINS_REQUIRE_SIGNATURE` — truthy strings (`1`, `true`,
   `yes`, `on`) make `SignatureVerifier` reject unsigned plugins.
-- The plugins base directory comes from `appConfig['plugins_base_dir']`
-  with a default of `var/plugins/`.
+
+(The plugins base directory is **not** an env var — it comes from
+`appConfig['plugins_base_dir']`, defaulting to `var/plugins/`.)
+
+The loader itself reads one more, outside the provider:
+
+- `PHLIX_PLUGINS_ALLOW_UNVERIFIED` — truthy strings let
+  `PluginLoader::assertVerifiedOrOverride()` install a remote source whose
+  catalog entry has no pinned artifact `sha256`. Unset means refuse.
 
 When you add a new env var that the loader honours, document it both
 here and in `docs/reference/env-vars.md`.

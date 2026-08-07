@@ -87,15 +87,18 @@ the music scanner only. Use `rescan` after an ARR **adds, renames or deletes** a
 file, and `match-metadata` when an item is **unmatched**.
 :::
 
-::: danger An ARR that MOVES a movie file without renaming it loses the item
+::: tip An ARR that MOVES a movie file without renaming it is handled (S158)
 Radarr's "Movie Editor → root folder change" and any other operation that relocates
-a file while keeping its filename hits a scanner defect (**S158**): the rescan
-matches the file to its existing row by a path-independent canonical key, reuses
-that row **without updating its `path`**, and the prune in the same run then deletes
-it — cascading the watch history and resume position. The movie reappears only on
-the *next* rescan, as a new row with a **new UUID**. Episodes are unaffected. See
-[Moving a file](../admin/library-management#moving-a-file); there is no way to avoid
-it today, so prefer letting an ARR rename-in-place over relocating files.
+a file while keeping its filename is safe: the rescan matches the file to its
+existing row by a path-independent canonical key, and the prune in the same run
+**re-points that row at the new path** rather than deleting it. The UUID, watch
+history and resume position survive. Episodes were never affected.
+
+Two caveats. Run a **Rescan** rather than a standalone **Prune** afterwards — a
+prune does not scan, so it has nothing to match against and will delete the row.
+And an ARR operation that **renames as well as moves** produces a different
+canonical key, so it still lands as a new row with a new UUID. See
+[Moving a file](../admin/library-management#moving-a-file).
 :::
 
 ::: warning `refresh-metadata` will not correct a wrong match

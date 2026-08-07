@@ -172,16 +172,17 @@ files are **added or deleted**, and the wrong tool for a **wrong or missing
 match** — it will not re-parse the filename or re-fetch metadata for a row that
 already exists.
 
-::: danger A rescan handles a MOVED file badly
-Renaming a movie file inserts a new row (new UUID, no watch state) and the prune
-removes the old one. **Moving** a movie file without renaming it is worse: the
-scanner matches it to the existing row by a canonical key built from title and year
-alone, reuses that row **without updating its `path`**, and the prune in the same
-rescan then deletes it — cascading its watch history and resume position. The movie
-reappears only on the *next* rescan, as a new row with a new UUID. Episodes are
-unaffected. There is no way to avoid this today; read
-[Moving a file](/admin/library-management#moving-a-file) before reorganising
-storage. Tracked as **S158**.
+::: tip A rescan handles a MOVED file, but not a RENAMED one (S158)
+**Renaming** a movie file inserts a new row (new UUID, no watch state) and the prune
+removes the old one — the new name is a different canonical key, so nothing links
+the two. **Moving** a movie file without renaming it is safe: the scanner matches it
+to the existing row by a canonical key built from title and year alone, and the prune
+in the same rescan re-points that row at the new path instead of deleting it, keeping
+the UUID, watch history and resume position. Episodes were never affected.
+
+After reorganising storage run a **Rescan**, not a standalone **Prune** — a prune
+does not scan and so deletes the rows it cannot match. See
+[Moving a file](/admin/library-management#moving-a-file).
 :::
 
 For a match problem, which remedy you want depends on which problem it is:

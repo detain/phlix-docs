@@ -200,14 +200,18 @@ A rescan is **non-destructive** for items whose file is still where the catalogu
 says it is — it does not delete them, their watch history or their fetched
 metadata.
 
-::: danger It is destructive for a file that was MOVED
+::: tip A file that was MOVED keeps its identity (S158)
 A parent-less item — `movie`, `video`, `photo`, `book`, `audiobook` — whose file
-was **moved without being renamed** is matched by a path-independent canonical key,
-so the scanner reuses the existing row and never updates its `path`. The prune in
-the same job then deletes that row, cascading its `user_item_data`. The item
-returns on the *next* rescan as a new row with a **new UUID** and no watch state.
-Episodes are unaffected. Full detail and the (absent) alternatives:
-[Moving a file](../admin/library-management#moving-a-file). Tracked as **S158**.
+was **moved without being renamed** is matched by a path-independent canonical key.
+The scan records the new location and the prune in the same job **re-points the
+existing row at it instead of deleting it**, so the item keeps its UUID, its
+`user_item_data` (favorite, rating, like level, watched) and its resume position.
+Episodes were never affected.
+
+Two cases still lose the row: a move that also **renames** the file (a different
+name is a different canonical key), and the standalone `prune` job, which does not
+scan and so has no candidate to adopt. Full detail:
+[Moving a file](../admin/library-management#moving-a-file).
 :::
 
 ::: warning The "re-read every file" half applies to music libraries only
@@ -542,8 +546,9 @@ response (and on the favorites list below); browse/list rows do not carry it.
 
 - `favorite` (`boolean`) — whether the current user has favorited the item.
 - `rating` (`int 1-10 | null`) — the current user's personal rating (`null` when unset).
-- `like_level` (`int 0-3`) — the current user's multi-level "Love" value
-  (`0` = not loved … `3` = most loved). **Since:** 0.57.0.
+- `like_level` (`int -2..2`) — the current user's **thumbs** value on a signed
+  axis: `-2` = strongly dislike, `-1` = dislike, `0` = not set, `1` = like,
+  `2` = love. **Since:** 0.57.0.
 
 `user_data` is `null` when the request is unauthenticated; when authenticated
 with no stored row it defaults to `{ "favorite": false, "rating": null, "like_level": 0 }`.
@@ -642,7 +647,7 @@ Clear the current user's personal rating.
 
 ### PUT /api/v1/media/`{id}`/like
 
-Set the current user's multi-level **Love** value for the item.
+Set the current user's **thumbs** value for the item.
 
 **Since:** 0.57.0
 
@@ -652,13 +657,18 @@ Set the current user's multi-level **Love** value for the item.
 ```json
 { "level": 2 }
 ```
-- `level` (`int 0-3`, **required**) — `0` = not loved … `3` = most loved. The
-  `level` field is required (there is no "clear" / null branch — set `0` to unset).
-  The 0-3 range is enforced in PHP (no DB `CHECK` constraint), and `like_level` is a
+- `level` (`int -2..2`, **required**) — the signed thumbs axis: `-2` = strongly
+  dislike, `-1` = dislike, `0` = not set, `1` = like, `2` = love. The `level`
+  field is required (there is no "clear" / null branch — set `0` to unset).
+  The range is enforced in PHP (`UserItemDataRepository::MIN_LIKE`/`MAX_LIKE`);
+  the `TINYINT` column carries no DB `CHECK` constraint. `like_level` is a
   **separate axis** from `favorite` (boolean) and `rating` (1-10).
 
 **Response 200:** `{ "message": "Love level saved" }`
-**Response 400:** missing/non-integer `level`, or a value outside `0-3`
+**Response 400:** two distinct bodies — a missing/non-integer `level` returns
+`{"error": "level must be an integer between -2 and 2"}`; an integer outside
+`-2..2` passes that guard and is rejected by the repository with
+`{"error": "like_level must be between -2 and 2 (inclusive), got 3"}`
 **Response 401:** unauthenticated
 **Response 404:** media item not found
 

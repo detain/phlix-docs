@@ -90,10 +90,16 @@ This section describes how the shipping federation feature is built.
 
 ### Hub-to-hub transport
 
-Leaf hubs connect to the master over a persistent **WebSocket** tunnel served by `FederationWorker` on **port 8804**. The inbound path is `/relay/federation/{hub_id}`, and the incoming `hub_id` is validated against the `federation_peers` table before the connection is accepted. The tunnel reuses the existing binary relay frame protocol.
+Leaf hubs connect to the master over a persistent **WebSocket** tunnel served by `FederationWorker` on **port 8805** (`FederationWorker::DEFAULT_PORT`). The inbound path is `/relay/federation/{hub_id}`, and the incoming `hub_id` is validated against the `federation_peers` table before the connection is accepted. The tunnel reuses the existing binary relay frame protocol.
+
+> **8805, not 8804.** `8804` is the **SyncPlay** relay worker. The two are easy to
+> transpose — `FederationWorker`'s own docblock carried exactly this error from the
+> file's introduction until S66, and this page carried it until S270. The hub's
+> port map is in `phlix-hub/docs/websockets.md`: `8802` relay, `8803` client relay,
+> `8804` SyncPlay, `8805` hub federation.
 
 ```text
- ┌─────────────┐   WebSocket federation tunnel (port 8804)   ┌─────────────┐
+ ┌─────────────┐   WebSocket federation tunnel (port 8805)   ┌─────────────┐
  │ Master Hub  │◄───────────────────────────────────────────│  Leaf Hub A │
  │             │   /relay/federation/{hub_id}                │             │
  │ - peer reg  │   - HUB_HELLO handshake                     │ - shares to │
@@ -186,7 +192,7 @@ DELETE /api/v1/me/federation/admin-delegations/{id}   # revoke a delegation
 
 The federation UI is the **Federation page** at `/app/federation` (`FederationPage`), reachable from the hub's top navigation. A legacy server-rendered page also exists at `/federation` (and `/federation/shares`). For automation, use the `/api/v1/me/federation/*` API directly.
 
-The master hub additionally accepts hub-to-hub WebSocket connections at `/relay/federation/{hub_id}` (handled by `FederationWorker` on port 8804). That endpoint is for hub-to-hub traffic, not for operator or browser use.
+The master hub additionally accepts hub-to-hub WebSocket connections at `/relay/federation/{hub_id}` (handled by `FederationWorker` on port 8805). That endpoint is for hub-to-hub traffic, not for operator or browser use.
 
 ---
 
@@ -278,9 +284,9 @@ Federating two hubs does **not** merge their user accounts. There is no cross-hu
 
 **Symptom:** Two hubs are configured but the federation link never establishes.
 
-**Cause:** Peers are added manually with public keys, and the master validates the leaf's key on the `HUB_HELLO` handshake. A missing peer record, a wrong public key, or the master's federation port (8804) being unreachable will all prevent the link.
+**Cause:** Peers are added manually with public keys, and the master validates the leaf's key on the `HUB_HELLO` handshake. A missing peer record, a wrong public key, or the master's federation port (8805) being unreachable will all prevent the link.
 
-**Fix:** Verify the peer exists on **both** hubs and that each side has the other's correct public key (compare against `GET /api/v1/me/federation/hub-config`). Ensure the leaf can reach the master's `/relay/federation/{hub_id}` endpoint on port 8804.
+**Fix:** Verify the peer exists on **both** hubs and that each side has the other's correct public key (compare against `GET /api/v1/me/federation/hub-config`). Ensure the leaf can reach the master's `/relay/federation/{hub_id}` endpoint on port 8805.
 
 ### Server owner tries to claim to two hubs simultaneously (first claim wins)
 

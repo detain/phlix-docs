@@ -77,10 +77,11 @@ sudo -u phlix php bin/phlix library:scan {libraryId} --rescan 2>&1
 This runs the scan **synchronously** in your shell and prints errors that may not
 appear in the log.
 
-⚠ `--rescan` also runs the prune, so it is not a read-only diagnostic. Do not reach
-for it as a debugging step straight after relocating media: a top-level item whose
-file was moved without being renamed is deleted rather than re-indexed — see
-[Moving a file](../admin/library-management#moving-a-file). A plain
+⚠ `--rescan` also runs the prune, so it is not a read-only diagnostic — it will
+delete rows whose files are genuinely gone. It is safe after relocating media,
+though: a top-level item whose file was moved without being renamed is re-pointed at
+its new path rather than deleted (see
+[Moving a file](../admin/library-management#moving-a-file)). A plain
 `library:scan {libraryId}` does not prune.
 
 What `--rescan` buys you depends on the library type. On a **music** library it

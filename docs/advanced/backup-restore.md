@@ -198,16 +198,17 @@ curl -X POST http://localhost:8096/api/v1/libraries/{id}/rescan \
 
 If the items are there but *metadata images* are missing, a rescan will not help — see [Failure 3](#failure-3-metadata-not-re-fetched-after-restore) below.
 
-::: danger Do not rescan if you restored the media to a different path
+::: tip Restoring media to a different path is handled by a rescan (S158)
 A parent-less item — `movie`, `video`, `photo`, `book`, `audiobook` — whose file now
-sits at a different path under the **same filename** is not re-indexed there. The
-scanner reuses the old row by a path-independent canonical key without updating its
-`path`, and the prune in the same rescan then deletes that row together with its
-watch history and resume position. A second rescan re-creates it with a **new UUID**
-and no watch state, which defeats the point of restoring the backup. Episodes are
-unaffected. Restore the media to its **original paths** before rescanning; if you
-cannot, read [Moving a file](../admin/library-management#moving-a-file) — there is no
-workaround today. Tracked as **S158**.
+sits at a different path under the **same filename** is matched by a path-independent
+canonical key, and the prune in the same rescan re-points the existing row at the new
+location. The UUID, watch history and resume position survive the relocation, so the
+restored backup keeps its value. Episodes were never affected.
+
+Run a **Rescan**, not a standalone **Prune** — a prune does not scan and will delete
+the rows instead. If the restore also changed **filenames**, those items will come
+back as new rows with new UUIDs; restore to the original names where you can. See
+[Moving a file](../admin/library-management#moving-a-file).
 :::
 
 ---

@@ -138,8 +138,21 @@ Notes on the mint body:
 - Unknown scope values are **dropped**, not rejected. A list with nothing known
   left in it is a `400` (`mcp_token.no_valid_scopes`) rather than a token that
   authenticates but authorises nothing.
-- **Omitting `scopes` entirely grants every scope** the hub offers. Send the key
-  explicitly if you want a narrow token.
+- **Any `scopes` value that is not a JSON array or object grants every scope**
+  the hub offers, including the write scope `mcp:playback:control`. The check is
+  `is_array($rawScopes)` in `McpTokenController::create()`, so omitting the key,
+  sending `null`, a bare string, a number or a boolean all fall through to "all
+  scopes" — `"scopes": "mcp:library:read"` asks for one scope and gets four.
+  Only an array (or a JSON object, which decodes to a PHP array) is filtered
+  against the known list. Note the asymmetry with the bullet above: a typo
+  *inside* an array fails **closed** with a `400`, but a wrong *type* for the
+  array itself fails **open**. Always send `"scopes": [ ... ]`.
+
+  Any authenticated hub user can mint such a token — `POST /api/v1/me/mcp-tokens`
+  is gated by `AuthMiddleware` alone, not admin-only. The hub's own token UI
+  always sends an array, so the fail-open path is reachable only from a direct
+  API call. An over-broad token is still bounded by ownership: scope is the
+  second gate, and the first is that the account must already own the server.
 - Revoking an unknown id, an already-revoked token, or somebody else's token all
   return the same `404` (`mcp_token.not_found`) — they are deliberately
   indistinguishable so the endpoint cannot be used to probe for other users'

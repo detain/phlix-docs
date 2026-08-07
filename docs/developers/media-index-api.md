@@ -60,6 +60,24 @@ GET /api/v1/media/index?field=name&order=asc&libraryId=<uuid>&limit=50&offset=0
 
 **`offset` invariant:** `buckets[n].offset = sum(buckets[0].count … buckets[n-1].count)`. The client uses this value to call `ensureRange(offset, offset + limit)` when the user clicks a bucket — jumping to the correct page of items.
 
+::: warning The invariant only lines up with the grid for some fields
+An offset is only useful if the bucket ordering matches the grid's `ORDER BY`.
+That holds for `field=name`, where buckets group on `UPPER(LEFT(sort_title,1))` and
+the grid orders on `sort_title, name`. It does **not** hold for:
+
+- **`field=rating`** — the grid orders by `rating_score DESC` while the buckets
+  group and order on `content_rating`. These are unrelated orderings.
+- **`field=date_added`** — the buckets are emitted newest-first and only reversed
+  when `order=desc`, so both directions are misaligned.
+- **rows with no value** — items with `year <= 0`, `runtime <= 0` or a blank genre
+  are dropped from the buckets but still occupy rows in the grid, so every offset
+  after them is short by their count.
+- **divergent filters** — `minRating` applies to the grid only, and profile tag
+  filtering removes rows *after* `LIMIT`/`OFFSET` has been applied.
+
+Treat a jump on those fields as approximate.
+:::
+
 ### Bucket Label Formats by Field
 
 | Field | `key` example | `label` example | Notes |
@@ -85,7 +103,19 @@ The `offset` field is the critical contract between server and client. Clicking 
 ensureRange(240, 240 + limit)
 ```
 
-This fills the grid starting at row 240 — the exact position of the first item whose name begins with C. The alignment is verified by server↔rail integration tests; if offsets ever drift from actual DB offsets, those tests fail.
+This fills the grid starting at row 240 — the exact position of the first item whose name begins with C.
+
+::: warning The alignment is not covered by any test
+The offset **arithmetic** — that each bucket's `offset` is the running sum of the
+preceding buckets' `count`s — is covered by unit tests
+(`tests/Unit/Media/Library/IndexBucketsTest.php`,
+`tests/Unit/Server/WebPortal/WebPortalRouterMediaTest.php`). But those run against
+hand-written counts and a mocked `ItemRepository`: **no test compares a bucket
+offset to an item's real row position in `media_items`**, so drift between
+`ItemRepository::valueBuckets()`'s `ORDER BY` and the grid query's `ORDER BY` would
+not be caught automatically. (Earlier revisions of this page claimed
+"server↔rail integration tests" verified it; no such test exists.)
+:::
 
 ## Backward Compatibility
 
@@ -99,4 +129,4 @@ The endpoint is implemented in `WebPortalRouter::getMediaIndex()` and uses:
 2. `IndexBuckets::build()` — transforms raw distinct values into typed bucket objects (letter/decade/rating/range/relative)
 3. `IndexBuckets::withOffsets()` — computes cumulative row offsets from bucket counts
 
-The `ItemRepository` query reuses the same `buildFilters()` logic as `GET /api/v1/media`, so filters (search, genres, ratings, year range, etc.) apply identically to both endpoints.
+The `ItemRepository` query reuses the same `buildFilters()` logic as `GET /api/v1/media`, so most filters (search, genres, ratings, year range, etc.) apply to both endpoints. Two do **not**: `minRating` is applied to the grid query only, and profile tag filtering runs in PHP on the grid's result page after `LIMIT`/`OFFSET`. Both make the bucket counts larger than the rows the grid actually returns.

@@ -1,25 +1,26 @@
 # Remote Access
 
-The Remote Access page (`/admin/remote-access`) in the admin console provides four
-collapsible sections for managing the server's remote access capabilities: **Hub
-Pairing** (connection to a Phlix Hub instance), **Subdomain** (claimable HTTPS
+The Remote Access page (`/app/admin/remote-access`) in the admin console provides
+five collapsible sections for managing the server's remote access capabilities:
+**Hub Pairing** (connection to a Phlix Hub instance), **Subdomain** (claimable HTTPS
 endpoint via Hub), **Relay Tunnel** (fallback connectivity when direct connection
-is unavailable), and **Port Forward** (UPnP/NAT-PMP port mapping on the LAN).
+is unavailable), **Port Forward** (UPnP/NAT-PMP port mapping on the LAN), and
+**Network Health**.
 
 ---
 
 ## Access
 
-Navigate to **`/admin/remote-access`** in the admin console sidebar (entry:
+Navigate to **`/app/admin/remote-access`** in the admin console sidebar (entry:
 **Remote Access**, positioned in the Admin section). Requires admin authentication.
-All four sections are collapsed by default on page load; click a section heading
+**Hub Pairing** starts expanded; the rest start collapsed. Click a section heading
 to expand it.
 
 ---
 
 ## What it does
 
-The page renders four independent collapsible sections. Each shows a summary
+The page renders five independent collapsible sections. Each shows a summary
 line (e.g. "Paired (srv-123)" or "Not paired") in the collapsed header and a
 detail card in the expanded body.
 
@@ -115,7 +116,7 @@ POST /api/v1/admin/remote/hub/heartbeat
 #### Get relay candidates
 
 ```http
-GET /api/v1/admin/remote/hub/relay-candidates
+GET /api/v1/admin/remote/portforward/candidates
 ```
 
 ```json
@@ -180,6 +181,13 @@ POST /api/v1/admin/remote/subdomain/release
 
 #### Update subdomain
 
+::: danger This endpoint does not exist
+There is no `PUT .../subdomain/update` route, and no `PUT` method on the subdomain
+group at all. The three real subdomain endpoints are `GET /subdomain/status`,
+`POST /subdomain/claim` and `POST /subdomain/release` — to change a subdomain,
+release the current one and claim the new one.
+:::
+
 ```http
 PUT /api/v1/admin/remote/subdomain/update
 ```
@@ -191,6 +199,11 @@ Body: `{ "subdomain": "newserver" }`.
 ```
 
 #### Verify subdomain DNS
+
+::: danger This endpoint does not exist
+There is no `POST .../subdomain/verify` route. DNS verification is not exposed as
+an admin endpoint.
+:::
 
 ```http
 POST /api/v1/admin/remote/subdomain/verify
@@ -519,11 +532,13 @@ GET /api/v1/admin/remote/portforward/status
 
 #### Toggle port-forward
 
-```http
-POST /api/v1/admin/remote/portforward/toggle
-```
+There is no single `toggle` route — enable and disable are separate endpoints and
+neither takes a body:
 
-Body: `{ "enabled": true }`.
+```http
+POST /api/v1/admin/remote/portforward/enable
+POST /api/v1/admin/remote/portforward/disable
+```
 
 ```json
 { "success": true, "message": "Port forwarding enabled." }
@@ -553,27 +568,31 @@ operation fails at the network layer.
 
 | File | Purpose |
 |------|---------|
-| `src/Server/Http/Controllers/Admin/AdminHubController.php` | 16 REST endpoints covering hub, subdomain, relay, and portforward operations |
-| `src/Server/Core/Application.php` | Wires all `remote/*` routes under `AdminMiddleware` via `loadRemoteAccessRoutes()` |
+| `src/Server/Http/Controllers/Admin/AdminHubController.php` | 17 REST endpoints covering hub, subdomain, relay, and portforward operations |
+| `src/Server/Core/Application.php` | Wires all `remote/*` routes under `AdminMiddleware` via `loadHubAdminRoutes()` |
 
 ### Frontend
 
+The React `admin-ui/` tree was **decommissioned in C8.1** and no longer exists.
+The admin console is the Vue SPA in the `phlix-ui` package:
+
 | File | Purpose |
 |------|---------|
-| `admin-ui/src/api/remoteAccess.ts` (`RemoteAccessApi`) | Typed wrappers for all 16 endpoints; throws `ApiError` on non-2xx |
-| `admin-ui/src/api/remoteAccess.test.ts` | 22 unit tests for `RemoteAccessApi` (100% coverage) |
-| `admin-ui/src/pages/RemoteAccessPage.tsx` | React page — 4 collapsible sections with expand/collapse state machine |
-| `admin-ui/src/pages/RemoteAccessPage.test.tsx` | 14 component tests covering all render states, expand/collapse, and action flows |
-| `admin-ui/src/styles.css` | Remote access page styles (`.page--remote-access`, section and card styles) |
+| `phlix-ui/src/api/admin/remoteAccess.ts` (`AdminRemoteAccessApi`) | Typed wrappers for all 17 endpoints; throws `ApiError` on non-2xx |
+| `phlix-ui/src/api/admin/remoteAccess.test.ts` | 18 unit tests for `AdminRemoteAccessApi` |
+| `phlix-ui/src/pages/admin/RemoteAccessPage.vue` | Vue SFC — 5 collapsible sections |
+| `phlix-ui/src/pages/admin/RemoteAccessPage.test.ts` | 64 component tests covering render states, expand/collapse, and action flows |
+
+There is no shared stylesheet entry — the page's styles live in the SFC's scoped
+`<style>` block under the `admin-remote__*` BEM prefix.
 
 ### Design notes
 
-- Each section uses `expanded` state (`useState` per section) controlled by
-  clicking the section heading. All sections start collapsed; the Hub Pairing
-  section additionally loads its status data on expand (not on page mount).
-- `useToast()` is destructured as `const { push: pushToast } = useToast()` —
-  the stable `push` reference prevents unnecessary re-renders when
-  `pushToast()` is called from inside a `useCallback`.
+- Expansion is one Vue `ref` map keyed by section, toggled by clicking the section
+  heading. Sections do **not** all start collapsed — Hub Pairing starts expanded.
+  Hub, subdomain, relay and portforward statuses load on mount; only **Network
+  Health** defers its load until the section is expanded.
+- Toasts come from `useToastStore()`, called as `toasts.error(...)`.
 - The Relay Tunnel controls read/persist real cross-process state (see
   [Relay Tunnel](#relay-tunnel)): Status shows the persisted connect/enrolled/
   kill-switch state plus the last connect-error reason; Enable/Disable persist the
@@ -583,21 +602,34 @@ operation fails at the network layer.
   tunnel is not connected).
 - Port-forward toggle returns HTTP `500` with `{ success: false }` when the
   network operation fails, which the page surfaces as an error toast.
-- All 16 endpoints are also documented in the OpenAPI spec at
-  `public_html/spec/openapi-admin.yaml`.
+- There is **no** OpenAPI spec for this surface. Earlier revisions of this page
+  cited `public_html/spec/openapi-admin.yaml`; neither that file nor that directory
+  exists. The only OpenAPI document in the estate is `phlix-hub/openapi.yaml`, which
+  covers a different surface.
+
+### The 17 endpoints
+
+All are under `/api/v1/admin/remote` and all sit behind `AdminMiddleware`:
+
+| Group | Endpoints |
+|---|---|
+| Hub (6) | `GET /hub/status`, `POST /hub/pair`, `POST /hub/poll`, `POST /hub/complete`, `POST /hub/unenroll`, `POST /hub/heartbeat` |
+| Subdomain (3) | `GET /subdomain/status`, `POST /subdomain/claim`, `POST /subdomain/release` |
+| Relay (4) | `GET /relay/status`, `POST /relay/enable`, `POST /relay/disable`, `POST /relay/ping` |
+| Port forward (4) | `GET /portforward/status`, `POST /portforward/enable`, `POST /portforward/disable`, `GET /portforward/candidates` |
+
+Two further routes the page consumes are **not** part of that group and are
+unauthenticated: `GET /api/v1/health/relay` and `GET /api/v1/health/network`.
 
 ---
 
 ## Coverage (Vitest)
 
-| File | Statements |
-|------|------------|
-| `src/api/remoteAccess.ts` | **100%** |
-| `src/pages/RemoteAccessPage.tsx` | ≥80% |
-| `src/pages/RemoteAccessPage.test.tsx` | **100%** (14/14) |
-
-Overall SPA: 36 passing tests covering all 16 API methods and all page
-render, expand/collapse, and action states.
+**82 passing tests** covering all 17 API methods and the page's render,
+expand/collapse and action states — 18 in
+`phlix-ui/src/api/admin/remoteAccess.test.ts` and 64 in
+`phlix-ui/src/pages/admin/RemoteAccessPage.test.ts`. No coverage threshold is
+pinned for this page, so no percentage is quoted here.
 
 ---
 

@@ -62,8 +62,11 @@ paths:
         or empty `url` yields `plugin.catalog.url.required`. The added source is
         persisted as a `plugins.catalog.sources` override in `server_settings`.
 
-        Adding a URL that duplicates the default or an existing source is a
-        no-op (it still returns `200` with the unchanged list).
+        Adding a URL that canonically duplicates the built-in default or a
+        source already in the list is **rejected with `409`** and the code
+        `plugin.catalog.url.duplicate`. URLs are compared after normalisation,
+        so `.../phlix-plugins`, `.../phlix-plugins/` and `.../phlix-plugins.git`
+        all count as the same catalog.
       operationId: addPluginCatalogSource
       requestBody:
         required: true
@@ -88,6 +91,14 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '409':
+          description: |
+            The URL canonically duplicates the built-in default catalog or a
+            source already in the list (`plugin.catalog.url.duplicate`).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorWithFields'
     delete:
       summary: Remove an extra catalog source
       description: |
@@ -427,7 +438,17 @@ components:
         default_source:
           type: string
           format: uri
-          description: The immutable default catalog URL (cannot be removed).
+          description: |
+            The default catalog URL. It cannot be removed through the API —
+            `DELETE /plugins/catalog/sources` ignores it and it is always first
+            in `sources`. It is **not** a hard-coded constant, though:
+            `PluginCatalogService::defaultSource()` resolves it from the
+            `plugins.catalog.default_source` setting (`config/plugins.php`
+            under `catalog.default_source`, or a `server_settings` override),
+            falling back to a built-in URL only when that is unset. No admin
+            endpoint exposes the key — `PUT /admin/settings` rejects it,
+            because it is absent from `server-settings.schema.json` — so
+            changing it requires filesystem or database access.
         sources:
           type: array
           description: Every configured source — the default first, then any operator-added extras.
@@ -542,8 +563,8 @@ components:
         `Error` plus a `fields` array naming the offending input(s). The
         install pipeline (`POST /plugins/install`, `422`) emits per-field
         objects; the catalog-source endpoints (`/plugins/catalog/sources`,
-        `400`) emit a flat list of field names, e.g. `{ "error": "...",
-        "code": "plugin.catalog.url.invalid", "fields": ["url"] }`.
+        `400` and `409`) emit a flat list of field names, e.g. `{ "error":
+        "...", "code": "plugin.catalog.url.invalid", "fields": ["url"] }`.
       allOf:
         - $ref: '#/components/schemas/Error'
         - type: object

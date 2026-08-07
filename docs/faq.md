@@ -19,7 +19,7 @@ See [/advanced/hardware-transcoding](/advanced/hardware-transcoding) for hardwar
 1. Check the file naming convention. Phlix matches movies by `MovieName (Year).ext` and TV by `ShowName S01E01.ext`. See [/libraries/movies](/libraries/movies) and [/libraries/tv-shows](/libraries/tv-shows) for exact patterns.
 2. **Fix one title:** use the per-item **Match metadata** action (admin-only, on the media card's ⋯ menu and on the detail page hero). It searches TMDB and applies the result you pick, and for a series it enriches the whole season/episode subtree. This is the most reliable remedy for a single wrong or missing match. See [Fixing a single item's match](/admin/library-management#fixing-a-single-items-match).
 3. **Fix a whole library:** `POST /api/v1/libraries/{id}/match-metadata` queues a background match over every item that has **no** metadata yet. It is the tool for *unmatched* items; it will **not** correct an item that matched the *wrong* title, and neither will `refresh-metadata` on its own — see [Fixing a wrong match](/admin/library-management#fixing-a-wrong-match). Both jobs visit `movie`, `video` and `series` rows only. See [Enqueue a metadata match](/admin/library-management#enqueue-a-metadata-match).
-4. If the filename itself is wrong, rename it to match the expected pattern first — the matcher works from the title and year parsed out of the path, so nothing downstream can recover from a name it cannot parse. After renaming, run a **Rescan** (**Admin → Libraries → Rescan**, or `php bin/phlix library:scan {libraryId} --rescan`; `php bin/phlix library:list` prints the ids) so the renamed file is indexed as a new row, then run the metadata match from step 3. Note that this leaves the old row to be pruned, so the item's watch history and resume position do not survive the rename. Rename in place — do **not** also move the file, or the item disappears for a rescan; see [Moving a file](/admin/library-management#moving-a-file).
+4. If the filename itself is wrong, rename it to match the expected pattern first — the matcher works from the title and year parsed out of the path, so nothing downstream can recover from a name it cannot parse. After renaming, run a **Rescan** (**Admin → Libraries → Rescan**, or `php bin/phlix library:scan {libraryId} --rescan`; `php bin/phlix library:list` prints the ids) so the renamed file is indexed as a new row, then run the metadata match from step 3. Note that this leaves the old row to be pruned, so the item's watch history and resume position do not survive the rename. Moving the file at the same time makes no difference to this: a rename is what creates the new row either way; see [Moving a file](/admin/library-management#moving-a-file).
 5. For TV shows, verify season/episode folders are named correctly — nested folders with an `S01E01` file inside a `Season 1` folder are supported.
 
 ::: warning A rescan will not re-match an already-indexed movie or episode
@@ -40,8 +40,9 @@ no metadata-fetching provider for `photo`, `book` or `audiobook` items, and both
 item keeps whatever the scanner wrote when it was first indexed; the only way to
 change it is to **rename** the file (or delete the item) and scan again, which
 creates a **new row** and loses the old row's watch state. **Moving** the file is
-not an alternative — it creates no new row at all and the next rescan prunes the
-existing one; see [Moving a file](/admin/library-management#moving-a-file). See also
+not an alternative — a move without a rename keeps the same canonical key, so the
+rescan simply re-points the existing row at the new path and nothing is re-parsed;
+see [Moving a file](/admin/library-management#moving-a-file). See also
 [what Match metadata skips](/admin/library-management#what-match-metadata-skips).
 :::
 
@@ -99,7 +100,7 @@ sudo -u phlix php bin/phlix library:list                       # get the library
 sudo -u phlix php bin/phlix library:scan {libraryId} --rescan  # one library at a time
 ```
 
-This is non-destructive for items still sitting at their recorded path. It is **not** safe if you moved media files as part of the upgrade — a top-level item whose file moved without being renamed is pruned rather than re-indexed; see [Moving a file](/admin/library-management#moving-a-file). See [/install/upgrade](/install/upgrade) for the full upgrade procedure including migration steps.
+This is non-destructive for items still sitting at their recorded path, and also for items you **moved** as part of the upgrade — a top-level item whose file moved without being renamed is re-pointed at its new path rather than pruned; see [Moving a file](/admin/library-management#moving-a-file). See [/install/upgrade](/install/upgrade) for the full upgrade procedure including migration steps.
 
 For **metadata** that changed shape between releases, a rescan is the wrong tool: it does not re-fetch metadata for rows that are already indexed. Queue a forced re-match instead, which re-resolves items that already carry metadata:
 

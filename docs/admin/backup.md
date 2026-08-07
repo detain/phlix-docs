@@ -5,7 +5,7 @@ description: Server backup management — create, restore, delete, S3 upload, an
 
 # Backup
 
-The **Backup** admin page (`/admin/backup`) manages full server backups containing a MySQL database dump, config files, user data, and SSL certificates. Backups can be stored locally or uploaded to Amazon S3 (or any S3-compatible bucket), with configurable retention and automatic scheduling.
+The **Backup** admin page (`/app/admin/backup`) manages full server backups containing a MySQL database dump, config files, user data, and SSL certificates. Backups can be stored locally or uploaded to Amazon S3 (or any S3-compatible bucket), with configurable retention and automatic scheduling.
 
 > **Destructive operation**: Restore overwrites the current database and all config files. Do not restore onto a running server — stop the server first, restore, then restart.
 
@@ -137,17 +137,33 @@ DELETE /api/v1/admin/backup/{id}
 POST /api/v1/admin/backup/{id}/restore
 ```
 
-Downloads from S3 if needed, verifies SHA-256 checksum, extracts the archive, imports `database.sql` via `mysql`, and restores config files. The operation is atomic — if any step fails, the process aborts and reports the error.
+Downloads from S3 if needed, verifies the SHA-256 checksum, extracts the archive, imports `database.sql` via `mysql`, then copies the archived config files over `config/`.
 
-**Response `200`:**
+::: danger The restore is NOT atomic and there is no rollback
+There is no transaction, no pre-restore snapshot and no compensating action. The
+checksum and extraction steps run before anything is written, so a corrupt archive
+is rejected harmlessly — but once the `mysql` import has run it cannot be undone,
+and a later failure while restoring config files leaves the **database fully
+replaced** and `config/` **partially overwritten**.
+
+Partial config state is the normal path, not just the crash path: the restore
+copies file-by-file and skips past entries whose parent directory it cannot create
+or which fail the containment check, so it can report success having written only a
+subset. **Take your own database and `config/` snapshot before restoring.**
+:::
+
+**Response `200`:** — the backup id is interpolated into the message.
 ```json
-{ "success": true, "message": "Backup restored successfully" }
+{ "success": true, "message": "Backup 'abc123' restored successfully" }
 ```
 
-**Response `500`:**
+**Response `500`:** — note `message` carries the failure category and `error` the
+detail, not the other way round. On a checksum mismatch:
 ```json
-{ "success": false, "message": "Restore failed", "error": "checksum mismatch" }
+{ "success": false, "message": "Checksum mismatch", "error": "Expected <a>, got <b>" }
 ```
+`"Restore failed"` appears as the **`error`** value only when an unexpected
+exception escapes.
 
 > **Warning**: Restore is destructive. Stop the server before restoring.
 
@@ -159,11 +175,11 @@ Downloads from S3 if needed, verifies SHA-256 checksum, extracts the archive, im
 POST /api/v1/admin/backup/{id}/upload-s3
 ```
 
-Uploads the local backup archive to S3. The `is_s3` flag on the backup record updates to `true` after a successful upload.
+Uploads the local backup archive to S3. After a successful upload the `is_s3` flag on the backup record updates to `true` **and `file_path` is replaced with the `s3://` URL** — the local `.tar.gz` is left on disk and its path is no longer recorded anywhere. See [Retention](#retention) for why that matters.
 
 **Response `200`:**
 ```json
-{ "success": true, "message": "Backup uploaded to S3" }
+{ "success": true, "message": "Backup uploaded to S3 successfully" }
 ```
 
 **Response `500`:**
@@ -215,17 +231,17 @@ PUT /api/v1/admin/backup/schedule
 ```json
 {
   "success": true,
-  "message": "Schedule updated",
+  "message": "Schedule updated successfully",
   "data": {
     "auto_backup_interval_days": 7,
-    "retention_count": 10
+    "retention_count": 5
   }
 }
 ```
 
-**Response `400`:**
+**Response `400`:** — the specific rule is in `message`; `error` is the category.
 ```json
-{ "success": false, "error": "retention_count must be at least 1" }
+{ "success": false, "error": "Invalid retention count", "message": "retention_count must be at least 1" }
 ```
 
 ---
@@ -237,9 +253,10 @@ Backup settings are defined in `config/backup.php`:
 ```php
 <?php
 return [
-    'local_path'                => '/var/backups/phlix',
+    'enabled'                   => true, // REQUIRED for automatic backups
+    'local_path'                => '/var/phlix/backups',
     'auto_backup_interval_days' => 7,    // 0 = disabled
-    'retention_count'           => 10,   // keep last N backups
+    'retention_count'           => 5,    // keep last N backups
     's3' => [
         'enabled'    => false,
         'region'     => 'us-east-1',
@@ -252,7 +269,33 @@ return [
 ];
 ```
 
-When `auto_backup_interval_days > 0`, the server schedules backups automatically. The next scheduled time is returned by `GET /api/v1/admin/backup/schedule`. Old backups beyond `retention_count` are automatically deleted after each new backup (both local files and S3 objects).
+::: warning `enabled` is required, and the schedule is only read at boot
+Automatic backups need an explicit truthy `enabled`. The boot-time check reads it as
+`empty($backupConfig['enabled'])`, so a `config/backup.php` that **omits** the key
+registers no timer at all, whatever `auto_backup_interval_days` says. (A second
+reader defaults the same key to `true`, but nothing consumes that value — the
+boot-time check is the only live consumer, so the behaviour is unambiguous: no
+`enabled`, no automatic backups.) Manual backups from the admin page are unaffected.
+
+Both gates — `enabled` and `auto_backup_interval_days > 0` — are evaluated **once,
+at startup**. `PUT /api/v1/admin/backup/schedule` rewrites `config/backup.php` but
+does not touch the running process, and the backup manager caches its config for the
+process lifetime. **Restart the server for a schedule change to take effect.**
+:::
+
+When `enabled` is truthy and `auto_backup_interval_days > 0`, the server registers a scheduled-backup timer at startup. The next scheduled time is returned by `GET /api/v1/admin/backup/schedule`.
+
+### Retention {#retention}
+
+Old backups beyond `retention_count` are deleted after each new backup. Deletion removes **either** the S3 object **or** the local file, depending on the record's `is_s3` flag — never both.
+
+::: warning An uploaded backup leaves its local archive behind forever
+"Upload to S3" flips `is_s3` to `true` and replaces the stored `file_path` with the
+`s3://` URL **without deleting the local archive**. Retention then only ever deletes
+the S3 object for that record, and the on-disk `.tar.gz` path is no longer recorded
+anywhere, so no code path can ever clean it up. If you use S3, prune `local_path`
+yourself.
+:::
 
 ---
 
@@ -261,7 +304,7 @@ When `auto_backup_interval_days > 0`, the server schedules backups automatically
 `BackupManager` creates `tar.gz` archives containing:
 
 - **MySQL database dump** — all tables via `mysqldump --single-transaction`
-- **Config files** — everything in `config/*.php`
+- **Config files** — every `*.php` under `config/`, walked **recursively**, so nested files such as `config/scrobblers/trakt.php` are included (a flat glob used to miss them, losing Trakt's OAuth tokens)
 - **User data** — everything in `data/`
 - **SSL certificates** — if present at `/etc/ssl/certs/phlix`, `/etc/phlix/ssl`, or `/var/lib/phlix/ssl`
 

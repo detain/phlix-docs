@@ -151,9 +151,9 @@ php bin/phlix library:list                  # get the library ids
 php bin/phlix library:scan {libraryId}      # one library at a time — there is no --all flag
 ```
 
-Add `--rescan` to re-walk the whole tree and prune items whose file is gone. Do not
-use it straight after relocating media — a top-level item whose file was moved
-without being renamed is pruned rather than re-indexed
+Add `--rescan` to re-walk the whole tree and prune items whose file is gone. It is
+also the right command after relocating media: a top-level item whose file was moved
+without being renamed is re-pointed at its new path rather than pruned
 ([Moving a file](/admin/library-management#moving-a-file)). See the
 [CLI reference](/reference/cli#library-scan).
 

@@ -196,17 +196,18 @@ If you really do want every item removed, that is a separate, explicitly-confirm
 action — `POST /api/v1/libraries/{id}/delete-all` with `confirm=true`, which
 returns `400` without the flag.
 
-⚠ There is **one exception**, and it is a real data-loss path: an item whose file
-was **moved without being renamed** is deleted by that prune, because the scanner
-never learns the new path. Read [Moving a file](#moving-a-file) before you
-reorganise storage.
+⚠ One case still loses a row: the **standalone `prune` job**. It does not scan, so
+it cannot tell a deleted file from a moved one, and an item whose file was moved is
+deleted. A **Rescan** handles the same move safely. Read
+[Moving a file](#moving-a-file) before you reorganise storage.
 :::
 
 #### Moving a file {#moving-a-file}
 
-::: danger A move without a rename loses a top-level item for one rescan
-This is a scanner defect, tracked as **S158** — not a behaviour to work around.
-It affects **parent-less (top-level) rows only**: `movie`, `video`, `photo`,
+::: tip A move without a rename is safe on a Rescan (S158)
+Use **Rescan**, not a bare Prune, after moving files.
+
+This concerns **parent-less (top-level) rows only**: `movie`, `video`, `photo`,
 `book` and `audiobook`. **Episodes are unaffected** — they hang off a season
 parent and never take the branch below, so a moved episode is simply indexed at
 its new path. **Music libraries are also outside this** — they are walked by a
@@ -217,35 +218,34 @@ at all.
 catalogue, it looks the file up by path (a miss, since the path changed) and
 then, for a parent-less row, by a **canonical key** derived from the title and
 year alone. That key is path-independent, so a file that moved but kept its name
-still matches its existing row. The scanner treats that as "this item already
-exists" and returns without writing — it **never updates the row's `path`
-column**, and nothing is indexed at the new location.
+still matches its existing row. Since **S158** the scanner does not just walk away
+from that match: it *records an adoption candidate*. The prune then, at the one
+point where it already knows it would delete the row, **re-points that row at the
+new file instead** — same UUID, same `user_item_data`, same resume position. Rows
+that the prune's unmount and presence guards were already sparing are never
+touched.
 
-What you observe then depends on which action you ran:
+What you observe depends on which action you ran:
 
 | Action | Result for the moved item |
 |---|---|
-| **Scan** (`scan` job) | No prune runs. The row survives, still pointing at the path the file no longer occupies — the item is listed but will not play. |
-| **Rescan** (`rescan` job), or the standalone `prune` job | The prune runs in the same job. The old path is gone from disk and its root still holds present items, so the guard does not fire and the row is `DELETE`d — taking its `user_item_data` (watch history, resume position, favourite) with it via `ON DELETE CASCADE`. |
+| **Scan** (`scan` job) | No prune runs, so no adoption runs either. The row survives, still pointing at the path the file no longer occupies — the item is listed but will not play. A later **Rescan** repairs it. |
+| **Rescan** (`rescan` job) | The row is re-pointed at the new path. Nothing is deleted and nothing is lost. |
+| **Prune** (standalone `prune` job) | The prune did not scan, so it has no candidate to adopt: the row is `DELETE`d, taking its `user_item_data` (watch history, resume position, favourite) with it via `ON DELETE CASCADE`. |
 
-So a moved-but-not-renamed movie, photo, book or audiobook **disappears from the
-library for one rescan**. Once the prune has removed the row, the *next* scan or
-rescan finds the file at its new path with no row left to reuse and inserts it — as
-a **new item with a new UUID**, no watch state and no resume position. (The
-cascade is a real foreign key: `user_item_data.item_id REFERENCES media_items(id)
-ON DELETE CASCADE`.)
+(The cascade is a real foreign key: `user_item_data.item_id REFERENCES
+media_items(id) ON DELETE CASCADE`.)
 
-Note the asymmetry: a plain **Scan** never recovers on its own, because it never
-prunes — the stale row survives every scan and keeps shadowing the file at its new
-path. Only a rescan clears it, and clearing it is the data loss.
+**Still lost: a move that also renames.** A different name is a different
+canonical key, so the scanner never matches the existing row — the file is
+inserted as a new row with a **new UUID** and the old row is pruned, losing its
+watch state. Rename *or* move, not both, if you want to keep watch state.
 
-**There is no safe alternative today.** Renaming as part of the move does not
-avoid the loss: a different name is a different canonical key, so the file is
-inserted as a new row and the old row is pruned — a new UUID and lost watch state
-again, just without the one-rescan disappearance. Both `Scan` and `Rescan` (and
-`bin/phlix library:scan --rescan`) go through the same scanner, so neither
-behaves differently. If you must reorganise storage, expect to lose the watch
-state of every top-level item you move, and take a database backup first — see
+**Bounds.** Adoption is capped at 20,000 moved items per rescan pass; past the cap
+the surplus rows are pruned exactly as they were before S158. A separate
+2,000-entry probe budget means a very large reorganisation may adopt a row without
+re-deriving its duration and codec details. If you are reorganising storage at that
+scale, take a database backup first — see
 [Backup and restore](/advanced/backup-restore).
 :::
 

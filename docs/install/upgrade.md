@@ -128,14 +128,16 @@ every file's tags and takes substantially longer than a plain scan — see
 for measured figures.
 :::
 
-::: danger Do not rescan straight after moving media files
+::: tip A rescan is the right tool after moving media files (S158)
 A parent-less item — `movie`, `video`, `photo`, `book`, `audiobook` — whose file was
-**moved without being renamed** is not re-indexed at its new path; the scanner reuses
-the old row by a path-independent canonical key and leaves its `path` stale, and the
-prune then deletes that row along with its watch history and resume position. It
-returns on the *next* rescan as a new row with a **new UUID**. Episodes are
-unaffected. There is no option that avoids this — read
-[Moving a file](../admin/library-management#moving-a-file) first. Tracked as **S158**.
+**moved without being renamed** is matched by a path-independent canonical key, and
+the prune in the same rescan re-points the existing row at the new path instead of
+deleting it. The UUID, watch history and resume position all survive. Episodes were
+never affected.
+
+Use **Rescan**, not a standalone **Prune**: a prune does not scan, so it cannot tell
+a moved file from a deleted one. A move that also **renames** the file still creates
+a new row. See [Moving a file](../admin/library-management#moving-a-file).
 :::
 
 ::: warning A rescan is not the tool for a metadata change
@@ -167,8 +169,9 @@ metadata-fetching provider for them, so there is nothing to re-run after an upgr
 | Minor (e.g. 0.17.x → 0.18.x) | Only if files were added or deleted. For provider/match changes, run a metadata refresh instead |
 | Major (e.g. 0.x → 1.x) | Review breaking changes first; rescan for added/deleted files, metadata refresh for match changes |
 
-(Files that were **moved** are the one filesystem change a rescan handles badly —
-see [Moving a file](../admin/library-management#moving-a-file).)
+(Files that were **moved and renamed** are the one filesystem change a rescan
+handles badly — a plain move is handled correctly. See
+[Moving a file](../admin/library-management#moving-a-file).)
 
 If movie or TV items that were previously matched show no metadata after an upgrade,
 run a

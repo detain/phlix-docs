@@ -87,7 +87,7 @@ queues a job; see the [Library Scan Worker](../dev/library-scan-worker).)
 | Argument / option | Description |
 | --- | --- |
 | `libraryId` (required) | The library identifier to scan. |
-| `--rescan` | Full rescan: re-walk the tree, index files at paths not yet in the catalogue, backfill missing source metadata on `video` / `movie` / `episode` / `audio` / `audiobook` rows, then prune items whose file is gone. User data is preserved — **except** for a top-level item whose file was *moved*, which the prune deletes; see [Moving a file](../admin/library-management#moving-a-file). On a **music** library it additionally re-reads every track's tags (this can take hours) and is what repairs tracks filed under the wrong album/artist; on every other library type the re-read flag is ignored. |
+| `--rescan` | Full rescan: re-walk the tree, index files at paths not yet in the catalogue, backfill missing source metadata on `video` / `movie` / `episode` / `audio` / `audiobook` rows, then prune items whose file is gone. User data is preserved, including for a top-level item whose file was **moved without being renamed** — the prune re-points the row instead of deleting it (S158). A move that also renames still creates a new row; see [Moving a file](../admin/library-management#moving-a-file). On a **music** library it additionally re-reads every track's tags (this can take hours) and is what repairs tracks filed under the wrong album/artist; on every other library type the re-read flag is ignored. |
 | `--force` | Start even when the library already has a `queued`/`running` scan job. |
 
 ```bash
@@ -105,14 +105,15 @@ missing source metadata on the already-existing rows whose type is `video`,
 and then prune the items whose source file has disappeared. Use a plain scan for an
 incremental refresh.
 
-::: danger One exception: a file that was MOVED
+::: tip A moved file keeps its row (S158)
 A parent-less item — `movie`, `video`, `photo`, `book`, `audiobook` — whose file
 was **moved without being renamed** is matched by a path-independent canonical key,
-so the scanner reuses the existing row without updating its `path`, and the prune in
-the same run then deletes that row and its `user_item_data`. It comes back on the
-*next* `--rescan` as a new row with a **new UUID** and no watch state. Episodes are
-unaffected. There is no flag that avoids this — see
-[Moving a file](../admin/library-management#moving-a-file). Tracked as **S158**.
+and the prune in the same `--rescan` re-points the existing row at the new path
+rather than deleting it. The UUID, `user_item_data` and resume position survive,
+and no flag is needed. Episodes were never affected.
+
+A move that also **renames** the file still produces a new row with a new UUID —
+see [Moving a file](../admin/library-management#moving-a-file).
 :::
 
 #### `--rescan` re-reads every file on MUSIC libraries only

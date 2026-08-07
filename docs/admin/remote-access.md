@@ -328,12 +328,20 @@ never a fabricated timing.
   "active": true,
   "latencyMs": 45,
   "lastHeartbeatAt": "2026-07-23T10:30:00+00:00",
+  "heartbeatStale": false,
   "latencySource": "persisted"
 }
 ```
 
+`heartbeatStale` is a boolean and is always present in the `200` body. When it is
+`true`, the heartbeat fork has stopped refreshing its snapshot and `latencyMs` is
+a **historical** measurement rather than a current one — it lets you tell "45 ms,
+measured a moment ago" from "45 ms, measured before the heartbeat fork died".
+
 When the tunnel is **not connected**, Ping returns HTTP **`409`** (rather than
-pretending to ping), including the last connect-error reason:
+pretending to ping) — including when the tunnel's own state snapshot has gone
+stale, so a frozen file cannot answer "pong, connected". The `409` body includes
+the last connect-error reason:
 
 ```json
 {
@@ -412,12 +420,14 @@ GET /api/v1/health/relay
     "lastDisconnectTime": null,
     "activeSessions": 2,
     "lastConnectError": null,
-    "lastConnectErrorAt": null
+    "lastConnectErrorAt": null,
+    "stale": false
   },
   "hub": {
     "lastSuccessfulHeartbeat": "2026-07-23T10:30:00+00:00",
     "consecutiveFailures": 0,
     "lastLatencyMs": 45,
+    "stale": false,
     "isEnrolled": true,
     "enrollmentExpiresAt": "2026-08-23T10:30:00+00:00"
   }
@@ -427,6 +437,12 @@ GET /api/v1/health/relay
 Reads relay + heartbeat state from the persisted files plus cheap enrollment
 presence/expiry file reads. Returns `500` (`{ "success": false, "message": … }`)
 on read failure.
+
+Both `stale` flags are booleans and are always present. Each marks a state file
+that the fork owning it has stopped refreshing — so the snapshot describes the
+past, not the present. When the relay flag is set, the liveness fields
+(`connected`, `active`) are already forced down by the staleness-gated read, so a
+frozen file from a dead fork cannot report `connected: true`.
 
 #### Network health (cheap probe)
 
@@ -454,15 +470,29 @@ No outbound heartbeat, no blocking I/O, no side effects.
 |----------|------|
 | `healthy` | Last heartbeat latency `< 100ms` |
 | `degraded` | Last heartbeat latency `100–500ms` |
-| `offline` | Not enrolled, no successful heartbeat recorded yet, the heartbeat is currently failing (`consecutiveFailures > 0`), or latency `> 500ms` |
+| `offline` | Not enrolled, **the persisted snapshot is stale**, no successful heartbeat recorded yet, the heartbeat is currently failing (`consecutiveFailures > 0`), or latency `> 500ms` |
 
 When `offline`, the response also carries an `error` string (e.g.
 `"Not enrolled in hub"`, `"No successful heartbeat recorded yet"`, or
 `"Hub heartbeat failing"`) and `measuredAt` reflects the snapshot's own timestamp.
-Because the probe trusts the persisted snapshot, a stale reading can persist if the
-heartbeat fork itself hangs (there is currently no `updatedAt`-staleness guard — a
-documented follow-up); the `consecutiveFailures` branch already covers the
-hub-down-while-fork-alive case.
+
+**Staleness is now guarded.** If the heartbeat fork stops refreshing its snapshot,
+the probe reports `offline` with an additional `stale: true` field rather than
+serving a frozen `healthy`:
+
+```json
+{
+  "latencyMs": 45,
+  "status": "offline",
+  "measuredAt": "2026-07-23T10:30:00+00:00",
+  "stale": true,
+  "error": "Hub heartbeat state is stale — the phlix-hub-heartbeat worker is not running"
+}
+```
+
+`stale` is emitted **only** on that branch — it is absent from healthy, degraded
+and the other `offline` responses. The `consecutiveFailures` branch continues to
+cover the hub-down-while-fork-alive case.
 
 ---
 

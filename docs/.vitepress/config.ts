@@ -320,6 +320,7 @@ export default defineConfig({
           items: [
             { text: 'Last.fm Scrobbling', link: '/integrations/lastfm' },
             { text: 'Trakt.tv', link: '/integrations/trakt' },
+            { text: 'MCP (Model Context Protocol)', link: '/integrations/mcp' },
           ]
         }
       ],

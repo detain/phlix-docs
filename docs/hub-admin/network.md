@@ -15,7 +15,7 @@ In `config/port-forward.php`:
 return [
     'port_forwarding' => [
         'auto' => true,         // Set to false to disable
-        'port' => 32400,       // Port for direct access
+        'port' => 8096,        // Must match server.port in config/server.php
         'upnp_enabled' => true, // Set to false to skip UPnP
     ],
 ];
@@ -25,9 +25,22 @@ Or via environment variables:
 
 ```bash
 PHLIX_PORT_FORWARD_AUTO=1
-PHLIX_EXTERNAL_PORT=32400
+PHLIX_EXTERNAL_PORT=8096
 PHLIX_UPNP_ENABLED=1
 ```
+
+::: danger The shipped default does not match the port the server listens on
+`config/port-forward.php` defaults `port` to **`32400`** (`PHLIX_EXTERNAL_PORT`),
+and `PortForwardService` uses that single value as **both** the external and the
+internal port of the mapping — the router is told to forward WAN `32400` to
+`<server-lan-ip>:32400`. phlix-server listens on **`8096`**
+(`config/server.php` `server.port`, which has no environment override).
+
+Left at the defaults, the mapping therefore points at a port nothing is bound to,
+direct access fails, and the hostname candidates the server advertises to the Hub
+(`http://<lan-ip>:32400`, `http://phlix.local:32400`, …) are unreachable. Set
+`port` / `PHLIX_EXTERNAL_PORT` to the server's actual listen port, as shown above.
+:::
 
 ### Checking Server Connectivity
 
@@ -69,20 +82,22 @@ See `docs/dev/relay-protocol.md` for relay tunnel protocol details.
 
 | Port  | Protocol | Purpose |
 | ------| -------- | ------- |
-| 32400 | TCP | Media streaming and web portal (direct access) |
+| 8096 | TCP | Media streaming and web portal (direct access) — `server.port`, and the value `port_forwarding.port` must be set to |
+| 8097 | TCP | SyncPlay WebSocket (only if clients connect to SyncPlay directly rather than through the Hub relay) |
 
 ## Firewall Configuration
 
 If your server is behind a firewall, ensure:
 
-1. **Inbound TCP 32400** — Media streaming and web portal access
+1. **Inbound TCP 8096** — Media streaming and web portal access (or whatever
+   `server.port` is set to on that host)
 2. **Outbound UDP 19302** — STUN binding requests
 3. **Outbound TCP 443** — Hub API and relay tunnel
 
 ### UFW Example
 
 ```bash
-ufw allow 32400/tcp comment 'Phlix Media Server'
+ufw allow 8096/tcp comment 'Phlix Media Server'
 ufw allow out 19302/udp comment 'STUN'
 ufw allow out 443/tcp comment 'Phlix Hub'
 ```
@@ -90,7 +105,7 @@ ufw allow out 443/tcp comment 'Phlix Hub'
 ### firewalld Example
 
 ```bash
-firewall-cmd --permanent --add-port=32400/tcp
+firewall-cmd --permanent --add-port=8096/tcp
 firewall-cmd --permanent --add-port=19302/udp
 firewall-cmd --permanent --add-port=443/tcp
 firewall-cmd --reload
@@ -98,15 +113,20 @@ firewall-cmd --reload
 
 ## Multi-Server Setups
 
-Each server instance requires its own port forwarding rule and unique external port:
+Each server instance requires its own port forwarding rule and unique external
+port. Because the external and internal ports of the mapping are the same value,
+each instance must also **listen** on that port — change `server.port` in that
+instance's `config/server.php` to match:
 
 ```php
-// Server 1
-'port_forwarding' => ['port' => 32400]
+// Server 1 — config/server.php 'port' => 8096
+'port_forwarding' => ['port' => 8096]
 
-// Server 2
-'port_forwarding' => ['port' => 32401]
+// Server 2 — config/server.php 'port' => 8098
+'port_forwarding' => ['port' => 8098]
 ```
+
+(`8097` is taken by the SyncPlay WebSocket worker.)
 
 Clients connect to `http://<server-public-ip>:<port>` directly.
 

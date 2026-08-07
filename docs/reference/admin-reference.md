@@ -12,13 +12,16 @@ This page is the single admin landing page for three pillars of Phlix server ope
 
 Environment variables are read at process startup. Most can be overridden by `config/*.php` at runtime (noted per variable). For the full table, see [Environment variables](env-vars.md).
 
-**Five operationally critical variables:**
+**Four operationally critical variables:**
 
 - `JWT_SECRET` — change this immediately in production; the default is insecure and only suitable for local dev.
-- `PHLIX_HTTP_PORT` — the port the server binds (default `32400`).
 - `PHLIX_DATABASE_HOST` / `PHLIX_DATABASE_PASSWORD` — MySQL connection; credentials live in the environment, not in config files.
 - `TZ` — timestamps in logs and EPG depend on a correct timezone; set to your local timezone.
 - `PHLIX_LOG_LEVEL` — `debug` is verbose; `error` is production-minimal.
+
+The HTTP listen port is **not** one of them: there is no environment variable for
+it. Set `server.port` in `config/server.php` (default `8096`), or pass
+`--http-port PORT` to `scripts/install.sh`.
 
 ## CLI Commands
 
@@ -85,7 +88,7 @@ return [
     'server' => [
         'name' => 'Phlix Media Server',
         'host' => '0.0.0.0',      // bind address (all interfaces)
-        'port' => 8096,            // HTTP port (overridden by PHLIX_HTTP_PORT env var)
+        'port' => 8096,            // HTTP port — this is the only place it is set
         'context' => [],
     ],
     'worker' => [
@@ -101,7 +104,8 @@ return [
 ```
 
 - `server.host` — `0.0.0.0` = all interfaces; `127.0.0.1` = localhost only.
-- `server.port` — default `8096`. Use `PHLIX_HTTP_PORT` env var to override.
+- `server.port` — default `8096`. There is no environment-variable override; edit
+  this value (or install with `scripts/install.sh --http-port PORT`) and restart.
 - `worker.count` — Workerman process count. `auto` = CPU core count.
 - `worker.stdout_file` — Workerman master process stdout/stderr redirect.
 

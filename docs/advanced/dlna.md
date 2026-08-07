@@ -93,7 +93,12 @@ the allowlist/LAN check runs against the proxy's IP, not the real client's. See
 | Variable | Description |
 |----------|-------------|
 | `PHLIX_PUBLIC_URL` | Public URL used in DLNA announcements. Set if behind a reverse proxy. |
-| `PHLIX_HTTP_PORT` | HTTP port the server listens on (default: 32400) |
+
+The HTTP port the server listens on is not an environment variable. It is
+`server.port` in `config/server.php`, default `8096`. (`PHLIX_HTTP_PORT` was
+listed in this table in earlier revisions; it was never implemented in
+phlix-server and setting it has no effect. See
+[Environment variables](/reference/env-vars).)
 
 ### Device Identification
 
@@ -192,7 +197,7 @@ Phlix's DLNA server serves media in the following formats:
 
 Media items include a `upnp:res` element with an HLS streaming URL:
 ```
-http://{phlix}:32400/api/v1/streaming/hls/{itemId}/master.m3u8
+http://{phlix}:8096/api/v1/streaming/hls/{itemId}/master.m3u8
 ```
 
 Clients that support HLS (most modern DLNA renderers) can stream directly. For older devices, you may need to enable transcoding.
@@ -216,7 +221,7 @@ Renderer discovery happens via:
 
 1. **Verify Phlix is running**:
    ```bash
-   curl http://localhost:32400/api/v1/system/status
+   curl http://localhost:8096/api/v1/system/status
    ```
 
 2. **Check SSDP is announced** (requires network debugging tool):
@@ -248,7 +253,8 @@ Some DLNA clients cache credentials incorrectly. Try:
 
 ### Slow Content Loading
 
-- Ensure `PHLIX_HTTP_PORT` is not conflicting with another service
+- Ensure the HTTP port (`server.port` in `config/server.php`, default `8096`) is
+  not conflicting with another service
 - Check the server is not under heavy load from transcoding
 - Verify network throughput between Phlix and the TV
 

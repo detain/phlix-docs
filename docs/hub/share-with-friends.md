@@ -144,13 +144,13 @@ grep "share_invite_accepted" .logs/hub-audit.log | tail -10
 **Diagnosis:**
 ```bash
 # On the server, check library status via the API:
-curl -s http://localhost:32400/api/v1/libraries -H "Authorization: Bearer $TOKEN"
+curl -s http://localhost:8096/api/v1/libraries -H "Authorization: Bearer $TOKEN"
 
 # Check if a scan is currently running:
 ps aux | grep -i "media_scanner\|phlix" | grep -v grep
 
 # Manually trigger a rescan of a library (use the library id from the call above):
-curl -X POST http://localhost:32400/api/v1/libraries/{id}/rescan \
+curl -X POST http://localhost:8096/api/v1/libraries/{id}/rescan \
   -H "Authorization: Bearer $TOKEN"
 ```
 

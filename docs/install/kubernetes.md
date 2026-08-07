@@ -228,7 +228,15 @@ The chart passes these to the pod automatically via `PHLIX_*` env vars:
 | `PHLIX_DATABASE_PASSWORD` | Database password | from Kubernetes Secret |
 | `PHLIX_SECRET_KEY` | JWT/signing key | from Kubernetes Secret |
 | `PHLIX_LOG_LEVEL` | Log verbosity | `info`, `debug` |
-| `PHLIX_HTTP_PORT` | Internal HTTP port | `80` |
+
+::: warning There is no `PHLIX_HTTP_PORT`
+Earlier revisions of this table listed `PHLIX_HTTP_PORT` with a default of `80`.
+No such variable is read anywhere in phlix-server, and the container does not
+listen on `80` — it listens on **`8096`** (`config/server.php` `server.port`,
+also what the image's `EXPOSE`/healthcheck use). The Service `port` values below
+are the *Service's* ports; whatever you set them to, the Service's `targetPort`
+must resolve to `8096`.
+:::
 
 Set passwords/keys via the chart's secrets mechanism (required):
 

@@ -54,7 +54,7 @@ credentials-file: /root/.cloudflared/<your-tunnel-id>.json
 
 ingress:
   - hostname: server.yourdomain.com
-    service: http://localhost:32400
+    service: http://localhost:8096
   - service: http_status:404
 ```
 
@@ -82,7 +82,7 @@ This creates a CNAME record in Cloudflare pointing to your tunnel.
 
 ### Access your server
 
-Visit `https://server.yourdomain.com` — Cloudflare handles TLS and proxies requests to your server on port 32400.
+Visit `https://server.yourdomain.com` — Cloudflare handles TLS and proxies requests to your server on port 8096.
 
 ---
 
@@ -162,7 +162,7 @@ Import this config into the WireGuard app on the client. Connect before accessin
 
 ### Access Phlix (WireGuard)
 
-With the VPN active, access your server at `http://10.0.0.1:32400` (VPN tunnel address) or by LAN IP if on the same network.
+With the VPN active, access your server at `http://10.0.0.1:8096` (VPN tunnel address) or by LAN IP if on the same network.
 
 ---
 
@@ -189,7 +189,7 @@ This opens a browser for authentication. After auth, your device joins your tail
 Once connected, access your server at:
 
 ```
-https://phlixMachineName.tailcale.mesh:32400
+https://phlixMachineName.tailcale.mesh:8096
 ```
 
 Replace `phlixMachineName` with the hostname of your Phlix server (run `hostname` on the server to find it).
@@ -199,14 +199,14 @@ Replace `phlixMachineName` with the hostname of your Phlix server (run `hostname
 To make Phlix publicly accessible via your tailnet without port forwarding:
 
 ```bash
-# Enable Funnel on port 32400
-tailscale funnel 32400
+# Enable Funnel on port 8096
+tailscale funnel 8096
 
 # Check Funnel status
 tailscale funnel status
 ```
 
-Funnel exposes `https://phlixMachineName.tailcale.mesh:32400` to the public internet via Tailscale's relay — no router port forwarding needed.
+Funnel exposes `https://phlixMachineName.tailcale.mesh:8096` to the public internet via Tailscale's relay — no router port forwarding needed.
 
 ---
 
@@ -235,7 +235,7 @@ hostname -I | awk '{print $1}'
 
 2. Log into your router (typically `http://192.168.1.1` or `http://192.168.0.1`)
 3. Find the port forwarding / NAT / firewall section
-4. Add a forward: external port `32400` → `<your-server-lan-ip>:32400` (TCP)
+4. Add a forward: external port `8096` → `<your-server-lan-ip>:8096` (TCP)
 5. Save and apply
 
 ### Method C: Dynamic DNS (for Changing Public IPs)
@@ -260,7 +260,7 @@ curl ifconfig.me
 curl icanhazip.com
 ```
 
-Users outside your network then access: `http://<your-public-ip>:32400`
+Users outside your network then access: `http://<your-public-ip>:8096`
 
 ---
 
@@ -332,7 +332,7 @@ Also verify the client has `PersistentKeepalive = 25` and that `AllowedIPs` incl
 
 ### Failure 3: Tailscale — Device Not Showing Up in Tailnet
 
-**Symptom:** Cannot reach server via `phlixMachineName.tailcale.mesh:32400`; device missing from Tailscale admin console.
+**Symptom:** Cannot reach server via `phlixMachineName.tailcale.mesh:8096`; device missing from Tailscale admin console.
 
 **Diagnosis:**
 
@@ -355,7 +355,7 @@ tailscale logout
 tailscale up --accept-routes
 
 # If using Funnel, re-enable
-tailscale funnel 32400
+tailscale funnel 8096
 ```
 
 Ensure both client and server are on the same Tailscale network (same auth key or same organization).

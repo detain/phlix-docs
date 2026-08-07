@@ -18,7 +18,7 @@ phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time 
   brew services start mysql@8.0 && php public/index.php
 ```
 
-Then open `http://localhost:32400` in your browser.
+Then open `http://localhost:8096` in your browser.
 
 ::: tip Screenshots TBD
 This guide is text-first. Screenshots will be added in a follow-up.
@@ -135,7 +135,6 @@ composer install --no-dev --optimize-autoloader
 ```bash
 cp .env.example .env
 # Edit .env with:
-#   APP_URL=http://your-mac-ip:32400
 #   DB_HOST=localhost
 #   DB_SOCKET=/opt/homebrew/var/mysql/mysql.sock   # Apple Silicon Homebrew
 #   DB_SOCKET=/usr/local/var/mysql/mysql.sock     # Intel Homebrew
@@ -232,13 +231,13 @@ The plist above uses Apple Silicon paths (`/opt/homebrew/bin/php`). For Intel, c
 
 ```bash
 # Add to /etc/pf.anchors/com.phlix
-# pass in proto tcp from any to any port 32400 keep state
+# pass in proto tcp from any to any port 8096 keep state
 
 # Reload pfctl
 sudo pfctl -f /etc/pf.conf -E
 ```
 
-> Note: macOS built-in firewall blocks incoming connections to port 32400 by default. For LAN-only access, add an exception via System Settings first. DLNA/UDP 1900 discovery is optional.
+> Note: macOS built-in firewall blocks incoming connections to port 8096 by default. For LAN-only access, add an exception via System Settings first. DLNA/UDP 1900 discovery is optional.
 
 ---
 
@@ -246,7 +245,7 @@ sudo pfctl -f /etc/pf.conf -E
 
 ```bash
 # Check server is running
-curl -I http://localhost:32400
+curl -I http://localhost:8096
 # Expected: HTTP 200 from the phlix index
 
 # Check Launchd service
@@ -277,16 +276,16 @@ launchctl list | grep phlix
 - **Fix (MacPorts):** `sudo port install ffmpeg +full`
 - **Verify:** `ffmpeg -codecs | grep -c h264` (should be > 0)
 
-### Port 32400 already in use
+### Port 8096 already in use
 
-- **Symptom:** `bind(): Address already in use` or `Port 32400 in use`
-- **Fix:** `sudo lsof -i :32400` to find the conflicting process (e.g., another web server or AirPlay receiver). Stop it or change phlix port via `APP_URL` env var
-- **Verify after fix:** `curl -I http://localhost:32400`
+- **Symptom:** `bind(): Address already in use` or `Port 8096 in use`
+- **Fix:** `sudo lsof -i :8096` to find the conflicting process (e.g., another web server or AirPlay receiver). Stop it, or change the port by editing `server.port` in `config/server.php` and restarting. There is no environment variable for the HTTP port — `APP_URL` was named here in earlier revisions and is not read by phlix-server at all.
+- **Verify after fix:** `curl -I http://localhost:8096`
 
 ---
 
 ## Next steps
 
-- [First-run wizard](/first-run) — complete the browser-based setup at `http://your-mac-ip:32400`
+- [First-run wizard](/first-run) — complete the browser-based setup at `http://your-mac-ip:8096`
 - [Docker install](/install/docker) — alternative install using containers on macOS
 - [Hardware transcoding](/advanced/hardware-transcoding) — configure VideoToolbox on Apple Silicon for better performance

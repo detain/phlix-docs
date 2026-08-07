@@ -91,8 +91,12 @@ TZ=UTC
 PLEX_UID=1000
 PLEX_GID=1000
 PHLIX_LOG_LEVEL=info
-PHLIX_PORT=32400
 ```
+
+There is no `PHLIX_PORT` (or `PHLIX_HTTP_PORT`) variable — earlier revisions of
+this page listed one, but no such variable is read anywhere in phlix-server.
+The published port is set by the `ports:` mapping in `docker-compose.yml`; see
+[Port reference](#_6-port-reference) below.
 
 ---
 
@@ -156,14 +160,24 @@ No special runtime needed; the container automatically detects Quicksync devices
 
 ## 6. Port reference
 
-| Port | Protocol | Service |
-|------|---------|---------|
-| 32400 | TCP | HTTP web interface |
-| 1900 | UDP | DLNA discovery |
+| Host port | Container port | Protocol | Service |
+|------|------|---------|---------|
+| 32400 | 8096 | TCP | HTTP web interface (REST, the `/app` SPA, static assets, WebSocket upgrade) |
+| 8097 | 8097 | TCP | SyncPlay WebSocket |
+| 1900 | 1900 | UDP | DLNA discovery |
+
+::: tip 8096 inside, 32400 outside
+phlix-server always listens on **`8096`** — that is `server.port` in
+`config/server.php` and it is not settable from the environment. The example
+compose files in `docker/examples/` publish it on host port **`32400`**
+(`ports: - "32400:8096"`), which is why the URLs on this page use `:32400` while
+the Linux/macOS/Windows install pages use `:8096`. Change the **left** side of
+that mapping to publish it somewhere else; the right side must stay `8096`.
+:::
 
 ```bash
 # Verify ports are free before starting
-sudo ss -tlnp | grep -E '32400|1900'
+sudo ss -tlnp | grep -E '32400|8097|1900'
 ```
 
 ---
@@ -243,8 +257,9 @@ open http://localhost:32400
   Or change the mapped port in `docker-compose.yml`:
   ```yaml
   ports:
-    - "32401:80"   # change host port 32401 instead of 32400
+    - "32401:8096"   # publish on host port 32401 instead of 32400
   ```
+  Only the host (left) side may change — `8096` is the port inside the container.
 - For DLNA port 1900/UDP: set `PHLIX_DLNA_PORT=0` to disable DLNA if another service uses it
 
 ### NVIDIA runtime not configured

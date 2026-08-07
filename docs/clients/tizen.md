@@ -42,7 +42,7 @@ The TV must be on the same local network as your Phlix server, or connected via 
 
 1. Open **Phlix** from **My Apps**.
 2. On first launch, enter your server's address:
-   - **Local:** `http://192.168.1.100:32400` (replace with your server's LAN IP)
+   - **Local:** `http://192.168.1.100:8096` (replace with your server's LAN IP)
    - **Hub relay:** `https://hub.phlix.example.com` (after signing in with Hub)
 3. The URL is saved automatically. Update it in **Settings → Server URL** later.
 
@@ -72,7 +72,7 @@ Hub login means your TV app works anywhere — the Hub relay handles the connect
 
 **Symptom:** During installation, the TV shows "This app is not compatible with this TV" or the installation silently fails.
 
-**Fix:** Confirm your TV model year is **2018 or newer**. Phlix requires Tizen 4.0 or later. Update your TV's firmware in **Settings → Support → Software Update**. If your TV is older, use the web client (`http://your-server:32400/app`) in the TV's browser instead.
+**Fix:** Confirm your TV model year is **2018 or newer**. Phlix requires Tizen 4.0 or later. Update your TV's firmware in **Settings → Support → Software Update**. If your TV is older, use the web client (`http://your-server:8096/app`) in the TV's browser instead.
 
 ### Network isolation preventing server access
 

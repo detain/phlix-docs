@@ -11,7 +11,7 @@ Phlix can run behind a reverse proxy (nginx, Caddy, or Apache) to terminate TLS,
 - **TLS termination** — terminate HTTPS at the proxy and forward plain HTTP to Phlix
 - **Subfolder deployment** — host Phlix at `https://example.com/phlix/` instead of root
 - **Load balancing** — scale horizontally by proxying to multiple Phlix instances
-- **Firewall/NAT traversal** — single port (32400) exposed through the proxy
+- **Firewall/NAT traversal** — single port (8096) exposed through the proxy
 
 ## General Requirements
 
@@ -35,9 +35,9 @@ server {
     ssl_certificate     /path/to/fullchain.pem;
     ssl_certificate_key /path/to/privkey.pem;
 
-    # Phlix runs on port 32400
+    # Phlix runs on port 8096
     location /phlix/ {
-        proxy_pass http://127.0.0.1:32400/;
+        proxy_pass http://127.0.0.1:8096/;
         proxy_http_version 1.1;
 
         proxy_set_header Host $host;
@@ -62,7 +62,7 @@ When deploying to a subfolder, ensure the `proxy_pass` path ends with `/` so tha
 ```caddy
 # Caddyfile
 example.com {
-    reverse_proxy /phlix/* localhost:32400
+    reverse_proxy /phlix/* localhost:8096
 }
 ```
 
@@ -79,15 +79,15 @@ Caddy automatically handles WebSocket upgrades and `X-Forwarded-*` headers.
     SSLCertificateKeyFile /path/to/privkey.pem
 
     <Location /phlix>
-        ProxyPass http://127.0.0.1:32400/
-        ProxyPassReverse http://127.0.0.1:32400/
+        ProxyPass http://127.0.0.1:8096/
+        ProxyPassReverse http://127.0.0.1:8096/
         RequestHeader set X-Forwarded-Proto "https"
         RequestHeader set X-Forwarded-Host "%{HTTP_HOST}s"
     </Location>
 
     # WebSocket support
     <Location /phlix/api>
-        ProxyPass ws://127.0.0.1:32400/
+        ProxyPass ws://127.0.0.1:8096/
     </Location>
 </VirtualHost>
 ```

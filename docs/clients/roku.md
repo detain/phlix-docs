@@ -37,7 +37,7 @@
 On first open, the Phlix channel shows a server URL entry screen:
 
 1. Enter your server's address:
-   - **Local:** `http://192.168.1.100:32400` (replace with your server's LAN IP)
+   - **Local:** `http://192.168.1.100:8096` (replace with your server's LAN IP)
    - **Remote:** your server's public domain if you have remote access configured
 2. Press **Connect** on your remote.
 3. The URL is saved to persistent storage and remembered on subsequent launches.
@@ -61,7 +61,7 @@ Hub login also enables remote playback when you are away from home — the Hub r
 
 **Symptom:** Immediately after entering the server URL and pressing Connect, the channel displays "Unable to reach server."
 
-**Fix:** Verify the URL protocol — `http://` and `https://` are different. Confirm the port number is correct (default is `32400`). Try using the direct LAN IP address of your server. If you are traveling, you need either a Hub relay URL or a configured VPN to reach your server remotely.
+**Fix:** Verify the URL protocol — `http://` and `https://` are different. Confirm the port number is correct (default is `8096`). Try using the direct LAN IP address of your server. If you are traveling, you need either a Hub relay URL or a configured VPN to reach your server remotely.
 
 ### Roku not on the same network as the server
 

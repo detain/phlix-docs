@@ -18,7 +18,19 @@ UPnP-IGD allows devices on your LAN to automatically configure port mappings on 
 
 1. **Discovery** — Sends an SSDP M-SEARCH multicast to `239.255.255.250:1900` to find UPnP-capable routers.
 2. **External IP detection** — Queries the router's `GetExternalIPAddress` SOAP action.
-3. **Port mapping** — Calls `AddPortMapping` to open the configured port (default: 32400) on the router.
+3. **Port mapping** — Calls `AddPortMapping` to open the configured port (`port_forwarding.port` / `PHLIX_EXTERNAL_PORT`, default: 32400) on the router. The same value is used for both the external and the internal port of the mapping.
+
+::: danger Set the port-forwarding port to 8096 before you rely on any of this
+phlix-server listens on **`8096`** (`config/server.php` `server.port`), but
+`port_forwarding.port` defaults to **`32400`** — so with both defaults left alone
+the router forwards WAN `32400` to `<server-lan-ip>:32400`, where nothing is
+listening. Set `PHLIX_EXTERNAL_PORT=8096` (or `'port' => 8096` in
+`config/port-forward.php`) so the mapping, the firewall rule and the listener all
+agree. Every `32400` on the rest of this page is the port-forwarding default,
+not the port the server binds. See
+[Network configuration](/hub-admin/network) and
+[Environment variables](/reference/env-vars).
+:::
 
 ### NAT-PMP (NAT Port Mapping Protocol)
 
@@ -58,8 +70,8 @@ If automatic discovery fails, you can configure port forwarding manually:
    | Field     | Value                 |
    | --------- | --------------------- |
    | Protocol  | TCP                   |
-   | Ext Port  | 32400 (or your choice) |
-   | Int Port  | 32400                 |
+   | Ext Port  | 8096 (or your choice) |
+   | Int Port  | 8096 (must be `server.port`) |
    | Int IP    | Your server's LAN IP  |
 
 4. Save and apply. Your router may need a restart.
@@ -78,7 +90,8 @@ After configuring, verify your port is accessible:
 php scripts/port-forward.php info
 ```
 
-Look for the `Port 32400 on <public-ip>` line. It should show `OPEN` if the mapping succeeded.
+Look for the `Port <configured-port> on <public-ip>` line — it prints whatever
+`port_forwarding.port` is set to. It should show `OPEN` if the mapping succeeded.
 
 You can also use an external port checker like [you-get-signal.com](https://www.yougetsignal.com/tools/open-ports/).
 
@@ -103,11 +116,17 @@ You can also use an external port checker like [you-get-signal.com](https://www.
 
 When direct access is available, your server includes hostname candidates in heartbeats to the hub:
 
-- `http://<lan-ip>:32400` — Local network access
-- `http://phlix.local:32400` — mDNS/local hostname
-- `http://<public-ip>:32400` — Direct internet access (when port is open)
+- `http://<lan-ip>:8096` — Local network access
+- `http://phlix.local:8096` — mDNS/local hostname
+- `http://<hostname>.local:8096` — LAN hostname
+- `http://<public-ip>:8096` — Direct internet access (when port is open)
 
 The hub uses these candidates to determine the best connection method for clients.
+
+The port in every candidate is `port_forwarding.port`, **not** `server.port` —
+`PortForwardService::discoverHostnameCandidates()` builds them from its own port.
+That is why the two must be set to the same value; if they are not, the hub is
+handed addresses that no client can connect to.
 
 ## See Also
 

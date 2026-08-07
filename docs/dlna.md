@@ -32,10 +32,15 @@ DLNA is enabled by default when Phlix starts. The server announces itself on you
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PHLIX_DLNA_PORT` | `8200` | HTTP port for DLNA device description and SOAP |
-| `PHLIX_HTTP_PORT` | `32400` | Main HTTP port |
 | `PHLIX_PUBLIC_URL` | — | Set this if Phlix is behind a reverse proxy |
 
 To disable DLNA entirely, set `PHLIX_DLNA_PORT=0`.
+
+The main HTTP port — the one the media URLs in DLNA announcements point at — is
+**not** settable from the environment. It is `server.port` in
+`config/server.php`, default `8096`. (`PHLIX_HTTP_PORT` was listed here in
+earlier revisions of this page; it was never implemented in phlix-server and
+setting it does nothing. See [Environment variables](/reference/env-vars).)
 
 ### Firewall
 
@@ -95,7 +100,7 @@ For older devices that don't support modern codecs, enable transcoding in **Admi
 
 1. **Verify Phlix is running:**
    ```bash
-   curl http://localhost:32400/api/v1/system/status
+   curl http://localhost:8096/api/v1/system/status
    ```
 
 2. **Check network:** Phlix and the TV must be on the same subnet (same network segment, not separated by VLANs).
@@ -108,7 +113,7 @@ For older devices that don't support modern codecs, enable transcoding in **Admi
 
 1. **Format not supported** — Try a different file format (MP4/H.264 is the most widely supported)
 2. **Transcoding needed** — Enable hardware transcoding if your TV doesn't support the codec
-3. **Network issue** — Verify the TV can reach Phlix: try opening `http://[phlix-ip]:32400` in a browser on the same network
+3. **Network issue** — Verify the TV can reach Phlix: try opening `http://[phlix-ip]:8096` in a browser on the same network
 
 ### "No such object" Error
 

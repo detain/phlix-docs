@@ -17,7 +17,7 @@ https://your-server-domain.com/app
 ```
 Or for local access:
 ```
-http://192.168.1.100:32400/app
+http://192.168.1.100:8096/app
 ```
 
 ## Platform-Specific Notes
@@ -45,7 +45,7 @@ http://192.168.1.100:32400/app
 ### Sign In With Direct Server URL
 
 1. On the login screen, click **Connect Directly**.
-2. Enter your server's direct URL (e.g., `http://192.168.1.100:32400`) and press **Connect**.
+2. Enter your server's direct URL (e.g., `http://192.168.1.100:8096`) and press **Connect**.
 3. Enter your server username and password.
 4. The portal loads your server's libraries directly.
 

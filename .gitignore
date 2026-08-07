@@ -4,7 +4,14 @@ docs/.vitepress/cache/
 *.local
 .DS_Store
 .caliber/
-.claude/
+# Agent config is machine-local EXCEPT the authoring rules, which are repo
+# knowledge and are tracked. This must be written as an exclusion of the
+# directory's CONTENTS (`.claude/*`) plus a re-inclusion of the `rules/`
+# directory itself. A plain `.claude/` exclusion would make git skip the
+# directory entirely and never evaluate any `!` negation inside it, so
+# `.claude/` + `!.claude/rules/*.md` silently tracks nothing.
+.claude/*
+!.claude/rules/
 CALIBER_LEARNINGS.md
 docs/old/
 coverage/

@@ -159,7 +159,7 @@ A `default` key appears in a schema entry **only** when the manifest declares on
 ## 8. Next Steps
 
 - [Install from URL](./install-from-url) — install any public plugin by `plugin.json` URL
-- [Install from Catalog](./install-from-catalog) — curated, signature-verified plugins in one click
+- [Install from Catalog](./install-from-catalog) — curated, digest-pinned plugins in one click
 - [Plugin Manifest](./manifest) — the `plugin.json` format and the `settings` schema that drives the configure form
 - [Plugin Catalog](./plugin-catalog) — the catalog feed format
 - [Trusted Plugin List](./trusted-plugin-list) — author signing-key allowlist

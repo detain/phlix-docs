@@ -12,7 +12,11 @@ Phlix provides three layers of household control: **Access Schedules** restrict 
 
 ### Access Schedules Overview
 
-Access schedules define time windows during which a user (or user group) is allowed to stream. Outside of permitted hours, playback requests are denied with an appropriate error message.
+Access schedules define recurring time windows during which a **profile is blocked** from streaming. Inside a matching window, playback requests are refused with `403`; outside every window, access is allowed.
+
+::: warning Schedules are blackout windows, not permit windows
+This is the opposite of how the rest of this section previously described them, and the distinction is load-bearing: a profile with **no** schedules is **unrestricted**, and access is allowed whenever no schedule matches. `AccessScheduleService::isAccessAllowed()` returns true when no active schedule matches the current day and time, so schedules can only ever take access away. Do not rely on "add one allow-window to lock everything else down" — that is not what the implementation does.
+:::
 
 ### Use Cases
 
@@ -39,11 +43,11 @@ Multiple schedules can be stacked — a deny schedule overrides an allow schedul
 
 ### Schedule Priority
 
-When multiple schedules conflict, the most restrictive rule wins:
+Schedules carry no allow/deny action — every schedule is a block window, and they stack as a union:
 
-1. Explicit `deny` schedules always take precedence
-2. Within the same action type, the most recently modified schedule wins
-3. If no schedule matches (e.g., no schedule for a given day), access is **denied by default**
+1. The first **active** schedule matching the current day and time refuses the request; the rest are not consulted
+2. Overnight ranges (for example 22:00–06:00) are supported
+3. If no schedule matches (including a profile with no schedules at all), access is **allowed** — the check fails open by design. It is not a deny-by-default gate.
 
 ### API Behavior
 

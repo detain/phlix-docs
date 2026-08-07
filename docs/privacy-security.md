@@ -4,7 +4,7 @@
 
 ## TL;DR
 
-Phlix is privacy-first. No telemetry, no analytics, no third-party data sharing. Media stays on your hardware. Hub relay is end-to-end encrypted. The guide below explains exactly what is and is not collected, what the Hub can and cannot see, and how to harden your deployment.
+Phlix is privacy-first. No telemetry, no analytics, no third-party data sharing by default. Media stays on your hardware. The Hub relay is TLS-encrypted in transit but is **not** end-to-end encrypted — the Hub terminates TLS, so it can see what it proxies. The guide below explains exactly what is and is not collected, what the Hub can and cannot see, and how to harden your deployment.
 
 ```bash
 # Verify no unexpected external network calls (drop all egress except DNS/80/443)
@@ -21,7 +21,7 @@ iptables -A OUTPUT -j DROP
 
 - Stored in `playback_state` / `watch_history` tables in the local MySQL database.
 - Tied to the user profile; not associated with any external identity.
-- Never leaves the server unless the user explicitly exports it.
+- Never leaves the server unless you export it, configure an off-site backup destination, or connect an opt-in scrobbling integration (Trakt, Last.fm).
 
 ### Server logs (local file)
 
@@ -31,7 +31,7 @@ iptables -A OUTPUT -j DROP
 
 ### What is NOT collected
 
-- No viewing habits sent to any third party.
+- No viewing habits sent to any third party unless you connect one yourself. The opt-in Trakt and Last.fm integrations scrobble playback to those services; both need an operator to configure them and a user to authorise them, and neither sends anything until then.
 - No device IDs shared externally.
 - No media filenames transmitted anywhere.
 - No analytics, crash reports, or usage telemetry.
@@ -43,9 +43,12 @@ iptables -A OUTPUT -j DROP
 - **User email** — used for account identity and server claim status.
 - **Server claim status** — whether the server is claimed or unclaimed.
 - **Server version string** — for compatibility checks during pairing.
-- **Relay session metadata** — WebSocket frame timing, connection duration, session token. The Hub does **not** see media content or filenames.
+- **Relay session metadata** — WebSocket frame timing, connection duration, session token.
+- **Everything that crosses the relay.** When remote access goes through the Hub, the Hub proxies your HTTP requests and responses *in cleartext inside the tunnel*: request paths, headers (including your session token), JSON library listings, and the media bytes themselves.
 
-### Hub does NOT see
+### Hub does NOT see — when the relay is not in use
+
+When clients reach the server directly — LAN, VPN, Cloudflare Tunnel, or your own reverse proxy — the Hub is involved only in claim, heartbeat and subdomain calls, and never sees:
 
 - Media filenames or folder structure.
 - Playback history or watch history.
@@ -53,11 +56,13 @@ iptables -A OUTPUT -j DROP
 - Library metadata (genres, descriptions, actors).
 - Any content of the local database.
 
+When traffic **is** relayed through the Hub, all of the above passes through the Hub process in cleartext. If that trust boundary matters to you, use a [direct remote-access option](advanced/remote-access-without-hub.md) or self-host the Hub.
+
 ### Hub relay encryption
 
-- WebSocket frames between server and Hub are end-to-end encrypted.
-- The Hub terminates the TLS connection and acts as a relay — it cannot decrypt the WebSocket payload.
-- The Hub only sees encrypted binary frames and connection metadata (IP address, timing).
+- The server↔Hub tunnel and the client↔Hub connection are each TLS/WSS encrypted **on the wire**.
+- The Hub **terminates** both, so relayed traffic exists in cleartext inside the Hub process. There is no application-layer encryption between client and server today — `phlix-hub/src/Relay/` performs no encryption or decryption of its own, and the proxy decodes each request and response body to forward it.
+- The Hub therefore sees connection metadata (IP address, timing) **plus** the proxied request and response content described above.
 
 ## Security Hardening Checklist
 
@@ -119,13 +124,14 @@ ufw enable
 DLNA discovery broadcasts on port 1900/UDP to the local network. If no DLNA/play-to clients are used, disable it to reduce attack surface:
 
 ```php
-// In config/server.php:
-'dlna' => ['enabled' => false],
+// In config/dlna.php:
+'enabled'     => false,  // SSDP advertiser on 1900/UDP — on by default
+'cds_enabled' => false,  // ContentDirectory browse + /dlna/stream — already off by default
 ```
 
 ### 5. Strong admin password
 
-- Passwords are hashed with Argon2ID (12 MiB memory, 3 iterations, 4 parallelism).
+- Passwords are hashed with Argon2ID at PHP's built-in defaults (64 MiB memory, 4 iterations, 1 thread) — the server passes no cost overrides to `password_hash()`.
 - Minimum recommended: 12+ characters, mixed case, digits, symbols.
 - Never reuse your Hub account password for the server admin account.
 

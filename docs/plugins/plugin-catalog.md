@@ -243,6 +243,10 @@ Only install plugins from trusted sources. Review the plugin's code
 before installing, especially if it requires network access or handles
 sensitive data.
 
-Plugins must be signed before they can be installed from the catalog.
-See [trusted-plugin-list.md](./trusted-plugin-list.md) for the trust
+Signing is **optional and off by default**: `PHLIX_PLUGINS_REQUIRE_SIGNATURE`
+defaults to `0`, so an unsigned catalog plugin installs with a warning on the
+`plugins` log channel. Set it to `1` to refuse unsigned installs. What the
+catalog gates on by default is the per-entry **artifact pin** (`ref` +
+`artifactSha256`), not a signature — see the un-pinned exemptions above.
+See [trusted-plugin-list.md](./trusted-plugin-list.md) for the signature trust
 model and how to add trusted keys.

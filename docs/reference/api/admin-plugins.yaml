@@ -152,9 +152,13 @@ paths:
         branch to surface the newest, unreleased catalog entries and is
         **opt-in / advanced**.
 
-        Per-entry `ref` + `artifactSha256` verification gates every install on
-        both channels, so switching channel does not turn a check off — but it
-        does move the **trust anchor**. Both values are self-asserted by the
+        Per-entry `ref` + `artifactSha256` verification runs on both channels, so
+        switching channel does not turn a check off — but it does move the
+        **trust anchor**. Two standing exemptions apply on either channel:
+        `file://` and scheme-less sources are treated as operator-local bytes
+        rather than a supply-chain artifact, and `PHLIX_PLUGINS_ALLOW_UNVERIFIED`
+        opts back into installing un-pinned remote sources with only a warning
+        logged. Both values are self-asserted by the
         catalog document, so the digest check proves the artifact matches what
         that document claimed, not that the document was audited. On `stable`
         the document is an audited pinned tag; on `dev` it is whatever the

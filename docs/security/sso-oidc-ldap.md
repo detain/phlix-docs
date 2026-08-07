@@ -559,8 +559,13 @@ link attempts resolve to exactly one row (a genuine server error is surfaced as 
 - **`state` is server-side and one-shot.** The PKCE `code_verifier` and the
   authorize-time `redirect_uri` live in the `oauth_state_store` table (600 s TTL),
   never in `$_SESSION` — which under Workerman is process-global and shared between
-  concurrent requests. The consume is atomic (`SELECT … FOR UPDATE` + `DELETE`
-  inside a transaction), so a code cannot be redeemed twice.
+  concurrent requests. The consume is a `SELECT` + `DELETE` inside a transaction.
+  For **GitHub** the `SELECT` takes a `FOR UPDATE` row lock, so two concurrent
+  callbacks carrying the same `state` cannot both be served. The **OIDC** store
+  does not take that lock yet, so its one-shot property rests on the `DELETE`
+  alone and two callbacks racing on the same `state` can both read it. In both
+  cases a replayed `state` still has to carry the matching browser-binding cookie
+  described above.
 - **The `redirect_uri` sent to the provider cannot disagree between legs.** The
   absolute value resolved at authorize is stored in the state and replayed verbatim
   at token exchange (and re-validated on the way out), so the two legs match

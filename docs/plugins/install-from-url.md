@@ -2,15 +2,19 @@
 
 ## TL;DR
 
-Install any public plugin by pasting its `plugin.json` URL into Phlix. Two prerequisites: an admin account on the server and the plugin's HTTPS URL. The plugin lands **disabled** after install — flip the toggle to enable it. For curated, signature-verified plugins in one click, use the [catalog](install-from-catalog.md) instead.
+Install a public plugin by pasting its `plugin.json` URL into Phlix. Two prerequisites: an admin account on the server and the plugin's HTTPS URL. The plugin lands **disabled** after install — flip the toggle to enable it. For curated, digest-pinned plugins in one click, use the [catalog](install-from-catalog.md) instead.
+
+::: warning A pasted URL that is not in a catalog is refused by default
+Only a URL that a configured catalog pins (with both `ref` and `artifactSha256`) carries a supply-chain pin. Anything else is a remote, un-pinned source, and the loader **refuses it** with `Refusing to install unverified plugin source …`. Set `PHLIX_PLUGINS_ALLOW_UNVERIFIED=1` to install un-pinned remote sources anyway — a warning is then logged on the `plugins` channel. `file://` and scheme-less sources are exempt from this gate.
+:::
 
 ---
 
 ## 1. Prerequisites
 
 - **Admin account** on the Phlix server (`users.is_admin = 1`).
-- **Plugin's public `plugin.json` URL** — must be HTTPS (`http://` refused unless `PHLIX_PLUGINS_ALLOW_HTTP=1`).
-- **Optional:** signed plugins need their author key in the [trusted-key allowlist](trusted-plugin-list.md).
+- **Plugin's public `plugin.json` URL** — must be `https://` (or `file://` for an operator-local source). The admin install endpoint accepts only those two schemes; `PHLIX_PLUGINS_ALLOW_HTTP=1` does **not** re-open `http://` here, because it is read by the installer, not by this endpoint.
+- **Optional:** a [trusted-key allowlist](trusted-plugin-list.md) entry for the author's key. The allowlist ships empty, and while it is empty a signature that matches the manifest contents is accepted without an entry.
 
 ---
 
@@ -90,9 +94,9 @@ After install, click **Configure** next to any plugin to open its per-plugin set
 
 ### Failure 2: Signature Verification Failure
 
-**Symptom:** `422` / `plugin.signature.mismatch`.
+**Symptom:** `422` with `"code": "plugin.install.failed"` and an `error` naming the signature. (Every install failure carries this one code — read the `error` string to tell the causes apart.)
 
-**Cause:** Downloaded tarball was corrupted in transit, or the plugin was tampered with.
+**Cause:** The manifest declares a `sha256:…` signature that does not match `sha256(plugin.json)` as installed — the plugin was tampered with or corrupted in transit — or a non-empty trusted-key allowlist does not contain that signature.
 
 **Fix:** Re-download the plugin, or check with the plugin author that the signature is current.
 
@@ -133,7 +137,7 @@ Then contact the plugin author.
 
 ## 7. Next Steps
 
-- [Browse the plugin catalog](install-from-catalog.md) — for curated, signature-verified plugins in one click
+- [Browse the plugin catalog](install-from-catalog.md) — for curated, digest-pinned plugins in one click
 - [Trusted plugin list](trusted-plugin-list.md) — add an author's signing key to the allowlist
 - [Plugin developer guide](developer-guide.md) — for plugin authors; understand what types exist and how to implement them
 - [Verifying the install](developer-guide.md#verifying-the-install) — common plugin errors and `.logs/` exploration
@@ -143,6 +147,6 @@ Then contact the plugin author.
 ## Security Notes
 
 - **HTTPS only by default.** The controller refuses `http://` even when `PHLIX_PLUGINS_ALLOW_HTTP=1` is set elsewhere.
-- **Signatures are honoured.** If the manifest declares a `sha256:…` signature, install fails unless that signature appears in the [trusted-key allowlist](trusted-plugin-list.md). Unsigned plugins install with a warning in the `plugins` log channel.
+- **Signatures are honoured, but they are not required.** If the manifest declares a `sha256:…` signature it must match `sha256(plugin.json)` as installed; a mismatch fails the install unconditionally. It must **also** appear in the [trusted-key allowlist](trusted-plugin-list.md) *when the operator has configured a non-empty one* — the allowlist ships empty, so by default a content-matching signature is accepted without an entry. Unsigned plugins install with a warning in the `plugins` log channel, because `PHLIX_PLUGINS_REQUIRE_SIGNATURE` defaults to `0`.
 - **CSRF is not required.** The API is Bearer-token authenticated. Browsers do not auto-attach Authorization headers across origins.
 - **Every install / enable / disable / uninstall is audit-logged.** Entries land in the `AUTH` log channel with the actor user id and action name. See `docs/dev/architecture-server.md` for log paths.

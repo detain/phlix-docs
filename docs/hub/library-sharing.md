@@ -1,74 +1,100 @@
 # Library Sharing
 
-**Since:** 0.19.0
-
 ## TL;DR
 
-Library sharing lets you grant a hub user access to one of your libraries by email — no link required. You choose the library, set a permission level, and optionally add an expiry. The collaborator sees the shared library under **"Shared with me"** immediately after you share it.
+Library sharing grants a hub user access to one of your libraries. In the current
+UI the only way to create a share is an **invite link** — you pick a server,
+optionally a library, and a permission level, then send the recipient the URL. The
+`POST /api/v1/me/shares` API can also create a share directly from a collaborator's
+email, but no page in the hub calls it. The collaborator sees the library under
+**Shared With Me** as soon as the share exists.
+
+::: warning Much of the UI this page used to describe has been removed
+The hub once had a full share-management UI — a "Share Library" modal, an expiry
+menu, and inline permission editing — built on the old server-rendered template
+stack. That stack was deleted and the Vue replacement re-implemented **list and
+revoke only**. The API endpoints for the rest still exist; the controls do not.
+:::
 
 ---
 
 ## The Shares Page
 
-Both "libraries I've shared" and "shared with me" live together on the single
-**Shares** page (`/app/shares`), reached from the hub's top navigation. (The
-legacy `/manage-shares` and `/shared-with-me` pages still resolve, but `/app/shares`
-is the current entry point.)
+They are **two separate pages**, both in the hub's top navigation: **Shares**
+(`/app/shares`) lists what you have shared out, and **Shared With Me**
+(`/app/shared-with-me`) lists what others have shared with you. (The legacy
+`/manage-shares` and `/shared-with-me` paths still resolve — they redirect to the
+two pages above.)
 
 ### Libraries I've Shared
 
 The **Shares** page lists every library share you have created, one row per share:
 
 ```
-┌─ Library    Shared With    Permission   Shared On   Actions ────────┐
-│ Movies ★   alice@example.com  Read only   2026-05-29  [Edit] [Revoke]│
-│ TV Shows   bob@example.com    Read/Write  2026-05-29  [Edit] [Revoke]│
-└────────────────────────────────────────────────────────────────────┘
+┌─ Library   Shared with   Permissions   Created     Expires    Actions ─┐
+│ Movies ★   Alice         Read only     2026-05-29  Never      [Revoke] │
+│ TV Shows   Bob           Read/Write    2026-05-29  2026-08-27 [Revoke] │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 #### Reading a share row
 
-Each row shows:
+Each row shows six columns:
 
 - **Library** — the library being shared.
-- **Shared With** — the collaborator's email address.
-- **Permission** — `Read` or `Read/Write`. Shown as a coloured badge.
-- **Shared On** — the date the share was created.
-- **Actions** — **Edit** lets you change the permission inline. **Revoke** deletes the share immediately.
+- **Shared with** — the collaborator's **display name**, falling back to their user
+  id if they have not set one. The email address you shared with is not returned by
+  the API and is not shown.
+- **Permissions** — `Read only` or `Read / Write`, as a badge. ⚠ Read-only, in both
+  senses: see [Permission levels are not enforced](#permission-levels-are-not-enforced).
+- **Created** — the date the share was created.
+- **Expires** — the share's expiry, if it has one.
+- **Actions** — **Revoke** only. There is no **Edit** control; to change a
+  permission you must call `PATCH /api/v1/me/shares/{id}` directly.
 
 ### Shared With Me
 
-The same **Shares** page also lists every library another hub user has shared with you, one card per library:
+The separate **Shared With Me** page (`/app/shared-with-me`) shows one card per
+incoming share:
 
 ```
 ┌─ Library ──────────────────────────────┐
 │ Movies ★                               │
-│ Shared by: Alice (alice@example.com)   │
-│ Server: My Server                     │
+│ Shared by: Alice                       │
+│ Server: My Server                      │
+│ Received: 2026-05-29                   │
+│ Expires: Never                         │
 │ Permission: Read only                  │
-│                         [Browse Library]│
+│                           [Open Server]│
 └────────────────────────────────────────┘
 ```
 
-Clicking **Browse Library** opens the library in the browse view.
+**Open Server** opens the media server's own web UI in a new tab, at the first
+hostname that server has advertised. It is disabled when the server has not
+reported a reachable URL. **There is no in-hub browse view for a shared library** —
+the hub has no `/browse/:server/:library` route.
+
+The card shows the sharer's display name only; their email address is not exposed.
 
 ---
 
 ## Sharing a Library
 
-Click **+ Share Library** in the top-right corner of the **Shares** page to open the Share modal.
-
-### Fields
+There is **no "+ Share Library" control on the Shares page.** Create shares from
+**Invite Links** (`/app/invite-links`) instead — see
+[Invite Links](./invite-links.md).
 
 | Field | Required | Description |
 |---|---|---|
-| **Server** | Yes | Select one of your claimed servers from the dropdown. |
-| **Library** | Yes | Select a specific library on that server. This dropdown populates after you select a server. |
-| **Share with** | Yes | The collaborator's hub account email address. They must have a hub account. |
-| **Permission** | No | `Read` (default) or `Read/Write`. Read-only collaborators cannot modify playlists or download media. |
-| **Expires** | No | How long the share lasts. Options: `Never` (default), `7 days`, `30 days`, `90 days`. |
+| **Server** | Yes | One of your claimed servers. |
+| **Library** | No | A specific library on that server. Leave it unset to grant **all** libraries on the server — that is the only sub-server granularity there is. |
+| **Permission** | No | `Read` (default) or `Read/Write`. |
+| **Max uses** | No | How many times the link may be redeemed. |
+| **Expires** | No | `7 days` (default), `30 days`, `90 days`, `1 year` or `Never`. |
 
-Click **Share** to create the share. The new row appears at the top of the list without a page reload. Click **Cancel** or click outside the modal to close it without sharing.
+Whoever redeems the link gets the share, under their own account. Direct shares
+created through `POST /api/v1/me/shares` take no expiry at all — the endpoint never
+reads one from the request body.
 
 ---
 
@@ -76,11 +102,33 @@ Click **Share** to create the share. The new row appears at the top of the list 
 
 ### Change permission
 
-On the **Shares** page, find the row for the share you want to update. Click the permission badge (e.g., "Read only") in the **Actions** column and select a new level from the dropdown. The change is saved immediately via the API and the badge updates to reflect the new level.
+API-only. The Shares page renders the level as a read-only badge; there is no
+dropdown and no Edit control. Use:
+
+```http
+PATCH /api/v1/me/shares/{id}
+```
+
+with `{ "permission": "read" }` or `{ "permission": "readwrite" }`.
+
+### Permission levels are not enforced {#permission-levels-are-not-enforced}
+
+::: danger `permission_level` is a label, not a control
+There are **two** levels, `read` and `readwrite` — not three, and there is no
+separate download or DLNA tier. More importantly, nothing enforces either value.
+The level is validated on write, stored, returned by the API and rendered as a
+badge, but no code path consults it before permitting an action: the hub's
+`LibraryShare::canWrite()` and `SharedLibraryDto::canWrite()` have **zero production
+callers** — they are reachable only from their own unit tests.
+
+Do not rely on `read` to prevent a collaborator from doing anything.
+:::
 
 ### Revoke a share
 
-Click **Revoke** on the row. The share is deleted immediately and the row is removed from the table with a fade animation.
+Click **Revoke** on the row. The share stops applying immediately and the table
+reloads without it. (It is a soft delete — the row is marked `revoked_at` and
+filtered out of every query, rather than being physically removed.)
 
 ---
 
@@ -105,7 +153,7 @@ All endpoints require authentication (`Authorization: Bearer <jwt>` or the `phli
 
 ### 1. Library dropdown is empty after selecting a server
 
-**Symptom:** You select a server in the Share modal but the Library dropdown shows no options.
+**Symptom:** You select a server on the **Invite Links** page but the Library dropdown shows no options.
 
 **Reason:** The library dropdown is populated from the list of libraries on that server. If the server has no libraries, none appear.
 
@@ -113,7 +161,7 @@ All endpoints require authentication (`Authorization: Bearer <jwt>` or the `phli
 
 ### 2. Share target email not found
 
-**Symptom:** The Share modal shows an error and the share is not created.
+**Symptom:** `POST /api/v1/me/shares` returns `404 user_not_found` and the share is not created.
 
 **Reasons:**
 - The collaborator's email address is not registered on the hub.
@@ -127,9 +175,13 @@ All endpoints require authentication (`Authorization: Bearer <jwt>` or the `phli
 
 **Diagnosis:**
 ```bash
-# On the hub, check the share creation audit log:
-grep "library-share-created" .logs/hub-audit.log | tail -20
+# On the hub, check the share creation log line:
+grep "Library shared" .logs/hub.log | tail -20
 ```
+
+(There is no `.logs/hub-audit.log` — the audit channel writes to `.logs/audit.log`
+— and no `library-share-created` event string exists. The handler logs the
+free-text message `Library shared` on the `hub` channel.)
 
 **Fix:** The library must have completed a media scan on the server. A library with no scanned content appears empty. Ask the library owner to trigger a rescan.
 
@@ -137,9 +189,11 @@ grep "library-share-created" .logs/hub-audit.log | tail -20
 
 **Symptom:** The collaborator sees the library disappear from "Shared with me" after the expiry date.
 
-**Reason:** The share had a fixed expiry (7, 30, or 90 days) and that period has passed.
+**Reason:** The share came from an invite link that carried an expiry, and that
+period has passed. (Shares created directly through the API never expire — the
+endpoint does not accept an expiry.)
 
-**Fix:** The library owner can create a new share without an expiry (select "Never") to restore access.
+**Fix:** The library owner can issue a new invite link with **Never** selected.
 
 ---
 

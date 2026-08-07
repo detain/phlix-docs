@@ -2,7 +2,17 @@
 
 ## TL;DR
 
-Hub sharing lets you grant access to your media library to friends and family through the hub. Open the **Shares** page (`/app/shares`) → choose what to share → invite by email or link. Recipients see your server under **"Shared with me"** on the same **Shares** page in their hub account without needing to install anything or be on the same network. Permissions are configurable from view-only to full playback with optional download access.
+Hub sharing lets you grant access to your media library to friends and family
+through the hub. Create an **invite link** on `/app/invite-links` and send it to
+them. Recipients see your server under **Shared With Me** (`/app/shared-with-me`)
+in their hub account without needing to install anything or be on the same network.
+
+::: warning There is no email invite, and permissions are not enforced
+phlix-hub has **no mailer of any kind** — it cannot send an invite email. Sharing
+is link-based. And the two permission levels (`read`, `read/write`) are stored and
+displayed but **not enforced** by any code path. Both are described accurately
+below.
+:::
 
 ---
 
@@ -10,46 +20,55 @@ Hub sharing lets you grant access to your media library to friends and family th
 
 The sharing model is simple:
 
-- **You** (library owner) grant access from the **Shares** page (`/app/shares`)
-- **Your friend** receives an invite by email or a shareable link
-- **Your friend** logs into the hub and sees your server under **"Shared with me"** on the **Shares** page
-- **You** retain full control — revoke or change permissions at any time
+- **You** (library owner) create an invite link on `/app/invite-links`
+- **Your friend** opens the link
+- **Your friend** logs into the hub and sees your server under **Shared With Me**
+  (`/app/shared-with-me`)
+- **You** retain control — you can revoke at any time
 
-### Three sharing scopes
+### Two sharing scopes
+
+Both are at library granularity. Folder-level and item-level sharing do not exist —
+a share carries a single `library_id` and there is no sub-library plumbing at all.
 
 | Scope | What the recipient sees |
 |---|---|
-| Entire library | All items in the selected library |
-| Specific folders | Only the folders you chose (e.g., `Movies/Classics`) |
-| Specific media items | Only the individual items you selected |
+| Whole server | Every library on that server — leave **Library** unset on the invite link |
+| One library | Only the library you selected |
 
-### Three permission levels
+### Two permission levels
 
-| Permission | Browse | Play | Cast / DLNA | Download |
-|---|---|---|---|---|
-| **View only** | ✅ | ❌ | ❌ | ❌ |
-| **View + Playback** | ✅ | ✅ | ❌ | ❌ |
-| **View + Playback + Download** | ✅ | ✅ | ✅ | ✅ |
+| Permission | Stored value |
+|---|---|
+| **Read only** | `read` (default) |
+| **Read / Write** | `readwrite` |
 
-> **Note:** DLNA casting requires the `View + Playback + Download` permission — the download component enables the stream to be redirected to a DLNA renderer.
+::: danger The level is recorded, not enforced
+Nothing consults `permission_level` before permitting an action — the hub's
+`canWrite()` helpers have no production callers. There is also no download tier and
+no DLNA tier: neither concept exists in the sharing model, and no permission gates
+DLNA casting.
+:::
 
 ---
 
 ## 2. Granting Access via the Hub Web App
 
 1. Log into the hub at `https://hub.phlix.app` (or your self-hosted hub URL)
-2. Open the **Shares** page (`/app/shares`) from the top navigation
-3. Click **Share Library**
-4. Choose what to share (entire library, specific folders, or specific items)
-5. Select the permission level: **View only** / **View + Playback** / **View + Playback + Download**
-6. Choose invite method:
-   - **Email** — enter the recipient's address; optionally set an expiry date
-   - **Shareable link** — generates a direct link anyone can use
-7. Click **Send Invite**
+2. Open **Invite Links** (`/app/invite-links`) from the top navigation
+3. Click **New Invite**
+4. Choose the **server**, and optionally a **library** (leave unset to share every
+   library on that server)
+5. Select the permission level: **Read only** or **Read / Write**
+6. Set **max uses** and an **expiry** (`7 days` default, `30 days`, `90 days`,
+   `1 year`, `Never`)
+7. Copy the generated URL and send it to your friend however you like
 
-### Per-profile sharing (content filtering)
+### Content filtering is not available per share
 
-You can restrict shared content to G-rated media for certain recipients. This uses the same rating filter system as user profiles. When granting access, enable **"Restrict to G-rated content"** — the recipient will only see media approved for general audiences in that shared library, regardless of the actual library contents.
+There is no "Restrict to G-rated content" option, and no rating filter of any kind
+attaches to a hub share. Content-rating caps are a **media-server profile** feature
+and have no wiring to hub sharing.
 
 ---
 
@@ -59,12 +78,11 @@ Library sharing is managed entirely from the **Shares** page (`/app/shares`) —
 there is no server-side CLI for sharing. Grant, list, change, and revoke access
 from the **Shares** page described in §2 above:
 
-- **Grant** — click **Share Library**, choose the library/folder/item, pick a
-  permission level (**View only** / **View + Playback** / **View + Playback +
-  Download**, the last of which enables DLNA casting), and send the invite.
-- **List** — the **Shares** page lists every active share and its permission level.
-- **Change / Revoke** — adjust the permission level or revoke access inline;
-  revocation takes effect immediately.
+- **Grant** — create an invite link on `/app/invite-links` (see §2).
+- **List** — the **Shares** page (`/app/shares`) lists every active share and its
+  permission level.
+- **Revoke** — click **Revoke** on the row; it takes effect immediately.
+- **Change** — not available in the UI. Use `PATCH /api/v1/me/shares/{id}`.
 
 Sharing state lives on the hub, not on the media server, so these actions are
 only available through the hub web app.
@@ -73,17 +91,11 @@ only available through the hub web app.
 
 ## 4. Accepting a Share Invite
 
-### Via email invite
-
-1. Open the invite email (check **spam** if it doesn't arrive within a few minutes)
-2. Click **Accept Invite** — if you don't have a hub account yet, create one first
-3. Log into the hub — the shared server appears under **"Shared with me"** in your dashboard
-4. Select the shared server to browse and play the library
-
-### Via shareable link
+There is one method: the shareable link. (The hub cannot send email.)
 
 1. Click the link — if you're not logged in, sign in or create a hub account
-2. The shared library is immediately accessible under **"Shared with me"**
+2. The shared library is immediately accessible under **Shared With Me**
+   (`/app/shared-with-me`)
 
 ---
 
@@ -92,13 +104,14 @@ only available through the hub web app.
 As a library owner, you can manage all active shares from the **Shares** page (`/app/shares`):
 
 - **View** all active shares and their permission levels
-- **Change** a permission level for an existing share
 - **Revoke** access at any time (immediate effect)
-- **Set an expiry** on email invites — after the expiry date the link becomes invalid
+
+Changing a permission level is API-only, and expiry is set on the **invite link**
+rather than on an existing share.
 
 As a recipient:
 
-- Shared libraries appear under **"Shared with me"** on the **Shares** page
+- Shared libraries appear under **Shared With Me** (`/app/shared-with-me`)
 - You cannot re-share content you have been given access to
 - Your access can be revoked by the library owner at any time
 
@@ -106,38 +119,26 @@ As a recipient:
 
 ## 6. What Can Go Wrong
 
-### 1. Friend doesn't receive the invite email
+### 1. An invite link is not tied to an email address
 
-**Symptom:** The sender sees "Invite sent" but the recipient cannot find the email.
+::: danger Treat an invite link as a bearer token
+Earlier revisions of this page said the invite "is tied to the exact email address
+it was sent to". **The opposite is true.** Redeeming a link creates the share for
+**whoever redeems it**, using their own account email. A link is bounded only by its
+**max uses** and its **expiry** — not by identity.
 
-**Diagnosis:**
-```bash
-# Check the hub audit log for invite events:
-grep "share_invite_sent" .logs/hub-audit.log | tail -20
+Anyone who obtains the URL, by forwarding or interception, can redeem it. Send links
+over a channel you trust, set a low max-use count, and keep the expiry short.
+:::
 
-# Verify the email address — the most common cause is a typo
-```
+**Symptom:** Someone other than the intended recipient now has access.
 
-**Fix:** Ask the recipient to check their spam/junk folder. If still not found, re-send the invite with a verified email address. For enterprise users, ask their mail admin to allow-list `noreply@phlix.app`.
-
----
-
-### 2. Friend creates an account with a different email than invited
-
-**Symptom:** The invite link is clicked but the library doesn't appear under "Shared with me" after login.
-
-**Diagnosis:**
-```bash
-# Check the hub audit log for invite acceptance:
-grep "share_invite_accepted" .logs/hub-audit.log | tail -10
-# The log shows the invited email vs. the accepting account email
-```
-
-**Fix:** The invite is tied to the exact email address it was sent to. The friend must use the same email address that received the invite, or the library owner must grant access afresh to the friend's actual email address via the dashboard or CLI.
+**Fix:** Revoke the share on `/app/shares`, and delete or expire the invite link so
+it cannot be redeemed again.
 
 ---
 
-### 3. Shared library appears empty or doesn't appear
+### 2. Shared library appears empty or doesn't appear
 
 **Symptom:** Friend accepts the invite and logs in, but the shared server shows no libraries or an empty library.
 
@@ -158,18 +159,14 @@ curl -X POST http://localhost:8096/api/v1/libraries/{id}/rescan \
 
 ---
 
-### 4. View-only user cannot cast to DLNA
+### 3. Cannot cast to DLNA
 
 **Symptom:** Friend logs in, browses the shared library, but pressing **Cast** or **Play To** on a DLNA device does nothing or shows an error.
 
-**Diagnosis:**
-Check the current permission level on the share from the hub's **Shares** page
-(`/app/shares`) — it lists each share and its permission level.
-
-**Fix:** DLNA casting requires `View + Playback + Download` permission. Ask the
-library owner to upgrade your permission level from the hub's **Shares** page
-(`/app/shares`) — change the share's permission to **"View + Playback +
-Download"**.
+**This is not a permissions problem.** No share permission gates DLNA casting —
+there is no download or cast tier, and `permission_level` is not enforced anywhere.
+Raising the permission level will not change the outcome. Investigate the DLNA
+setup on the media server instead; see [DLNA](/advanced/dlna).
 
 ---
 

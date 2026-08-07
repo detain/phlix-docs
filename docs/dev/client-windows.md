@@ -11,14 +11,14 @@
 
 ## Table of Contents
 
-1. [Architectural Rule](#1-architectural-rule)
-2. [Technology Stack](#2-technology-stack)
-3. [Entry Points and Boot Sequence](#3-entry-points-and-boot-sequence)
-4. [The `app://` Protocol](#4-the-app-protocol)
-5. [IPC Channels](#5-ipc-channels)
-6. [Dependency Pinning](#6-dependency-pinning)
-7. [Testing](#7-testing)
-8. [Building and Releasing](#8-building-and-releasing)
+1. [Architectural Rule](#_1-architectural-rule)
+2. [Technology Stack](#_2-technology-stack)
+3. [Entry Points and Boot Sequence](#_3-entry-points-and-boot-sequence)
+4. [The `app://` Protocol](#_4-the-app-protocol)
+5. [IPC Channels](#_5-ipc-channels)
+6. [Dependency Pinning](#_6-dependency-pinning)
+7. [Testing](#_7-testing)
+8. [Building and Releasing](#_8-building-and-releasing)
 
 ---
 

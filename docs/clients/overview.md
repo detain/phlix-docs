@@ -18,6 +18,7 @@ Phlix is available on a wide range of platforms — from living-room TVs to phon
 | [Web](./web) | Browser-based | No install needed |
 | [Roku](./roku) | Channel app | For Roku devices |
 | [Samsung Tizen](./tizen) | Smart TV app | For Samsung Smart TVs |
+| [Console](./console) | Terminal TUI | Full-window terminal client |
 
 ## Skip Button
 

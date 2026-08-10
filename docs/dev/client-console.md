@@ -103,9 +103,6 @@ phlix-console-client/
 │   │   ├── DetailScreen.php # Media detail view
 │   │   ├── PlayerScreen.php # Video player
 │   │   └── AdminUsersScreen.php # Admin user management
-│   ├── Spike/
-│   │   ├── PosterSpike.php  # Poster rendering spike
-│   │   └── VideoSpike.php   # Video frame extraction
 │   ├── Store/
 │   │   ├── AuthStore.php    # Authentication state
 │   │   ├── LibrariesStore.php # Libraries cache
@@ -154,6 +151,20 @@ interface Screen
     public function columns(): int;             // Terminal columns
     public function rows(): int;               // Terminal rows
 }
+```
+
+The App hand-rolls its own routing rather than using `candy-core`'s `ScreenStack`. The
+`ScreenStack` discards a nested screen's updated model when navigating away, so it cannot
+host a stateful form — the `Route` enum (see `src/Route.php:13-15`) names the current
+destination instead:
+
+```php
+/**
+ * The top-level screen the {@see App} is showing. The App hand-rolls routing
+ * (candy-core's ScreenStack discards a nested screen's updated model, so it
+ * can't host a stateful form) — this enum names the current destination.
+ */
+enum Route { ... }
 ```
 
 ### 4.3 Message Passing
@@ -261,15 +272,15 @@ auto      → Half-block by default, graphics on demand
 
 ### 6.3 Video Frame Extraction
 
-Video frames are decoded via `VideoSpike`:
+Video frames are decoded via ffmpeg and converted to ANSI-escaped strings:
 
 ```php
-// Probe a video file
-$report = $videoSpike->probeReport($path);
+// Probe a video file using ffprobe
+$report = $this->videoSpike->probeReport($path);
 // Returns: duration, resolution, codecs, etc.
 
-// Extract frames
-$frames = $videoSpike->frames($path, $count = 1, $cols = 60, $rows = 20, $mode = 'halfblock');
+// Extract frames using ffmpeg
+$frames = $this->videoSpike->frames($path, $count = 1, $cols = 60, $rows = 20, $mode = 'halfblock');
 // Yields ANSI-escaped strings for each frame
 ```
 

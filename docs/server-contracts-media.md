@@ -73,7 +73,7 @@ Returns library facets (genres, years, etc.) across all libraries.
 
 ---
 
-### GET /api/v1/media/facets?library_id={id}
+### GET /api/v1/media/facets?library_id={id} {#get-media-facets-library-id}
 
 Returns library facets scoped to a specific library.
 
@@ -94,7 +94,7 @@ Returns a list of all libraries accessible to the user.
 
 ---
 
-### GET /api/v1/libraries/{id}
+### GET /api/v1/libraries/{id} {#get-library-by-id}
 
 Returns a single library by its ID.
 
@@ -121,7 +121,7 @@ Returns the authenticated user's favorited media with pagination support.
 
 ---
 
-### POST /api/v1/media/{id}/favorite
+### POST /api/v1/media/{id}/favorite {#add-media-favorite}
 
 Adds a media item to the authenticated user's favorites.
 
@@ -134,7 +134,7 @@ Adds a media item to the authenticated user's favorites.
 
 ---
 
-### DELETE /api/v1/media/{id}/favorite
+### DELETE /api/v1/media/{id}/favorite {#remove-media-favorite}
 
 Removes a media item from the authenticated user's favorites.
 
@@ -147,7 +147,7 @@ Removes a media item from the authenticated user's favorites.
 
 ---
 
-### POST /api/v1/media/{id}/watched
+### POST /api/v1/media/{id}/watched {#mark-media-watched}
 
 Marks a media item as watched.
 
@@ -160,7 +160,7 @@ Marks a media item as watched.
 
 ---
 
-### POST /api/v1/media/{id}/unwatched
+### POST /api/v1/media/{id}/unwatched {#mark-media-unwatched}
 
 Marks a media item as unwatched (removes watched status).
 
@@ -173,7 +173,7 @@ Marks a media item as unwatched (removes watched status).
 
 ---
 
-### PUT /api/v1/media/{id}/like
+### PUT /api/v1/media/{id}/like {#set-media-like}
 
 Sets the like level for a media item.
 
@@ -205,7 +205,7 @@ Returns the "Continue Watching" rail for the authenticated user.
 
 ---
 
-### GET /api/v1/media/{id}/siblings
+### GET /api/v1/media/{id}/siblings {#get-media-siblings}
 
 Returns siblings of a media item (related items in the same library/season) with pagination.
 
@@ -224,7 +224,7 @@ Returns siblings of a media item (related items in the same library/season) with
 
 ---
 
-### GET /api/v1/media/similar/{id}
+### GET /api/v1/media/similar/{id} {#get-media-similar}
 
 Returns similar media items (More Like This) for a given media item.
 
@@ -237,7 +237,7 @@ Returns similar media items (More Like This) for a given media item.
 
 ---
 
-### GET /api/v1/media/{id}/missing-episodes
+### GET /api/v1/media/{id}/missing-episodes {#get-media-missing-episodes}
 
 Returns a report of missing episodes for a TV series.
 
@@ -250,7 +250,7 @@ Returns a report of missing episodes for a TV series.
 
 ---
 
-### GET /api/v1/media/trickplay/{id}
+### GET /api/v1/media/trickplay/{id} {#get-media-trickplay}
 
 Returns trickplay sprite URLs for fast-forward thumbnail generation.
 
@@ -263,7 +263,7 @@ Returns trickplay sprite URLs for fast-forward thumbnail generation.
 
 ---
 
-### GET /api/v1/media/{id}/playback-info
+### GET /api/v1/media/{id}/playback-info {#get-media-playback-info}
 
 Returns stream URLs and playback information for a media item.
 

@@ -121,6 +121,7 @@ export default defineConfig({
             { text: 'Windows App', link: '/clients/windows' },
             { text: 'Web App', link: '/clients/web' },
             { text: 'DLNA / Play To', link: '/clients/dlna' },
+            { text: 'Console', link: '/clients/console' },
             { text: 'Skip Button Integration Brief', link: '/clients/skip-button-integration-brief' },
           ]
         }
@@ -240,6 +241,7 @@ export default defineConfig({
             { text: 'Samsung Tizen', link: '/dev/client-tizen' },
             { text: 'Roku', link: '/dev/client-roku' },
             { text: 'Windows', link: '/dev/client-windows' },
+            { text: 'Console Client Build', link: '/dev/client-console' },
           ]
         },
         {

@@ -44,9 +44,32 @@ For TV shows, theme files can be placed at the series level to apply to all epis
 
 1. **Library Scan:** When a library is scanned (via `LibraryManager::scanLibrary()`), theme media is automatically discovered by `ThemeMediaFinder`.
 2. **Cache:** Discovered theme media is cached in the `theme_media` table to avoid re-scanning on every request.
-3. **Manual Rescan:** Users can trigger a rescan via `POST /api/v1/libraries/{id}/theme-media/scan`.
+3. **Manual Rescan:** An **admin** can trigger a rescan via `POST /api/v1/libraries/{id}/theme-media/scan` (see [Authorization](#authorization)).
 
 ## API Endpoints
+
+### Authorization
+
+The two **mutation** endpoints are admin-only; the read endpoint is not.
+
+| Endpoint | Who may call it |
+|----------|-----------------|
+| `GET /api/v1/libraries/{id}/theme-media` | Not admin-gated — a plain read of the cached row |
+| `POST /api/v1/libraries/{id}/theme-media/scan` | **Admin only** — `401 {code: auth.required}` unauthenticated, `403 {code: auth.not_admin}` for a non-admin |
+| `DELETE /api/v1/libraries/{id}/theme-media` | **Admin only** — same `401` / `403` contract |
+
+The gate is `Phlix\Server\Http\Middleware\AdminMiddleware`, consulted **inside** each handler
+rather than by route-level middleware (the three routes are registered bare in
+`Application::loadLibraryRoutes()`). Since **S323** the middleware is a *required*, non-nullable
+constructor dependency of `ThemeMediaController` — the check is unconditional, and a controller
+built without a gate cannot exist (`ArgumentCountError` at construction). Before S323 it was an
+optional setter with an `if ($this->adminMiddleware !== null)` guard around each check, which
+meant a gate-less construction would have exposed both mutations to an anonymous caller; the
+production wiring always supplied the middleware, so this was a latent shape rather than an
+observed bypass. Do not re-introduce a nullable type, a default, or a setter —
+`tests/Unit/Server/Http/Controllers/ThemeMediaControllerAdminGateIsStructuralTest.php` fails on
+each of those, and on a **new** handler added to the controller without either a gate or an
+explicit read-only exemption.
 
 ### Get Theme Media
 
@@ -84,7 +107,8 @@ Returns theme media metadata for a library:
 POST /api/v1/libraries/{id}/theme-media/scan
 ```
 
-Triggers a filesystem rescan and updates the cache.
+Triggers a filesystem rescan and updates the cache. **Admin only** — see
+[Authorization](#authorization).
 
 ### Delete Theme Media Cache
 
@@ -92,7 +116,8 @@ Triggers a filesystem rescan and updates the cache.
 DELETE /api/v1/libraries/{id}/theme-media
 ```
 
-Removes the cached theme media entry (files remain on disk).
+Removes the cached theme media entry (files remain on disk). **Admin only** — see
+[Authorization](#authorization).
 
 ### Stream Audio
 

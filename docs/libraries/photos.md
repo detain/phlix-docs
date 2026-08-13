@@ -134,8 +134,8 @@ The slideshow player features:
 `PhotoScanner` (`src/Media/Library/PhotoScanner.php`) is a complete, tested EXIF
 harvester: `harvestExif()` (`:85-179`), a `getimagesize()` fallback
 (`harvestBasicImageMetadata()`, `:189-219`), GPS rational conversion (`:278-364`) and a
-`scanPhotoLibrary()` generator (`:392-434`). It is not deleted and it is not broken — it
-is simply **not on the scan path**.
+`scanPhotoLibrary()` generator (`:392-434`). It is not deleted, and its logic is
+exercised by unit tests — it is simply **not on the scan path**.
 
 Traced at `phlix-server` `96dbb3a4`:
 
@@ -163,6 +163,30 @@ and `PhotoLibraryManagerTest.php`, which construct the scanner directly.
 
 **Consequence:** these classes are covered by green unit tests while contributing nothing
 to a real scan. Do not read `PhotoScannerTest` passing as evidence that photo EXIF works.
+
+### Wiring it up needs `ext-exif`, which the published image lacked until S314
+
+`harvestExif()` calls `@exif_read_data()` (`PhotoScanner.php:95`) with no
+`function_exists()` guard, and `@` does **not** suppress the `Error` PHP raises for an
+undefined function. The published Docker images did not enable the extension:
+`php:8.3-cli-alpine` ships without it, and `ext-exif` was only declared in
+`composer.json` (`:11`) and installed in the base image
+(`docker/Dockerfile.base:100`) by **S314** (`6a8f07c5`, 2026-08-10), which also makes a
+missing extension fail the build rather than the runtime
+(`composer check-platform-reqs`, `docker/Dockerfile:75-76`).
+
+So there were two independent reasons a photo scan produced no EXIF, and it matters
+which one applied:
+
+| | |
+|---|---|
+| **Why no EXIF is extracted** | The harvester is not called. This is the operative reason, and it is unchanged by S314. |
+| **What would have happened if it *were* called, pre-S314** | An immediate fatal `Error: Call to undefined function exif_read_data()` on the first JPEG. |
+
+Because nothing on the scan path reaches the call, **no photo scan ever hit that fatal**
+— the `scanPhotoLibrary()` fallback comment predates the extension work by weeks
+(`LibraryManager.php` at `641602bc`, 2026-07-15). S314 removed the latent hazard; it did
+not change what a photo scan extracts, which is still nothing.
 
 ## Metadata matching writes FILM metadata onto photos
 

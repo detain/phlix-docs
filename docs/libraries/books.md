@@ -147,7 +147,10 @@ run.
 `harvestEpub()` parses `content.opf` (`:132-294`), `harvestPdf()` reads PDF metadata and
 counts pages (`:296-349`, `:351-398`), `harvestCbz()` parses `ComicInfo.xml` and extracts
 a cover (`:400-506`), and `scanBookLibrary()` is a generator over all three (`:508`).
-It is not deleted and it is not broken — it is **not on the scan path**.
+It is not deleted, and its logic is exercised by unit tests — it is **not on the scan
+path**. (One caveat on "not broken": see
+[the `ext-exif` note](#the-pdf-path-needs-ext-exif-which-the-published-image-lacked-until-s314)
+below.)
 
 Traced at `phlix-server` `96dbb3a4`:
 
@@ -182,6 +185,29 @@ construct the scanner directly.
 **Consequence:** these classes are covered by green unit tests while contributing nothing
 to a real scan. Do not read `BookScannerTest` passing as evidence that EPUB/PDF/CBZ
 metadata extraction works.
+
+### The PDF path needs `ext-exif`, which the published image lacked until S314
+
+`harvestPdf()` reads XMP through `@exif_read_data($path, 'PDF', true)`
+(`BookScanner.php:306`) with no `function_exists()` guard, and `@` does **not** suppress
+the `Error` PHP raises for an undefined function. The published Docker images did not
+enable the extension: `php:8.3-cli-alpine` ships without it, and `ext-exif` was only
+declared in `composer.json` (`:11`) and installed in the base image
+(`docker/Dockerfile.base:100`) by **S314** (`6a8f07c5`, 2026-08-10), which also makes a
+missing extension fail the build rather than the runtime
+(`composer check-platform-reqs`, `docker/Dockerfile:75-76`).
+
+Two independent reasons, and it matters which one applies:
+
+| | |
+|---|---|
+| **Why no PDF metadata is extracted** | `harvestPdf()` is not called. This is the operative reason, and S314 does not change it. |
+| **What would have happened if it *were* called, pre-S314** | An immediate fatal `Error: Call to undefined function exif_read_data()` on the first PDF. |
+
+Because nothing on the scan path reaches the call, **no book scan ever hit that fatal**.
+S314 removed the latent hazard; it did not change what a book scan extracts, which is
+still nothing. EPUB and CBZ do not touch `exif_read_data()` at all — they use
+`ZipArchive` — so they were never exposed to it.
 
 ## Metadata matching writes FILM metadata onto books
 

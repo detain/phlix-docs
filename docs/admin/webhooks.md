@@ -15,7 +15,11 @@ The webhook system dispatches events via signed HTTP POST requests to configured
 
 ### Via API
 
-All webhook management is under the `/api/v1/admin/webhooks` endpoint group, protected by admin authentication.
+All webhook management is under the `/api/v1/admin/webhooks` endpoint group, protected by admin
+authentication: `401 {code: auth.required}` unauthenticated, `403 {code: auth.not_admin}` for a
+non-admin, enforced by `AdminMiddleware` inside each handler of
+`WebhookAdminController` — which since **S323** cannot be constructed without that gate
+([Admin Gate Invariant](../dev/admin-gate-invariant)).
 
 **Register a webhook**
 

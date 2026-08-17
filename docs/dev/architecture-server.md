@@ -60,6 +60,10 @@ the factory.
    new provider in `src/Common/Container/Providers/` and append it to
    `ContainerFactory::defaultProviders()`.
 2. For autowire-friendly classes, add `Foo\Bar::class => autowire()`.
+   ⚠ `autowire()` **silently skips optional constructor parameters**, so a
+   nullable-with-default dependency arrives as `null` instead of failing loudly.
+   Never make a security check optional this way — see
+   [Admin Gate Invariant](admin-gate-invariant).
 3. For classes that need configuration values, use `factory(static fn () => ...)`
    and read from `$appConfig`.
 4. Update the matching unit test in

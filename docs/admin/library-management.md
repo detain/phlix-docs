@@ -950,6 +950,11 @@ GET  /api/v1/media/{id}/match/search?query=&year=&type=
 POST /api/v1/media/{id}/match/apply
 ```
 
+Both answer `401 {code: auth.required}` unauthenticated and
+`403 {code: auth.not_admin}` for a non-admin. The check is taken by
+`AdminMiddleware` inside `MediaMatchController`, which since **S323** cannot be
+constructed without it ([Admin Gate Invariant](../dev/admin-gate-invariant)).
+
 - `GET .../match/search` returns up to 20 candidates as
   `{ results: [ { tmdb_id, type, title, year, overview, poster_url, backdrop_url, vote_average } ], query, type, context }`.
   All query params are optional — the server derives `query`/`year`/`type` from the

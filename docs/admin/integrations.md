@@ -42,6 +42,14 @@ The event multi-select lists the 7 subscribable events from the catalog, grouped
 | `DELETE` | `/api/v1/admin/webhooks/{id}` | Remove a webhook |
 | `POST` | `/api/v1/admin/webhooks/{id}/test` | Fire a test dispatch |
 
+All five are **admin-only**: `401 {code: auth.required}` unauthenticated,
+`403 {code: auth.not_admin}` for a non-admin. The check is taken by
+`AdminMiddleware` **inside** each handler — the routes are registered bare in
+`Application::loadWebhookAdminRoutes()`, with no route-level middleware group — and
+since **S323** the middleware is a required, non-nullable constructor dependency of
+`WebhookAdminController` rather than an optional setter with a null guard. See
+[Admin Gate Invariant](../dev/admin-gate-invariant).
+
 The backend is documented in [`webhooks.md`](./webhooks).
 
 ### Note on other integrations
@@ -73,6 +81,14 @@ The Arr sync section (`/admin/integrations#arr-sync`) connects to TRaSH-Guides-c
 | `GET` | `/api/v1/admin/sync/status` | Returns `{ enabled, last_sync_at, last_sync_timestamp }` |
 | `POST` | `/api/v1/admin/sync/trash-guides` | Triggers a manual TRaSH-Guides sync |
 | `PUT` | `/api/v1/admin/sync/enable` | Body `{ enabled: bool }` — enables or disables auto-sync |
+
+All three are **admin-only**: `401 {code: auth.required}` unauthenticated,
+`403 {code: auth.not_admin}` for a non-admin. As with the webhook routes above the
+check is taken by `AdminMiddleware` **inside** each handler (`Arr\SyncController`;
+the routes are registered bare in `Application::loadArrSyncRoutes()`), and since
+**S323** the middleware is a required, non-nullable constructor dependency rather
+than an optional setter with a null guard. See
+[Admin Gate Invariant](../dev/admin-gate-invariant).
 
 ## Auth providers
 

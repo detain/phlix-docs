@@ -71,6 +71,10 @@ observed bypass. Do not re-introduce a nullable type, a default, or a setter —
 each of those, and on a **new** handler added to the controller without either a gate or an
 explicit read-only exemption.
 
+`ThemeMediaController` was the first of six controllers converted to that shape; the recipe, the
+structural pin and the shared handler-enumeration helper are documented once in
+[Admin Gate Invariant](../dev/admin-gate-invariant).
+
 ### Get Theme Media
 
 ```

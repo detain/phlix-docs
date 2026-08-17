@@ -229,6 +229,7 @@ export default defineConfig({
           items: [
             { text: 'Contributing', link: '/dev/contributing' },
             { text: 'Admin SPA (admin-ui)', link: '/dev/admin-spa' },
+            { text: 'Admin Gate Invariant', link: '/dev/admin-gate-invariant' },
             { text: 'Test Harness', link: '/dev/test-harness' },
             { text: 'Debug Recipes', link: '/dev/debug-recipes' },
             { text: 'Release Process', link: '/dev/release-process' },

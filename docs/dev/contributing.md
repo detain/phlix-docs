@@ -229,6 +229,8 @@ $db->expects($this->once())
 
 Test files live in `tests/Unit/{Module}/{Class}Test.php` with namespace `Phlix\Tests\Unit\{Module}` and extend `PHPUnit\Framework\TestCase`.
 
+Some tests skip themselves when the box lacks MySQL, Chromium, mysqldump or FFI, so the `Skipped: N` figure is not comparable between machines or between CI jobs. If you need to know whether your change moved the skip set, compare the skipped-test **names** — see [Test Harness](test-harness.md).
+
 ### Code coverage
 
 ```bash

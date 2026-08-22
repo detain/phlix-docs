@@ -217,6 +217,7 @@ The trait states what it does **not** close. Read this before trusting it:
 | `MediaMatchController` | 2 | required, non-nullable, `readonly` | S323 phase 2 |
 | `MediaPosterController` | 2 | required, non-nullable, `readonly` | S323 phase 2 |
 | `Arr\SyncController` | 3 | required, non-nullable, `readonly` | S323 phase 2 |
+| `Admin\MaintenanceController` | 8 | required, non-nullable, `readonly` | S338 |
 
 Handler counts are the reflection-enumerated populations the pins assert. The four
 phase-2 controllers cover twelve endpoints:
@@ -240,7 +241,7 @@ and both pass the gate as a constructor argument; they must move together,
 because a required parameter cannot be satisfied by a path that still uses a
 setter.
 
-### Severity differs between the two phases, and the difference is real
+### Severity differs between the phases, and the difference is real
 
 `ThemeMediaController` (phase 1) took its in-body check with **no** prior auth
 check, so a gate-less construction would have exposed its two mutation endpoints
@@ -248,25 +249,33 @@ to an **anonymous** caller. The four phase-2 controllers all refuse an
 unauthenticated caller *before* consulting the middleware (`requireAuth()`, or
 the equivalent empty-`$request->userId` check), so the missing decision would
 have degraded them to **any authenticated user** — never to an anonymous one.
-Both were latent: every production wiring site supplied the middleware, and no
-exploitation is claimed for either.
+`Admin\MaintenanceController` (S338) is in the same class: its `requireAdmin()`
+refuses a null/empty `$request->userId` with a 401 before the guard is
+consulted, so a gate-less construction would have let any logged-in user reach
+the eight `/maintenance/*` handlers, including the two destructive ones. All of
+these were latent: every production wiring site supplied the middleware, and no
+exploitation is claimed for any of them.
 
-### The pattern is established, not universally applied
+### The family is closed
 
-⚠ **One instance of the old shape is still live.**
-`src/Server/Http/Controllers/Admin/MaintenanceController.php` holds
-`private readonly ?AdminMiddleware $adminGuard = null` and its `requireAdmin()`
-returns "authorised" when that dependency is absent — the same self-disabling
-guard. It is **out of S323's scope and owned by S338.**
+The tokenized `?AdminMiddleware` scan over `src/` (comments stripped) now
+returns **zero** hits — the optional-nullable-gate shape this page exists to
+prevent is gone from every self-gating controller. The last instance was
+`Admin\MaintenanceController` (owned by S338 per the S323-phase-2 note): its
+eight `/maintenance/*` routes are registered inside `AdminRoutes`'
+`[$adminMiddleware]` group, so the in-body check was a second gate rather than
+the only one, and `tests/Unit/Admin/Maintenance/MaintenanceContainerWiringTest.php`
+pinned the wiring. That "latent, therefore fine" argument is exactly the one
+this invariant rejects — it is a property of the current route registration,
+not of the class — and the required-parameter shape removes the null state
+itself: constructing the controller without a gate is an `ArgumentCountError`,
+and the fail-open pin that used to demonstrate the old hazard now demonstrates
+the new contract.
 
-Its exposure is lower than the six above: the eight `/maintenance/*` routes are
-registered inside `AdminRoutes`' `[$adminMiddleware]` group, so the in-body check
-is a second gate rather than the only one, and
-`tests/Unit/Admin/Maintenance/MaintenanceContainerWiringTest.php` pins the
-wiring. That "latent, therefore fine" argument is exactly the one this invariant
-rejects — it is a property of the current route registration, not of the class.
-Treat this page's recipe as the target shape for it, including the pin's
-directory requirement noted above.
+S338's pin lives at
+`tests/Unit/Server/Http/Controllers/Admin/MaintenanceControllerAdminGateIsStructuralTest.php` —
+inside the walked tree, in the `Admin/` subdirectory — and the pin-count
+assertion in `RouterDispatchableHandlersTest` is 7, not 6.
 
 ---
 

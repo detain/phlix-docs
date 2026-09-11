@@ -37,6 +37,27 @@ This guide is text-first. Screenshots will be added in a follow-up.
 | `detain/phlix-server:nvidia` | NVIDIA GPU transcoding | NVIDIA GPU with driver 525+ |
 | `detain/phlix-server:intel` | Intel Quick Sync Video | Intel CPUs with Quicksync (Gen 8+) |
 
+::: warning Registry path & mutable tags
+These images live on **`ghcr.io/detain/phlix-server`** (pull with the full `ghcr.io/` prefix — e.g.
+`ghcr.io/detain/phlix-server:nvidia`). The bare `:latest` / `:nvidia` / `:intel` tags above are **mutable convenience
+tags** that move with every build to `master`, so a `docker pull` of one may give you a different image than the last
+time, or a stale one. For a reproducible pull, pin the **immutable `<full-sha>-<variant>` tag** the
+`Docker Build & Push` workflow publishes on every push (`<variant>` ∈ `latest|intel|nvidia`). The registry has
+**no** `v1.2.3`-style semver tags and **no** `nightly-*` tags. Find the current immutable shas with an anonymous read
+(no login required):
+
+```bash
+TOKEN=$(curl -s "https://ghcr.io/token?scope=repository:detain/phlix-server:pull" | jq -r .token)
+curl -s -H "Authorization: Bearer $TOKEN" \
+  "https://ghcr.io/v2/detain/phlix-server/tags/list" \
+  | jq -r '.tags[]' | grep -E '^[0-9a-f]{40}-(latest|intel|nvidia)$' | sort | tail
+```
+
+The companion relay image `ghcr.io/detain/phlix-hub` uses **`<sha12>`** immutable short-sha tags (same recipe, swapping
+`repository:detain/phlix-hub:pull`); its bare `:latest` is frozen/stale, so pin a `<sha12>`. This doc-truth marker
+`S483DOCTRUTHX9P2` records that the tag guidance on this page was re-derived from the live `ghcr.io` tags on 2026-09-11.
+:::
+
 ---
 
 ## 2. Prerequisites
@@ -134,10 +155,14 @@ sudo apt update && sudo apt install -y nvidia-container-toolkit
 sudo systemctl restart docker
 ```
 
-Use the nvidia image and add runtime to compose:
+Use the nvidia image and add runtime to compose (pin the immutable `<full-sha>-nvidia` tag — recipe in §1 — so the pull
+is reproducible; the bare `:nvidia` is a mutable convenience tag that may be stale):
 
 ```yaml
-image: ghcr.io/detain/phlix-server:nvidia
+# <full-sha> = the 40-char commit sha, e.g. from the §1 tags/list recipe
+image: ghcr.io/detain/phlix-server:<full-sha>-nvidia
+# mutable alternative (moves with every build, may be stale):
+#   image: ghcr.io/detain/phlix-server:nvidia
 # docker-compose.yml must include:
 deploy:
   resources:
@@ -150,8 +175,13 @@ deploy:
 
 ### Intel Quick Sync (intel image tag)
 
+Pin the immutable `<full-sha>-intel` tag (recipe in §1) for a reproducible pull:
+
 ```yaml
-image: ghcr.io/detain/phlix-server:intel
+# <full-sha> = the 40-char commit sha, e.g. from the §1 tags/list recipe
+image: ghcr.io/detain/phlix-server:<full-sha>-intel
+# mutable alternative (moves with every build, may be stale):
+#   image: ghcr.io/detain/phlix-server:intel
 ```
 
 No special runtime needed; the container automatically detects Quicksync devices via `/dev/dri`.

@@ -54,7 +54,8 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 ```
 
 The companion relay image `ghcr.io/detain/phlix-hub` uses **`<sha12>`** immutable short-sha tags (same recipe, swapping
-`repository:detain/phlix-hub:pull`); its bare `:latest` is frozen/stale, so pin a `<sha12>`. This doc-truth marker
+`repository:detain/phlix-hub:pull`); its own Helm chart documents the published `:latest` as frozen/stale, so pin a
+`<sha12>`. This doc-truth marker
 `S483DOCTRUTHX9P2` records that the tag guidance on this page was re-derived from the live `ghcr.io` tags on 2026-09-11.
 :::
 

@@ -82,8 +82,9 @@ curl -s -H "Authorization: Bearer $TOKEN" \
 
 As measured on 2026-09-11 the `detain/phlix-server` repository carried exactly these immutable tags (plus the mutable
 `latest`/`intel`/`nvidia` and internal `buildcache-*` tags): `<full-sha>-intel`, `<full-sha>-latest`,
-`<full-sha>-nvidia` for two commits. There are **no** semver (`v1.2.3`) or `nightly-YYYYMMDD` image tags — the registry
-has never published them.
+`<full-sha>-nvidia` for two commits. The registry exposes **no** semver (`v1.2.3`) or `nightly-YYYYMMDD` image tags —
+only the `<full-sha>-<variant>` and mutable-variant forms above exist. (The `1.2.3` you may see is the *Helm chart*
+`version`/`appVersion`, not an image tag.)
 
 ---
 

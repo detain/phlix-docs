@@ -6,10 +6,13 @@
 > **Tl;dr.** Both daemons run on Workerman 5 with the Swoole eventLoop
 > driver and `Swoole\Runtime::enableCoroutine(SWOOLE_HOOK_ALL)`. **Never
 > use `exit`/`die`, never `sleep()`, and never store per-request data in
-> `static` properties / `global` / `$GLOBALS`.** Use
-> `Phlix\Server\Http\RequestContext` (server) or
-> `Phlix\Hub\Http\RequestContext` (hub) for per-request state. Both wrap
-> `support\Context`, which the eventLoop isolates per coroutine.
+> `static` properties / `global` / `$GLOBALS`.** For per-request state:
+> the **server** uses `Phlix\Server\Http\RequestContext` (a wrapper
+> around `support\Context`, which the eventLoop isolates per coroutine);
+> the **hub** carries per-request state on the `Request` object itself
+> (`$request->userId` etc.) and has no ambient-context consumers — its
+> former `RequestContext` wrapper was retired 2026-10-02 at hub
+> `7748d79` (see §3).
 
 This page covers the runtime model introduced in step 0.2 of the UI
 coverage plan. The entry-point Swoole hook landed in step **0.2a**
@@ -101,46 +104,71 @@ A `static` property is a **shared variable** across all of them.
 
 ### What you do instead
 
-Both daemons provide a typed wrapper around `support\Context`, one per
-repo, that lives alongside the rest of the HTTP layer:
+**Server.** `phlix-server` provides one typed wrapper around
+`support\Context`, `src/Server/Http/RequestContext.php`. It is the
+living estate pattern for ambient per-request state — any per-request
+read that cannot thread the `Request` down goes through it:
 
 ```php
 // phlix-server
 use Phlix\Server\Http\RequestContext;
 
-// In AdminMiddleware — publish the value:
-RequestContext::setUserId($request->userId);
+// In AuthMiddleware / AdminMiddleware / SignedUrlMiddleware — publish:
+RequestContext::setUserId($userId);
 
-// In a downstream admin controller or service — read it:
-$userId = RequestContext::getUserId();
-if ($userId === null) {
-    // anonymous — fall back to whatever your service expects
-}
+// In a downstream controller or service — read it:
+$userId = RequestContext::getUserId(); // null = anonymous / not yet published
 ```
 
-```php
-// phlix-hub
-use Phlix\Hub\Http\RequestContext;
+The class carries three namespaced context keys today, all `phlix.*` so
+they cannot collide with webman's own internal keys
+(`context.onDestroy`, etc.):
 
-// In AuthMiddleware — publish the value:
-RequestContext::setUserId($claims->sub);
+| Key | Written by | Read by / purpose |
+|---|---|---|
+| `phlix.userId` | `AuthMiddleware`, `AdminMiddleware`, `SignedUrlMiddleware` | admin self-lockout checks (`AdminUserController`), marker ownership (`MediaMarkerController`), `AccessScheduleMiddleware`, `StreamLimitMiddleware` |
+| `phlix.profileId` | `RequestAuthenticator`, `AccessScheduleMiddleware` | active-profile fallback in `RatingGate` / `ItemRepository`, fast-path profile resolution (`PreRouterFastPaths`), access-schedule + stream-limit checks |
+| `phlix.relayCancelGroup` | `Hub\RelayConsumer` (RELAY path) and `Server\Workerman\HttpHandler` (DIRECT-LAN path, via the transport-neutral `setCancelGroup()` alias) | `TranscodeManager` reads it so an on-demand segment encode launched during dispatch is registered under the request's cancel-group id for group-kill: SV-4.2 / X1 `HTTP_CANCEL` on the relay path, socket-close kill on the direct path |
 
-// In a downstream hub controller or service — read it:
-$userId = RequestContext::getUserId();
-```
+The two identity keys are **set-only**: published once per request
+during auth and relying on the eventLoop destroying the coroutine's
+context bag at exit. The cancel-group key is the deliberate exception
+and carries an explicit **clear-pairing mitigation**: every
+`set*CancelGroup()` is bracketed by a `clear*CancelGroup()` in a
+`finally` (both `RelayConsumer` dispatch sites — the outer one and the
+child-coroutine one, which publishes explicitly rather than relying on
+Swoole child-context inheritance — and
+`HttpHandler::armDirectCancelHook()`/`disarmDirectCancelHook()`), so a
+stale cancel-group id can never leak into whatever runs next in the same
+context and mis-target an ffmpeg encode group. The direct path
+additionally nulls its per-connection `onClose` only under an identity
+guard, so a pipelined sibling request's live hook is never clobbered.
 
-Both wrappers expose the same four methods (`setUserId`, `getUserId`,
-`hasUserId`, `clearUserId`) and use namespaced context keys
-(`phlix.userId` on the server, `phlix.hub.userId` in the hub) so they
-cannot collide with each other or with webman's own internal keys
-(`context.onDestroy`, etc.).
+**Hub.** The hub threads per-request state on the `Request` object
+(`Request::$userId`, plus claims / `oauthGrant`) — nothing ambient;
+`src/` there uses no `support\Context` at all today. Historically
+(step 0.2c, 2026-07) the hub mirrored the server shape:
+`Phlix\Hub\Http\RequestContext` over a `phlix.hub.userId` key with the
+same four methods (`setUserId`, `getUserId`, `hasUserId`,
+`clearUserId`). That twin was **deleted 2026-10-02 at hub `7748d79`**:
+it was write-only — zero readers of `getUserId()`/`hasUserId()` anywhere
+in `src/`, `scripts/` or `public/`, only two middleware writers — so
+dropping the facade made both middlewares' no-cross-request-state
+posture strictly more true. The server-side copy had already diverged
+before that: SV-6 pruned its dead members and it grew the
+profile/cancel-group keys, so the two "identical wrappers" the original
+0.2b/0.2c text promised stopped being identical on the server well
+before the hub twin's retirement. If hub code ever genuinely needs
+per-request state that must not travel on `Request`, that is a new
+design decision, not a copy-paste of the server wrapper.
 
-If you need to publish per-request data that ISN'T the user-id (a
-correlation-id, a tenant id, …), call `support\Context::set/get`
-directly with a `phlix.*` / `phlix.hub.*` namespaced key — and consider
-adding a typed helper method to `RequestContext` if the call sites
-start to multiply. Premature abstraction is just as bad as stringly-typed
-code, but more than three call sites for the same key is the threshold.
+If you need to publish per-request server data that ISN'T one of the
+three keys (a correlation-id, a tenant id, …), call
+`support\Context::set/get` directly with a `phlix.*` namespaced key —
+and consider adding a typed helper method to `RequestContext` if the
+call sites start to multiply. Premature abstraction is just as bad as
+stringly-typed code, but more than three call sites for the same key is
+the threshold.
 
 ### What Context actually is
 
@@ -173,7 +201,7 @@ ban them statically; reviewers MUST catch them.
 |---|---|---|
 | `exit;` / `die();` in a handler | Kills the entire worker, not just the request. Other in-flight requests on the same worker die too. | Return a `Response` (or throw, and let the exception handler turn it into a 5xx). |
 | `sleep($s);` / `usleep($us);` / `time_nanosleep()` not under SWOOLE_HOOK_ALL | Pre-hook these block the thread. With `SWOOLE_HOOK_ALL` they yield, but **only inside a coroutine**. In an entry-point script or a non-coroutine context they still block. | `Workerman\Timer::sleep($seconds)` — always yields, always safe. |
-| `protected static $foo;` holding request data | Trampled by the next request on the same worker; visible from other coroutines on the same worker. | `RequestContext::setUserId(...)` / `Context::set('your.key', $value)`. |
+| `protected static $foo;` holding request data | Trampled by the next request on the same worker; visible from other coroutines on the same worker. | Server: `RequestContext::setUserId(...)` / `Context::set('phlix.your.key', $value)`. Hub: carry it on the `Request`. |
 | `global $foo;` referencing per-request data | Same as above. | Same as above. |
 | `$GLOBALS['foo']` for per-request data | Same as above. | Same as above. |
 | Long-running blocking work inline in an HTTP handler | Holds the coroutine slot; under load you starve the worker. | Push to a queue (`webman/redis-queue`) or a dedicated worker process (`config/process.php`). |
@@ -250,17 +278,20 @@ or `phlix-hub/src/Http/`:
   `docs/dev/BLOCKING_IO_EXCEPTIONS.md` (phlix-server); adding a new
   one requires naming it there with a **measured** bound and a stated
   blast radius, not a comment beside the call.
-- [ ] If you add a new piece of per-request state, publish it via the
-  repo-appropriate `RequestContext` wrapper (`Phlix\Server\Http\RequestContext`
-  in the server, `Phlix\Hub\Http\RequestContext` in the hub) — not on a
-  `static` somewhere.
+- [ ] If you add a new piece of per-request state, publish it via
+  `Phlix\Server\Http\RequestContext` in the server (wrapping
+  `support\Context`) or thread it on the `Request` object in the hub
+  (the hub's former `RequestContext` wrapper was retired 2026-10-02 at
+  hub `7748d79`) — never on a `static` somewhere.
 
 ---
 
 ## 8. Related reading
 
 - `phlix-server/CHANGELOG.md` `[Unreleased]` — step 0.2 entries.
-- `phlix-hub/CHANGELOG.md` `[Unreleased]` — step 0.2c entry.
+- `phlix-hub/CHANGELOG.md` `[Unreleased]` — step 0.2c entry, and the
+  2026-10-02 "Removed — the write-only `Http/RequestContext` scaffolding"
+  entry (hub `7748d79`) documenting the wrapper's retirement.
 - `PHLIX_UI_PLAN.md` — "Runtime & async (cross-cutting)" section.
 - `steps/0.2-coroutine-runtime.md` — the canonical step spec with
   acceptance criteria and verification commands.

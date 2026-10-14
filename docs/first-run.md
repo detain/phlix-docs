@@ -1,192 +1,111 @@
 ---
-title: First-Run Wizard
-description: Get your Phlix server running in minutes with the first-run setup wizard.
+title: First Run
+description: From a freshly installed Phlix server to your first playing title
 ---
 
-**Since:** 0.18.0
+# First Run
 
-## TL;DR
+**TL;DR:** There is no separate setup wizard. A fresh Phlix server is simply a login
+page: you create the first account (which automatically becomes the administrator),
+then add a library folder and press scan. Ten minutes, start to watch.
 
-The first-run wizard starts automatically when you boot Phlix with no admin account configured. It walks you through creating your admin login, adding media library folders, choosing library types, setting language/timezone preferences, and enabling DLNA discovery — taking about five minutes from server boot to a ready-to-scan library.
+Every term used below that sounds like jargon is defined in the
+[Glossary](glossary.md).
 
-<!-- screenshots TBD — text-first -->
+## Before you start
 
-## Screenshots / Flow Description
+- Phlix is **installed and running** on some machine (see
+  [Install](install/linux.md) if that hasn't happened yet).
+- Your media files are **on a folder the server machine can read** — a local disk path,
+  or a network share mounted into the server's filesystem (see
+  [Libraries](libraries/overview.md)). Phlix scans the server's own folders; it cannot
+  browse your laptop's disk from across the room.
 
-The wizard runs in your browser and presents each step one at a time. Work through each screen in order.
+## Step 1 — Open the web app
 
-### Step 1 — Welcome Screen
-
-When you first access your server, the wizard displays a welcome screen. Open your browser and navigate to:
+On any device on the same network, visit:
 
 ```
-http://localhost:8096/app
+http://<your-server>:8096/app
 ```
 
-Or, if accessing from another machine on your network, replace `localhost` with your server's LAN IP address (e.g., `http://192.168.1.100:8096/app`). The bare root (`/`) also redirects to `/app`.
+The plain address `http://<your-server>:8096/` redirects there. You'll see a sign-in
+card — **Username or email**, **Password**, **Sign in** — and a link to create an
+account.
 
-Click **Get Started** to begin.
+## Step 2 — Create the first account (it becomes admin)
 
-### Step 2 — Admin Account Creation
+Press the sign-up link and fill in:
 
-Create your server administrator account. This account has full access to all server settings, library management, and user management.
+- **Email** — a valid address; this is also a login name.
+- **Username** — at least 3 characters.
+- **Password** — at least 8 characters.
 
-- **Email** — Enter a valid email address. This is your login username.
-- **Password** — Choose a strong password. An on-screen strength meter will update as you type.
-- **Confirm Password** — Re-enter your password to confirm there are no typos.
+Normally sign-ups on a Phlix server wait for admin approval (the default
+signup mode — see [Adding people](advanced/adding-people.md)). The **first account ever**
+is the bootstrap exception: it's created active *and* as an administrator, immediately,
+on any fresh server. No email verification is involved — the "email" is just a label and
+a login handle; Phlix doesn't send mail.
 
-Click **Create Account** when the strength meter shows a strong rating. You can update the email and password later in **Settings → Account**.
+Sign in with those credentials. You land on **Browse**, which is, as expected, empty.
 
-### Step 3 — Library Path Configuration
+## Step 3 — Point Phlix at your media
 
-Tell Phlix where your media files live. Click **Add Folder** and browse to each directory you want to include.
+Go to **Admin → Libraries** and press **Add library**:
 
-Common examples:
+- **Name** — anything you'll recognize ("Movies", "Kids TV").
+- **Type** — one of: movie, series, music, photo, video, book, audiobook.
+- **Paths** — the folders to scan, one per line. They must exist **on the server's
+  filesystem**; a missing or unreadable folder is flagged.
 
-| Content type | Example path |
-|-------------|-------------|
-| Movies | `/media/movies` |
-| TV shows | `/media/tv` |
-| Music | `/media/music` |
-| Photos | `/media/photos` |
-| Books | `/media/books` |
-| Audiobooks | `/media/audiobooks` |
+Save, then run **Scan** on the new library (the row shows live progress). A first scan
+also fetches metadata and artwork for movies and shows — expect it to take longer than
+later rescans. When it finishes, titles appear under Browse.
 
-You can add multiple folders for the same library type (for example, `/data/movies` and `/backup/movies`). Folders that don't exist or are inaccessible will be flagged — correct the path or remove the entry before proceeding.
+::: tip Folders can be managed later without drama
+The library's menu has **Rescan**, **Recheck all metadata**, **Prune removed** (drop
+index rows for files you deleted), and **Regenerate media assets** (posters, previews).
+You can also add more paths to the same library by editing it.
+:::
 
-Click **Continue** when all desired folders are listed.
+## Step 4 — Watch something
 
-### Step 4 — Library Type Selection
+Click any title, press play. The web player usually starts instantly. If it buffers or
+looks off, your device may have needed the server to convert the video on the fly
+(*transcoding*) — that's normal; see
+[Hardware transcoding](advanced/hardware-transcoding.md) if your server struggles.
 
-For each folder you added, choose what kind of content it contains:
+## Good next steps
 
-- **Movies** — Individual film files
-- **TV Shows** — Episodic content organized in folders or by season
-- **Music** — Albums, artists, and tracks
-- **Photos** — Image collections
-- **Books** — E-books and PDFs
-- **Audiobooks** — Audio book files
+- **Add the rest of the household** — profiles vs. real accounts:
+  [Adding People to Your Household](advanced/adding-people.md).
+- **Cast to your TV** — DLNA is shipped **off**; flip it on under **Admin → DLNA**
+  (page has a Start/Stop control) and compatible TVs will find the server on the LAN.
+- **Watch from outside the house** — claim the server on a Hub:
+  [Claim your server](hub/claim-server.md). (A *relay* handles the hard part —
+  no router settings to touch.)
+- **Watch together with friends** — [Watch Together (SyncPlay)](advanced/syncplay.md).
+  Heads-up: it needs your server's port **8097** reachable by your guests, which home
+  networks usually don't offer by default.
+- **Keep your data safe** — [Backup & restore](advanced/backup-restore.md).
 
-You can create multiple libraries (for example, one Movies library and one TV Shows library) or put everything in a single library. The type helps Phlix fetch the correct metadata and display posters, descriptions, and episode guides.
+## If you get locked out
 
-Click **Continue** when each folder has a type assigned.
+There is no "forgot password" email flow — Phlix sends no mail. Recovery happens on the
+server itself, at a terminal:
 
-### Step 5 — Library Scan Trigger
-
-Choose when Phlix should scan your libraries for media files:
-
-- **Scan Now** — Triggers an immediate background scan. Large libraries may take several minutes. You can continue using the wizard while the scan runs.
-- **Scan Later** — Defers the scan to a scheduled time. You can trigger it manually from **Settings → Libraries** whenever you are ready.
-
-You can always change the scan schedule later in **Settings → Libraries → Scan Schedule**.
-
-Click **Continue**.
-
-### Step 6 — Hub Connection
-
-Connect this server to a Phlix Hub for remote access and multi-server management. This step is optional.
-
-- **Connect Now** — Enter your hub URL (e.g., `https://hub.phlix.example.com`) and authenticate with your hub credentials. See [Hub Claim Guide](./hub/claim-server.md) for the full claim flow.
-- **Skip** — Defer hub connection. You can set up hub access later from **Settings → Hub**.
-
-Even when skipped, you can connect clients directly to the server over your LAN or configure your own remote access (reverse proxy, Tailscale VPN, etc.).
-
-Click **Continue**.
-
-### Step 7 — Language and Timezone
-
-Set defaults for the server's display language and local time representation:
-
-- **Language** — Select your preferred language from the dropdown.
-- **Timezone** — Select your city or region to ensure correcttimestamps on recording schedules, watch history, and DLNA announcements.
-
-These settings affect the web portal, API responses, and any scheduled tasks. They can be changed at any time in **Settings → General**.
-
-Click **Continue**.
-
-### Step 8 — DLNA Server Toggle
-
-DLNA (Digital Living Network Alliance) enables other devices on your network — smart TVs, game consoles, media players — to discover and stream from your Phlix server without needing a dedicated client app.
-
-- **Enable DLNA** — Allows device discovery on your local network. Phlix will announce itself to any DLNA-compatible device.
-- **Disable DLNA** — Turns off network discovery. You can still access content through dedicated client apps.
-
-If you enable DLNA, the server will listen on port 1900 (UDP) for SSDP discovery requests and serve content over HTTP on the same port as the web portal.
-
-Click **Continue**.
-
-### Step 9 — Web Dashboard Ready
-
-The wizard is complete. You land on the Phlix web dashboard, which shows:
-
-- Your configured libraries on the home screen
-- Ongoing library scans in the top-right notification area
-- The navigation sidebar for browsing content, managing libraries, and adjusting settings
-
-Your server is now ready to stream to clients. Download a client app for your device from the [Clients overview](./clients/overview.md).
-
-## Shell Blocks
-
-These commands are useful for operators managing a headless server.
-
-**Verify the server is running:**
-
-```bash
-curl http://localhost:8096/api/v1/system/status
+```
+php bin/phlix user:reset-password <username-or-email>
+php bin/phlix user:promote <username>          # (re)grant admin
+php bin/phlix user:list                        # who exists at all
 ```
 
-Expected response includes `"status": "ok"` and the server version.
+Run these from the Phlix server's own install directory. See
+[CLI reference](reference/cli.md) for the rest of the toolbox.
 
-**Check library paths on disk:**
+## Related pages
 
-```bash
-ls -la /media/movies
-ls -la /media/tv
-```
-
-**Trigger a manual library scan via CLI:**
-
-```bash
-php bin/phlix library:list                  # get the library ids
-php bin/phlix library:scan {libraryId}      # one library at a time — there is no --all flag
-```
-
-Add `--rescan` to re-walk the whole tree and prune items whose file is gone. It is
-also the right command after relocating media: a top-level item whose file was moved
-without being renamed is re-pointed at its new path rather than pruned
-([Moving a file](/admin/library-management#moving-a-file)). See the
-[CLI reference](/reference/cli#library-scan).
-
-**View DLNA server status:**
-
-```bash
-curl http://localhost:8096/api/v1/system/dlna
-```
-
-## What Can Go Wrong
-
-### Admin account email already in use
-
-**Symptom:** The wizard refuses to create the account and shows "An account with this email already exists."
-
-**Fix:** An admin account was already created on this server (possibly during a previous run that did not complete). If you know the existing credentials, log in with them and change the password from **Settings → Account**. If you have lost access, use the account recovery flow from the login screen. If the server has no other admin, you can reset the database and run the wizard again — but this erases all libraries, watch history, and user accounts.
-
-### Library paths not accessible
-
-**Symptom:** A folder shows a warning icon in step 3, or the scan completes with files missing or a "path not found" error.
-
-**Fix:** Verify the folder exists on the server's filesystem: `ls /media/movies`. If the folder exists but is owned by root, either change ownership (`sudo chown -R phlix:phlix /media/movies`) or grant read access to the phlix process user. If the path is a network mount (NFS, SMB), confirm the mount is still active and the phlix process has network access to the mount server. Correct the path in **Settings → Libraries** after the wizard completes.
-
-### Initial scan hangs or times out
-
-**Symptom:** The scan progress indicator appears stuck, or the wizard shows a timeout error after several minutes for a large library.
-
-**Fix:** Very large libraries (tens of thousands of files) or slow network mounts can exceed the default timeout. From **Settings → Libraries**, defer the scan and trigger it manually at a convenient time: set **Scan Schedule** to a manual-only setting, then click **Scan Now** when the server is lightly loaded. If using network storage, ensure the connection is stable and the mount uses a protocol with decent read performance (SMBv3 or NFSv4 rather than SMBv1).
-
-## Next Steps
-
-- [Libraries overview](./libraries/overview.md) — Add, remove, and manage your media libraries
-- [Clients overview](./clients/overview.md) — Connect playback apps on TV, mobile, and desktop
-- [Hub remote access](./hub/remote-access.md) — Set up secure remote access without opening ports
-- [Live TV](./advanced/live-tv.md) — Watch and record live television
-- [CLI reference](./reference/cli.md) — Server management commands
+- [Libraries overview](libraries/overview.md)
+- [Adding people](advanced/adding-people.md)
+- [Glossary](glossary.md)
+- [Troubleshooting](troubleshooting.md)

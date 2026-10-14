@@ -33,15 +33,17 @@ a share carries a single `library_id` and there is no sub-library plumbing at al
 
 | Scope | What the recipient sees |
 |---|---|
-| Whole server | Every library on that server — leave **Library** unset on the invite link |
+| Whole server | Every library on that server — leave **Library** on **All Libraries** in the invite form |
 | One library | Only the library you selected |
 
 ### Two permission levels
 
-| Permission | Stored value |
+The invite form's **Permission** dropdown offers exactly two choices — **Read** and **Read/Write**:
+
+| What the form shows | Stored value |
 |---|---|
-| **Read only** | `read` (default) |
-| **Read / Write** | `readwrite` |
+| **Read** | `read` (default) |
+| **Read/Write** | `readwrite` |
 
 ::: danger The level is recorded, not enforced
 Nothing consults `permission_level` before permitting an action — the hub's
@@ -57,9 +59,9 @@ DLNA casting.
 1. Log into the hub at `https://hub.phlix.app` (or your self-hosted hub URL)
 2. Open **Invite Links** (`/app/invite-links`) from the top navigation
 3. Click **New Invite**
-4. Choose the **server**, and optionally a **library** (leave unset to share every
-   library on that server)
-5. Select the permission level: **Read only** or **Read / Write**
+4. Choose the **server**, and optionally a **library** — leave it on **All Libraries**
+   to share every library on that server
+5. Select the permission level: **Read** or **Read/Write**
 6. Set **max uses** and an **expiry** (`7 days` default, `30 days`, `90 days`,
    `1 year`, `Never`)
 7. Copy the generated URL and send it to your friend however you like

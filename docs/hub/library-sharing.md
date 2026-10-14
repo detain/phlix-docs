@@ -89,7 +89,7 @@ There is **no "+ Share Library" control on the Shares page.** Create shares from
 | Field | Required | Description |
 |---|---|---|
 | **Server** | Yes | One of your claimed servers. |
-| **Library** | No | A specific library on that server. Leave it unset to grant **all** libraries on the server — that is the only sub-server granularity there is. |
+| **Library** | No | A specific library on that server. Leave it on **All Libraries** to grant **every** library on the server — that is the only sub-server granularity there is. |
 | **Permission** | No | `Read` (default) or `Read/Write`. |
 | **Max uses** | No | How many times the link may be redeemed. |
 | **Expires** | No | `7 days` (default), `30 days`, `90 days`, `1 year` or `Never`. |
@@ -157,9 +157,9 @@ All endpoints require authentication (`Authorization: Bearer <jwt>` or the `phli
 
 **Symptom:** You select a server on the **Invite Links** page but the Library dropdown shows no options.
 
-**Reason:** The library dropdown is populated from the list of libraries on that server. If the server has no libraries, none appear.
+**Reason:** The dropdown reads the hub's snapshot of that server's libraries, which the server pushes to the hub over its relay heartbeats. A server that isn't currently reaching the hub — or has none configured — yields an empty list.
 
-**Fix:** Make sure the server has at least one library configured on the server itself. Refresh the server's library list by triggering a rescan from the server's control panel.
+**Fix:** Make sure the server is online with its hub relay connected, and that the server has at least one library configured. Then retry.
 
 ### 2. Share target email not found (API-direct shares only)
 

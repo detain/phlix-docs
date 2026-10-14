@@ -19,7 +19,7 @@ A native Windows desktop application for Phlix Media Server.
 
 ## Installation
 
-Download the latest NSIS installer from the Releases page. The installer does not require administrator privileges — it installs per-user to `%LOCALAPPDATA%\Phlix`.
+Download the latest NSIS installer (`Phlix.Setup.*.exe`, plus a SHA256SUMS file) from the [releases page](https://github.com/detain/phlix-windows-client/releases) — builds are published as a rolling `Latest (master)` pre-release. The installer does not require administrator privileges — it installs per-user to `%LOCALAPPDATA%\Phlix`.
 
 ## Keyboard Shortcuts
 

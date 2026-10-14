@@ -3,7 +3,7 @@
 **Since:** 0.18.0
 
 > [!TIP]
-> The Phlix app for Samsung Smart TVs runs on 2018 and newer Samsung TVs powered by Tizen. Enable Developer Mode on your TV, sideload the `.wgt` package from a USB drive, then open the app and enter your server URL or sign in with your Hub account.
+> The Phlix app for Samsung Smart TVs runs on 2018 and newer Samsung TVs powered by Tizen. Enable Developer Mode on your TV, sideload the `.wgt` package from a USB drive, then open the app and enter your server URL.
 
 ## Install / Store Links
 
@@ -34,31 +34,28 @@
 
 ### Step 3 — Network Requirement
 
-The TV must be on the same local network as your Phlix server, or connected via the Hub relay for remote access. Avoid connecting the TV to a "guest" network that isolates devices from each other.
+The TV must be able to reach your Phlix server — usually that means the same local network. Avoid connecting the TV to a "guest" network that isolates devices from each other.
+
+> [!NOTE]
+> The Tizen app connects directly to your server. Signing in to the Hub is **not** available on this platform yet, so there is no built-in way to reach a server that is not directly reachable from your TV's network. If you want TV-style access while away from home, the practical options today are a [VPN](../hub/remote-access.md) back to your home network, or a properly secured HTTPS reverse proxy in front of your server. (Watch-together also needs the separate SyncPlay port **8097** reachable — see [Watch together](../advanced/syncplay.md).)
 
 ## Configuration
 
 ### In-App Server URL
 
 1. Open **Phlix** from **My Apps**.
-2. On first launch, enter your server's address:
-   - **Local:** `http://192.168.1.100:8096` (replace with your server's LAN IP)
-   - **Hub relay:** `https://hub.phlix.example.com` (after signing in with Hub)
-3. The URL is saved automatically. Update it in **Settings → Server URL** later.
+2. On first launch, enter your server's address, for example `http://192.168.1.100:8096` (replace with your server's LAN IP or hostname).
+3. The address is saved automatically. Update it later in **Settings → Server URL**.
+
+### Signing In
+
+After the app can reach your server, sign in with your regular Phlix user account (username and password). There is no separate Hub sign-in on this platform — the Tizen app is a direct-to-server client only.
+
+Typing a password with a TV remote is tedious, so the app also offers **Quick-Connect**: on the sign-in screen choose **Sign in without a keyboard**, and a short code appears on the TV. Then, on your phone (or any device already signed in), open Phlix → **Sign in on TV** → type the code, and the TV logs itself in.
 
 ### Environment Variable (for Packaged Builds)
 
 For automated or kiosk-style deployments, you can embed the server URL at build time by setting `window.PHLIX_SERVER_URL` in the build configuration. See the [Tizen client readme](https://github.com/detain/phlix-tizen-client/blob/master/README.md) for details.
-
-## Hub Connection
-
-1. In the Phlix app, open **Settings** (gear icon).
-2. Navigate to **Hub → Sign In**.
-3. Enter the Hub URL (e.g., `https://hub.phlix.example.com`) and press **OK** on your remote.
-4. Enter your Hub username and password using the on-screen keyboard.
-5. After authentication, the server is auto-selected from your Hub account. No manual server URL entry is needed.
-
-Hub login means your TV app works anywhere — the Hub relay handles the connection when you are away from home.
 
 ## What Can Go Wrong
 
@@ -78,7 +75,7 @@ Hub login means your TV app works anywhere — the Hub relay handles the connect
 
 **Symptom:** The app opens but displays "Server unreachable" immediately after entering the server URL.
 
-**Fix:** Verify the TV and your Phlix server are on the **same subnet**. Some Samsung TVs have network isolation features that prevent devices on one network from seeing each other. Ensure both devices are on the same LAN. Try using the server's direct LAN IP instead of a hostname. If you are traveling, use the Hub relay URL after signing in with Hub.
+**Fix:** Verify the TV and your Phlix server are on the **same subnet**. Some Samsung TVs have network isolation features that prevent devices on one network from seeing each other. Ensure both devices are on the same LAN. Try using the server's direct LAN IP instead of a hostname. The Tizen app has no Hub relay sign-in, so a server that is unreachable from the TV's network simply cannot be used from that TV — see the network note above for the VPN / reverse-proxy workarounds.
 
 ## Next Steps
 

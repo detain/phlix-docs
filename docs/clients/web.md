@@ -3,7 +3,7 @@
 **Since:** 0.18.0
 
 > [!TIP]
-> The Phlix web portal runs in any modern browser — no software to install. Navigate to your server's web address, sign in with your Hub account or enter a direct server URL, and start streaming immediately. Works on Chrome, Firefox, Safari, and Edge.
+> The Phlix web portal runs in any modern browser — no software to install. Navigate to your server's (or your Hub's) web address, sign in, and start streaming immediately. Works on Chrome, Firefox, Safari, and Edge.
 
 ## Install / Store Links
 
@@ -22,7 +22,7 @@ http://192.168.1.100:8096/app
 
 ## Platform-Specific Notes
 
-- The web portal requires the server's web address to be reachable from your browser — either on the local network or via a Hub relay / reverse proxy.
+- The web portal requires the address you open to be reachable from your browser — either on the local network or via a reverse proxy / HTTPS exposure. (Your browser talks straight to whichever Phlix host served the page; there is no in-browser relay hop.)
 - Some browser extensions (ad blockers, privacy extensions) may interfere with playback. If playback does not start, try disabling extensions or using an incognito/private window.
 - For best playback performance, use a browser with hardware acceleration enabled (Chrome and Edge have this on by default).
 - **Incompatible formats play automatically.** Titles your browser can't play directly — non-web containers like MKV, or codecs like HEVC (including **10-bit HEVC**) — are transcoded on the server on demand and streamed as HLS. The server transcodes them to 8-bit H.264 (High@4.1, yuv420p) so they decode in any modern browser. You'll see a brief "Preparing your stream…" message while the server starts the conversion, then playback begins. mp4/WebM titles play instantly with no conversion.
@@ -31,23 +31,18 @@ http://192.168.1.100:8096/app
 
 ### Open the Web Portal
 
-1. Open your browser and navigate to your server's web URL.
-2. You land on the Phlix login screen.
+1. Open your browser and navigate to your server's web URL (`/app`).
+2. You land on the Phlix login card — **"Welcome back"** — asking for **Username or email** and **Password**.
 
-### Sign In With Hub (Recommended for Multi-Server Users)
+There is no "enter a Hub URL" or "Connect Directly" switch inside the browser app: the page you opened talks only to the host that served it. Which door you open decides which account you use:
 
-1. On the login screen, click **Sign in with Hub**.
-2. Enter your Hub URL (e.g., `https://hub.phlix.example.com`) and press **Continue**.
-3. Enter your Hub username and password, then click **Sign In**.
-4. If your Hub account has multiple servers linked, a picker appears — select the server you want to access.
-5. The portal loads your selected server's libraries.
+### Sign In Directly to Your Server
 
-### Sign In With Direct Server URL
+Open `https://your-server-domain.com/app` (or `http://192.168.1.100:8096/app` at home) and sign in with your **server account**. You get that server's libraries straight away.
 
-1. On the login screen, click **Connect Directly**.
-2. Enter your server's direct URL (e.g., `http://192.168.1.100:8096`) and press **Connect**.
-3. Enter your server username and password.
-4. The portal loads your server's libraries directly.
+### Sign In to the Hub Portal
+
+Open your **Hub's** address instead (e.g. `https://hub.phlix.example.com`) and sign in with your **Hub account**. The hub's home is **My Servers** — the list of servers claimed under your account. Each row offers **Browse** (opens that server's libraries inside the hub portal, routed over the relay proxy — available once the server's relay is connected), **Manage** (opens the server's own web UI in a new tab at the address it advertised), and **Remove**. Browsing through the hub is also how you reach servers you have not exposed to the internet at all; see [What is the Hub?](../hub/what-is-the-hub.md).
 
 ### No Downloads or Permissions
 
@@ -57,7 +52,14 @@ The web portal uses standard browser APIs and requires no plugins, extensions, o
 
 ### Per-library Browse sections
 
-The Browse home (`/app`) is organized as horizontal rails: a **Continue Watching** rail, a **Next Up** rail (the next unwatched episode for each series you've started, shown right after Continue Watching), any rows your server has configured for the home page, and then **one rail per library** — for example **Movies**, **TV**, and **Anime**. Libraries appear in the order the admin set (their display order), then alphabetically.
+The Browse home (`/app`) is organized as horizontal rails:
+
+1. A **Continue Watching** rail.
+2. A **Next Up** rail — the next unwatched episode for each series you've started, shown right after Continue Watching.
+3. Any rows your server has configured for the home page.
+4. **One rail per library** — for example **Movies**, **TV**, and **Anime**.
+
+Libraries appear in the order the admin set (their display order), then alphabetically.
 
 Each library rail has a **See all** link that opens a dedicated page for that library at `/app/library/<library-id>`. That page is the full grid for the single library, with the filter bar (search, genres, year range, ratings, cast) and pagination — so you can drill into one library at a time instead of one flat all-libraries grid. The media server's sidebar also shows a **Browse** link per library, so you can jump straight to any library's page from the nav.
 

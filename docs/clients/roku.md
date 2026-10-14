@@ -6,54 +6,42 @@
 > **Device verification status:** The Roku channel was remediated in 2026 (phases R0–R9) but has **never been tested on physical hardware** due to no device being available. Static analysis (brighterscript `bsc`, `make verify-runtime`) is the only automated quality bar. Functional testing requires a physical Roku device or emulator.
 
 > [!TIP]
-> The Phlix channel for Roku brings your media library to any Roku streaming device. Add the channel from the Roku Channel Store, open it, enter your server URL (or sign in with Hub), and start streaming. Works on all Roku models running OS 10 or later.
+> The Phlix channel for Roku brings your media library to any Roku streaming device. The channel is **not published in the Roku Channel Store yet** — today it is installed by developer sideload. Open it, enter your server (or Hub) URL on the Connect screen, sign in with your account, and start streaming.
 
 ## Install / Store Links
 
-- **Roku Channel Store:** Search for **Phlix** on your Roku device or at [channel.roku.com](https://channel.roku.com)
-- **Developer sideload (.ipk):** [github.com/detain/phlix-roku-client/releases](https://github.com/detain/phlix-roku-client/releases) — for beta testing and development devices only
+- **Roku Channel Store:** not published yet. When certification and submission happen, this section will link the listing.
+- **Developer sideload (zip package):** [github.com/detain/phlix-roku-client/releases](https://github.com/detain/phlix-roku-client/releases) — the rolling `Latest (master)` pre-release carries `phlix.zip`, installed through the Roku's device installer.
 
 ## Platform-Specific Install Steps
 
-### Add the Official Channel (Recommended)
+### Developer Sideload (the only route today)
 
-1. From the Roku home screen, navigate to **Streaming Channels → Search Channels**.
-2. Type **Phlix** and select the Phlix channel from the results.
-3. Click **Add Channel** and confirm. The channel appears on your home screen.
-4. Open **Phlix** from your channel list.
+1. On the Roku remote, press **Home 5×, Up 2×, Right, Left, Right, Left, Right** to open the hidden developer menu, then follow the prompts to enable developer mode (you will set a device password). Note the device's IP address.
+2. Download `phlix.zip` from the [releases page](https://github.com/detain/phlix-roku-client/releases).
+3. In a browser on the same network, open `http://<ROKU_IP>` (the device web interface), go to the **Installer**, upload `phlix.zip`, and click **Install**.
+4. The channel appears on your home screen as a developer channel.
 
-### Developer Sideload (Beta / Testing Only)
-
-1. Download the latest `.ipk` package from [github.com/detain/phlix-roku-client/releases](https://github.com/detain/phlix-roku-client/releases).
-2. Set up your Roku device for development at [developer.roku.com](https://developer.roku.com) — create a developer account and register your device.
-3. Use the **Roku Developer Application Loader (RDA)** to install:
-   ```bash
-   rokudev install Phlix-1.0.0.ipk --device 192.168.1.x
-   ```
-4. The channel appears in **My Channels** on the home screen.
+> [!NOTE]
+> If you build from source instead of downloading the package, `make package` produces `phlix.zip` and `make install` pushes it straight to a dev-enabled device. Store submission (`make package-signed`) requires a real Roku code-signing certificate and is documented in the repository's publishing guide.
 
 ### First Launch
 
-On first open, the Phlix channel shows a server URL entry screen:
+On first open (no saved address yet), the channel shows a **Connect to server** screen:
 
-1. Enter your server's address:
-   - **Local:** `http://192.168.1.100:8096` (replace with your server's LAN IP)
-   - **Remote:** your server's public domain if you have remote access configured
-2. Press **Connect** on your remote.
-3. The URL is saved to persistent storage and remembered on subsequent launches.
+1. Enter your server's address — either a direct Phlix server (e.g. `http://192.168.1.100:8096`) or a Phlix Hub URL. A missing scheme is inferred (`http://` for local addresses, `https://` otherwise).
+2. Press **Connect**. The channel checks the address with a quick health probe before saving it; if the probe fails you can still choose **Connect anyway**.
+3. Next comes the sign-in screen: enter your **username** and **password** (the server address lives only on the Connect screen — you are not asked again).
+4. On later launches the saved address is reused and you land straight on login (or Home if your session is still valid).
 
 ## Hub Connection
 
-1. In the Phlix channel, go to **Settings** (gear icon).
-2. Select **Hub Login**.
-3. Enter your Hub URL (e.g., `https://hub.phlix.example.com`) and press **OK**.
-4. Enter your Hub username and password on the on-screen keyboard.
-5. After authentication, the Hub auto-populates your server URL if you have a server claimed. No manual entry required.
+There is no separate "Hub login" switch. Instead: on the **Connect screen**, enter your Hub URL instead of a server URL, then sign in with your Hub account as usual. The channel detects that it reached a Hub right after login and shows a **server picker** listing your claimed servers with their online/offline status — pick one and every request is routed through the Hub relay to that server, so nothing on the server side needs router configuration.
 
-Hub login also enables remote playback when you are away from home — the Hub relay handles the connection without any router configuration.
+To switch servers later, sign out and back in (the picker returns). To go back to a direct connection, re-enter the direct server URL on the Connect screen.
 
 > [!NOTE]
-> **SyncPlay / Watch Together:** This feature uses WebSocket (`ws://`) and requires a **direct server connection** — it is disabled in Hub mode because the Hub relay strips the `Upgrade` header required for WebSocket.
+> **SyncPlay / Watch Together:** This feature is **direct-connection only** on Roku. The channel speaks plain, unencrypted WebSocket (`ws://`) directly to your server's SyncPlay port **8097** — Roku's socket API has no TLS support at all, so `wss://` is impossible for this client, and the Hub relay's HTTP proxy carries no WebSocket traffic. In hub mode the Watch Together overlay opens with "Watch Together isn't available in hub mode yet". On a LAN this works as-is; remotely you would need the server's plaintext `:8097` reachable by the Roku (not recommended without a VPN).
 
 ## What Can Go Wrong
 
@@ -61,7 +49,7 @@ Hub login also enables remote playback when you are away from home — the Hub r
 
 **Symptom:** Immediately after entering the server URL and pressing Connect, the channel displays "Unable to reach server."
 
-**Fix:** Verify the URL protocol — `http://` and `https://` are different. Confirm the port number is correct (default is `8096`). Try using the direct LAN IP address of your server. If you are traveling, you need either a Hub relay URL or a configured VPN to reach your server remotely.
+**Fix:** Verify the URL protocol — `http://` and `https://` are different. Confirm the port number is correct (default is `8096`). Try using the direct LAN IP address of your server. If you are away from home, enter your Hub URL on the Connect screen instead (see [Hub Connection](#hub-connection)), or use a configured VPN to reach your server directly.
 
 ### Roku not on the same network as the server
 
@@ -69,11 +57,11 @@ Hub login also enables remote playback when you are away from home — the Hub r
 
 **Fix:** Some Roku models default to a "linked" or guest network that isolates them from other devices. In your router's admin panel, verify the Roku is on the same SSID as your server. Check that the router does not have **Client Isolation** or **AP Isolation** enabled. As a workaround, try connecting the server via Ethernet to the router instead of Wi-Fi.
 
-### Channel store version vs. dev channel version mismatch
+### Updating the sideloaded channel
 
-**Symptom:** The version of Phlix on the Channel Store behaves differently from the version you sideloaded for testing.
+**Symptom:** You installed Phlix weeks ago and want the newer build.
 
-**Fix:** Report the discrepancy at [github.com/detain/phlix-roku-client/issues](https://github.com/detain/phlix-roku-client/issues). For production use, always rely on the Channel Store version — it has passed Roku's certification process. Dev sideloads are for beta testing only.
+**Fix:** Download the current `phlix.zip` from the [releases page](https://github.com/detain/phlix-roku-client/releases) and install it through the device web interface again (`http://<ROKU_IP>` → Installer) — the same channel ID is replaced in place, and your saved server address and session survive the update.
 
 ## Next Steps
 

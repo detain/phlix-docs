@@ -3,59 +3,57 @@
 **Since:** 0.18.0
 
 > [!TIP]
-> The Phlix mobile app is available for both iOS and Android. Install it from your device's app store, open it, and enter your server URL or sign in with your Hub account. Minimum requirements: iOS 15+ or Android 10+.
+> The Phlix mobile app runs on iOS 15+ and Android 10+. It is **not published in the App Store or Google Play yet** — for Android, download the APK from the GitHub releases page; for iOS, the app must currently be built from source.
 
 ## Install / Store Links
 
-- **Apple App Store:** [Phlix on the App Store](#) <!-- placeholder: pending App Store setup -->
-- **Google Play:** [Phlix on Google Play](#) <!-- placeholder: pending Play Store setup -->
-- **Direct APK download:** [github.com/detain/phlix-mobile-client/releases](https://github.com/detain/phlix-mobile-client/releases) — for Android devices outside the Play Store
+- **Apple App Store:** not published yet — building from source is the only iOS route today (see the [mobile client build guide](../dev/client-mobile.md)).
+- **Google Play:** not published yet.
+- **Direct APK download (Android):** [github.com/detain/phlix-mobile-client/releases](https://github.com/detain/phlix-mobile-client/releases) — the rolling `Latest (master)` pre-release carries `app-release.apk`.
 
 ## Platform-Specific Install Steps
 
 ### iOS
 
-1. Open the **App Store** on your iPhone or iPad.
-2. Search for **Phlix** and tap **Get** to install.
-3. For beta testing, join the **TestFlight** program via the link on the [releases page](https://github.com/detain/phlix-mobile-client/releases).
-4. Open Phlix from your home screen after installation.
+There is no App Store or TestFlight listing yet. To run Phlix on an iPhone or iPad today you build the app from source with Xcode — follow the [mobile client build guide](../dev/client-mobile.md).
 
 ### Android
 
-1. Open **Google Play** and search for **Phlix**.
-2. Tap **Install** to download and install automatically.
-3. For sideloading (outside Play Store):
-   - Download the APK from [github.com/detain/phlix-mobile-client/releases](https://github.com/detain/phlix-mobile-client/releases).
-   - Enable **Install unknown apps** in your device's security settings before running the APK.
-   - Open the APK and follow the on-screen prompts.
+1. On the phone, open [github.com/detain/phlix-mobile-client/releases](https://github.com/detain/phlix-mobile-client/releases) in a browser.
+2. In the `Latest (master)` pre-release, download `app-release.apk`.
+3. Enable **Install unknown apps** for your browser (or file manager) in the device's security settings.
+4. Open the downloaded APK and follow the on-screen prompts.
+
+> [!NOTE]
+> The pre-release APK is a development build, updated whenever the app changes. If you prefer to compile it yourself, the release APK lands at `android/app/build/outputs/apk/release/app-release.apk` after a source build.
 
 ### First Launch
 
-On first launch, the app presents two options:
+The sign-in screen is a single form — there is no choice of connection modes:
 
-- **Enter Server URL** — type your server's address directly (e.g., `http://192.168.1.100:8096` for local access or `https://your-domain.com` for remote access)
-- **Sign in with Hub** — authenticate via your Phlix Hub account, which auto-discovers all servers linked to your hub
+1. Enter your **Server URL** — your server's address, e.g. `http://192.168.1.100:8096` on the local network or `https://your-domain.com` if you expose it securely over HTTPS. An address typed without a scheme is assumed to be `https://`.
+2. Enter your Phlix **username** and **password**, then tap **Login**.
+3. If your server supports passkey sign-in, a **Sign in with a passkey** button also appears.
 
-Choose one and proceed. You can switch methods later in **Settings → Account**.
+Signing in to the Hub is a separate, optional step you can do later from **Settings** — see [Hub Connection](#hub-connection).
 
 ## Setup Steps
 
-1. After connecting, the app downloads your library list and starts displaying movies, shows, and other content.
-2. On first connect, grant **Camera** permission if you want to scan barcodes or use photo-based search. Grant **Storage** permission if you want to download content for offline playback.
-3. A background library sync begins automatically. New or updated items appear in your library over the next few minutes.
-4. To manually refresh, pull down on the library list.
+1. After signing in, the app downloads your library list and starts displaying movies, shows, and other content.
+2. Grant the **notifications** permission when prompted if you want alerts on this device.
+3. To save content for offline playback, use the download action on a movie or episode — downloads stay on the device and play with an "Offline" badge in the player.
+4. To manually refresh, pull down on the home or library list.
 
 ## Hub Connection
 
-Once the app is running and connected to a server, you can link it to your Hub account:
+Once the app is connected to a server directly, you can additionally link it to your Hub account for remote access when away from home:
 
-1. Tap **Settings** (gear icon) in the top-right corner.
-2. Tap **Account → Sign in with Hub**.
-3. Enter the Hub URL (e.g., `https://hub.phlix.example.com`) and tap **Continue**.
-4. Enter your Hub username and password, then tap **Sign In**.
-5. If your Hub account manages multiple servers, a picker appears — select the server you want to use.
+1. Tap **Settings** (gear icon).
+2. In the **Hub** section, tap **Sign in to Hub** (hint: "Access your claimed servers remotely").
+3. Enter your **Hub URL (e.g., https://hub.example.com)**, plus your Hub username and password.
+4. After signing in, the app shows **Connection Mode** with a **Direct | Via Hub** toggle, an **Active Server** picker, and your **Claimed Servers** list — pick the server you want to use.
 
-The Hub connection allows you to access all of your Hub-linked servers without manually entering each URL, and enables secure remote playback when you are away from home.
+Via Hub mode routes the app's traffic through the Hub relay, so the server itself does not need to be exposed to the internet. Tap **Sign Out** in the same section to unlink the Hub account.
 
 ## What Can Go Wrong
 
@@ -69,11 +67,11 @@ The Hub connection allows you to access all of your Hub-linked servers without m
 
 **Symptom:** The app times out or shows "Server unreachable" when you are on mobile data or a different Wi-Fi network, even though it works fine at home.
 
-**Fix:** Use the Hub relay URL (from the sign-in-with-Hub flow) for remote access — the Hub relay handles the connection tunnel automatically. For direct access, configure port forwarding on your router for TCP port 8096, or set up a Tailscale VPN to create a private tunnel between your mobile device and your home network.
+**Fix:** Sign in to the Hub (see [Hub Connection](#hub-connection)) and switch **Connection Mode** to **Via Hub** — the Hub relay carries the connection for you, so the server need not be reachable from the outside. For direct access, configure port forwarding on your router for TCP port 8096, or set up a Tailscale VPN to create a private tunnel between your mobile device and your home network.
 
 ### Hub login fails
 
-**Symptom:** Tapping "Sign in with Hub" and entering your credentials returns "Authentication failed."
+**Symptom:** Tapping **Sign in to Hub** and entering your credentials returns "Authentication failed."
 
 **Fix:** Verify your Hub username and password. Confirm the Hub URL is entered without a trailing slash (e.g., `https://hub.phlix.example.com` not `https://hub.phlix.example.com/`). If you have forgotten your Hub password, use the password reset flow on the Hub login page.
 

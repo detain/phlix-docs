@@ -246,19 +246,19 @@ effect after the server restarts — the page badges these.
 **72 keys** in `phlix-shared` v0.45.0. This table is a regenerated snapshot and
 may lag the schema for a release or two; the schema is the source of truth.
 
-#### `access.*`
+### `access.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `access.default_concurrent_streams` | `int` | standard | no |
 
-#### `artwork.*`
+### `artwork.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `artwork.download_enabled` | `bool` | standard | no |
 
-#### `auth.*`
+### `auth.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
@@ -268,7 +268,7 @@ may lag the schema for a release or two; the schema is the source of truth.
 | `auth.refresh_ttl` | `int` | advanced | no |
 | `auth.signup_mode` | `string (enum)` | standard | no |
 
-#### `casting.*`
+### `casting.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
@@ -276,7 +276,7 @@ may lag the schema for a release or two; the schema is the source of truth.
 | `casting.chromecast.enabled` | `bool` | standard | no |
 | `casting.roku.enabled` | `bool` | standard | no |
 
-#### `dlna.*`
+### `dlna.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
@@ -286,7 +286,7 @@ may lag the schema for a release or two; the schema is the source of truth.
 | `dlna.friendly_name` | `string` | standard | yes |
 | `dlna.restrict_to_lan` | `bool` | advanced | no |
 
-#### `ffmpeg.*`
+### `ffmpeg.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
@@ -294,14 +294,14 @@ may lag the schema for a release or two; the schema is the source of truth.
 | `ffmpeg.max_concurrent_transcodes` | `int` | advanced | yes |
 | `ffmpeg.transcode_timeout` | `int` | advanced | yes |
 
-#### `hwaccel.*`
+### `hwaccel.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `hwaccel.enabled` | `bool` | standard | yes |
 | `hwaccel.prefer_hardware` | `bool` | advanced | yes |
 
-#### `lastfm.*`
+### `lastfm.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
@@ -309,39 +309,39 @@ may lag the schema for a release or two; the schema is the source of truth.
 | `lastfm.enabled` | `bool` | standard | no |
 | `lastfm.shared_secret` | `string` | standard | no |
 
-#### `matching.*`
+### `matching.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `matching.noise_suffixes` | `json` | advanced | no |
 
-#### `metadata.*`
+### `metadata.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `metadata.genres_mode` | `string (enum)` | standard | no |
 | `metadata.provider_priority` | `json` | standard | no |
 
-#### `metrics.*`
+### `metrics.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `metrics.enabled` | `bool` | advanced | yes |
 
-#### `newsletter.*`
+### `newsletter.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `newsletter.enabled` | `bool` | standard | no |
 | `newsletter.send_hour` | `int` | standard | no |
 
-#### `port-forward.*`
+### `port-forward.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `port-forward.port_forwarding.upnp_enabled` | `bool` | standard | no |
 
-#### `process.*`
+### `process.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
@@ -351,20 +351,20 @@ may lag the schema for a release or two; the schema is the source of truth.
 | `process.plugin-auto-update.enabled` | `bool` | standard | yes |
 | `process.similarity.enabled` | `bool` | standard | yes |
 
-#### `relay.*`
+### `relay.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `relay.ping_interval` | `int` | advanced | no |
 | `relay.reconnect_delay` | `int` | advanced | no |
 
-#### `scanner.*`
+### `scanner.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `scanner.ignore_patterns` | `json` | advanced | no |
 
-#### `server.*`
+### `server.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
@@ -385,32 +385,32 @@ may lag the schema for a release or two; the schema is the source of truth.
 | `server.rate_limit.ws_connect.max` | `int` | advanced | yes |
 | `server.rate_limit.ws_connect.window` | `int` | advanced | yes |
 
-#### `stats.*`
+### `stats.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `stats.enabled` | `bool` | standard | no |
 
-#### `subtitles.*`
+### `subtitles.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `subtitles.default_language` | `string` | standard | no |
 
-#### `tmdb.*`
+### `tmdb.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `tmdb.api_key` | `string` | standard | no |
 
-#### `theme_music.*`
+### `theme_music.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `theme_music.enabled` | `bool` | advanced | yes |
 | `theme_music.source` | `string (enum)` | advanced | yes |
 
-#### `trakt.*`
+### `trakt.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
@@ -418,7 +418,7 @@ may lag the schema for a release or two; the schema is the source of truth.
 | `trakt.client_secret` | `string` | standard | no |
 | `trakt.redirect_uri` | `string` | standard | no |
 
-#### `transcoding.*`
+### `transcoding.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
@@ -429,13 +429,13 @@ may lag the schema for a release or two; the schema is the source of truth.
 | `transcoding.preset` | `string (enum)` | advanced | no |
 | `transcoding.tone_mapping_mode` | `string (enum)` | standard | no |
 
-#### `trickplay.*`
+### `trickplay.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|
 | `trickplay.enabled` | `bool` | standard | no |
 
-#### `webhooks.*`
+### `webhooks.*`
 
 | Key | Type | Tier | Restart |
 |-----|------|------|---------|

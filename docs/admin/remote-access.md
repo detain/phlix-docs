@@ -418,7 +418,7 @@ offline/0/null even on a healthy, enrolled, connected box. The heartbeat fork
 records the real hub round-trip latency each tick (monotonic `hrtime`), which is
 what lights up the Relay Tunnel [Ping](#ping-relay) latency above.
 
-#### Relay health
+### Relay health
 
 ```http
 GET /api/v1/health/relay
@@ -457,7 +457,7 @@ past, not the present. When the relay flag is set, the liveness fields
 (`connected`, `active`) are already forced down by the staleness-gated read, so a
 frozen file from a dead fork cannot report `connected: true`.
 
-#### Network health (cheap probe)
+### Network health (cheap probe)
 
 ```http
 GET /api/v1/health/network

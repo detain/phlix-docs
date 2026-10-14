@@ -67,7 +67,13 @@ For each user-media pair, Phlix records:
 
 The Continue Watching row on the home screen surfaces unwatched or partially-watched content, sorted by most recently played. Items where `percent_complete >= 90` are excluded (considered "finished").
 
-An item also drops out immediately when the player sends an explicit **finish signal** — the web player and the persistent mini-player POST [`/api/v1/sessions/{id}/complete`](../reference/api#post-api-v1-sessions-id-complete) when playback reaches its natural end, so a fully-watched title clears itself from Continue Watching without any manual "mark watched" step. Native clients (Roku, mobile, Tizen, Windows) do not send this signal yet, so a title finished on those clients only leaves the row once it independently crosses the completion threshold on a progress tick.
+An item also drops out immediately when the player sends an explicit **finish signal**:
+when playback reaches its natural end, the player calls
+[`/api/v1/sessions/{id}/complete`](../reference/api#post-api-v1-sessions-id-complete), so a
+fully-watched title clears itself from Continue Watching without any manual "mark watched"
+step. Which clients send it: the web player and the mini-player do; the Tizen and Windows
+apps embed that same web player, so they do too. The Roku and mobile apps don't — there a
+finished title leaves the row only once its progress ticks past the completion threshold.
 
 ### Up Next
 
@@ -76,7 +82,12 @@ For TV shows, the Up Next feature links episodes in a series. When a user finish
 - User's auto-play settings
 - Whether the show is still actively airing (new episodes get higher priority)
 
-A dedicated **Next Up** rail is also exposed as its own endpoint, [`GET /api/v1/users/me/next-up`](../reference/api#get-api-v1-users-me-next-up): for each series the profile has started, it returns the single next unwatched episode (resuming an in-progress episode, or advancing to the next numbered episode/season once one is finished). It reads only playback state and walks numbered seasons in order, excluding Specials.
+A dedicated **Next Up** rail is also exposed as its own endpoint,
+[`GET /api/v1/users/me/next-up`](../reference/api#get-api-v1-users-me-next-up). For each
+series the profile has started it returns the single next unwatched episode — resuming an
+in-progress episode, or advancing to the next numbered episode or season once one is
+finished. It reads only playback state, walks numbered seasons in order, and excludes
+Specials.
 
 ---
 

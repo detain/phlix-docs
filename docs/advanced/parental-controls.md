@@ -39,6 +39,14 @@ then too. If you want "only allowed 4–6pm on Tuesdays", you'd have to build it
 everything-but windows — the feature has no "allow only during" mode.
 :::
 
+::: warning And if the schedule can't be read, access stays allowed
+If the server hits a quiet database hiccup while looking up a profile's schedules, the
+lookup comes back empty and the request is treated as "no schedule applies" — allowed.
+Think of a curfew as a firm reminder the server enforces when it can see the rulebook,
+not a deadbolt. (If the database connection is fully dead, requests fail loudly instead
+— you won't get silent streaming through a broken server.)
+:::
+
 ### Setting one up
 
 | Field | What it means |

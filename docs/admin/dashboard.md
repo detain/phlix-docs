@@ -1,147 +1,97 @@
 ---
 title: Dashboard
-description: Admin dashboard overview and metrics
+description: Reading your Phlix admin dashboard
 ---
 
-# Dashboard
+# Reading Your Dashboard
 
-The admin dashboard at `/admin/dashboard` is the admin console's **stats hub** — a
-rich, real-time view of server activity with five live sections. It replaces the
-Phase-0 placeholder with a fully-featured SPA page backed by the existing
-`DashboardController` + `StatsController` endpoints.
+The dashboard is the first page you see after signing in as an admin. It answers the
+"what's happening on my server right now — and lately?" question without you having to
+ask the database anything. This page walks through the five panels, what each number
+means, and what the dashboard deliberately does *not* tell you.
 
-## Page layout
+## Where it is
 
-The page renders five card sections in a responsive grid:
+Open **Dashboard** in the admin sidebar (the URL is `/app/admin/dashboard`; the older
+`/admin/dashboard` address simply redirects there). You must be signed in with an admin
+account — everyone else gets an access-denied response.
 
-| Section | Data source | Refresh |
-|---------|-------------|---------|
-| **Now Playing** | `GET /api/v1/admin/dashboard/now-playing` | Live — 30 s auto-refresh via `setInterval`, cleared on unmount |
-| **Top Users** | `GET /api/v1/admin/dashboard/top-users?days=N` | On mount + date-range change |
-| **Top Media** | `GET /api/v1/admin/dashboard/top-media?days=N` | On mount + date-range change |
-| **Storage** | `GET /api/v1/admin/dashboard/storage` | On mount |
-| **Recent Activity** | `GET /api/v1/admin/dashboard/activity?limit=N` | On mount + "Load more" pagination |
+## The five panels
 
 ### Now Playing
 
-Live list of every currently-active playback session. Each row shows:
-- Username + avatar
-- Media title + type badge (movie/series/music/photo/video)
-- Progress bar (`position_ticks / duration_ticks`, percentage label)
-- Device name + type icon
-- Status badge (playing/paused/buffering)
+A live list of everything with an active session on your server right now. The panel header
+counts the sessions ("N active sessions"), and each row shows who is watching, what
+they're watching, the type of media (movie / episode / music badge), and how far along
+they are — a progress bar with a percentage.
 
-Auto-refreshes every 30 seconds via `setInterval` stored in a `useRef` and cleared
-in the `useEffect` return function.
+The panel refreshes itself every 30 seconds while you're looking at it. If you switch to
+another browser tab, the refresh pauses until you come back — the page doesn't keep
+polling your server in the background.
+
+A row appears when a client has an active session — paused counts, stopped doesn't.
+"Now Playing" really means "has a session", not "the picture is moving this second".
 
 ### Top Users
 
-30-day leaderboard table with columns: **Rank**, **Username**, **Watch Time** (human-
-readable, e.g. "3d 4h"), **Play Count**, **Avatar**. Date range filter (7d / 30d / 90d)
-changes the `days` query param. Empty state: "No user data yet for this period."
+A leaderboard of who has watched the most. Columns: rank, username, total watch time
+(written out like "2h 15m"), and play count. The **Date range** menu at the top of the
+page changes the window for this panel and Top Media together (last 7, 30, or 90 days).
+If nobody has watched anything in the chosen period the panel simply says
+"No user data yet".
+
+Watch time counts what the server was told you watched. Skipping around, leaving a
+title paused for an hour, or using a client that reports progress differently will all
+skew it — it's a fun ranking, not a billing meter.
 
 ### Top Media
 
-30-day ranked list with columns: **Rank**, **Title** (with poster thumbnail), **Type**
-badge, **Play Count**, **Total Duration**. Date range filter applies here too. Empty
-state: "No media has been played in this period."
+The same idea for titles: rank, title (it links to that item's page), type badge, how
+many times it was played, and total watch time. Same Date range menu. When the list is
+empty the panel says "No media data yet".
 
-::: tip Deleted items/users are excluded
-Both leaderboards only list items and users that still exist — plays of a since-deleted
-item (or activity from a deleted user) are hidden rather than shown as a blank-title /
-blank-username row. See [Stats → Top Media/Top Users](./stats.md#top-users-by-watch-time)
-for the JOIN-based mechanism.
+::: tip Deleted things disappear from the leaderboards
+Both lists hide activity from deleted users and plays of deleted items, rather than
+showing blank rows. So a "Top Users" chart can honestly change shape when you clean up
+an account — the plays didn't happen more or less, they just stopped being attributable.
 :::
 
 ### Storage
 
-Breakdown cards per media type (movie / series / music / photo / video) showing:
-- Item count + total size (human-readable, e.g. "46.57 GB")
-- Transcode cache size
+A snapshot of what your library weighs: one card per media type found in your library,
+each with its item count and total size. Below the cards, a line reports the size of the
+transcode cache (only once it has something in it). The transcode cache is disposable
+work product — it regenerates as people watch, so a big number there is normal. It also
+lives outside what a backup archive carries (the archive holds the database dump, config
+files, the data directory, and SSL certificates — see
+[Backup & Restore](../advanced/backup-restore.md)), which is fine precisely because it
+can be rebuilt.
 
-Cards use a `mediaTypeBadgeClass()` switch that maps lowercased type strings to
-static CSS class names — no user input in class names, XSS-safe.
+Storage sizes are what the database recorded at scan time. If you replaced files on disk
+without rescanning, give it a minute after a rescan before trusting these numbers.
 
 ### Recent Activity
 
-Paginated event feed with **"Load more"** button when `activity.length >= ACTIVITY_PAGE_SIZE`.
-Each event row shows:
-- Event-type badge (playback_completed / library_change / login / logout)
-- Username
-- Event description
-- Relative timestamp ("2m ago")
+A plain event feed — playback completions, library changes, logins and logouts — newest
+first, with relative timestamps like "2m ago". Click **Load more** to page further back.
+If the feed looks thin, that's because it shows the event kinds it collects, not every
+API call your clients make. An empty feed simply reads "No recent activity".
 
-Uses `eventTypeBadgeClass()` with the same allowlisted-switch pattern as storage.
-Empty state: "No recent activity to show."
+## What this page is not
 
-### Date range filter
-
-A `7d / 30d / 90d` toggle stored in `useState` affects **Top Users**, **Top Media**,
-and **Recent Activity** via a `useEffect` that re-fetches when `dateRange` changes.
-
-### Loading & empty states
-
-All five sections show a `SectionSkeleton` loading skeleton while their respective
-`loading*` state is true. Each section has a contextual `EmptyState` when the API
-returns an empty array.
-
-## Accessing the page
-
-Navigate to **Admin UI → Dashboard** (the default admin landing page, also reachable
-from the sidebar). All five sections are visible without navigating away.
-
-## API reference
-
-The page uses two typed API wrappers that mirror the existing PHP controller endpoints:
-
-### DashboardApi (`admin-ui/src/api/dashboard.ts`)
-
-| Method | Endpoint | Return type |
-|--------|----------|-------------|
-| `getNowPlaying()` | `GET /api/v1/admin/dashboard/now-playing` | `NowPlayingEntry[]` |
-| `getTopUsers(limit?, days?)` | `GET /api/v1/admin/dashboard/top-users?limit=N&days=N` | `TopUserEntry[]` |
-| `getTopMedia(limit?, days?)` | `GET /api/v1/admin/dashboard/top-media?limit=N&days=N` | `TopMediaEntry[]` |
-| `getStorage()` | `GET /api/v1/admin/dashboard/storage` | `StorageEntry` |
-| `getActivity(limit?)` | `GET /api/v1/admin/dashboard/activity?limit=N` | `ActivityEntry[]` |
-
-### StatsApi (`admin-ui/src/api/stats.ts`)
-
-| Method | Endpoint | Return type |
-|--------|----------|-------------|
-| `getPlaybackStats(from?, to?)` | `GET /api/v1/admin/stats/playback?from=…&to=…` | `PlaybackStatEntry[]` |
-| `getTopUsers(limit?, since?)` | `GET /api/v1/admin/stats/top-users?limit=N&since=…` | `TopUserEntry[]` |
-| `getTopMedia(limit?, since?)` | `GET /api/v1/admin/stats/top-media?limit=N&since=…` | `TopMediaEntry[]` |
-| `getStorageStats()` | `GET /api/v1/admin/stats/storage` | `StorageEntry` |
-
-Both wrappers consume `ApiClient.get()` with a params object — `URLSearchParams` handles
-encoding internally, so no `encodeURIComponent` is needed in callers.
-
-## Design notes
-
-- `useToast()` is destructured as `const { push: pushToast } = useToast()` — the stable
-  `push` callback reference avoids triggering `useEffect` re-runs when a toast is pushed.
-- No `dangerouslySetInnerHTML` anywhere in `DashboardPage.tsx`. All user-visible strings
-  render via JSX `{}` interpolation.
-- `relativeTime()` returns plain text ("2m ago") with no HTML.
-- All badge-class functions use a switch over lowercased type strings returning static
-  CSS class names — no user input flows into class names.
-
-## Vitest coverage
-
-| File | Coverage |
-|------|----------|
-| `src/api/dashboard.ts` | **100%** |
-| `src/api/stats.ts` | **100%** |
-| `src/pages/DashboardPage.tsx` | ≥80% |
-| Overall SPA | 301/302 tests (99.7%) |
-
-Two tests in `DashboardPage.test.tsx` are known-flaky due to mock response-cycling
-infrastructure (not production bugs — the core pagination logic is verified by
-passing tests).
+- **Not a debugging tool.** If something looks wrong, the panels tell you *that*, not
+  *why*. The detailed statistics endpoints and the logs pages are the next step —
+  see [Stats](./stats.md).
+- **Not permission-aware in shades of grey.** It's all-or-nothing: admins see it,
+  everyone else doesn't.
+- **Not real-time to the second.** Now Playing is up to 30 seconds stale; the other
+  panels load when the page loads (or when you change the range) and stay put until
+  you reload.
 
 ## See also
 
-- [Stats](./stats) — detailed statistics API reference
-- [Webhooks](./webhooks) — get notified on playback and library events
-- [Backup](./backup) — backup dashboard data and server state
-- [Admin SPA dev guide](../dev/admin-spa#the-dashboard-page) — internal implementation details
+- [Stats](./stats.md) — the detailed numbers behind Top Users / Top Media
+- [Webhooks](./webhooks.md) — get told about these events somewhere else instead
+- [Backup](./backup.md) — what to keep so this history survives a disk failure
+- [Admin SPA internals](../dev/admin-spa.md#the-dashboard-page) — how the page is built
+  (developer documentation)

@@ -80,6 +80,12 @@ export default defineConfig({
           link: '/dev'
         }
       ],
+      '/glossary': [
+        {
+          text: 'Glossary',
+          link: '/glossary'
+        }
+      ],
       '/faq': [
         {
           text: 'FAQ',
@@ -98,6 +104,7 @@ export default defineConfig({
             { text: 'Books', link: '/libraries/books' },
             { text: 'Audiobooks', link: '/libraries/audiobooks' },
             { text: 'Metadata & Ratings', link: '/libraries' },
+            { text: 'Playlists & Collections', link: '/libraries/collections' },
           ]
         }
       ],
@@ -141,9 +148,10 @@ export default defineConfig({
             { text: 'ARR Integration', link: '/advanced/arr-integration' },
             { text: 'Player Experience', link: '/advanced/player-experience' },
             { text: 'Recommendations & Discovery', link: '/advanced/recommendations' },
+            { text: 'Adding People to Your Household', link: '/advanced/adding-people' },
             { text: 'Parental & Session Controls', link: '/advanced/parental-controls' },
             { text: 'Music & Audio', link: '/advanced/music-audio' },
-            { text: 'SyncPlay', link: '/advanced/syncplay' },
+            { text: 'Watch Together (SyncPlay)', link: '/advanced/syncplay' },
           ]
         }
       ],

@@ -15,9 +15,13 @@ Every profile on your server can have three kinds of guardrails:
 They are three independent tools, and each has real limits you should know before you
 rely on it. Read [What they can't do](#what-they-cant-do) before bedtime-shaming anyone.
 
-Everything below is set per profile on the **Parental Controls** page — open it from a
-profile's menu or at `/app/parental?profile=<id>`. You don't have to be an admin to
-manage your *own* profile's controls; an admin can manage anyone's.
+Everything below is set per profile on the **Parental Controls** page. Two honest quirks:
+no menu links to it yet — you open it by typing the address
+`http(s)://your-server/app/parental?profile=<id>` — and the `<id>` (the profile's
+internal identifier) isn't shown anywhere in the app either. You can read it from your
+browser's developer tools while the Profiles page loads, from the server's API, or from
+the database. You don't have to be an admin to manage your *own* profile's controls; an
+admin can manage anyone's.
 
 ---
 

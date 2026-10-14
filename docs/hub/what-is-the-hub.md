@@ -24,7 +24,8 @@ reach Federation and Shares from the top navigation.
 ## Next Steps
 
 - [Claim your server to the hub](claim-server.md) — connect a server to a hub.
-- [Library Sharing](library-sharing.md) — share specific libraries with other hub users by email.
-- [Share with Friends](share-with-friends.md) — invite links and email-based sharing for non-hub users.
+- [Library Sharing](library-sharing.md) — grant other hub users access to your libraries (created through invite links).
+- [Share with Friends](share-with-friends.md) — invite links: how you actually hand someone access (the hub sends no email).
+- [Invite Links](invite-links.md) — create and manage shareable invite links.
 - [Remote access](remote-access.md) — how remote connectivity works.
 - [Self-host the hub](self-host-the-hub.md) — run your own hub instance.

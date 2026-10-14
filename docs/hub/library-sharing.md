@@ -32,8 +32,8 @@ The **Shares** page lists every library share you have created, one row per shar
 
 ```
 ┌─ Library   Shared with   Permissions   Created     Expires    Actions ─┐
-│ Movies ★   Alice         Read only     2026-05-29  Never      [Revoke] │
-│ TV Shows   Bob           Read/Write    2026-05-29  2026-08-27 [Revoke] │
+│ Movies ★   Alice         read          2026-05-29  Never      [Revoke] │
+│ TV Shows   Bob           write         2026-05-29  2026-08-27 [Revoke] │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -43,10 +43,12 @@ Each row shows six columns:
 
 - **Library** — the library being shared.
 - **Shared with** — the collaborator's **display name**, falling back to their user
-  id if they have not set one. The email address you shared with is not returned by
-  the API and is not shown.
-- **Permissions** — `Read only` or `Read / Write`, as a badge. ⚠ Read-only, in both
-  senses: see [Permission levels are not enforced](#permission-levels-are-not-enforced).
+  id if they have not set one. The email address they registered with is not returned
+  by the API and is not shown.
+- **Permissions** — the stored level rendered as a badge: **`read`** or **`write`**
+  (yes, lower-case — the page shows the raw value; the *invite-link form* is where you
+  choose between **Read** and **Read/Write**). ⚠ Read-only, in both senses: see
+  [Permission levels are not enforced](#permission-levels-are-not-enforced).
 - **Created** — the date the share was created.
 - **Expires** — the share's expiry, if it has one.
 - **Actions** — **Revoke** only. There is no **Edit** control; to change a
@@ -159,7 +161,12 @@ All endpoints require authentication (`Authorization: Bearer <jwt>` or the `phli
 
 **Fix:** Make sure the server has at least one library configured on the server itself. Refresh the server's library list by triggering a rescan from the server's control panel.
 
-### 2. Share target email not found
+### 2. Share target email not found (API-direct shares only)
+
+> [!NOTE]
+> This only applies if you call the API directly — no hub page sends this request.
+> Normal sharing is done with [invite links](./invite-links.md), which are not tied
+> to any email address.
 
 **Symptom:** `POST /api/v1/me/shares` returns `404 user_not_found` and the share is not created.
 

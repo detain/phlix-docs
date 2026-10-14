@@ -12,11 +12,16 @@ Phlix needs three things to survive a disaster: the **database** (users, watch h
 
 **What:** All Phlix data — users, watch history, media library metadata, playback state, sessions.
 
+The database is named **`phlix`** by default (that is what the Docker stack and the install
+guides create). Substitute your own name if you chose a different one.
+
 ```bash
-mysqldump -u phlix -p phlix_db > phlix-db-$(date +%Y%m%d).sql
+mysqldump --single-transaction -u phlix -p phlix > phlix-db-$(date +%Y%m%d).sql
 ```
 
-For MariaDB the command is identical. Verify the dump is valid:
+`--single-transaction` takes a consistent snapshot without locking any table, so the
+library keeps serving while the dump runs — always include it. For MariaDB the command is
+identical. Verify the dump is valid:
 
 ```bash
 # Check the dump starts correctly
@@ -72,7 +77,7 @@ tar czf phlix-plugins-$(date +%Y%m%d).tar.gz -C /path/to/phlix data/plugins/
 
 ```bash
 # Database
-mysqldump -u phlix -p phlix_db > phlix-db-$(date +%Y%m%d).sql
+mysqldump --single-transaction -u phlix -p phlix > phlix-db-$(date +%Y%m%d).sql
 
 # Full tarball — everything that matters (excluding transcode and logs)
 tar czf phlix-backup-$(date +%Y%m%d).tar.gz \
@@ -86,14 +91,22 @@ tar czf phlix-backup-$(date +%Y%m%d).tar.gz \
 
 Phlix ships a `BackupManager` (`src/Admin/BackupManager.php`) that packages the
 MySQL dump, `config/*.php`, the `data/` directory, and SSL certificates into a
-single `tar.gz`, with optional S3 upload and retention cleanup. There is **no
-admin CLI command for this yet** — backups are driven by configuration: set
-`auto_backup_interval_days` and `retention_count` in `config/backup.php` and the
-server creates and prunes backups automatically. See [Backup](../admin/backup.md)
-for the full configuration reference (local path, S3 credentials, retention).
+single `tar.gz`, with optional S3 upload and retention cleanup. The dump it takes
+inside the archive already runs `mysqldump --single-transaction` and the manager
+verifies the dump completed before shipping the archive.
 
-For an on-demand backup without the manager, use the manual tarball shown in
-§2.1 above.
+You can drive it on demand from the console:
+
+```bash
+php bin/phlix backup:create --label="before-upgrade"   # create one archive now
+php bin/phlix backup:list                               # every stored backup, newest first
+```
+
+Or let the server do it: set `auto_backup_interval_days` and `retention_count` in
+`config/backup.php` and a periodic timer creates and prunes backups automatically
+(archives land in `local_path`, default `/var/phlix/backups`). See
+[Backup](../admin/backup.md) for the full configuration reference (local path, S3
+credentials, retention).
 
 ### 2.3 Automated (Cron / systemd timer)
 
@@ -102,7 +115,7 @@ backup from cron:
 
 ```bash
 # /etc/cron.d/phlix-backup — daily at 03:00
-0 3 * * * root /usr/bin/mysqldump -u phlix -pYOURPASS phlix_db \
+0 3 * * * root /usr/bin/mysqldump --single-transaction -u phlix -pYOURPASS phlix \
   > /backups/phlix-db-$(date +\%Y\%m\%d).sql && \
   /usr/bin/tar czf /backups/phlix-$(date +\%Y\%m\%d).tar.gz \
   -C /path/to/phlix config/ data/metadata/ data/plugins/ \
@@ -165,7 +178,7 @@ systemctl stop phlix
 2. **Restore database**
 
 ```bash
-mysql -u phlix -p phlix_db < phlix-db-20250601.sql
+mysql -u phlix -p phlix < phlix-db-20250601.sql
 ```
 
 3. **Restore config and data**
@@ -217,15 +230,35 @@ back as new rows with new UUIDs; restore to the original names where you can. Se
 
 ### Using docker compose exec
 
+The stock `docker-compose.yml` names its services **`phlix`** (the app, container
+`phlix-server`) and **`mysql`** (container `phlix-mysql`) — `docker compose exec` takes the
+*service* name. Config, data and backup archives live in the `phlix_config`, `phlix_data`
+and `phlix_backups` volumes, mounted in the app container under `/var/phlix/`.
+
+Run `mysqldump` from the **mysql container**, where the client is guaranteed to exist
+(the app image is not documented to ship one):
+
 ```bash
-# Inside the container — dump the DB and tar the data, landing in a mounted volume
-docker compose exec phlix-server sh -c \
-  'mysqldump -u phlix -pYOURPASS phlix_db > /backups/phlix-db-$(date +%Y%m%d).sql && \
-   tar czf /backups/phlix-$(date +%Y%m%d).tar.gz -C /app config/ data/metadata/ data/plugins/ \
+# Database dump straight to your terminal's shell (-T keeps stdout clean for the redirect)
+docker compose exec -T mysql sh -c \
+  'exec mysqldump -u phlix -p"$MYSQL_PASSWORD" --single-transaction phlix' \
+  > phlix-db-$(date +%Y%m%d).sql
+
+# File backup (config + metadata), landing in the mounted backups volume
+docker compose exec phlix sh -c \
+  'tar czf /var/phlix/backups/phlix-files-$(date +%Y%m%d).tar.gz \
+   -C /var/phlix config data \
    --exclude="data/transcode/*" --exclude="*.log"'
 
-# Copy the backup out of the container
-docker compose cp phlix-server:/backups/phlix-20250601.tar.gz ./phlix-backup-20250601.tar.gz
+# Copy the backup out of the volume
+docker compose cp phlix:/var/phlix/backups/phlix-files-20250601.tar.gz ./
+```
+
+Or skip all of that and let the built-in manager do both halves in one archive:
+
+```bash
+docker compose exec phlix php bin/phlix backup:create --label="docker-manual"
+docker compose exec phlix php bin/phlix backup:list
 ```
 
 ### Backing up named volumes directly
@@ -250,7 +283,7 @@ docker run --rm \
   tar xzf /backup/phlix_data.tar.gz -C /data
 
 # Restart Phlix
-docker compose up -d phlix-server
+docker compose up -d phlix
 ```
 
 ---

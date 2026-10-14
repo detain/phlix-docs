@@ -1,166 +1,108 @@
-# SyncPlay
+# Watch Together (SyncPlay)
 
 **Since:** 0.17.0
 
+> [!NOTE]
+> **Words this app uses:** the everyday name for this feature is a **watch group** — everyone pressing play together, staying in step. *SyncPlay* is the technical name you'll see in settings, URLs and error messages; "room" appears verbatim inside some screens' buttons and fields (the web dialog literally says "Create room" / "Join room"). They all refer to the same thing.
+
 ## TL;DR
 
-SyncPlay synchronizes playback across multiple clients so friends and family watching remotely can experience movies and TV shows together in near-realtime. One client acts as the **PIMP** (SyncPlay server), and all other clients connect as **players** that follow the PIMP's playback position.
+A **watch group** keeps playback in lockstep across everyone's devices, so household members on different TVs — or friends on the other side of the country — can start, pause and seek as one. One person is the **host**: their play, pause and seek commands lead, and everyone else follows. Your Phlix server coordinates the group; devices never talk to each other directly.
 
 ---
 
-## Overview
+## How It Feels to Use It
 
-SyncPlay is a protocol for synchronized multi-viewer playback over the internet. It solves the problem of watching content "together" when physically apart — everyone sees the same frame at the same time, and any viewer can pause, seek, or change playback state for the entire group.
+1. Someone starts a watch group and picks the title.
+2. Everyone else joins — by picking the group from a list, or typing its ID.
+3. From then on it behaves like one shared remote: when the host pauses, all screens pause; when the host seeks ahead, all screens jump.
+4. If someone's playback drifts more than about two seconds behind or ahead, their player quietly corrects itself — no button needed.
 
-### Key Concepts
+### Who is the host?
 
-| Role | Description |
-|------|-------------|
-| **PIMP** (Play Is My Pause) | The session host — one client acts as the authority for playback state. All others follow. |
-| **Player** | A client that joins a SyncPlay session and mirrors the PIMP's playback. |
-| **Room** | A named session that players join using a room name and optional password. |
-| **Watch Party** | A SyncPlay session with a shared media item — everyone watches the same movie or episode. |
+- The **first person in the group is the host.**
+- Only the host's playback controls move the group. If you join as a follower and press pause on your own player, the group is unaffected — the player shows you're in a group and defers to the host.
+- The host can **pass the lead** to another member (host transfer).
+- If the host leaves or their connection drops, the group **elects the member who joined earliest** as the new host automatically. Nobody votes; the rule is simply "oldest member inherits."
 
-### What Is Synchronized
+### What stays synchronized
 
-The following states are synchronized across all clients in a SyncPlay room:
+- **Play / pause** — the host starts or stops, everyone does
+- **Seek** — the host jumps to a scene, everyone jumps (small player-side nudges are tolerated, see drift below)
+- **Media item** — the group shares one current title, and switching within the group's queue moves everyone
 
-- **Play / Pause** — when the PIMP plays or pauses, all players follow
-- **Seek position** — when the PIMP seeks, all players seek to the same position
-- **Playback speed** — if the PIMP changes speed (e.g., 1.25x), all players follow
-- **Media item** — when the PIMP switches to a different movie or episode, all players switch
+### What is NOT synchronized (on purpose)
 
-### What Is NOT Synchronized
-
-- **Volume** — each client controls their own volume independently
-- **Subtitle selection** — each client can use their own subtitle track and offset
-- **Audio track selection** — each client can choose their own audio language
-
-### Automatic Drift Correction
-
-Follower clients don't just apply the host's play/pause/seek events — the web player also
-continuously measures its own **drift** from the host's extrapolated position
-(`local − (hostPosition + elapsed × playbackRate)`). When the drift exceeds the
-**2-second** tolerance (`Max Latency Tolerance`, below) it seeks to the host position
-automatically; smaller drifts are left alone so playback isn't interrupted by needless
-micro-seeks. This keeps followers locked to the host between explicit sync events, without
-a manual resync.
+- **Volume** — everyone sets their own
+- **Playback speed** — there is no speed control in group commands; each player runs at its own pace setting
+- **Subtitle selection and offset** — each viewer picks their own track
+- **Audio track selection** — each viewer picks their own language
 
 ---
 
-## Creating a SyncPlay Session
+## Starting or Joining a Watch Group on the Web
 
-### From the Web Player
+1. Open any title in the web player.
+2. In the player's control bar, click the **person icon** (its tooltip/label is "SyncPlay"; it reads "In SyncPlay room" once you're inside a group).
+3. The dialog offers **"Create or join a room"**:
+   - **Create room** — type a **Room name**, click **Create**. You are the host.
+   - **Join room** — pick a group from the **Public rooms** list when it shows one, or type the **Room ID** you were given (it looks like `sp_…`) and click **Join**.
+4. A "Joined {name}" confirmation appears and the player's sync controls take over: transport buttons become **"Play for everyone" / "Pause for everyone"**, and rewind/fast-forward move the whole group.
 
-1. Start playing any video
-2. Click the **SyncPlay** icon in the player controls (two arrows forming a circle)
-3. Choose **Create Room**
-4. Set a room name and optional password
-5. Share the room link / name with friends
+Groups created from the player are always open — there is no password box in the dialog. Room IDs are not guessable, which is the practical privacy control: share the ID only with people you want watching.
 
-### From the Mobile App
+A standalone page exists at `https://your-server/app/syncplay` (after signing in) where you can create a group or join by ID before opening a title. A pre-filled invite link you can send to someone is simply:
 
-1. Long-press any title in the library
-2. Tap **Watch Together**
-3. The app creates a room and starts playback immediately
+```
+https://your-server/app/syncplay?room=<room-id>
+```
+
+It opens the join form with the ID filled in — the person still has to be signed in to your server with their own account.
+
+### On mobile
+
+In the mobile player, tap the **SyncPlay** button in the overlay controls to open the same create/join dialog (create by name, join by ID).
+
+### On Roku
+
+During playback press the **`*` / Options** key to open the **Watch Together** overlay. It lists the server's existing groups (name and member count; locked ones marked) — select one to join, or press **Create Group** (the name comes from your device name; the Roku has no text keyboard for it). Roku has real constraints — see [Roku client notes](../clients/roku.md).
 
 ---
 
-## Joining a SyncPlay Session
+## Watching from Outside Your Home Network
 
-### Via Room Name
+The honest picture:
 
-1. Open the SyncPlay panel in the player
-2. Tap **Join Room**
-3. Enter the room name and password (if required)
-4. The client connects and begins mirroring the PIMP
-
-### Via Invite Link
-
-SyncPlay rooms can be shared via a URL:
-
-```
-https://your-phlix.example.com/syncplay/join?room=my-room&token=abc123
-```
-
-Clicking the link on a device with Phlix installed opens the app and joins the room directly.
+- **Everyone in a group needs to reach the sync service on your server: TCP port 8097.** On your home LAN that just works. From outside, you must expose or tunnel that port (a VPN is the safe default; the same port must be reachable plaintext — see the Roku caveat below).
+- **Devices signed in through the Hub** synchronize *your own* devices with each other: Hub-relay rooms are scoped to the server's owner, so a friend signing in with their own Hub account lands in their own room namespace, not yours. For multi-household parties, invite people to your server itself (see [Share with friends](../hub/share-with-friends.md)) and have them connect where they can reach `:8097`.
+- **Roku** cannot do encrypted WebSockets at all — its plain-socket API speaks `ws://` only, so watch-together on a Roku requires the server's plaintext `:8097` to be reachable from the device, and refuses to run in Hub mode.
+- **Password-protected groups** (created from the admin screen) currently can't be joined from the web dialog, and Roku joins to them fail outright — no client sends a password yet. Create open groups and simply keep the room ID to yourselves.
 
 ---
 
-## The PIMP (Host) Role
+## Staying in Step (Drift and Re-syncing)
 
-### Responsibilities
+Followers continuously compare their own clock with the host's reported position (the group exchanges position reports and clock-offset messages; the web client reports its position every five seconds and on every command). Behavior you can actually see:
 
-The PIMP client:
-- Owns the authoritative playback state
-- Handles network communication with all players
-- Sends position updates at regular intervals (~250ms)
-- Handles join/leave events
+- A tiny gap is tolerated — no micro-seeks interrupting anyone.
+- Once a player is more than **~2 seconds** off, it seeks to the host automatically.
+- The player's status pill tells you the state: **"Synced"**, **"Out of sync"**, or **"Re-syncing…"** while a correction lands.
 
-### PIMP Election
+There is deliberately **no manual "resync" button** — corrections are automatic. If someone is still visibly off, check their connection, or have them leave and rejoin the group.
 
-When the current PIMP disconnects or leaves the room, the remaining players vote on a new PIMP. Election uses a simple majority vote based on client ID priority (stable across reconnections). If there is a tie, the player who joined earliest wins.
-
-### PIMP Pause Tolerance
-
-To prevent accidental group-wide pauses, the PIMP client requires a double-press to pause (two taps within 500ms). This prevents single-tap pauses from accidentally pausing for everyone.
+If a connection drops: web clients retry the sync connection automatically with growing delays; a Roku drop ends that device's session and it re-joins manually.
 
 ---
 
-## Server-Side Architecture
+## For Administrators
 
-### Relay Mode
+There is no SyncPlay settings panel and no server toggle — watch groups are always on. What **Admin → SyncPlay** does give you is a **group management screen**:
 
-For clients behind restrictive NAT (e.g., mobile networks, corporate firewalls), SyncPlay traffic is relayed through the Phlix relay infrastructure:
+- A table of live groups (name, members, host).
+- **Create SyncPlay group** — give it a name and, optionally, a password ("Leave empty for an open group"). Note the password caveat above: joining clients can't supply one yet, so prefer open groups.
+- **Join SyncPlay group** — enter a Group ID (intended for checks and demos).
 
-```
-Player A (PIMP) → Relay Server → Player B
-                → Relay Server → Player C
-```
-
-The relay provides a consistent addressing namespace and handles NAT traversal. Relay connections use WebSocket over TLS.
-
-### Direct Mode
-
-If both PIMP and players can reach each other directly (same LAN or open NAT), SyncPlay uses direct WebSocket connections between clients, bypassing the relay for lower latency.
-
-### State Machine
-
-```
-INIT → WAITING_FOR_READY → PLAYING
-              ↓                ↓
-         PAUSED ←────────── PLAYING
-              ↓
-           ENDED
-```
-
-All clients maintain a copy of the state machine and transition together when the PIMP's state changes.
-
----
-
-## Configuration
-
-### Server Settings
-
-Administrators can configure SyncPlay in **Admin → Server Settings → SyncPlay**:
-
-| Setting | Default | Description |
-|---------|---------|-------------|
-| **Enable SyncPlay** | true | Master toggle |
-| **Max Room Size** | 10 | Maximum players per room |
-| **Allow Public Rooms** | true | Show public rooms in discovery |
-| **Relay Required** | false | Force relay for all rooms |
-| **Position Update Interval** | 250ms | How often PIMP sends position updates |
-| **Max Latency Tolerance** | 2000ms | Max playback drift before resync |
-
-### Environment Variables
-
-```bash
-PHLIX_SYNCCAST_ENABLED=true           # Enable SyncPlay
-PHLIX_SYNCCAST_MAX_ROOM_SIZE=10       # Max players per room
-PHLIX_SYNCCAST_RELAY_REQUIRED=false   # Force relay mode
-PHLIX_SYNCCAST_MAX_LATENCY_MS=2000    # Drift threshold for resync
-```
+If you want watch-together to work for remote guests, the port to plan for is **8097/tcp** in addition to the usual server port — see [Remote access](../hub/remote-access.md).
 
 ---
 
@@ -168,24 +110,24 @@ PHLIX_SYNCCAST_MAX_LATENCY_MS=2000    # Drift threshold for resync
 
 ### "Playback is out of sync"
 
-Run a **resync** from the SyncPlay panel — this forces all players to seek to the PIMP's current position.
+Wait a moment — automatic correction kicks in at roughly a two-second gap (the status pill shows "Re-syncing…"). If it never settles: that viewer's device has a slow or unstable path to your server's `:8097`; leave and rejoin, and check reachability.
 
 ### "Cannot join room"
 
-- Check the room name and password are correct
-- Ensure the PIMP's server is reachable from your network
-- Try refreshing and rejoining
+- Room IDs are the `sp_…` string from the group's detail or the admin table — names don't work for joining on web/mobile.
+- The joiner must be signed in to the same server as the group.
+- If the group was created from the admin screen **with** a password, joining fails — no client can enter a password yet (see honest limitation above).
+- If nobody can reach the server's `:8097`, the sync connection itself can't open.
 
 ### "Video keeps buffering"
 
-SyncPlay is sensitive to latency. Try:
-- Switching to the relay if on direct mode
-- Reducing the video quality / bitrate
-- Ensuring the PIMP has a stable connection
+Sync playback is not the same as video delivery: buffering is about the media stream, not the group. Try a lower quality for that viewer, or check their bandwidth to the server. The group keeps its logical position even if one player buffers; that player catches up automatically when it can.
 
 ---
 
 ## Related Pages
 
+- [Glossary](../glossary.md) — what WebSocket, relay and NAT mean in plain words
+- [Web client](../clients/web.md) · [Mobile app](../clients/mobile.md) · [Roku channel](../clients/roku.md)
 - [Relay Protocol](/dev/relay-protocol) — Technical details on the relay infrastructure
 - [Pairing Protocol](/dev/pairing-protocol) — How clients authenticate with the server

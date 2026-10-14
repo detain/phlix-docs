@@ -13,7 +13,9 @@ Phlix needs three things to survive a disaster: the **database** (users, watch h
 **What:** All Phlix data — users, watch history, media library metadata, playback state, sessions.
 
 The database is named **`phlix`** by default (that is what the Docker stack and the install
-guides create). Substitute your own name if you chose a different one.
+guides create). Substitute your own name if you chose a different one. If you also **self-host a
+Hub**, it keeps its own separate database — `phlix_hub` by default — which needs its own dump on
+the same schedule.
 
 ```bash
 mysqldump --single-transaction -u phlix -p phlix > phlix-db-$(date +%Y%m%d).sql

@@ -19,22 +19,50 @@ Every secret below has an insecure default that **must** be overridden before pr
 
 See [/reference/env-vars](/reference/env-vars) and [/reference/config-files](/reference/config-files) for where these are documented and consumed.
 
+### Rotating JWT secrets
+
+Rotating `JWT_SECRET` (server) or `HUB_JWT_SECRET` (hub, ≥ 32 bytes) **invalidates every token issued under the old secret** — signature verification fails, so all clients must re-authenticate. That is the desired effect after a suspected leak, and the cost to plan for on a routine rotation.
+
+Two further mechanics worth knowing:
+
+- **Per-user kill switch without rotating the secret:** the server carries a `users.tokens_not_valid_after` watermark — every JWT issued at or before that timestamp is rejected for that user. The server bumps it automatically on password change; it is the per-user equivalent of a secret rotation and does not disturb anyone else's sessions.
+- **Restart to apply a rotated secret:** both secrets are read from the environment at config load, and resident Workerman workers keep the pre-fork value. Set the new secret in the environment file and **restart the service** — a running server will keep signing and verifying with the old secret until it does.
+
+### Admin lock-out guards (auth-method policy)
+
+The server refuses admin setting changes that would lock you out (`src/Auth/AuthMethodPolicy.php`, enforced by the admin settings API):
+
+- **All methods off is rejected:** turning off *all five* auth methods (password, WebAuthn/passkeys, OIDC, LDAP, GitHub) in one update returns `422` with a machine-readable `reason` — at least one method must stay enabled.
+- **Last usable factor is protected:** an update that would leave an *active* admin with no usable auth factor is likewise rejected with `422`.
+- **Break-glass fallback:** if all methods are ever found disabled (e.g. a raw-SQL edit that bypassed the API), the login path applies a documented password-only fallback and records an `auth.methods_all_disabled_fallback` audit event; the fallback is applied, never persisted.
+
 ---
 
 ## 2. Enable TLS
 
 ### Option A — Phlix Hub (simplest)
 
-Let the Hub allocate a `*.phlix.media` subdomain and manage TLS automatically:
+Let the Hub allocate a `*.phlix.media` subdomain and manage TLS for the **public hostname** automatically:
 
 ```bash
 PHLIX_HUB_URL=https://hub.phlix.media
 PHLIX_HUB_ENROLLMENT_TOKEN=<token-from-hub-ui>
 PHLIX_SUBDOMAIN_AUTO_CLAIM=1
-PHLIX_TLS_ENABLED=1
 ```
 
-The Hub's tunnel (port 8802) carries all traffic over an encrypted WebSocket. See [/hub/remote-access](/hub/remote-access) and [/hub/self-host-the-hub](/hub/self-host-the-hub).
+This secures the **client ↔ Hub** leg with HTTPS. It does **not** by itself encrypt the **server ↔ Hub relay tunnel** (port 8802 — see [Glossary: Relay / Tunnel](/glossary)): by default that tunnel is a plain `ws://` connection. `PHLIX_TLS_ENABLED` controls only the scheme of the server's advertised `public_url` (`https://` vs `http://` + `PHLIX_DOMAIN`) during pairing — it defaults to true when unset and has no effect on the tunnel.
+
+To put TLS on the tunnel you must enable it on **both ends**:
+
+| # | End | Setting |
+|---|-----|---------|
+| 1 | Hub (listener) | `HUB_RELAY_TLS=true` **and** `HUB_RELAY_TLS_CERT` + `HUB_RELAY_TLS_KEY` — the relay worker errors out at boot if TLS is on without a cert/key pair |
+| 2 | Server (dialer) | `PHLIX_RELAY_TLS=1` — dials the tunnel as `wss://` (or set the `hub_relay_ws_url` key in `config/relay.php` to an explicit `wss://` URL, which overrides the derived scheme). Certificate verification is on by default (`PHLIX_RELAY_TLS_VERIFY`, CA bundle via `PHLIX_RELAY_TLS_CAFILE`) |
+| 3 | Server (policy, optional) | `PHLIX_RELAY_REQUIRE_TLS=1` — the server **refuses** any tunnel dial that resolves to plaintext `ws://`, before the socket opens. This beats a Hub `allow_plaintext` ACK: the refusal is enforced server-side, so a misconfigured or compromised Hub setting cannot re-open the cleartext path |
+
+Why step 3 matters: the relay tunnel honors the `X-Phlix-Relay-User` identity header the Hub attaches, so anyone able to position themselves on a plaintext `ws://` tunnel could impersonate users to the server. With `PHLIX_RELAY_REQUIRE_TLS=1` set, a plaintext dial is rejected and audited (`connect` error logged, reconnect scheduled) instead of silently carrying tokens in the clear. With the default (off), the server logs a warning on a plaintext tunnel but still connects.
+
+See [/hub/remote-access](/hub/remote-access) and [/hub/self-host-the-hub](/hub/self-host-the-hub).
 
 ### Option B — Reverse proxy with your own certificate
 
@@ -163,6 +191,17 @@ The Hub runs the same per-surface framework; see [Hub relay tuning → Rate limi
 
 ---
 
+## 12. Understand what plugin signatures do (and don't) do
+
+Phlix plugin "signatures" today are **`sha256:<hex>` digest strings over the `plugin.json` manifest bytes** — a content-integrity check, not asymmetric cryptography:
+
+- **What is verified:** on load, the server hashes the plugin's on-disk `plugin.json` and compares it to the recorded digest. A tampered manifest **always** fails verification, regardless of any settings.
+- **What is NOT covered:** the digest pins only the manifest, not the plugin's whole code tree, and it carries **no publisher identity** — the digest is catalog metadata, so it proves the manifest matches what was cataloged, not *who* built the plugin.
+- **Default posture is permissive:** unsigned plugins load with a warning. Set `PHLIX_PLUGINS_REQUIRE_SIGNATURE=1` to refuse them; with an allowlist configured (`PHLIX_PLUGINS_TRUSTED_SIGNATURES` comma-separated, or `PHLIX_PLUGINS_TRUSTED_SIGNATURES_FILE` pointing at a JSON array) and `REQUIRE_SIGNATURE=1`, only listed digests load — an empty allowlist plus `REQUIRE_SIGNATURE=1` rejects **all** signed plugins (explicit trusted-only opt-in).
+- **Transport:** installs from `http://` URLs are refused unless you deliberately set `PHLIX_PLUGINS_ALLOW_HTTP=1`. Keep it unset in production.
+
+---
+
 ## Quick reference: hardening env vars
 
 | Variable | Recommended value | Effect |
@@ -170,8 +209,10 @@ The Hub runs the same per-surface framework; see [Hub relay tuning → Rate limi
 | `DB_PASSWORD` | _(strong random string)_ | MySQL auth — must not be empty in production |
 | `JWT_SECRET` | _(strong random string)_ | JWT signing key — must not be `default-secret-change-me` |
 | `PHLIX_SIGNED_URL_SECRET` | _(strong random string)_ | Stream URL signing — set explicitly for key rotation |
-| `PHLIX_TLS_ENABLED` | `1` | Enforces TLS on the Hub tunnel |
-| `PHLIX_PLUGINS_REQUIRE_SIGNATURE` | `1` | Refuses unsigned plugins in the catalog |
-| `PHLIX_PLUGINS_ALLOW_HTTP` | `0` | Disallows plugin installation from `http://` URLs |
+| `PHLIX_TLS_ENABLED` | `1` (default when unset) | Scheme of the advertised `public_url` (`https://` + domain) during pairing — **not** relay-tunnel TLS; see §2 |
+| `PHLIX_RELAY_TLS` | `1` | Dials the server↔Hub relay tunnel as `wss://` — requires `HUB_RELAY_TLS=true` + cert/key on the Hub (§2) |
+| `PHLIX_RELAY_REQUIRE_TLS` | `1` | Server-side policy: refuse any plaintext `ws://` tunnel dial, enforced even against a Hub `allow_plaintext` ACK (§2) |
+| `PHLIX_PLUGINS_REQUIRE_SIGNATURE` | `1` | Refuses unsigned plugins at load |
+| `PHLIX_PLUGINS_ALLOW_HTTP` | `0` (leave unset) | Disallows plugin installation from `http://` URLs |
 | `TRUSTED_PROXIES` | _(your proxy hops)_ | Comma-separated IP/CIDR of reverse-proxy hops — required for correct rate-limit client-IP keying behind a non-loopback proxy (default is loopback only) |
 | `RATE_LIMIT_<SURFACE>_MAX` / `_WINDOW` | per-surface | Tighten the built-in auth rate limits (`REGISTER`, `REFRESH`, `WEBAUTHN_START`, `WEBAUTHN_FINISH`, `JWKS`, `WS_CONNECT`) |

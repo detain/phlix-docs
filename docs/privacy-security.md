@@ -4,7 +4,7 @@
 
 ## TL;DR
 
-Phlix is privacy-first. No telemetry, no analytics, no third-party data sharing by default. Media stays on your hardware. The Hub relay is TLS-encrypted in transit but is **not** end-to-end encrypted — the Hub terminates TLS, so it can see what it proxies. The guide below explains exactly what is and is not collected, what the Hub can and cannot see, and how to harden your deployment.
+Phlix is privacy-first. No telemetry, no analytics, no third-party data sharing by default. Media stays on your hardware. The Hub relay is **not** end-to-end encrypted — the Hub terminates your traffic and proxies it, so it can see what it relays. And by default the server↔Hub relay tunnel is **not even encrypted on the wire** (plain `ws://` until you enable relay TLS on both ends — see [Hardening §2](/security/hardening)). The guide below explains exactly what is and is not collected, what the Hub can and cannot see, and how to harden your deployment. New to the terms? [Glossary: Relay / Tunnel / Bearer](/glossary).
 
 ```bash
 # Verify no unexpected external network calls (drop all egress except DNS/80/443)
@@ -60,9 +60,21 @@ When traffic **is** relayed through the Hub, all of the above passes through the
 
 ### Hub relay encryption
 
-- The server↔Hub tunnel and the client↔Hub connection are each TLS/WSS encrypted **on the wire**.
-- The Hub **terminates** both, so relayed traffic exists in cleartext inside the Hub process. There is no application-layer encryption between client and server today — `phlix-hub/src/Relay/` performs no encryption or decryption of its own, and the proxy decodes each request and response body to forward it.
+- **By default, neither leg of a Hub-relayed session is tunneled over TLS to your server:** the server↔Hub relay tunnel is a plain `ws://` connection, and the Hub's relay listener (`:8802`) serves plaintext unless `HUB_RELAY_TLS=true` (+ cert/key) is configured. Only the client↔Hub *HTTPS* front is encrypted out of the box.
+- When you enable relay TLS on **both** ends (`HUB_RELAY_TLS=true` on the Hub, `PHLIX_RELAY_TLS=1` on the server), the tunnel and the client↔Hub connection are each encrypted **on the wire**; `PHLIX_RELAY_REQUIRE_TLS=1` makes the server refuse any plaintext tunnel outright. See [Hardening §2](/security/hardening).
+- Either way, the Hub **terminates** both connections, so relayed traffic exists in cleartext inside the Hub process. There is no application-layer encryption between client and server today — `phlix-hub/src/Relay/` performs no encryption or decryption of its own, and the proxy decodes each request and response body to forward it.
 - The Hub therefore sees connection metadata (IP address, timing) **plus** the proxied request and response content described above.
+
+## How the Web App Stores Tokens
+
+Phlix's API authenticates with **Bearer JWTs** — the token rides in an `Authorization: Bearer` header ([what's a bearer token?](/glossary)). The web SPA persists its access token in browser `localStorage` and sends it as a header on every API call.
+
+Be aware of the trade-off this makes:
+
+- **localStorage is readable by any script on the page.** A cross-site scripting (XSS) flaw in any loaded code — including third-party artwork or embeds — could exfiltrate the token. This is the known cost of header-based bearer auth in browsers.
+- **Why bearer instead of cookies-only:** the identical scheme serves every client in the estate — TVs, phones, consoles and CLI tools have no cookie jar — and a header the browser cannot auto-attach is inherently resistant to CSRF.
+- **Browser sessions are not localStorage-only:** the server's browser login flow additionally sets `HttpOnly` + `Secure` + `SameSite=Lax` session and refresh cookies (unreadable to scripts), so XSS exposure of the stored token is one credential among several, and `PHLIX_COOKIE_INSECURE` exists only as a local-dev opt-out.
+- Revocation levers: the per-user `tokens_not_valid_after` watermark kills a user's issued JWTs (automatic on password change), and rotating `JWT_SECRET` invalidates every token server-wide — see [Hardening §1](/security/hardening).
 
 ## Security Hardening Checklist
 
@@ -145,11 +157,13 @@ The server validates Hub JWTs using the Hub's JWKS endpoint — no shared secret
 
 ## Remote Access Privacy
 
-### VPN / blockchain remote access
+### VPN / tunnel remote access
 
-- Traffic stays off the public internet when using VPN or blockchain-based remote access.
-- No port forwarding required — the connection is outbound from the server to the relay.
-- Content is encrypted end-to-end; the relay sees only encrypted tunnel metadata.
+Phlix ships no VPN of its own; the documented no-port-forward options are **Cloudflare Tunnel, WireGuard, or Tailscale** (see [Remote access without a hub](/advanced/remote-access-without-hub)):
+
+- Traffic stays off the public internet when using a WireGuard/Tailscale VPN or a Cloudflare Tunnel.
+- Hub-relay mode needs no port forwarding — the connection is outbound from the server to the relay.
+- A VPN encrypts traffic to your VPN endpoint; a Cloudflare Tunnel encrypts client↔edge. Neither is end-to-end to the Phlix server. Same caution as the Hub relay: whoever terminates the tunnel sees the proxied requests.
 
 ### Cloud transcoding
 
@@ -232,5 +246,5 @@ iptables -A OUTPUT -m limit --limit 5/min -j LOG --log-prefix "EGRESS BLOCKED: "
 
 - [First-run setup](first-run.md) — initial server configuration and TLS setup.
 - [Hub claim and setup](hub/claim-server.md) — understanding what the Hub can and cannot do.
-- [Remote access without Hub](advanced/remote-access-without-hub.md) — VPN/blockchain-based remote access options.
+- [Remote access without Hub](advanced/remote-access-without-hub.md) — Cloudflare Tunnel, WireGuard, and Tailscale options.
 - [Troubleshooting](troubleshooting.md) — diagnose connection and access issues.

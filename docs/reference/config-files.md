@@ -375,7 +375,7 @@ Filesystem browse roots for the admin path picker.
 The admin `GET /api/v1/admin/fs/browse` endpoint is jailed to these roots. Override via `PHLIX_BROWSE_ROOTS` (comma-separated, replaces defaults):
 
 ```bash
-PHLIX_BROWSE_ROOTS=/home,/mnt/media,/srv/media php public/index.php
+PHLIX_BROWSE_ROOTS=/home,/mnt/media,/srv/media php start.php start
 ```
 
 See [/reference/env-vars](/reference/env-vars) for the full variable.

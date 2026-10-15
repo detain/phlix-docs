@@ -892,7 +892,7 @@ After install:
 mysql -e 'SELECT name, version, enabled, installed_at FROM plugins ORDER BY installed_at DESC LIMIT 5'
 ls var/plugins/my-plugin/                   # plugin.json, composer.json, src/, vendor/
 tail -f .logs/plugins.log                   # watch for enable / disable events
-PHLIX_DEBUG_EVENTS=1 php public/index.php   # watch event delivery in .logs/events.log
+PHLIX_DEBUG_EVENTS=1 php start.php start   # watch event delivery in .logs/events.log
 ```
 
 ---

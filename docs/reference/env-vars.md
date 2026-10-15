@@ -80,7 +80,7 @@ of env vars named for the surface. `<SURFACE>` ∈ `REGISTER`, `REFRESH`,
 | ------------------------------- | ------- | ----------- |
 | `PHLIX_HUB_URL`                 | _unset_ | Base URL of the Phlix Hub to pair with (e.g. `https://hub.example.com`). When set, the server initiates pairing automatically on startup if enrolled. See `Phlix\Hub\HubClient` and `config/hub.php`. |
 | `PHLIX_HUB_JWKS_URL`            | _unset_ | URL of the hub's JWKS endpoint for validating hub-issued JWTs. Typically set automatically during enrollment. See `Phlix\Hub\HubJwtValidator` and `config/hub.php`. |
-| `PHLIX_HUB_ENROLLMENT_TOKEN`    | _unset_ | When set, overrides the enrollment token read from `config/hub-enrollment.json`. Mostly useful for automation / container orchestration. See `Phlix\Hub\HubClient::loadEnrollment()`. |
+| `PHLIX_HUB_ENROLLMENT_TOKEN`    | _unset_ | **Documented but not implemented — do not set.** No code in phlix-server reads this variable. Enrollment state lives in the `hub-enrollment.json` file that `Phlix\Hub\HubClient::loadEnrollment()` reads — that loader takes **no env override**, contrary to what earlier revisions of this page claimed. Kept here only so existing scripts know the name is dead; slated for removal from this page. |
 | `PHLIX_HUB_HEARTBEAT_INTERVAL`  | `60`    | Interval in seconds between hub heartbeat calls. Must be between 30 and 3600. See `Phlix\Hub\HubClient::startHeartbeatLoop()` and `config/hub.php`. |
 | `PHLIX_SUBDOMAIN_AUTO_CLAIM`    | `1`     | When truthy (`1`, `true`, `yes`, `on`) automatically claims a *.phlix.media subdomain from the hub after enrollment. See `Phlix\Hub\SubdomainClient` and `config/hub.php`. |
 | `PHLIX_TLS_ENABLED`            | `1`     | When truthy enables TLS/HTTPS for the server's public hostname. Requires a subdomain to be allocated. See `config/hub.php`. |
@@ -178,6 +178,8 @@ See [`docs/hub/requests.md`](../hub/requests.md) for the full media-request work
 | `PHLIX_RELAY_RECONNECT_DELAY`  | `5`                                | Seconds to wait before attempting to reconnect after the relay tunnel is disconnected. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
 | `PHLIX_RELAY_PING_INTERVAL`    | `30`                               | Seconds between keep-alive ping frames sent over the relay tunnel. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
 | `PHLIX_RELAY_PING_TIMEOUT`     | `10`                               | Seconds to wait for a pong response before considering the relay connection dead. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
+| `PHLIX_RELAY_ALLOW_PLAINTEXT`  | `false`                            | When truthy, permits the hub tunnel to dial a plaintext `ws://` endpoint (warn-only posture). See `Phlix\Hub\RelayConfig`. |
+| `PHLIX_RELAY_REQUIRE_TLS`      | `false`                            | Hardening switch: when truthy (`1`, `true`, `yes`, `on`) the relay **refuses plaintext `ws://` hub dials at connect time** and fails closed instead of warning. Wins over `PHLIX_RELAY_ALLOW_PLAINTEXT`. Intended for hardened deployments; default off preserves current behavior. See `Phlix\Hub\RelayConfig` (added by SRV-HTTP). |
 
 ## Port forwarding / remote access
 
@@ -213,24 +215,47 @@ unreachable too.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `PHLIX_PUBLIC_URL` | _unset_ | Public URL used in Hub relay and DLNA announcements. Must be set if the server is behind a reverse proxy. See `Phlix\Server\Core\Application`. |
-| `PHLIX_LOG_LEVEL` | `info` | Minimum log level for application logs written to `.logs/app.log`. Valid values (in order of verbosity): `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`. See `config/logger.php`. |
+| `PHLIX_PUBLIC_URL` | _unset_ | **Documented but not implemented — do not set.** No code in phlix-server reads this variable (the `Phlix\Server\Core\Application` reference in earlier revisions was false). The server's public authority comes from `PHLIX_DOMAIN` (see the Hub section) and enrollment-derived URLs. |
+| `PHLIX_LOG_LEVEL` | per-handler defaults (`info` for the app file, `error` for the error file, `debug` for events/plugins) | **Live since SRV-OPS (2026-10-14).** Lowers or raises the floor of **every** logger handler at once. PSR-3 level names, case-insensitive; `warn` is accepted as an alias of `warning`. An unknown value fails **soft** — the shipped per-handler defaults stay in force, nothing crashes. Application logs live under `.logs/` split by channel. See `config/logger.php` / `Phlix\Common\Logger\StructuredLogger`. |
+| `PHLIX_LOG_STDOUT` | _unset_ (off) | **Live.** When truthy, adds a `php://stdout` sink carrying ALL channels on top of the file handlers — the container/systemd-journal friendly switch. See `config/logger.php` and `Phlix\Common\Logger\LogChannels::LOG_STDOUT_ENV`. |
 
-::: danger `PHLIX_HTTP_PORT` does not exist — if you have it set, it is doing nothing
-Earlier revisions of this page listed `PHLIX_HTTP_PORT` as the way to change the
-HTTP listen port. **It was never implemented.** The name appears nowhere in
-phlix-server — not in the current source and not in any commit in its history —
-so exporting it, or putting it in a `.env` file, has no effect whatsoever. The
-server is still listening on whatever `config/server.php` says.
+### Listen endpoints (`Phlix\Server\Runtime\ListenEndpoints`)
 
-There is no environment variable for the HTTP port. To change it:
+These five variables are **live** (wired by SRV-OPS, 2026-10-14) and control
+where the Workerman processes bind at boot:
 
-- edit `server.port` in `config/server.php` — the default is `8096`; or
-- pass `--http-port PORT` to `scripts/install.sh` at install time, which writes
-  that value into the config and into the generated HAProxy backend.
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PHLIX_HTTP_HOST` | `0.0.0.0` | Bind address of the HTTP worker. |
+| `PHLIX_HTTP_PORT` | `8096` | HTTP listen port. Environment takes precedence over `config/server.php` `server.port`. |
+| `PHLIX_HTTP_WORKER_COUNT` | `14` | Number of HTTP worker processes; the literal `auto` also means the default. |
+| `PHLIX_WS_HOST` | `0.0.0.0` | Bind address of the WebSocket (:8097) worker. |
+| `PHLIX_WS_PORT` | `8097` | WebSocket listen port. |
 
-Both take effect on the next server restart.
+::: warning Correction of an earlier revision of this page
+Earlier revisions carried a danger callout asserting `PHLIX_HTTP_PORT` "was
+never implemented" and did nothing. **That is no longer true** — since
+`ListenEndpoints` shipped, the variable is read at boot with default `8096`.
+The `config/server.php` edit and `scripts/install.sh --http-port` routes remain
+valid alternatives.
 :::
+
+### Job queues
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PHLIX_JOB_QUEUE_ROOT` | `<repo>/var/jobs` | Root directory for the on-disk job queues (markers, media assets, collections, metadata writes, similarity). Resolution order: **per-queue env > this root > `<repo>/var/jobs/<name>`**. See `Phlix\Config\JobQueuePaths`. |
+| `PHLIX_MARKER_JOBS_DIR` | derived | Per-queue override for the marker-detection queue. |
+| `PHLIX_MEDIA_ASSET_JOBS_DIR` | derived | Per-queue override for the media-asset queue. |
+| `PHLIX_COLLECTION_JOBS_DIR` | derived | Per-queue override for the collection queue. |
+| `PHLIX_METADATA_WRITE_JOBS_DIR` | derived | Per-queue override for the metadata-write queue. |
+| `PHLIX_SIMILARITY_JOBS_DIR` | derived | Per-queue override for the similarity queue. |
+
+### Container boot behavior
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `PHLIX_MIGRATIONS_STRICT` | **`1` in all shipped images** | Entrypoint-shell only (the PHP runtime never reads it). On a failed — or skipped-because-unconfigured — migration run, `1`/`true`/`yes`/`on` makes the container **refuse to start** with the migration's exit code; falsy boots anyway behind a `PHLIX-MIGRATION-FAILURE` banner. See `docker/docker-entrypoint.sh` and `docker/README.md`. |
 
 ## Database
 
@@ -269,7 +294,7 @@ any of the others when your database is remote or renamed. See `config/database.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `PHLIX_HWACCEL` | `none` | Preferred hardware acceleration. Valid values: `nvidia`, `vaapi`, `videotoolbox`, `qsv`, `amf`, `v4l2`, `none`. Overridden by `config/ffmpeg.php` `hwaccel.vendor_priority`. See `config/ffmpeg.php`. |
+| `PHLIX_HWACCEL` | — | **Documented but not implemented — do not set.** No code in phlix-server reads this variable (verified against current source; earlier revisions of this page described a value set that never existed). Hardware acceleration is auto-detected via `php bin/phlix hwaccel:probe`; pin a specific accelerator with **`PREFERRED_ACCELERATOR`** (default empty = auto; see `config/transcoding.php` and the phlix-server README env census). |
 
 ## Timezone
 

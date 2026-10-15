@@ -136,8 +136,13 @@ sudo tee /etc/phlix/env >/dev/null <<'EOF'
 # DB_DATABASE / DB_USER here if your database is remote or renamed.
 DB_PASSWORD=your_strong_password
 
-# 32-byte hex secret (openssl rand -hex 32)
-PHLIX_SECRET_KEY=CHANGE-ME
+# 32-byte hex JWT signing secret — the name the server actually reads
+# (AuthServicesProvider refuses to boot on a missing or placeholder value).
+# Leave it empty here; the sed command below injects a real random secret.
+JWT_SECRET=
+# Note: PHLIX_SECRET_KEY is a docker-entrypoint-only alias (the entrypoint
+# copies it into JWT_SECRET). It is not read by the systemd/bare-metal path,
+# so it is deliberately absent from this file.
 
 PHLIX_DOMAIN=your-server.example.com
 PHLIX_LOG_LEVEL=info
@@ -148,6 +153,8 @@ PHLIX_ENV=production
 #PHLIX_HUB_URL=
 #PHLIX_RELAY_ENABLED=1
 EOF
+# The heredoc is quoted, so expand the secret here instead:
+sudo sed -i "s|^JWT_SECRET=$|JWT_SECRET=$(openssl rand -hex 32)|" /etc/phlix/env
 sudo chmod 640 /etc/phlix/env
 sudo chown root:phlix /etc/phlix/env
 ```
@@ -167,9 +174,10 @@ sudo -u phlix DB_PASSWORD=your_strong_password \
 If your database is remote or renamed, prepend the matching `DB_*` vars the same way
 (e.g. `DB_HOST=db.internal DB_DATABASE=mediadb DB_USER=mediauser DB_PASSWORD=...`).
 
-The runner is *currently* not idempotent (no tracking table), but every migration uses
-`CREATE TABLE IF NOT EXISTS` / `ALTER TABLE ... ADD COLUMN` and the script swallows duplicate
-errors, so re-runs are safe.
+The runner is idempotent. It keeps a `schema_migrations` ledger (filename +
+checksum): files already recorded with a matching checksum are skipped, and
+"already exists"-class duplicate errors (MySQL 1050/1060/1061/1091) are
+downgraded to notes rather than failures, so re-runs are safe.
 
 ---
 
@@ -191,7 +199,7 @@ Group=phlix
 WorkingDirectory=/var/www/phlix
 EnvironmentFile=/etc/phlix/env
 Environment="PHLIX_ENV=production"
-ExecStart=/usr/bin/php /var/www/phlix/public/index.php start
+ExecStart=/usr/bin/php /var/www/phlix/start.php start
 ExecReload=/bin/kill -SIGUSR1 $MAINPID
 ExecStop=/bin/kill -SIGTERM $MAINPID
 Restart=on-failure
@@ -201,7 +209,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/phlix /var/log/phlix /var/run/phlix /var/www/phlix/.logs /var/www/phlix/templates_c
+ReadWritePaths=/var/phlix /var/log/phlix /var/run/phlix /var/www/phlix/.logs /var/www/phlix/templates_c /var/www/phlix/var /var/artwork /var/subtitles /var/cache/phlix/anidb
 RestrictNamespaces=true
 LockPersonality=true
 RemoveIPC=true
@@ -259,7 +267,7 @@ Expected: HTTP 200 from the `/health` endpoint.
 ## Updating an existing install
 
 If you used `scripts/install.sh` for the initial setup, the same script updates in place —
-preserving `/etc/phlix/env` (so `DB_PASSWORD` and `PHLIX_SECRET_KEY` survive), pulling the
+preserving `/etc/phlix/env` (so `DB_PASSWORD` and `JWT_SECRET` survive), pulling the
 latest code, refreshing Composer deps, running pending migrations, and restarting the service:
 
 ```bash
@@ -487,7 +495,7 @@ the coroutine runtime on every push.
 - **Symptom:** `systemctl status phlix-server` shows the service failing after a few seconds.
 - **Cause:** `ExecStart` is missing the trailing `start` argument — Workerman prints help text
   and exits.
-- **Fix:** confirm the unit's `ExecStart=` ends with `public/index.php start`.
+- **Fix:** confirm the unit's `ExecStart=` ends with `start.php start`.
 
 ### "dubious ownership in repository" on update
 

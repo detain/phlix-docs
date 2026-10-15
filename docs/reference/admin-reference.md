@@ -19,13 +19,14 @@ Environment variables are read at process startup. Most can be overridden by `co
 - `TZ` — timestamps in logs and EPG depend on a correct timezone; set to your local timezone.
 - `PHLIX_LOG_LEVEL` — `debug` is verbose; `error` is production-minimal.
 
-The HTTP listen port is **not** one of them: there is no environment variable for
-it. Set `server.port` in `config/server.php` (default `8096`), or pass
-`--http-port PORT` to `scripts/install.sh`.
+The HTTP listen port is settable via `PHLIX_HTTP_PORT` (default `8096`, resolved
+by `Phlix\Server\Runtime\ListenEndpoints` along with `PHLIX_HTTP_HOST`,
+`PHLIX_WS_HOST` and `PHLIX_WS_PORT`), via `server.port` in `config/server.php`,
+or by passing `--http-port PORT` to `scripts/install.sh`.
 
 ## CLI Commands
 
-All commands run from the Phlix Server install directory (`phlix-server/`). `php public/index.php` starts the Workerman HTTP server (blocking — use systemd or supervisord in production).
+All commands run from the Phlix Server install directory (`phlix-server/`). `php start.php start` starts the Workerman HTTP server (blocking — use systemd or supervisord in production). The old `public/index.php` entry point was removed; `start.php` is the only server entry.
 
 Ongoing operation is driven by the `php bin/phlix <command>` console. Run `php bin/phlix list` to see every available command (it works with no database). For the full reference of each command's arguments and options, see [CLI commands](cli.md).
 
@@ -33,7 +34,7 @@ Ongoing operation is driven by the `php bin/phlix <command>` console. Run `php b
 
 | Command | Description |
 | --- | --- |
-| `php public/index.php` | Start the Workerman HTTP server. Run under systemd/supervisord, not directly in a shell session. |
+| `php start.php start` | Start the Workerman HTTP server. Run under systemd/supervisord, not directly in a shell session. |
 | `php bin/phlix migrate` | Apply pending DB migrations (`migrations/*.sql`). Idempotent — safe to run multiple times. Supported equivalent of `php scripts/run-migrations.php` (both use the same `MigrationRunner`; the script remains for the Docker entrypoint/installer). |
 
 ### Operational (`bin/phlix`)
@@ -223,10 +224,10 @@ return [
 **Fix:** Use the empty string to falsify:
 ```bash
 # WRONG — "0" is truthy in PHP
-PHLIX_PLUGINS_ALLOW_HTTP=0 php public/index.php
+PHLIX_PLUGINS_ALLOW_HTTP=0 php start.php start
 
 # CORRECT — empty string is falsy
-PHLIX_PLUGINS_ALLOW_HTTP="" php public/index.php
+PHLIX_PLUGINS_ALLOW_HTTP="" php start.php start
 ```
 
 ### 2. PHP not on PATH

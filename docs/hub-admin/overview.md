@@ -57,21 +57,21 @@ curl http://localhost:8800/health
 
 The Hub is operated from the project root with plain PHP entry points — there is no separate
 `hub` binary. The two commands you use day-to-day are the process controller
-(`public/index.php`) and the migration runner (`scripts/run-migrations.php`).
+(`start.php`) and the migration runner (`scripts/run-migrations.php`).
 
-### Process control — `public/index.php`
+### Process control — `start.php`
 
 The HTTP, relay, and client-relay workers are managed by [Workerman](https://www.workerman.net/),
 which exposes the standard start/stop verbs:
 
 ```bash
-php public/index.php start        # run in the foreground
-php public/index.php start -d     # run as a daemon
-php public/index.php stop         # stop all workers
-php public/index.php restart      # stop, then start
-php public/index.php reload       # graceful reload (zero-downtime code reload)
-php public/index.php status       # show worker status
-php public/index.php connections  # list active connections
+php start.php start        # run in the foreground
+php start.php start -d     # run as a daemon
+php start.php stop         # stop all workers
+php start.php restart      # stop, then start
+php start.php reload       # graceful reload (zero-downtime code reload)
+php start.php status       # show worker status
+php start.php connections  # list active connections
 ```
 
 Under systemd, use the foreground form (`start`) with `Type=simple` — see the

@@ -63,38 +63,56 @@ mysqldump -u root -p phlix > /var/phlix/backups/phlix-db-$(date +%Y%m%d-%H%M%S).
 
 ## 2. Run database migrations
 
-Migrations run automatically at startup if `PHLIX_RUN_MIGRATIONS=1` (the default). To run them explicitly:
+There is no `PHLIX_RUN_MIGRATIONS` gate — that variable exists nowhere in the
+code. What actually happens:
+
+- **Docker/container boot:** the entrypoint runs the migration chain on **every
+  start** whenever a DB host is configured (`DB_HOST` or its
+  `PHLIX_DATABASE_HOST` alias). If a migration fails the container still boots
+  by default with a loud `PHLIX-MIGRATION-FAILURE` banner; setting
+  `PHLIX_MIGRATIONS_STRICT=1` makes the container refuse to start instead —
+  and since the SRV-DEPLOY hardening **all three shipped runtime images set
+  `PHLIX_MIGRATIONS_STRICT=1` by default**, so a failed migration halts boot
+  out of the box. (The strict flag is read by the entrypoint shell only; the
+  PHP runtime never sees it.)
+- **systemd / bare-metal boot:** `start.php` runs **no** migrations. Apply them
+  explicitly before restarting the service:
 
 ```bash
-sudo -u phlix php scripts/run-migrations.php
+sudo -u phlix php scripts/run-migrations.php   # or: php bin/phlix migrate
 ```
 
 If the migration fails with a schema error, restore the backup and investigate before proceeding. Common causes:
 - Skipped an intermediate version (always upgrade incrementally through consecutive releases, not jumps).
 - The `phlix` MySQL user lacks `ALTER` permission — grant it: `GRANT ALTER ON phlix.* TO 'phlix'@'127.0.0.1';`
 
-### One-time post-migration cleanup scripts (run once after upgrading)
+### Conditional recovery: dedupe cleanup scripts (normally NOT needed)
 
-A few releases ship a **one-time** cleanup script alongside a migration. These scripts first
-de-duplicate existing rows and then add a `UNIQUE KEY` — a step that would fail if run inline as a
-plain migration on any database that already holds duplicates. **The migration reserves the change;
-the cleanup script performs it.** Neither `scripts/install.sh` nor the Docker entrypoint runs these
-scripts automatically, so you must run them manually **once** after the migration that introduces
-them. They are idempotent — re-running is safe, and you should re-run one if it reports that
-duplicates remain.
+Older revisions of this page listed `cleanup_072.php` / `cleanup_090.php` as
+**mandatory** post-upgrade steps. That is no longer true. The unique-key
+creation they used to promise is now folded **into the sorted migration chain
+itself** — `096_path_hash_unique_index.sql` and
+`097_playback_state_unique_key.sql` build the `(library_id, path_hash)` index
+and the `uq_playback_state_session_media` key automatically, and they are
+idempotent. A normal upgrade runs them with everything else; you never touch
+the cleanup scripts.
 
-Run each from the install directory (e.g. `/opt/phlix-server`) as the `phlix` user:
+The cleanup scripts survive as **recovery tools for one specific failure**: on
+a database that still holds duplicate rows, 096/097 deliberately REFUSE to
+alter the table (they will not create a unique key over duplicates) and fail
+with a message naming the exact remedy. Only then do you run the matching
+script to merge the duplicates (keeping the most recently updated row), and
+re-run the migration chain:
 
-| Since | Migration | Run once after upgrading | What it does |
-|-------|-----------|--------------------------|--------------|
-| media-path dedupe | `072_media_items_path_hash.sql` | `sudo -u phlix php migrations/cleanup_072.php` | Merges duplicate-path `media_items` rows, then adds the `(library_id, path_hash)` unique index. |
-| playback-progress dedupe (updates.md #29 / S29) | `090_playback_state_session_media_unique.sql` | `sudo -u phlix php migrations/cleanup_090.php` | Merges duplicate `(session_id, media_item_id)` rows in `playback_state` (keeping the most recently updated), then adds the `uq_playback_state_session_media` unique key. **Until this runs, playback-progress writes keep inserting a new row every ~15 seconds instead of updating in place, which bloats the table and undermines resume / Continue Watching.** |
+| Symptom (migration refuses) | Recovery command | Then |
+|-----------------------------|------------------|------|
+| `096` reports duplicate `media_items` paths | `sudo -u phlix php migrations/cleanup_072.php` | re-run `php scripts/run-migrations.php` |
+| `097` reports duplicate `(session_id, media_item_id)` rows in `playback_state` | `sudo -u phlix php migrations/cleanup_090.php` | re-run `php scripts/run-migrations.php` |
 
-::: warning Run these before considering the upgrade complete
-If you skip a one-time cleanup script, the associated migration's unique key never gets created and
-the duplicate-row behaviour it fixes continues. Running the script late is fine (it dedupes whatever
-has accumulated), but do it as part of the upgrade so the fix actually takes effect.
-:::
+The cleanup scripts are de-dup only (they no longer add keys themselves) and
+are safe to re-run. On fresh installs and on databases without legacy
+duplicates, none of this ever applies. See the phlix-server README
+(“unique-key migrations and duplicate rows”) for the canonical narrative.
 
 ---
 

@@ -4,11 +4,37 @@ This document is the canonical reference for the `phlix-hub` MySQL
 schema. The migration files in `migrations/` are the source of truth;
 this doc explains the *why* and the *how it fits together*.
 
-All tables:
+::: warning Scope: core relay schema (migrations 001-012)
+This page walks the **seven original relay tables** (001-012: `users`,
+`servers`, `server_claims`, `server_heartbeats`, `shared_libraries`,
+`relay_sessions`, `webhooks`). The full chain on disk is **33 migration
+files** creating roughly 36 business tables — the following later tables are
+**not yet documented here** (read their `migrations/*.sql` headers):
+`audit_logs`, `auth_revoked_refresh_tokens`, `auth_signup_guard`,
+`client_relay_tokens`, `dns_challenges`, `federation_admin_delegations`,
+`federation_hubs`, `federation_incoming_share_offers`,
+`federation_library_shares`, `federation_peers`, `federation_sessions`,
+`hub_settings`, `invite_links`, `keeps`, `library_shares`,
+`login_rate_limit`, `mcp_tokens`, `metrics_connections`, `metrics_rollup`,
+`metrics_route_rollup`, `oauth_authorization_codes`, `oauth_clients`,
+`oauth_consent_requests`, `oauth_tokens`, `relay_user_quotas`,
+`relay_user_settings`, `requests`, `server_library_hashes`, `servers`
+extensions, and the runner-owned `migrations` ledger.
+:::
 
-- Use `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`.
-- Have a `CHAR(36)` UUID primary key named `id`.
-- Use `DATETIME` for timestamps (`created_at`, `updated_at`,
+Conventions, with exceptions:
+
+- Most tables `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  COLLATE=utf8mb4_unicode_ci`.
+- **Most** — not all — tables have a `CHAR(36)` UUID primary key named `id`.
+  Verified natural/composite-PK exceptions among the documented-plus-metrics
+  set: `login_rate_limit` (`PK(rate_key)`), `metrics_rollup`
+  (`PK(bucket_started_at, worker_id)`), `metrics_connections`
+  (`PK(connection_id)` — a `VARCHAR(64)`), `relay_user_quotas`
+  (`PK(user_id, period_start)`), `relay_user_settings` (`PK(user_id)`),
+  `server_library_hashes` (`PK(server_id)`), `auth_signup_guard`
+  (`PK(guard_key)`), `auth_revoked_refresh_tokens` (`PK(jti)`).
+- Timestamps use `DATETIME` (`created_at`, `updated_at`,
   `last_seen_at`, …) with `DEFAULT CURRENT_TIMESTAMP` and `ON UPDATE
   CURRENT_TIMESTAMP` where appropriate.
 
@@ -342,13 +368,23 @@ dispatcher worker.
 1. Creates a `migrations` tracking table on first run
    (`CREATE TABLE IF NOT EXISTS migrations (filename VARCHAR(255)
    PRIMARY KEY, applied_at DATETIME DEFAULT CURRENT_TIMESTAMP)`).
+   Migration `041_migrations_checksum.sql` later adds a nullable
+   `checksum` column (HB-4.11).
 2. Discovers `migrations/*.sql` in lexicographic order.
 3. For each file not yet in the tracking table:
    - Strips `--` comments and blank lines.
    - Splits on `;` into individual statements.
    - Executes each statement.
    - Inserts a row into `migrations` once the file completes.
-4. Re-running is a no-op (idempotent).
+4. Recorded files are skipped — but since HB-4.11 the runner also
+   compares the file's comment-normalised MD5 checksum against the
+   recorded value: a **divergence is surfaced instead of silently
+   skipped**, rows that predate the checksum column are backfilled
+   without re-executing, and the checksum flush is deferred to the end
+   of the run.
+5. Re-running is a no-op (idempotent). Unlike the server runner, the hub
+   has **no idempotent-error-code squelch list** — the tracking table is
+   the sole idempotency mechanism.
 
 Every business-table file also uses `CREATE TABLE IF NOT EXISTS`
 as a belt-and-braces guard for the case where the tracking table
@@ -358,8 +394,9 @@ is dropped but the schema persists.
 
 The integration test
 (`tests/Integration/Migrations/MigrationRunnerIntegrationTest.php`)
-applies all five migrations against a real MySQL test database
-configured via `HUB_TEST_DB_*` environment variables and asserts:
+globs the full `migrations/*.sql` set (33 files at the time of writing —
+not just the early core ones) and applies it against a real MySQL test
+database configured via `HUB_TEST_DB_*` environment variables, asserting:
 
 - Every business table exists after the run.
 - Re-running the runner applies nothing new.

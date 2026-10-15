@@ -10,17 +10,22 @@
 
 ## Overview
 
-`phlix-shared` (the `detain/phlix-shared` Composer package) bundles two
+`phlix-shared` (the `detain/phlix-shared` Composer package) bundles **six**
 machine-readable documents under its `schemas/` directory so that the server,
-the admin SPA, and any other consumer share a **single source of truth**
-instead of duplicating constants:
+the hub, the admin/portal SPAs, and the `@phlix/contracts` TypeScript package
+share a **single source of truth** instead of duplicating constants:
 
-| File | Kind | Purpose |
-|------|------|---------|
-| `schemas/server-settings.schema.json` | JSON Schema (draft 2020-12) | Describes the editable server settings exposed by `/api/v1/admin/settings`. |
-| `schemas/webhook-events.json` | Plain JSON data catalog | Enumerates the supported webhook event types a subscription may select. |
+| File | Kind | Purpose | Consumers |
+|------|------|---------|-----------|
+| `schemas/server-settings.schema.json` | JSON Schema (draft 2020-12) | Describes the editable server settings (84 keys) exposed by `/api/v1/admin/settings`. | phlix-server `AdminSettingsController`, admin settings UI |
+| `schemas/hub-settings.schema.json` | JSON Schema | Describes the hub's editable settings (18 keys). | phlix-hub `HubSettingsController` |
+| `schemas/media-item.schema.json` | JSON Schema | Canonical wire shape of a media item (23 properties). | phlix-server shapers, `phlix-contracts` `media.ts` |
+| `schemas/library-query.schema.json` | JSON Schema | Library query parameters (13 properties). | phlix-server `ItemRepository` / browse routes, `phlix-contracts` `library.ts` |
+| `schemas/manifest.schema.json` | JSON Schema | Plugin `plugin.json` manifest shape. | `Phlix\Shared\Plugin\ManifestType` (in-package validation) |
+| `schemas/webhook-events.json` | Plain JSON data catalog | Enumerates the supported webhook event types a subscription may select. | admin SPA picker, server webhook layer |
 
-Both files were added in **phlix-shared v0.7.0** (tagged `v0.7.0`).
+The original two (`server-settings.schema.json`, `webhook-events.json`) were
+added in **phlix-shared v0.7.0**; the other four landed in later releases.
 
 ## Locating the files — `SchemaPaths`
 
@@ -35,7 +40,10 @@ use Phlix\Shared\Schema\SchemaPaths;
 
 SchemaPaths::dir();             // /…/phlix-shared/schemas
 SchemaPaths::serverSettings();  // /…/phlix-shared/schemas/server-settings.schema.json
+SchemaPaths::hubSettings();     // /…/phlix-shared/schemas/hub-settings.schema.json
 SchemaPaths::webhookEvents();   // /…/phlix-shared/schemas/webhook-events.json
+SchemaPaths::mediaItem();       // /…/phlix-shared/schemas/media-item.schema.json
+SchemaPaths::libraryQuery();    // /…/phlix-shared/schemas/library-query.schema.json
 ```
 
 The depth is `dirname(__DIR__, 2) . '/schemas'`: `SchemaPaths.php` lives at
@@ -58,25 +66,35 @@ Runtime **default values are intentionally NOT declared** here — defaults live
 in phlix-server's `config/*.php` and are returned by the GET endpoint. The
 schema describes the writable allow-list and its shape, not the live values.
 
-### The 15 settings
+### The 84 settings (namespace summary)
 
-| Key | JSON-Schema type | Internal type | Group | Constraints |
-|-----|------------------|---------------|-------|-------------|
-| `hwaccel.enabled` | `boolean` | `bool` | transcoding | |
-| `hwaccel.prefer_hardware` | `boolean` | `bool` | transcoding | |
-| `hwaccel.probe_timeout` | `integer` | `int` | transcoding | `minimum: 0` |
-| `tmdb.api_key` | `string` | `string` | metadata | |
-| `marker_detection.similarity_threshold` | `number` | `float` | markers | `minimum: 0`, `maximum: 1` |
-| `marker_detection.intro_max_duration` | `integer` | `int` | markers | `minimum: 0` |
-| `subtitles.enabled` | `boolean` | `bool` | subtitles | |
-| `subtitles.default_language` | `string` | `string` | subtitles | |
-| `subtitles.burn_in_by_default` | `boolean` | `bool` | subtitles | |
-| `discovery.discovery_port` | `integer` | `int` | discovery | `minimum: 1`, `maximum: 65535` |
-| `trickplay.enabled` | `boolean` | `bool` | trickplay | |
-| `trickplay.interval_seconds` | `integer` | `int` | trickplay | `minimum: 1` |
-| `newsletter.enabled` | `boolean` | `bool` | newsletter | |
-| `newsletter.send_hour` | `integer` | `int` | newsletter | `minimum: 0`, `maximum: 23` |
-| `port-forward.port_forwarding.upnp_enabled` | `boolean` | `bool` | port-forward | |
+The schema has grown well past the original 15 keys — it currently defines
+**84 properties** across these namespaces (count per namespace prefix):
+
+| Namespace | Keys | Namespace | Keys |
+|-----------|------|-----------|------|
+| `server.*` | 16 | `auth.*` | 10 |
+| `transcoding.*` | 7 | `dlna.*` | 5 |
+| `metadata.*` | 5 | `process.*` | 5 |
+| `casting.*` | 3 | `ffmpeg.*` | 3 |
+| `lastfm.*` | 3 | `trakt.*` | 3 |
+| `discovery.*` | 2 | `hwaccel.*` | 2 |
+| `newsletter.*` | 2 | `relay.*` | 2 |
+| `security.*` | 2 | `subtitles.*` | 2 |
+| `theme_music.*` | 2 | `access.*` | 1 |
+| `artwork.*` | 1 | `matching.*` | 1 |
+| `metrics.*` | 1 | `port-forward.*` | 1 |
+| `scanner.*` | 1 | `stats.*` | 1 |
+| `tmdb.*` | 1 | `trickplay.*` | 1 |
+| `webhooks.*` | 1 | | |
+
+The per-key tables (types, tiers, restart flags) live on the
+[Server Settings](../admin/server-settings) admin page; the schema file itself
+is the authority. Note that several of the v0.7.0-era keys (e.g.
+`hwaccel.probe_timeout`, `discovery.discovery_port`,
+`trickplay.interval_seconds`, the `marker_detection.*` duo,
+`subtitles.enabled` / `subtitles.burn_in_by_default`) were later **removed**
+for having no consumer — the schema curates itself.
 
 ### How phlix-server consumes it
 
@@ -97,17 +115,18 @@ allow-list from the vendored schema:
    | `string` | `string` |
    | `array` / `object` | `json` |
 
-   The current schema only uses the first four; `array`/`object` → `json` is
-   present for forward compatibility.
+   The current schema exercises all of them (31 `boolean`, 30 `integer`,
+   17 `string`, 4 `array`, 1 `object`, 1 `number`) — the `array`/`object` →
+   `json` mapping that began as forward compatibility is now live.
 
 The result is exposed through `AdminSettingsController::allowedKeys()` (cached in
 a static after first load — it is immutable config, not request state). The
 **GET and PUT behavior of `/api/v1/admin/settings` is unchanged**: GET still
 returns the same `types` map (now equal to `allowedKeys()`), and PUT still
 validates and coerces each value with the unchanged `valueMatchesType()` /
-`coerce()` helpers. A lock-in unit test asserts the schema-derived map equals the
-prior 15 keys/types verbatim, so the schema is the de-facto single source of
-truth for the validation allow-list.
+`coerce()` helpers. Whole-schema value-pin tests in phlix-shared (and the
+server-side schema-derived tables) pin the current key/type set, so the schema
+is the de-facto single source of truth for the validation allow-list.
 
 > If the vendored schema is ever unreadable or malformed, the loader fails
 > **safe** to an empty allow-list rather than throwing on every request. The

@@ -145,7 +145,7 @@ enable.
 ```bash
 systemctl restart phlix
 # or, in the foreground, stop (Ctrl+C) and restart:
-php public/index.php
+php start.php start
 ```
 
 The plugin auto-re-attaches on boot for enabled plugins.

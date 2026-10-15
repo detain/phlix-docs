@@ -73,7 +73,6 @@ costed. Do not add one for a call you have not measured.
 | Repo | File | Lines |
 |---|---|---|
 | `phlix-server` | `start.php` | ~48-58 (eventLoop + hook in master) |
-| `phlix-server` | `public/index.php` | ~22-28 (coroutine hook for the CGI-style fallback) |
 | `phlix-hub` | `start.php` | bootstrap block at the top — eventLoop + hook in master |
 
 The CI/install side (load `swoole` + `uv` in the GitHub workflow and in

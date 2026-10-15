@@ -18,9 +18,9 @@ The hub runs as a Workerman HTTP + WebSocket server:
 
 ```bash
 # Start the hub
-php public/index.php start   # production (daemonized)
-php public/index.php status  # check worker status
-php public/index.php stop   # stop all workers
+php start.php start   # production (daemonize with `start -d`)
+php start.php status  # check worker status
+php start.php stop    # stop all workers
 ```
 
 **Ports:** HTTP `8800`, server relay `8802` (servers connect outbound here), client relay `8803` (remote clients connect here).
@@ -329,18 +329,18 @@ Phlix\Shared\       — Types shared with phlix-server:
 
 ### Enable debug logging
 
+The hub has **no log-level environment variable** (neither `HUB_LOG_LEVEL` nor
+`PHLIX_LOG_LEVEL` is read anywhere in phlix-hub). Verbosity is fixed per handler
+in `config/logger.php` (file handlers default to `debug`/`error`/`info` levels
+per channel); edit that config to change it.
+
 ```bash
-export HUB_LOG_LEVEL=debug
-php public/index.php start
+php start.php start
 tail -f .logs/hub.log | grep -i "debug\|heartbeat\|relay\|claim"
 ```
 
-In docker-compose:
-
-```yaml
-environment:
-  - HUB_LOG_LEVEL=debug
-```
+There is no compose `environment:` knob for hub log verbosity either — the same
+`config/logger.php` handler levels apply inside the container.
 
 ### Connect to hub MySQL directly
 

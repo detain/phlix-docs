@@ -71,7 +71,7 @@ env | grep -i PHLIX_HUB                                      # Verify Hub env va
 ### Debug logging
 
 ```bash
-PHLIX_LOG_LEVEL=debug php public/index.php    # Start server with debug-level logging
+PHLIX_LOG_LEVEL=debug php start.php start    # Start server with debug-level logging
 # Valid levels: debug, info, notice, warning, error, critical, alert, emergency
 ```
 
@@ -104,7 +104,7 @@ the same algorithm.
 
 **Fix:** Start the server in the foreground (for development):
 ```bash
-php public/index.php
+php start.php start
 ```
 For production, use systemd:
 ```bash
@@ -242,7 +242,7 @@ Restart the server after resetting the password to clear existing sessions.
 **Q: How do I enable debug logging?**
 A: Set the `PHLIX_LOG_LEVEL` environment variable before starting the server:
 ```bash
-PHLIX_LOG_LEVEL=debug php public/index.php
+PHLIX_LOG_LEVEL=debug php start.php start
 ```
 Valid levels (in order of verbosity): `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`. Restart the server for the change to take effect.
 
@@ -250,4 +250,4 @@ Valid levels (in order of verbosity): `debug`, `info`, `notice`, `warning`, `err
 A: (1) Check that the media directory has correct permissions (`chmod -R 755 /path/to/media`). (2) Trigger a manual rescan from the web UI (Library → Scan) or check `.logs/media.log` for scanner activity. (3) Verify your file naming matches the conventions in [Movies library](libraries/movies.md) or [TV library](libraries/tv-shows.md). If the scanner logs show "unrecognized file", rename the file to match the expected pattern.
 
 **Q: Where are the Workerman/FFmpeg logs?**
-A: Workerman stdout is written to `workerman.log` in the directory where you ran `php public/index.php`. FFmpeg transcode logs are in `.logs/transcode/`, one file per job. Phlix application logs are in `.logs/` split by channel (AUTH, HTTP, WEBSOCKET, MEDIA, SESSION, STREAMING).
+A: Workerman stdout is written to `workerman.log` in the directory where you ran `php start.php start`. FFmpeg transcode logs are in `.logs/transcode/`, one file per job. Phlix application logs are in `.logs/` split by channel (AUTH, HTTP, WEBSOCKET, MEDIA, SESSION, STREAMING).

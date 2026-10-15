@@ -174,7 +174,7 @@ rclone copy phlix-backup-$(date +%Y%m%d).tar.gz b2:my-bucket/phlix/
 
 ```bash
 systemctl stop phlix
-# or, if running in the foreground, stop the `php public/index.php` process (Ctrl+C)
+# or, if running in the foreground, stop the `php start.php start` process (Ctrl+C)
 ```
 
 2. **Restore database**
@@ -197,7 +197,7 @@ ls /path/to/phlix/data/metadata/
 ```bash
 systemctl start phlix
 # or, for development, run in the foreground:
-php public/index.php
+php start.php start
 ```
 
 5. **Verify**

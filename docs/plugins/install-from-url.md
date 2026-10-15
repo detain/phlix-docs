@@ -113,7 +113,7 @@ After install, click **Configure** next to any plugin to open its per-plugin set
 ```bash
 systemctl restart phlix
 # or, in the foreground, stop (Ctrl+C) and restart:
-php public/index.php
+php start.php start
 ```
 
 ---

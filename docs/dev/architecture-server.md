@@ -9,7 +9,8 @@ top-level `CLAUDE.md` / `AGENTS.md`.
 Since 0.10.0 the server bootstrap is centred on a PSR-11 container built by
 `Phlix\Common\Container\ContainerFactory`. The factory composes four service
 providers and returns a `\Psr\Container\ContainerInterface` instance. Both
-`public/index.php` (web portal) and `Phlix\Server\Core\Application` resolve
+`start.php` (the sole server entry point — the old `public/index.php` was
+removed) and `Phlix\Server\Core\Application` resolve
 their dependencies through the container instead of newing them up directly.
 
 ```text
@@ -85,7 +86,7 @@ take effect without a manual cache clear.
 
 ## Request lifecycle
 
-`public/index.php`:
+`start.php`:
 
 1. `include config/server.php` and inject the DB / logger config paths.
 2. `ContainerFactory::create($config)` builds the container.
@@ -231,7 +232,7 @@ find src -name '*.php' -exec php -l {} \;   # parse check only
 ### 1. Enable debug logging
 
 ```bash
-PHLIX_LOG_LEVEL=debug php public/index.php
+PHLIX_LOG_LEVEL=debug php start.php start
 # Valid levels (least → most verbose): emergency, alert, critical, error, warning, notice, info, debug
 ```
 
@@ -244,7 +245,7 @@ tail -f .logs/phlix.log | grep -i "debug\|error"
 ### 2. Xdebug
 
 ```bash
-php -d xdebug.mode=debug -d xdebug.clientHost=localhost public/index.php
+php -d xdebug.mode=debug -d xdebug.clientHost=localhost start.php start
 ```
 
 **VS Code** — `launch.json`:

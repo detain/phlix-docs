@@ -15,7 +15,7 @@ git clone git@github.com:detain/phlix-roku-client.git
 git clone git@github.com:detain/phlix-windows-client.git
 
 # Server dev setup
-cd phlix-server && composer install && php scripts/run-migrations.php && php public/index.php
+cd phlix-server && composer install && php scripts/run-migrations.php && php start.php start
 
 # Hub dev setup
 cd phlix-hub && composer install && php start.php start
@@ -63,7 +63,7 @@ git clone git@github.com:detain/phlix-windows-client.git
 cd phlix-server
 composer install
 php scripts/run-migrations.php   # creates all DB tables
-php public/index.php            # starts the server on 0.0.0.0:8080
+php start.php start             # starts the server on 0.0.0.0:8096 (defaults; PHLIX_HTTP_HOST / PHLIX_HTTP_PORT override)
 ```
 
 The server uses `Workerman\MySQL\Connection` (never PDO or mysqli). All DB access goes through the connection pool. See [`docs/dev/architecture-server.md`](architecture-server.md) for the bootstrap path.
@@ -364,7 +364,7 @@ See [`docs/plugins/developer-guide.md`](../plugins/developer-guide.md) for the f
 ```bash
 php -v                    # confirm PHP 8.3+
 composer install          # re-run after upgrading PHP
-php public/index.php      # verify the server starts
+php start.php start       # verify the server starts
 ```
 
 Use `phpbrew`, `nvm` (with phpenv), or Docker to manage multiple PHP versions.
@@ -403,10 +403,10 @@ Check `migrations/` for the current set of SQL files.
 
 **Fix:**
 ```bash
-# Copy and edit the env example
-cp .env.example .env
-# Fill in all required values (JWT_SECRET, DB_* credentials, etc.)
-php public/index.php
+# There is no .env loader — export the required values in the shell
+# (JWT_SECRET, DB_* credentials, etc.), then start the server:
+export JWT_SECRET="$(openssl rand -hex 32)"
+php start.php start
 ```
 
 The required variables are documented in [`docs/reference/env-vars.md`](../reference/env-vars.md).

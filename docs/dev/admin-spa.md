@@ -108,12 +108,17 @@ that:
   unauthenticated or **403** non-admin) maps to a **302 redirect to
   `/login`**, since a browser navigation can't render a JSON error envelope.
 
-The route is wired in **both** entry points — `public/index.php` and
-`src/Server/Workerman/HttpHandler.php` — and in both it is placed **AFTER**
-the existing `/admin/plugins` and `/admin/dashboard` SSR branches, so those
-specific routes keep winning. Each entry point gates the request with the
-existing `AdminMiddleware::checkAccess()` (the single source of truth for the
-admin gate + audit logging) and maps the result through `gateRedirect()`.
+**Status update (post-decommission):** the React admin console described on
+this page was decommissioned (`feat(C8.1): decommission React admin` in
+phlix-server); `admin-ui/` and `public/assets/admin/` no longer exist, and
+`/admin/plugins` and `/admin/dashboard` are now plain **redirects** to the
+vendored `/app` SPA (`src/Server/Workerman/HttpHandler.php`). The `/app` shell
+itself is served by `Phlix\Server\WebPortal\Controllers\SharedUiController::shell()`
+from `public/assets/app/index.html`, with a 503 + actionable message when the
+bundle has not been built. The bullets above describe the 0.4-era wiring and
+are retained as history: `public/index.php` was since removed (`start.php` is
+now the only server entry point), and `gateRedirect()` no longer exists in the
+source.
 
 The client-side `useAdminGuard` is **defence in depth only** — the
 authoritative gate is the server-side `AdminMiddleware`.

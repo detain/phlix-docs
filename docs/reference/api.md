@@ -4,9 +4,17 @@
 
 ## Overview
 
-Phlix exposes a REST API at `/api/v1/` returning JSON. Authentication uses JWT Bearer tokens (except on `/api/v1/auth/*` endpoints, which are unauthenticated). The API is documented by this hand-maintained reference page; there is no auto-generated OpenAPI spec or interactive API explorer at this time.
+Phlix exposes a REST API at `/api/v1/` returning JSON. Authentication uses JWT Bearer tokens (except on `/api/v1/auth/*` endpoints, which are unauthenticated).
 
-> **Future work:** A machine-readable OpenAPI specification may be provided in a future release. It is not available today.
+Machine-readable **OpenAPI specs exist and are kept current**:
+
+- `phlix-server/openapi.yaml` — the server API (412 operations), machine-checked
+  against the live router by `OpenapiSpecCurrencyTest` in CI, so it cannot
+  silently drift.
+- `phlix-hub/openapi.yaml` — the hub API, linted with Redocly in hub CI.
+
+This hand-maintained page remains the *narrative* reference (behavior notes,
+rate-limit semantics, gotchas) alongside those specs.
 
 ## Auth Endpoints
 

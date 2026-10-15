@@ -243,8 +243,17 @@ appear only when the Settings page's **Advanced** switch is on. **Restart** mark
 a key whose value is captured at container-build time and therefore only takes
 effect after the server restarts — the page badges these.
 
-**72 keys** in `phlix-shared` v0.45.0. This table is a regenerated snapshot and
-may lag the schema for a release or two; the schema is the source of truth.
+**Snapshot: 72 keys as of `phlix-shared` v0.45.0.** The schema has since grown
+to **84 keys** — every row below is still accurate per-key, but the newer keys
+are not listed here: the five `auth.<method>.enabled` toggles (F7),
+`discovery.mdns.enabled` / `discovery.ssdp.enabled`, the metadata trio
+(`metadata.cache_ttl_hours`, `metadata.min_match_confidence`,
+`metadata.overwrite_existing`), the four `process.*.enabled` flags,
+`security.frame_options` / `security.hsts_max_age_seconds`,
+`subtitles.provider_priority`, `transcoding.segment_format`, and
+`port-forward.port_forwarding.upnp_enabled`. See
+[Shared schemas](../dev/shared-schemas) for the current namespace census; the
+schema file itself is the source of truth.
 
 ### `access.*`
 

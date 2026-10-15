@@ -14,8 +14,8 @@ phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time 
   sudo mkdir -p /opt/phlix && sudo chown $USER /opt/phlix && \\
   git clone https://github.com/detain/phlix-server.git /opt/phlix && cd /opt/phlix && \\
   composer install --no-dev --optimize-autoloader && \\
-  cp .env.example .env && php scripts/run-migrations.php && \\
-  brew services start mysql@8.0 && php public/index.php
+  export JWT_SECRET="$(openssl rand -hex 32)" && php scripts/run-migrations.php && \\
+  brew services start mysql@8.0 && php start.php start
 ```
 
 Then open `http://localhost:8096` in your browser.
@@ -132,15 +132,18 @@ composer install --no-dev --optimize-autoloader
 
 ## 7. Configure environment
 
+phlix-server has **no `.env` file loader** — it reads the process environment
+directly (`getenv()` in `config/*.php`). Export the variables in your shell
+(put them in `launchd`'s `EnvironmentVariables` for the auto-start path below):
+
 ```bash
-cp .env.example .env
-# Edit .env with:
-#   DB_HOST=localhost
-#   DB_SOCKET=/opt/homebrew/var/mysql/mysql.sock   # Apple Silicon Homebrew
-#   DB_SOCKET=/usr/local/var/mysql/mysql.sock     # Intel Homebrew
-#   DB_DATABASE=phlix
-#   DB_USERNAME=phlix
-#   DB_PASSWORD=your_strong_password
+export DB_HOST=localhost
+export DB_SOCKET=/opt/homebrew/var/mysql/mysql.sock   # Apple Silicon Homebrew
+# Intel Homebrew instead: export DB_SOCKET=/usr/local/var/mysql/mysql.sock
+export DB_DATABASE=phlix
+export DB_USER=phlix
+export DB_PASSWORD=your_strong_password
+export JWT_SECRET="$(openssl rand -hex 32)"
 ```
 
 ---
@@ -156,9 +159,9 @@ php scripts/run-migrations.php
 ## 9. Start the server manually (first test)
 
 ```bash
-php public/index.php
+php start.php start
 # or to run in background:
-nohup php public/index.php > /opt/phlix/phlix.log 2>&1 &
+nohup php start.php start > /opt/phlix/phlix.log 2>&1 &
 ```
 
 ---
@@ -177,7 +180,7 @@ Create `~/Library/LaunchAgents/com.phlix.media-server.plist`:
     <key>ProgramArguments</key>
     <array>
         <string>/opt/homebrew/bin/php</string>
-        <string>/opt/phlix/public/index.php</string>
+        <string>/opt/phlix/start.php</string>
         <string>start</string>
     </array>
     <key>RunAtLoad</key>
@@ -213,7 +216,7 @@ launchctl list | grep phlix
 ```
 
 ::: tip Intel vs Apple Silicon
-The plist above uses Apple Silicon paths (`/opt/homebrew/bin/php`). For Intel, change `/opt/homebrew/bin/php` to `/usr/local/bin/php` and adjust socket paths in the `.env`.
+The plist above uses Apple Silicon paths (`/opt/homebrew/bin/php`). For Intel, change `/opt/homebrew/bin/php` to `/usr/local/bin/php` and adjust the socket path. `launchd` does not inherit your shell exports — add the `DB_*` / `JWT_SECRET` values to the plist via an `EnvironmentVariables` dict.
 :::
 
 ---
@@ -225,7 +228,7 @@ The plist above uses Apple Silicon paths (`/opt/homebrew/bin/php`). For Intel, c
 1. System Settings → Privacy & Security → Firewall
 2. Turn on Firewall
 3. Click "Firewall Options..."
-4. Add `/opt/phlix/public/index.php` (or allow PHP to accept incoming connections)
+4. Add `/opt/phlix/start.php` (or allow PHP to accept incoming connections)
 
 ### pfctl CLI (advanced)
 
@@ -266,7 +269,7 @@ launchctl list | grep phlix
 
 - **Symptom:** `SQLSTATE[HY000] [2002] No such file or directory` connecting to MySQL
 - **Cause:** Homebrew MySQL 8.x on Apple Silicon places socket at `/opt/homebrew/var/mysql/mysql.sock`; PHP may look in `/tmp/mysql.sock` or `/var/mysql/`
-- **Fix:** Set `DB_SOCKET=/opt/homebrew/var/mysql/mysql.sock` in `.env` (Apple Silicon) or `DB_SOCKET=/usr/local/var/mysql/mysql.sock` (Intel)
+- **Fix:** Export `DB_SOCKET=/opt/homebrew/var/mysql/mysql.sock` (Apple Silicon) or `DB_SOCKET=/usr/local/var/mysql/mysql.sock` (Intel)
 - **Verify:** `ls -la /opt/homebrew/var/mysql/mysql.sock` (or the Intel equivalent)
 
 ### FFmpeg missing codecs

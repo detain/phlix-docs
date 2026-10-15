@@ -54,12 +54,17 @@ are available.
 
 ### Server `migrate`
 
-Applies every `migrations/*.sql` file in sorted order. Idempotent: it has **no
-migration-tracking table** and is safe to run repeatedly — duplicate-column /
-duplicate-key / "already exists" errors are downgraded to notes rather than
-treated as failures. This is the supported equivalent of
-`php scripts/run-migrations.php` (both delegate to the same
-`Phlix\Common\Database\MigrationRunner`); the script remains for the Docker
+Applies pending `migrations/*.sql` files in sorted order. The runner keeps a
+**`schema_migrations` tracking ledger** (filename + checksum): files already
+recorded with a matching checksum are skipped outright, and a recorded file
+whose checksum has diverged is re-applied with a warning (then re-recorded).
+As a second safety net, "already exists"-class statement errors
+(MySQL 1050/1060/1061/1091) are downgraded to notes rather than failures —
+other duplicate-key errors like 1062 are *not* squelched, so migration authors
+must write idempotent data statements themselves (`INSERT IGNORE` etc.). A file
+that fails is left unrecorded and retried on the next run. This is the
+supported equivalent of `php scripts/run-migrations.php` (both delegate to the
+same `Phlix\Common\Database\MigrationRunner`); the script remains for the Docker
 entrypoint and installer.
 
 ```bash
@@ -310,10 +315,17 @@ available.
 
 ### Hub `migrate`
 
-Applies the hub's pending `migrations/*.sql`. Unlike the server's `migrate`,
-the hub uses a real migration-tracking table (`Phlix\Hub\Common\Database\MigrationRunner`),
-so already-applied migrations are skipped. It is the supported equivalent of
-`php scripts/run-migrations.php`.
+Applies the hub's pending `migrations/*.sql`. Like the server, the hub keeps a
+real migration-tracking table (`migrations`, managed by
+`Phlix\Hub\Common\Database\MigrationRunner`), so already-applied migrations are
+skipped by filename. Since HB-4.11 the table also carries a checksum column
+(added by `041_migrations_checksum.sql`): a recorded file whose (comment-
+normalised) checksum diverges from the on-disk file is surfaced rather than
+silently skipped, and pre-checksum rows are backfilled without re-executing
+them. Unlike the server, the hub has no idempotent-error-code squelch list —
+the tracking table is its sole idempotency mechanism, and every hub migration
+ships `CREATE TABLE IF NOT EXISTS` as a belt-and-braces guard. It is the
+supported equivalent of `php scripts/run-migrations.php`.
 
 ```bash
 php bin/phlix migrate

@@ -15,7 +15,7 @@ Every secret below has an insecure default that **must** be overridden before pr
 | `DB_PASSWORD` | _(empty)_ | Set a strong password for the `phlix` MySQL user. Use `openssl rand -base64 24`. |
 | `JWT_SECRET` | `default-secret-change-me` | Set a long random string. If leaked, attackers can forge tokens. |
 | `PHLIX_SIGNED_URL_SECRET` | _derived from `JWT_SECRET`_ | Set explicitly to rotate stream tokens independently of JWTs. |
-| `PHLIX_SECRET_KEY` | _(varies)_ | Set via the admin UI or env — used for internal cryptographic operations. |
+| `PHLIX_SECRET_KEY` | _unset_ | **Docker-only alias.** The container entrypoint copies it into `JWT_SECRET`; the PHP code never reads this name — on systemd/bare-metal set `JWT_SECRET` directly (see `install/linux.md` §7). |
 
 See [/reference/env-vars](/reference/env-vars) and [/reference/config-files](/reference/config-files) for where these are documented and consumed.
 

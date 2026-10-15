@@ -59,11 +59,16 @@ return [
 ];
 ```
 
-To force re-detection of a specific show:
+To force a re-scan (there is no per-show marker-only CLI command — marker
+detection re-runs as part of the library scan):
 
 ```bash
-php public/index.php media:rescan-show --show-id=42 --markers-only
+# Full non-destructive rescan of one library by id
+php bin/phlix library:scan <libraryId> --rescan
 ```
+
+Or enqueue the same from the admin UI (Library → Rescan,
+`POST /api/v1/libraries/{id}/rescan`).
 
 ---
 

@@ -94,17 +94,16 @@ composer install --no-dev --optimize-autoloader
 
 ### 2f. Configure environment
 
+phlix-server has **no `.env` file loader** — it reads the process environment
+directly. Set the variables in your shell (or via System Environment
+Variables for persistence):
+
 ```cmd
-copy .env.example .env
-```
-
-Edit `.env`:
-
-```env
-DB_HOST=localhost
-DB_DATABASE=phlix
-DB_USERNAME=phlix
-DB_PASSWORD=your_strong_password
+set DB_HOST=localhost
+set DB_DATABASE=phlix
+set DB_USER=phlix
+set DB_PASSWORD=your_strong_password
+set JWT_SECRET=<32-byte hex — any generator; the server refuses to boot without it>
 ```
 
 ### 2g. Database setup (MariaDB via XAMPP)
@@ -218,18 +217,15 @@ composer install --no-dev --optimize-autoloader
 
 ### 3j. Configure environment
 
+There is no `.env` loader in WSL either — export the variables (a small
+`env.sh` you `source` works well):
+
 ```bash
-cp .env.example .env
-nano .env
-```
-
-Set:
-
-```env
-DB_HOST=localhost
-DB_DATABASE=phlix
-DB_USERNAME=phlix
-DB_PASSWORD=your_strong_password
+export DB_HOST=localhost
+export DB_DATABASE=phlix
+export DB_USER=phlix
+export DB_PASSWORD=your_strong_password
+export JWT_SECRET="$(openssl rand -hex 32)"
 ```
 
 ### 3k. Database setup (MariaDB)
@@ -254,7 +250,7 @@ php scripts/run-migrations.php
 ### 3m. Start the server
 
 ```bash
-php /opt/phlix/public/index.php
+php /opt/phlix/start.php start
 ```
 
 ### 3n. Firewall configuration (from PowerShell on Windows host)
@@ -356,7 +352,7 @@ Expected: phlix-server index page loads (HTTP 200).
 ### Path separator issues (Windows vs Unix)
 
 - **Symptom:** "File not found" errors, broken requires/includes
-- **Fix:** Ensure all paths in `.env` use Windows-style separators or that the app handles `DIRECTORY_SEPARATOR` correctly; avoid hardcoded `/` in file paths
+- **Fix:** Ensure path-valued environment variables use Windows-style separators (native) or Unix separators (WSL) as appropriate; avoid hardcoded `/` in file paths
 - **Verify:** Set `git config --global core.autocrlf true` to handle line endings
 
 ### Port 8096 already in use

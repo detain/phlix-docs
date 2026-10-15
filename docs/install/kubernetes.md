@@ -270,16 +270,21 @@ The chart passes these to the pod automatically via `PHLIX_*` env vars:
 | `PHLIX_DATABASE_NAME` | Database name | `phlix` |
 | `PHLIX_DATABASE_USER` | Database user | `phlix` |
 | `PHLIX_DATABASE_PASSWORD` | Database password | from Kubernetes Secret |
-| `PHLIX_SECRET_KEY` | JWT/signing key | from Kubernetes Secret |
+| `PHLIX_SECRET_KEY` | JWT/signing key (entrypoint aliases it to `JWT_SECRET`) | from Kubernetes Secret |
 | `PHLIX_LOG_LEVEL` | Log verbosity | `info`, `debug` |
 
-::: warning There is no `PHLIX_HTTP_PORT`
-Earlier revisions of this table listed `PHLIX_HTTP_PORT` with a default of `80`.
-No such variable is read anywhere in phlix-server, and the container does not
-listen on `80` — it listens on **`8096`** (`config/server.php` `server.port`,
-also what the image's `EXPOSE`/healthcheck use). The Service `port` values below
-are the *Service's* ports; whatever you set them to, the Service's `targetPort`
-must resolve to `8096`.
+::: info Ports: the chart now states them explicitly
+The chart's deployment declares **`containerPort: 8096`** (HTTP) and
+**`containerPort: 8097`** (the WebSocket worker) for phlix-server, and the
+`phlix-hub` chart declares **`8800`** (HTTP) and **`8802`** (relay WebSocket) —
+verified against `k8s/helm/phlix/templates/deployment.yaml` and
+`k8s/helm/phlix-hub/templates/deployment.yaml`. The container never listens on
+`80`; the Service's `port` values in the examples above are the *Service's*
+ports and their `targetPort` resolves to `8096`. Changing the listen port
+without editing the chart is possible server-side via `PHLIX_HTTP_PORT` /
+`PHLIX_WS_PORT` (live since the SRV-OPS listen-endpoint wiring, default
+`8096` / `8097`) — but then the chart's hardcoded `containerPort`/probes would
+no longer match, so prefer the chart defaults inside Kubernetes.
 :::
 
 Set passwords/keys via the chart's secrets mechanism (required), and pass the immutable image tag (also required):

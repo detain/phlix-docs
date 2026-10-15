@@ -281,10 +281,10 @@ export HUB_JWT_SECRET="$(openssl rand -hex 32)"
 export HUB_PUBLIC_DOMAIN=hub.example.com
 
 php scripts/run-migrations.php     # create the schema (idempotent)
-php public/index.php start         # add -d to daemonize
+php start.php start         # add -d to daemonize
 ```
 
-For a production host, run `php public/index.php start` under a process manager such as systemd
+For a production host, run `php start.php start` under a process manager such as systemd
 (see the [Overview](./overview.md) for the full CLI and the
 [`phlix-hub` README](https://github.com/detain/phlix-hub#readme) for a ready-made unit file).
 

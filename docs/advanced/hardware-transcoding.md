@@ -1,5 +1,17 @@
 **Since:** 0.18.0
 
+::: warning `PHLIX_HWACCEL` is not implemented — do not set it
+Earlier revisions of this page told you to export `PHLIX_HWACCEL=nvidia|vaapi|…`.
+**No code in phlix-server reads that variable** (verified against current
+source). The "Env Var" column and the checklists below are kept only as
+historical narrative. What actually works today:
+
+- the built-in probe — `php bin/phlix hwaccel:probe` — detects available
+  encoders and the transcoder selects among them automatically; and
+- `PREFERRED_ACCELERATOR` (empty default = auto; see `config/transcoding.php`
+  and the env census in the phlix-server README) pins a specific accelerator.
+:::
+
 ## TL;DR
 
 Hardware transcoding offloads video encode/decode to your GPU, making 4K and HDR streams smooth without maxing out your CPU. Phlix supports four vendors: **NVIDIA** (NVENC), **Intel** (VAAPI/Quicksync), **AMD** (VAAPI/VCN), and **Apple Silicon** (VideoToolbox). Before this guide helps, you need the correct driver installed, the GPU visible as a device file, and `jellyfin-ffmpeg` in place of stock FFmpeg (stock distro FFmpeg lacks hardware support).
@@ -15,7 +27,9 @@ Hardware transcoding offloads video encode/decode to your GPU, making 4K and HDR
 | AMD | VAAPI + VCN | `vainfo \| grep VAEntrypointEncSlice` | `PHLIX_HWACCEL=vaapi` |
 | Apple Silicon | VideoToolbox | `system_profiler SPHardwareRAIDTool \| grep -i VideoToolbox` | `PHLIX_HWACCEL=videotoolbox` |
 
-All four vendors use the same `PHLIX_HWACCEL` env var; the value tells Phlix which FFmpeg hardware acceleration flags to emit.
+The `PHLIX_HWACCEL` values in the table are **not live** (see the warning
+above). Selection today is automatic via the hardware probe, or pinned with
+`PREFERRED_ACCELERATOR`.
 
 ---
 
@@ -24,7 +38,7 @@ All four vendors use the same `PHLIX_HWACCEL` env var; the value tells Phlix whi
 The fastest diagnostic is the built-in probe:
 
 ```bash
-php public/index.php hwaccel:probe
+php bin/phlix hwaccel:probe
 ```
 
 Sample output and interpretation:
@@ -202,7 +216,7 @@ ffmpeg -encoders 2>&1 | grep -E 'nvenc|vaapi|videotoolbox'
 apt install jellyfin-ffmpeg5   # Debian/Ubuntu
 
 # After install, re-run probe
-php public/index.php hwaccel:probe
+php bin/phlix hwaccel:probe
 ```
 
 ---

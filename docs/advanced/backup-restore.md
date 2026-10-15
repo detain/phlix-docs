@@ -173,7 +173,7 @@ rclone copy phlix-backup-$(date +%Y%m%d).tar.gz b2:my-bucket/phlix/
 1. **Stop Phlix**
 
 ```bash
-systemctl stop phlix
+systemctl stop phlix-server
 # or, if running in the foreground, stop the `php start.php start` process (Ctrl+C)
 ```
 
@@ -195,7 +195,7 @@ ls /path/to/phlix/data/metadata/
 4. **Start Phlix**
 
 ```bash
-systemctl start phlix
+systemctl start phlix-server
 # or, for development, run in the foreground:
 php start.php start
 ```

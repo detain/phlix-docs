@@ -108,7 +108,7 @@ Add user to video group:
 
 ```bash
 sudo usermod -aG video $USER
-sudo systemctl restart phlix
+sudo systemctl restart phlix-server
 ```
 
 ### AMD (VAAPI + VCN)
@@ -165,7 +165,7 @@ To set permanently, add to your Phlix startup environment or systemd service fil
 Environment="PHLIX_HWACCEL=nvidia"
 ```
 
-Then `sudo systemctl daemon-reload && sudo systemctl restart phlix`.
+Then `sudo systemctl daemon-reload && sudo systemctl restart phlix-server`.
 
 ---
 
@@ -233,7 +233,7 @@ php bin/phlix hwaccel:probe
 sudo usermod -aG video phlix
 
 # Restart Phlix to pick up new group membership
-sudo systemctl restart phlix
+sudo systemctl restart phlix-server
 
 # Verify
 groups phlix

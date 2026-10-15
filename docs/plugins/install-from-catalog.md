@@ -143,7 +143,7 @@ enable.
 **Fix:** Restart phlix-server:
 
 ```bash
-systemctl restart phlix
+systemctl restart phlix-server
 # or, in the foreground, stop (Ctrl+C) and restart:
 php start.php start
 ```

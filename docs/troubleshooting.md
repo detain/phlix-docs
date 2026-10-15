@@ -37,7 +37,7 @@ tail -f .logs/auth.log                # Channel-specific tail (one file per chan
 
 ```bash
 curl -s http://localhost:8096/api/v1/system/status  # Is server responding?
-systemctl status phlix                              # systemd service status (Linux)
+systemctl status phlix-server                              # systemd service status (Linux)
 ps aux | grep -E 'phlix|workerman' | grep -v grep   # Running processes
 lsof -i :8096                                       # Is port 8096 bound?
 ```
@@ -108,7 +108,7 @@ php start.php start
 ```
 For production, use systemd:
 ```bash
-systemctl start phlix
+systemctl start phlix-server
 ```
 
 **Cause 2 — Wrong port:** The `config/server.php` `http_port` value differs from the URL being accessed.

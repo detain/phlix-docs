@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Hub persistent state — users, server registry, grants, and audit logs — lives entirely in MariaDB; there is no Redis. JWT validation is stateless (HS256, no server-side session store). Horizontal scaling is straightforward for the HTTP API: add hub instances behind a load balancer and point them all at the same database. The one caveat is the relay: relay tunnel and session state is held **in-process** by each hub instance (Workerman `RelaySessionManager`/`TunnelManager`), so a server's WSS tunnel is bound to the single instance that holds it — use sticky sessions so each server's connection consistently lands on the same instance. Database backups use `mysqldump` with binlog for point-in-time recovery; offsite copies go to S3/R2 with 30-day retention. Restore drills should be run quarterly to catch corrupt or incomplete backups before a real disaster. RTO target is under 15 minutes with automated failover; RPO is under 4 hours.
+Hub persistent state — users, server registry, grants, and audit logs — lives entirely in MariaDB; there is no Redis. JWT validation is stateless (HS256, no server-side session store). Horizontal scaling is straightforward for the HTTP API: add hub instances behind a load balancer and point them all at the same database. The one caveat is the relay: relay tunnel and session state is held **in-process** by each hub instance (Workerman `RelaySessionManager`/`TunnelManager`), so a server's relay tunnel is bound to the single instance that holds it — use sticky sessions so each server's connection consistently lands on the same instance. Database backups use `mysqldump` with binlog for point-in-time recovery; offsite copies go to S3/R2 with 30-day retention. Restore drills should be run quarterly to catch corrupt or incomplete backups before a real disaster. RTO target is under 15 minutes with automated failover; RPO is under 4 hours.
 
 | Metric | Target |
 |---|---|
@@ -22,7 +22,7 @@ Hub persistent state — users, server registry, grants, and audit logs — live
 - Persistent state lives entirely in MariaDB (users, server registry, grants, audit logs); there is no Redis
 - Relay tunnel/session state is **not** persisted — it is held in-process by each hub instance's Workerman `RelaySessionManager`/`TunnelManager`, so it is per-instance and not shared
 - Multiple hub instances share the same database behind a load balancer
-- Each server maintains one persistent WSS connection; that connection must stick to the instance that holds its tunnel, so route servers via sticky sessions (source IP hash)
+- Each server maintains one persistent relay-tunnel connection (plain `ws://` unless you enable [relay TLS](/security/hardening) on both ends); that connection must stick to the instance that holds its tunnel, so route servers via sticky sessions (source IP hash)
 - Docker Swarm or Kubernetes for orchestration; `docker-compose up --scale phlix-hub=2` for simple HA
 
 ### Deployment Topology
@@ -38,7 +38,7 @@ services:
     environment:
       HUB_DB_HOST: hub-db
       HUB_DB_USER: phlix_hub
-      HUB_DB_NAME: hub_db
+      HUB_DB_NAME: phlix_hub
     depends_on:
       - hub-db
 
@@ -55,7 +55,7 @@ services:
     image: mariadb:10.11
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: hub_db
+      MYSQL_DATABASE: phlix_hub
       MYSQL_USER: phlix_hub
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
@@ -68,7 +68,7 @@ services:
       - hub-db
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: hub_db
+      MYSQL_DATABASE: phlix_hub
       MYSQL_USER: phlix_hub
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_MASTER_HOST: hub-db
@@ -78,7 +78,7 @@ services:
 
 ```bash
 # nginx upstream with ip_hash for sticky sessions
-# Each server's WSS connection lands on the same hub instance
+# Each server's relay-tunnel connection lands on the same hub instance
 upstream phlix_hub_backend {
     ip_hash;
     server phlix-hub-1:8443;
@@ -86,7 +86,7 @@ upstream phlix_hub_backend {
 }
 ```
 
-- Without sticky sessions, a server's WSS connection would be routed to different hub instances, breaking relay state
+- Without sticky sessions, a server's relay-tunnel connection would be routed to different hub instances, breaking relay state
 - For Kubernetes: use an Ingress with `sessionAffinity: ClientIP`
 - For Docker Swarm: use `docker-compose up --scale phlix-hub=2` with a compatible reverse proxy
 
@@ -98,7 +98,7 @@ upstream phlix_hub_backend {
 
 ```bash
 # Daily full backup
-mysqldump -h hub-db -u phlix_hub -p hub_db > hub-backup-$(date +%Y%m%d).sql
+mysqldump -h hub-db -u phlix_hub -p phlix_hub > hub-backup-$(date +%Y%m%d).sql
 
 # Verify the dump is valid before archiving
 grep -c "INSERT INTO" hub-backup-$(date +%Y%m%d).sql
@@ -114,7 +114,7 @@ SHOW VARIABLES LIKE 'log_bin';
 
 # If binlog is enabled, replay to a specific time:
 mysqlbinlog --stop-datetime="2025-06-01 12:00:00" /var/lib/mysql/mysql-bin.* | \
-  mysql -h hub-db -u phlix_hub -p hub_db
+  mysql -h hub-db -u phlix_hub -p phlix_hub
 ```
 
 ### Incremental Backup (every 4 hours)
@@ -163,12 +163,12 @@ kubectl scale deployment phlix-hub --replicas=0
 
 ```bash
 # Restore from latest full backup
-mysql -h hub-db -u phlix_hub -p hub_db < hub-backup-20250601.sql
+mysql -h hub-db -u phlix_hub -p phlix_hub < hub-backup-20250601.sql
 
 # If point-in-time recovery is needed, replay binlog:
 mysqlbinlog --stop-datetime="2025-06-01 12:00:00" \
   /var/lib/mysql/mysql-bin.* | \
-  mysql -h hub-db -u phlix_hub -p hub_db
+  mysql -h hub-db -u phlix_hub -p phlix_hub
 ```
 
 ### Step 3 — Restart Hub Instances
@@ -183,10 +183,12 @@ kubectl scale deployment phlix-hub --replicas=2
 ### Step 4 — Verify
 
 ```bash
-# Verify users can log in
+# Verify users can log in — use a private operator-owned account's credentials
+# from your secret store (env vars shown). Do NOT create shared or canned
+# test accounts on a Hub.
 curl -X POST https://your-hub.com/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"test@yourhub.com","password":"testpassword"}'
+  -d "{\"email\":\"$HUB_TEST_EMAIL\",\"password\":\"$HUB_TEST_PASSWORD\"}"
 
 # Verify enrolled servers and relay sessions via the admin dashboard summary
 # (requires an admin JWT). The console at /app/admin/dashboard shows the same data.
@@ -229,7 +231,7 @@ curl -s -H "Authorization: Bearer $ADMIN_JWT" \
 - **Symptom:** Active relay sessions on a restarted or failed-over instance drop; clients must reconnect after timeout (~30s)
 - **Cause:** Relay tunnel/session state is held in-process per hub instance (`RelaySessionManager`/`TunnelManager`); it is not persisted anywhere, so it does not survive that instance restarting or its connections moving to another instance
 - **Recovery:** Servers reconnect automatically; clients resume from their own last reported stream position (server-side), not from any hub-held state
-- **RTO:** < 5 minutes (servers re-establish WSS tunnels after reconnect)
+- **RTO:** < 5 minutes (servers re-establish relay tunnels after reconnect)
 - **RPO:** N/A (no persistent relay state is needed for playback resumption)
 
 ### Summary RTO/RPO
@@ -257,7 +259,7 @@ curl -s -H "Authorization: Bearer $ADMIN_JWT" \
 
 ### Sticky Sessions Missing (relay tunnels break across instances)
 
-**Symptom:** With more than one hub instance, server WSS tunnels flap or relay sessions appear to vanish; the admin dashboard shows inconsistent relay-session counts.
+**Symptom:** With more than one hub instance, server relay tunnels flap or relay sessions appear to vanish; the admin dashboard shows inconsistent relay-session counts.
 
 **Cause:** Relay tunnel/session state is held in-process per instance (`RelaySessionManager`/`TunnelManager`) and is not shared. Without sticky sessions, a server's connection (or its frames) can be routed to an instance that does not hold its tunnel.
 
@@ -301,5 +303,5 @@ curl -s -H "Authorization: Bearer $ADMIN_JWT" \
 
 - [Hub-admin capacity planning](capacity-planning.md) — sizing hub hardware for your user base
 - [Hub claim and setup](../hub/claim-server.md) — understanding server claiming and hub identity
-- [Hub relay tunnel](relay-tuning.md) — how the WSS relay actually works under the hood
+- [Hub relay tunnel](relay-tuning.md) — how the relay tunnel actually works under the hood
 - [Hub-admin install & first boot](install.md) — hub setup and admin account creation

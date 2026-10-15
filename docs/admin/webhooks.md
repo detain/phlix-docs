@@ -80,12 +80,24 @@ return [
 
 ## Available Event Types
 
-| Event | Description | Payload keys |
-|-------|-------------|--------------|
-| `playback.started` | User began playing media | `user_id`, `media_item_id`, `media_type`, `device_id` |
-| `playback.ended` | Playback stopped or completed | `user_id`, `media_item_id`, `media_type`, `duration_seconds`, `completed` |
-| `library.updated` | Library scan completed or item added/removed | `change_type` (`item_added`\|`item_removed`\|`metadata_updated`), `media_item_id`, `library_id` |
-| `webhook.test` | Sent only when manually testing a webhook | `message`, `webhook_id` |
+Canonical catalog — `src/Webhooks/WebhookEventCatalog.php` (10 events). "Live" means the server emits it today; "declared" events are reserved in the catalog (and mirrored in the `phlix-shared` webhook-event schemas) but have no server-side emit site yet, so subscriptions to them simply never fire.
+
+| Event | Status | Payload keys |
+|-------|--------|--------------|
+| `playback.started` | Live | `session_id`, `user_id`, `media_item_id`, `device_id`, `position_ticks` |
+| `playback.ended` | Live | `session_id`, `user_id`, `media_item_id`, `device_id`, `final_position_ticks`, `reached_end` (covers both stop and completion) |
+| `library.updated` | Live | `media_item_id`, `library_id`, `path`, `type` (fires when a media item is added) |
+| `user.login` | Live | `user_id`, `session_id`, `ip_address`, `user_agent` |
+| `user.logout` | Live | `user_id`, `session_id`, `reason` |
+| `user.created` | Live | `user_id`, `username`, `email` |
+| `download.complete` | Declared | — |
+| `recording.started` | Declared | — |
+| `recording.stopped` | Declared | — |
+| `alert` | Declared | — |
+
+**Legacy aliases.** Older subscription rows may carry `media.started` (→ `playback.started`), `media.played` / `media.stopped` (→ `playback.ended`), or `media.added` (→ `library.updated`); they keep receiving the mapped live events. New subscriptions are always written with the canonical name.
+
+**`webhook.test`** is not a catalog event — the admin "send test" button posts an internal test payload directly to one webhook and cannot be subscribed to.
 
 ## Verifying the Signature
 

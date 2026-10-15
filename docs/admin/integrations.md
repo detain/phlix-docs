@@ -8,7 +8,7 @@ The Webhooks page (`/admin/webhooks`) in the admin console provides full CRUD ma
 
 ### What it does
 
-Webhooks send signed HTTP POST requests to configured endpoints when events occur on the server. Each request carries a JSON payload and is verified with `X-Phlix-Signature: sha256=<hmac>` so receivers can authenticate the source.
+Webhooks send signed HTTP POST requests to configured endpoints when events occur on the server. Each request carries a JSON payload and **two** signature headers over the same bytes: `X-Phlix-Signature-V2: t=<unix-seconds>,v1=<hmac>` (preferred, replay-resistant) and the legacy `X-Phlix-Signature: sha256=<hmac>` kept for existing receivers. See [Webhooks → Verifying the Signature](./webhooks#verifying-the-signature) for the verification recipe.
 
 ### Managing webhooks in the UI
 
@@ -20,7 +20,7 @@ Webhooks send signed HTTP POST requests to configured endpoints when events occu
 | Delete | Row action shows a confirm modal, then calls `DELETE /api/v1/admin/webhooks/{id}` |
 | Test | Row action fires `POST /api/v1/admin/webhooks/{id}/test` and shows the delivery result (green checkmark or red X with message) |
 
-The event multi-select lists the 7 subscribable events from the catalog, grouped into 5 categories:
+The event multi-select lists the 10 subscribable events from the catalog, grouped into 6 categories:
 
 | Category | Events |
 |----------|--------|
@@ -28,7 +28,10 @@ The event multi-select lists the 7 subscribable events from the catalog, grouped
 | Library | `library.updated` |
 | Downloads | `download.complete` |
 | Recordings | `recording.started`, `recording.stopped` |
-| Alerts | `alert` |
+| System | `alert` |
+| User | `user.login`, `user.logout`, `user.created` |
+
+`download.complete`, `recording.*` and `alert` are catalog-declared but not yet emitted by the server — subscriptions exist and simply never fire until an emitter lands.
 
 `webhook.test` is **not** shown — it is used internally by the test button only.
 

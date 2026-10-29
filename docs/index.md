@@ -31,7 +31,7 @@ features:
 
   - icon: 📱
     title: Clients
-    details: "Native apps for Samsung Tizen, Roku, Windows, macOS, iOS, Android, and web browser"
+    details: "Native apps for Samsung Tizen, Roku, Windows, iOS, Android, and web browser"
     link: /clients/overview
     linkText: View clients
 

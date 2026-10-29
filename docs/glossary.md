@@ -10,7 +10,7 @@ sentence; linked pages tell the full story.
 
 **Bearer (token)** — "whoever *bears* this string gets in": the way Phlix apps attach
 their login token to each request, like showing a wristband instead of an ID.
-See [token](#token).
+See **Token** below.
 
 **Federation** — hubs talking to *other hubs*, with cryptographic handshakes, so a
 person on one hub's address book can reach servers shared from another. Advanced; a hub
@@ -52,7 +52,7 @@ it's the first thing that stops working when you leave the house.
 **Token** — the login receipt your server hands the app after the right password: a
 signed string (`JWT`) that says "this is Maya, expires at 9pm." Apps show it with every
 request instead of your password. It can expire and be refreshed — and anyone holding it
-holds the access, so it's kept in secure storage. See [bearer](#bearer-token).
+holds the access, so it's kept in secure storage. See **Bearer (token)** above.
 
 **Transcode** — re-encoding video *while you watch* so a picky device can play it, or
 shrinking it to fit a slow connection. Costs the server real CPU; a direct connection

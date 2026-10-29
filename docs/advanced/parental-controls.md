@@ -13,7 +13,7 @@ Every profile on your server can have three kinds of guardrails:
 3. **Stream limits** — capping how many things one profile can have going at once.
 
 They are three independent tools, and each has real limits you should know before you
-rely on it. Read [What they can't do](#what-they-cant-do) before bedtime-shaming anyone.
+rely on it. Read [What they can't do](#_4-what-they-can-t-do) before bedtime-shaming anyone.
 
 Everything below is set per profile on the **Parental Controls** page. Two honest quirks:
 no menu links to it yet — you open it by typing the address

@@ -154,7 +154,8 @@ What is deliberately **not** in this file:
   (`PHLIX_LOG_LEVEL` *is* a real application variable — see the [env reference](/reference/env-vars) — but only the
   value the container actually receives takes effect). Only the full-stack example passes a `TZ` line, also hardcoded.
 - There is no `PHLIX_PORT` variable. `PHLIX_HTTP_PORT` / `PHLIX_WS_PORT` (plus `PHLIX_HTTP_HOST`, `PHLIX_WS_HOST`,
-  `PHLIX_HTTP_WORKER_COUNT`) **are** real listen-port seams since phlix-server 1.4.0 (`src/Server/Runtime/ListenEndpoints.php`)
+  `PHLIX_HTTP_WORKER_COUNT`) **are** real listen-port seams on current master (`src/Server/Runtime/ListenEndpoints.php`;
+  unreleased as of v1.2.3 — the `<full-sha>` pins built from master, §1, include them)
   — an earlier revision of this page denied their existence, and `reference/env-vars.md` carries the corrected truth.
   The example compose does not pass them, so the container binds the defaults (8096/8097). If you do pass them into the
   container, the right-hand side of the `ports:` mapping must match the port the container actually listens on.
@@ -322,7 +323,7 @@ docker compose logs -f phlix
 curl -s http://127.0.0.1:32400/health
 # Expected: {"status":"ok",...} with HTTP 200
 
-# Access web UI — the browser opens the first-run setup wizard
+# Access web UI — the browser opens the login page; the first account becomes the admin (no wizard)
 xdg-open http://127.0.0.1:32400   # macOS: open
 ```
 
@@ -391,6 +392,6 @@ being *alive*, not broken.
 
 ## Next steps
 
-- [First-run wizard](/first-run) — complete the browser-based setup at `http://your-server:32400`
+- [First run](/first-run) — create the first account (it becomes the administrator) at `http://your-server:32400`
 - [Hardware transcoding](/advanced/hardware-transcoding) — configure NVENC/VAAPI/Quicksync for better transcoding performance
 - [Linux install](/install/linux) — alternative install method without containers

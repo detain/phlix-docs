@@ -223,7 +223,7 @@ final class YourPlugin implements LifecycleInterface
 
 ## See Also
 
-- [Last.fm Plugin Reference Implementation](https://github.com/detain/phlix/blob/master/src/Plugins/Lastfm/Plugin.php)
-- [Trakt.tv Plugin Reference Implementation](https://github.com/detain/phlix/blob/master/src/Plugins/Scrobbler/Trakt/TraktPlugin.php)
-- [Plugin Lifecycle Interface](https://github.com/detain/phlix/blob/master/src/Plugins/Contract/LifecycleInterface.php)
-- [WatchHistory Reference](https://github.com/detain/phlix/blob/master/src/Auth/WatchHistory.php)
+- [Last.fm plugin reference implementation](https://github.com/detain/phlix-plugin-lastfm/blob/master/src/LastfmPlugin.php)
+- [Trakt.tv plugin reference implementation](https://github.com/detain/phlix-plugin-trakt/blob/master/src/TraktPlugin.php)
+- [Plugin Lifecycle interface](https://github.com/detain/phlix-server/blob/master/src/Plugins/Contract/LifecycleInterface.php)
+- [WatchHistory reference](https://github.com/detain/phlix-server/blob/master/src/Auth/WatchHistory.php)

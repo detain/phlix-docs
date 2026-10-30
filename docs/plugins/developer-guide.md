@@ -85,36 +85,38 @@ type maps to a category of integration; the table below cross-walks
 each type with its typical PSR-14 event subscriptions and current
 implementation status.
 
-> **Implementation status today (Phase A complete):** the loader
-> instantiates and dispatches events to plugins of every type uniformly
-> — there is no type-specific dispatch path yet. The reference
-> `phlix-plugin-example` is a `metadata-provider` shell that
-> demonstrates the lifecycle but is not yet invoked by
+> **Implementation status today:** the loader instantiates and
+> dispatches events to plugins of every type uniformly — there is no
+> type-specific dispatch path yet for *metadata* or *subtitle*
+> providers. The reference `phlix-plugin-example` is a
+> `metadata-provider` shell that demonstrates the lifecycle but is not
+> invoked by
 > `MetadataManager`. Type-specific dispatch (e.g. the metadata manager
 > falling through to plugins for unknown providers) lands as each
 > subsystem is wired up over Phases C–L.
 
 | `type` value         | Use case                                                       | Typical events subscribed                                                                  | Implemented today                                          |
 | -------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| `metadata-provider`  | Pulls media metadata (alternative TMDb, AniDB, MusicBrainz…)   | `phlix.library.item.added` (refresh-on-add)                                                | Loader yes; manager dispatch wired in Phase C              |
-| `subtitle-provider`  | Downloads or generates subtitles                               | `phlix.library.item.added`, `phlix.playback.started`                                       | Loader yes; subtitle pipeline wired in Phase C             |
-| `auth-provider`      | Authenticates users (OIDC, LDAP, SSO)                          | `phlix.user.created`, `phlix.user.logged_in`                                               | Loader yes; pluggable auth backend wired in Phase D        |
-| `library-type`       | Adds a brand-new library kind (comics, audiobooks, …)          | `phlix.library.scan.started`, `phlix.library.scan.completed`                               | Loader yes; library-type registry wired in Phase E         |
+| `metadata-provider`  | Pulls media metadata (alternative TMDb, AniDB, MusicBrainz…)   | `phlix.library.item.added` (refresh-on-add)                                                | Loader yes; manager dispatch still to come                 |
+| `subtitle-provider`  | Downloads or generates subtitles                               | `phlix.library.item.added`, `phlix.playback.started`                                       | Loader yes; subtitle pipeline dispatch still to come       |
+| `auth-provider`      | Authenticates users (OIDC, LDAP, SSO)                          | `phlix.user.created`, `phlix.user.logged_in`                                               | Live — bundled Github/LDAP/OIDC plugins + admin routes     |
+| `library-type`       | Adds a brand-new library kind (comics, audiobooks, …)          | `phlix.library.scan.started`, `phlix.library.scan.completed`                               | Loader yes; library-type registry still to come            |
 | `notifier`           | Sends notifications (push, email, chat)                        | `phlix.library.item.added`, `phlix.user.created`, `phlix.playback.started`                 | Loader yes; notifier dispatch live via PSR-14 today        |
 | `scrobbler`          | Reports playback to an external service (Trakt, Last.fm)       | `phlix.playback.started`, `phlix.playback.paused`, `phlix.playback.resumed`, `phlix.playback.stopped` | Loader yes; scrobbling live via PSR-14 today               |
-| `tuner`              | Live-TV tuner backend (HDHomeRun, IPTV, …)                     | rarely subscribes — usually exposes a polled API                                           | Loader yes; tuner registry wired in Phase F                |
-| `transcoder-hook`    | Adjusts the FFmpeg transcoder pipeline                         | rarely subscribes — usually exposes a filter API                                           | Loader yes; transcoder hook points wired in Phase G        |
-| `ui-theme`           | Restyles the web portal                                        | none                                                                                       | Loader yes; theme registry wired in Phase H                |
-| `arr-integration`    | Integrates with the *arr stack (Sonarr, Radarr)                | `phlix.library.scan.completed`, `phlix.library.item.added`                                 | Loader yes; webhook bridge wired in Phase I                |
+| `tuner`              | Live-TV tuner backend (HDHomeRun, IPTV, …)                     | rarely subscribes — usually exposes a polled API                                           | Loader yes; tuner plug-in registry still to come           |
+| `transcoder-hook`    | Adjusts the FFmpeg transcoder pipeline                         | rarely subscribes — usually exposes a filter API                                           | Loader yes; transcoder hook points still to come           |
+| `ui-theme`           | Restyles the web portal                                        | none                                                                                       | Live — `ThemeSourceInterface` registry (server ≥ 0.44.0)   |
+| `arr-integration`    | Integrates with the *arr stack (Sonarr, Radarr)                | `phlix.library.scan.completed`, `phlix.library.item.added`                                 | Loader yes; dedicated arr bridge still to come             |
 | `analytics-sink`     | Exports analytics to external systems                          | every event the operator wants to mirror                                                   | Loader yes; sinks live via PSR-14 today                    |
 
-**Pragmatically**, today (Phase A) you can ship any of the
-**"live via PSR-14"** types — `notifier`, `scrobbler`, and
-`analytics-sink` — and they will fire on real events the moment they
-are enabled. The other types install and enable cleanly but their
-host-side integration points arrive in later phases. The reference
-plugin is deliberately the simplest case: a `metadata-provider` shell
-that just demonstrates the lifecycle.
+**Pragmatically**, today you can ship `notifier`, `scrobbler`, and
+`analytics-sink` plugins and they fire on real events the moment they
+are enabled; `auth-provider` plugins authenticate live users and
+`ui-theme` plugins restyle the portal live (see §13 and
+[UI Themes](../developers/ui-themes.md)). The remaining types install
+and enable cleanly, but their host-side integration points are still
+to come. The reference plugin is deliberately the simplest case: a
+`metadata-provider` shell that just demonstrates the lifecycle.
 
 See also: [`manifest.md`](manifest.md) for the enum's canonical home.
 
@@ -457,8 +459,8 @@ through `PluginRepository::insert()`. At runtime, the
 
 ### Reading a setting at runtime
 
-In Phase A the cleanest way for a plugin to read its own settings is
-to inject the host container and ask the repository for its row:
+The cleanest way for a plugin to read its own settings is to inject
+the host container and ask the repository for its row:
 
 ```php
 public function onEnable(ContainerInterface $container): void
@@ -473,21 +475,21 @@ The manifest schema for the live install is available as
 `$installed->manifest->settings` — useful if you need to discover the
 declared default at runtime.
 
-> **Editable settings UI is forthcoming.** The A.5 admin UI renders
-> settings **read-only**, with `secret: true` fields masked. The
-> in-product editor for plain (non-secret) settings is parked for a
-> later Phase A.x / B step; until then, settings ship with their
-> manifest defaults and can only be changed by updating
-> `plugins.settings_json` directly or by reinstalling the plugin with
-> a new default in the manifest.
+> **Settings are editable.** The admin API accepts
+> `PUT /api/v1/admin/plugins/{name}/settings`
+> (`PluginAdminController::updateSettings`), and the admin UI exposes
+> the editor; `secret: true` fields are masked in rendered responses.
+> Manifest defaults are the starting point, not a permanent state —
+> direct `plugins.settings_json` edits remain possible but the API is
+> the supported path.
 
 ### Secrets
 
 `secret: true` is a **declaration**, not yet a full encryption
 contract. Today the loader respects the flag by masking the value in
 admin-UI rendering. End-to-end at-rest encryption of the
-`settings_json` column is on the Phase B backlog (it depends on a key
-management story that arrives with `phlix-shared`). Until then, treat
+`settings_json` column is a stated goal without a shipped
+implementation. Until it lands, treat
 `secret: true` as "do not log this and do not display it in the
 table", but assume the value is plaintext on disk.
 
@@ -704,11 +706,14 @@ root; override it by setting `plugins_base_dir` in
 
 ## 9. Signing
 
-Plugin signing in Phase A is intentionally minimal — a one-line
+Plugin signing today is intentionally minimal — a one-line
 `sha256:<64-hex>` digest in the manifest's `signature` field, checked
-against a trusted-key allowlist on install. The Phase C hub will layer
-a real, key-rotation-aware signing infrastructure on top; until then,
-this is the contract.
+by the host's `SignatureVerifier` on install against a re-hash of the
+manifest bytes plus an operator-configured allowlist (see §9.4). The
+in-product catalog (see
+[install-from-catalog](install-from-catalog.md)) distributes plugins
+over git but does not yet add a key-rotation-aware signing layer; the
+digest scheme below is the whole contract.
 
 ### Signature format
 
@@ -720,23 +725,32 @@ The regex `^sha256:[0-9a-f]{64}$` is enforced by the manifest schema
 ([`schemas/manifest.schema.json` in phlix-shared](https://github.com/detain/phlix-shared/blob/master/schemas/manifest.schema.json)).
 Anything else fails manifest validation.
 
-### Computing a signature
+### What the verifier actually hashes
 
-There is no canonical "what bytes does the digest cover" specification
-yet — the current `SignatureVerifier` only checks the literal string
-against the allowlist (it does not re-hash the on-disk bytes). The
-recommended convention until the hub ships is to publish the digest of
-your **`plugin.json` file with the `signature` field set to `null`**:
+`SignatureVerifier` re-hashes the **on-disk `plugin.json` bytes as-is**
+(`hash_file('sha256', …)`) and compares byte-for-byte against the
+declared digest; a mismatch returns `invalid` regardless of allowlist
+contents.
 
-```bash
-# 1. publish plugin.json with "signature": null
-shasum -a 256 plugin.json
-# 2. paste the resulting 64-hex digest in as "signature": "sha256:<hex>"
+Be aware of what that implies while the digest still lives *inside*
+`plugin.json`: the declared value would have to equal the SHA-256 of
+the very file that contains it — a fixed point that is infeasible to
+compute. In practice this means **a manifest that carries a non-null
+`signature` today will always fail the content check**, and every
+install that passes ships `"signature": null` (result: `unsigned`).
+The content check exists to detect post-signing tampering and becomes
+usable once the signature moves out of the hashed bytes (detached
+signatures in a future signing layer).
+
+Until then, the supported authoring posture is:
+
+```json
+"signature": null
 ```
 
-This convention is portable across hosts and platforms (`shasum -a
-256` on macOS / Linux, `Get-FileHash` on Windows) and matches what the
-hub will adopt in Phase C.
+and, for operators who want trust-on-allowlist installs,
+`PHLIX_PLUGINS_REQUIRE_SIGNATURE=1` refuses unsigned plugins outright
+(see below for the allowlist seams).
 
 ### Verifier outcomes
 
@@ -745,12 +759,14 @@ three results per install:
 
 | Manifest state                  | `PHLIX_PLUGINS_REQUIRE_SIGNATURE` | Result    | Loader behaviour                                                |
 | ------------------------------- | --------------------------------- | --------- | --------------------------------------------------------------- |
-| Signature present, on allowlist | any                               | `valid`   | Install proceeds.                                               |
-| Signature present, allowlist empty | unset / `0`                    | `valid`   | Install proceeds (warning-free).                                |
-| Signature present, allowlist empty | `1`                            | `invalid` | Install fails, staged directory removed.                        |
-| Signature present, not on allowlist | any (when allowlist non-empty) | `invalid` | Install fails, staged directory removed.                        |
+| Signature present               | any                               | `invalid` | The content-integrity check re-hashes the on-disk bytes; with the digest embedded in the hashed file it can never match (see above), so the install fails and the staged directory is removed. |
 | No signature                    | unset / `0`                       | `unsigned`| Install proceeds; loader logs a `warning` on the `plugins` channel. |
 | No signature                    | `1`                               | `invalid` | Install fails.                                                  |
+
+(`valid` is reachable only when the declared digest equals the SHA-256
+of the exact bytes on disk — with today's embedded-field layout that
+requires a hash fixed point, so treat it as reserved for a future
+detached-signature flow.)
 
 The only env var honoured today is **`PHLIX_PLUGINS_REQUIRE_SIGNATURE`**.
 When unset or falsy (the default) unsigned plugins install with a
@@ -759,30 +775,27 @@ warning on the `plugins` log channel; set it to `1`, `true`, `yes`, or
 
 ### Registering a trusted key
 
-Until the in-product UI ships, the trusted-key allowlist is
-operator-configured in code by overriding the container binding for
-`SignatureVerifier`:
+The allowlist is operator-configured through environment seams
+(`Phlix\Plugins\Signature\TrustedSignaturesConfig`):
 
-```php
-$builder->addDefinitions([
-    \Phlix\Plugins\Signature\SignatureVerifier::class => DI\factory(
-        static fn (): \Phlix\Plugins\Signature\SignatureVerifier =>
-            new \Phlix\Plugins\Signature\SignatureVerifier(
-                trustedSignatures: [
-                    'sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
-                ],
-                requireSignature: false,
-            ),
-    ),
-]);
-```
+| Seam | Shape |
+| --- | --- |
+| `PHLIX_PLUGINS_TRUSTED_SIGNATURES` | Comma-separated list of `sha256:<64-hex>` digests |
+| `PHLIX_PLUGINS_TRUSTED_SIGNATURES_FILE` | Path to a JSON file of digest entries |
+
+With neither set, the allowlist is empty and the optimistic/unsigned
+default above applies. Advanced operators can still override the
+container binding for `SignatureVerifier` directly — its constructor
+takes `trustedSignatures` (a `list<string>` of `sha256:<hex>` digests)
+and `requireSignature`.
 
 See [`trusted-plugin-list.md`](trusted-plugin-list.md) for the full
-operator playbook. The community process for getting a plugin onto a
-**shared, hub-distributed** allowlist is **forthcoming** — it lands
-in Phase C alongside the hub itself. Don't oversell signing yet:
-today's contract is "the operator vouches for what they install" plus
-a defence-in-depth digest check.
+operator playbook. The in-product catalog
+([install-from-catalog](install-from-catalog.md)) is a *distribution*
+list, not a trust list: a **shared, hub-distributed** trust allowlist
+has not shipped. Don't oversell signing yet: today's contract is "the
+operator vouches for what they install" plus a defence-in-depth digest
+check.
 
 ---
 
@@ -920,10 +933,12 @@ Once your plugin is in shape:
 
    into the admin UI's **Install from URL** field. That's it.
 
-For now, plugin distribution lives in the operator's manual workflow.
-The in-product **catalog** (a curated, browsable list of trusted
-plugins fetched from the Phlix hub) ships with **Phase C**; until
-then, install-from-URL is the supported install path.
+Install-from-URL remains fully supported, and the in-product
+**catalog** is live: a curated, browsable list of plugin sources
+(admin → plugins → catalog; the default source is
+`detain/phlix-plugins`). See
+[Install from Catalog](install-from-catalog.md) for the operator
+walkthrough and the source/config routes behind it.
 
 ---
 
@@ -938,7 +953,7 @@ then, install-from-URL is the supported install path.
 - [`docs/plugins/install-from-url.md`](install-from-url.md) — the
   operator-facing install walkthrough.
 - [`docs/plugins/install-from-catalog.md`](install-from-catalog.md) —
-  forthcoming catalog flow (Phase C).
+  the catalog install walkthrough.
 - [`docs/plugins/trusted-plugin-list.md`](trusted-plugin-list.md) —
   trust model and per-operator allowlist setup.
 - [`docs/dev/event-reference.md`](../dev/event-reference.md) —
@@ -977,7 +992,7 @@ the label `area:plugins`.
 
 ---
 
-## 13. Auth Provider Plugins (Phase D)
+## 13. Auth Provider Plugins
 
 Phlix supports pluggable external authentication providers (OIDC,
 LDAP, SAML, passkeys) through the `auth-provider` plugin type. This
@@ -1134,8 +1149,11 @@ for the related authentication API spec.
 
 A `scrobbler` plugin subscribes to playback events and reports what the
 user is listening to/watching to an external service (Last.fm, Trakt,
-etc.). Phlix ships an in-core reference implementation:
-[`Phlix\Plugins\Lastfm\Plugin`](https://github.com/detain/phlix/blob/master/src/Plugins/Lastfm/Plugin.php).
+etc.). The reference implementations are standalone plugin
+repositories:
+[`detain/phlix-plugin-lastfm`](https://github.com/detain/phlix-plugin-lastfm)
+and
+[`detain/phlix-plugin-trakt`](https://github.com/detain/phlix-plugin-trakt).
 
 ### What gets submitted
 

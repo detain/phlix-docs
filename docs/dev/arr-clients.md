@@ -8,7 +8,9 @@
 
 ## Overview
 
-Phlix integrates with four *arr* applications via their v3 REST APIs:
+Phlix integrates with four *arr* applications via their REST APIs — Sonarr and Radarr
+at their **v3** surface, Prowlarr and Bazarr at their **v1** surface (each app's own
+API version; see the per-client tables below):
 
 | Application | Role | Default port |
 |------------|------|--------------|

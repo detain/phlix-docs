@@ -5,7 +5,10 @@
 Smart playlists populate from JSON DSL rules evaluated against the media library. Unlike manual playlists, their membership is derived from the rules rather than curated by hand.
 
 ::: warning Evaluation is request-driven, not automatic
-`SmartPlaylistEngine::evaluateOnScan()` is reached from the smart-playlist endpoints and from `CollectionManager::refreshSmartCollection()` (itself reached from `POST /api/v1/collections/{id}/refresh`) — i.e. when something asks for it. It is **not** triggered by a library scan, and it is not triggered by a folder-watch cycle: nothing calls `FolderWatcher::checkForChanges()` in production, so the `LibraryUpdated` event below is never dispatched, and `SmartPlaylistRefreshHandler::register()` — which is what would subscribe the handler to it — has no caller either. See [Scan triggering](/libraries/movies#scan-triggering).
+`SmartPlaylistEngine::evaluateOnScan()` is reached from `CollectionManager::refreshSmartCollection()`
+(itself reached from the **live** `POST /api/v1/collections/{id}/refresh`; the standalone
+smart-playlist endpoints below are unrouted — see [API Endpoints](#api-endpoints)) — i.e. when
+something asks for it. It is **not** triggered by a library scan, and it is not triggered by a folder-watch cycle: nothing calls `FolderWatcher::checkForChanges()` in production, so the `LibraryUpdated` event below is never dispatched, and `SmartPlaylistRefreshHandler::register()` — which is what would subscribe the handler to it — has no caller either. See [Scan triggering](/libraries/movies#scan-triggering).
 :::
 
 ## Architecture
@@ -113,16 +116,36 @@ To add a new operator:
 
 ## API Endpoints
 
+::: warning The standalone CRUD surface is NOT routed
+The handlers below exist (`SmartPlaylistController`), and `Router::smartPlaylists()`
+would register them — but that helper is **never called** by the application, so
+`/api/v1/smart-playlists` answers `404` on a shipped server (see `phlix-server`
+`src/Server/Http/Router.php` — "There is NO live /api/v1/smart-playlists surface").
+The **live** smart surface is the collections trio wired in
+`src/Server/Core/Application.php`:
+
+| Method | Endpoint | Status |
+|--------|----------|--------|
+| `POST` | `/api/v1/collections/{id}/refresh` | **Live** — re-evaluates the smart rules of the collection's bound `smart_playlist_id` |
+| `GET` | `/api/v1/collections` (+ `/{id}`) | **Live** — carries `smart_playlist_id` on the collection payload |
+| `POST` | `/api/v1/collections` | **Live** — accepts `smart_playlist_id` at create time |
+
+`smart_playlist_id` rows are therefore created out-of-band (database or tooling);
+the table carries no per-owner column today. Do not build clients against
+`/api/v1/smart-playlists` — it is not shipped. The endpoint table below documents
+the unrouted handlers as design reference only.
+:::
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/v1/smart-playlists` | List all smart playlists |
-| POST | `/api/v1/smart-playlists` | Create smart playlist |
-| GET | `/api/v1/smart-playlists/{id}` | Get playlist details |
-| PUT | `/api/v1/smart-playlists/{id}` | Update playlist |
-| DELETE | `/api/v1/smart-playlists/{id}` | Delete playlist |
-| POST | `/api/v1/smart-playlists/{id}/preview` | Preview rules against library |
+| GET | `/api/v1/smart-playlists` | List all smart playlists — **unrouted** |
+| POST | `/api/v1/smart-playlists` | Create smart playlist — **unrouted** |
+| GET | `/api/v1/smart-playlists/{id}` | Get playlist details — **unrouted** |
+| PUT | `/api/v1/smart-playlists/{id}` | Update playlist — **unrouted** |
+| DELETE | `/api/v1/smart-playlists/{id}` | Delete playlist — **unrouted** |
+| POST | `/api/v1/smart-playlists/{id}/preview` | Preview rules against library — **unrouted** |
 
-### Create Example
+### Create Example (unrouted design reference — will 404 today)
 
 ```bash
 curl -X POST /api/v1/smart-playlists \
@@ -137,7 +160,7 @@ curl -X POST /api/v1/smart-playlists \
   }'
 ```
 
-### Preview Example
+### Preview Example (unrouted design reference — will 404 today)
 
 ```bash
 curl -X POST /api/v1/smart-playlists/{id}/preview \
@@ -198,9 +221,12 @@ final class LibraryUpdated
 }
 ```
 
-## Future: Collections (Phase H.2)
+## Collections (Phase H.2 — shipped)
 
-H.2 will introduce collections that can combine smart playlists and manual selections. The `SmartPlaylistChanged` event will be added for collection synchronization.
+H.2 introduced collections that can combine smart playlists and manual selections —
+this has since shipped (see [Collections](/developers/collections) for the ownership
+law). A `SmartPlaylistChanged` event for collection synchronization is still future
+work.
 
 ## Testing
 

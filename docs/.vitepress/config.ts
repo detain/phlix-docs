@@ -139,7 +139,7 @@ export default defineConfig({
           items: [
             { text: 'Hardware Transcoding', link: '/advanced/hardware-transcoding' },
             { text: 'Live TV & DVR', link: '/advanced/live-tv' },
-            { text: 'Remote Access', link: '/advanced/remote-access-without-hub' },
+            { text: 'Remote Access Without the Hub', link: '/advanced/remote-access-without-hub' },
             { text: 'Reverse Proxy', link: '/advanced/reverse-proxy' },
             { text: 'Backup & Restore', link: '/advanced/backup-restore' },
             { text: 'DLNA Server', link: '/advanced/dlna' },
@@ -172,6 +172,11 @@ export default defineConfig({
             { text: 'Library Management', link: '/admin/library-management' },
             { text: 'User Management', link: '/admin/user-management' },
             { text: 'Server Settings', link: '/admin/server-settings' },
+            { text: 'Services', link: '/admin/services' },
+            { text: 'Remote Access (port forwarding)', link: '/admin/remote-access' },
+            { text: 'Live TV', link: '/admin/live-tv' },
+            { text: 'Integrations', link: '/admin/integrations' },
+            { text: 'DLNA Server', link: '/admin/dlna-server' },
           ]
         }
       ],
@@ -203,11 +208,21 @@ export default defineConfig({
           items: [
             { text: 'Server Architecture', link: '/dev/architecture-server' },
             { text: 'Hub Architecture', link: '/dev/architecture-hub' },
+            { text: 'Coroutine Runtime', link: '/dev/coroutine-runtime' },
             { text: 'Pairing Protocol', link: '/dev/pairing-protocol' },
             { text: 'Relay Protocol', link: '/dev/relay-protocol' },
             { text: 'Hub Database Schema', link: '/dev/schema-hub' },
             { text: 'TLS Certificates', link: '/dev/tls-certificates' },
             { text: 'Event Reference', link: '/dev/event-reference' },
+          ]
+        },
+        {
+          text: 'Relay Internals',
+          items: [
+            { text: 'Tunnel / TunnelManager', link: '/dev/relay/tunnel' },
+            { text: 'Frame Decoder / Encoder', link: '/dev/relay/frame-decoder' },
+            { text: 'Idle Reaper', link: '/dev/relay/idle-reaper' },
+            { text: 'WS Multiplexer Plan', link: '/dev/relay/ws-multiplexer-plan' },
           ]
         },
         {
@@ -265,6 +280,7 @@ export default defineConfig({
             { text: 'DVR', link: '/developers/dvr' },
             { text: 'Schedules Direct', link: '/developers/schedules-direct' },
             { text: 'Live Relay', link: '/developers/live-relay' },
+            { text: 'Media Index API', link: '/developers/media-index-api' },
             { text: 'Comskip / Live', link: '/developers/comskip-live' },
             { text: 'Chromaprint', link: '/developers/chromaprint' },
             { text: 'Scrobbler Plugins', link: '/developers/scrobbler-plugins' },
@@ -309,19 +325,13 @@ export default defineConfig({
           items: [
             { text: 'What is the Hub', link: '/hub/what-is-the-hub' },
             { text: 'Claim Server', link: '/hub/claim-server' },
+            { text: 'Server Detail', link: '/hub/server-detail' },
+            { text: 'Remote Access (via the Hub)', link: '/hub/remote-access' },
             { text: 'Share with Friends', link: '/hub/share-with-friends' },
-            { text: 'Remote Access', link: '/hub/remote-access' },
-            { text: 'Self-Host the Hub', link: '/hub/self-host-the-hub' },
+            { text: 'Library Sharing', link: '/hub/library-sharing' },
+            { text: 'Invite Links', link: '/hub/invite-links' },
             { text: 'Media Requests', link: '/hub/requests' },
-          ]
-        },
-        {
-          text: 'Relay Internals',
-          items: [
-            { text: 'Tunnel / TunnelManager', link: '/hub/relay/tunnel' },
-            { text: 'Frame Decoder / Encoder', link: '/hub/relay/frame-decoder' },
-            { text: 'Idle Reaper', link: '/hub/relay/idle-reaper' },
-            { text: 'WS Multiplexer Plan', link: '/hub/relay/ws-multiplexer-plan' },
+            { text: 'Self-Host the Hub', link: '/hub/self-host-the-hub' },
           ]
         }
       ],

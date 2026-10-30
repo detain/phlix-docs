@@ -17,7 +17,7 @@ Phlix can run behind a reverse proxy (nginx, Caddy, or Apache) to terminate TLS,
 
 When Phlix is behind a reverse proxy:
 
-1. Set the `TRUSTED_PROXIES` environment variable (or `trusted_proxies` in `config/server.php`) to a comma-separated IP/CIDR list of every proxy hop in front of Phlix. The default is **loopback only** (`127.0.0.1`, `::1`), which is correct for the stock install where nginx/HAProxy front Phlix over loopback — set this only when a **non-loopback** proxy is in the path.
+1. Set the `TRUSTED_PROXIES` environment variable (or `trusted_proxies` in `config/server.php`) to a comma-separated IP/CIDR list of every proxy hop in front of Phlix. The default is **loopback only** — the CIDRs `127.0.0.0/8` and `::1/128` (`TrustedProxyResolver::DEFAULT_TRUSTED_PROXIES`), which is correct for the stock install where nginx/HAProxy front Phlix over loopback — set this only when a **non-loopback** proxy is in the path.
 2. Ensure the proxy forwards `X-Forwarded-Proto`, `X-Forwarded-Host`, and `X-Forwarded-Port` headers, and appends the real client to `X-Forwarded-For` (nginx `$proxy_add_x_forwarded_for`, HAProxy `option forwardfor`).
 
 ::: warning Rate-limit client-IP keying

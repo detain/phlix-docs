@@ -1,135 +1,55 @@
-# Remote Access Without Relay Tunnel
+# Remote Access via the Hub
 
-Phlix Media Server supports direct internet access to your media library without requiring the relay tunnel. This guide explains how to set up and verify direct connectivity.
+The Hub's primary job is remote access: reaching your Phlix server from outside your
+home network **without configuring port forwarding or a VPN**. Your server dials *out*
+to the hub over a relay tunnel, so it works behind NAT as shipped — see
+[What Is the Hub?](what-is-the-hub.md) for the concept and
+[Claim your server](claim-server.md) to connect one.
 
-## Overview
+## How the hub chooses your connection
 
-When your server is reachable from the internet directly (via port forwarding on your router), clients can connect straight to your server rather than going through the relay tunnel. This typically provides:
+A claimed server advertises **direct-connection candidates** to the hub in its
+heartbeats: the LAN address, the `phlix.local` mDNS name, the machine hostname, and —
+when UPnP or STUN confirms the port is open — its public address. Clients are steered
+at the best candidate that actually answers; when none are reachable (you're away from
+home, or the port isn't open), traffic flows over the **relay tunnel** instead. The
+relay is the safety net: nothing about it requires router configuration.
 
-- Lower latency for playback
-- Higher quality streams (no transcoding at relay)
-- Reduced infrastructure dependency
-
-## How Port Forwarding Works
-
-### UPnP-IGD (Universal Plug and Play - Internet Gateway Device)
-
-UPnP-IGD allows devices on your LAN to automatically configure port mappings on your router. Phlix uses this to:
-
-1. **Discovery** — Sends an SSDP M-SEARCH multicast to `239.255.255.250:1900` to find UPnP-capable routers.
-2. **External IP detection** — Queries the router's `GetExternalIPAddress` SOAP action.
-3. **Port mapping** — Calls `AddPortMapping` to open the configured port (`port_forwarding.port` / `PHLIX_EXTERNAL_PORT`, default: 32400) on the router. The same value is used for both the external and the internal port of the mapping.
-
-::: danger Set the port-forwarding port to 8096 before you rely on any of this
-phlix-server listens on **`8096`** (`config/server.php` `server.port`), but
-`port_forwarding.port` defaults to **`32400`** — so with both defaults left alone
-the router forwards WAN `32400` to `<server-lan-ip>:32400`, where nothing is
-listening. Set `PHLIX_EXTERNAL_PORT=8096` (or `'port' => 8096` in
-`config/port-forward.php`) so the mapping, the firewall rule and the listener all
-agree. Every `32400` on the rest of this page is the port-forwarding default,
-not the port the server binds. See
-[Network configuration](/hub-admin/network) and
-[Environment variables](/reference/env-vars).
+::: tip The one port trap that breaks the candidates
+The advertised candidates are built from `port_forwarding.port`
+(`PHLIX_EXTERNAL_PORT`, default **32400**) — **not** from `server.port` (the listen
+port, `8096`). With both defaults left alone the hub is handed addresses on a port
+nothing listens on. If you want your direct candidates to be usable (e.g. on the LAN),
+set the two to agree — `PHLIX_EXTERNAL_PORT=8096`. This does not affect the relay
+tunnel, which works regardless. The mechanics live in
+`Phlix\Network\PortForwardService::discoverHostnameCandidates()`.
 :::
 
-### NAT-PMP (NAT Port Mapping Protocol)
+## Do you need any of the alternatives?
 
-For Apple AirPort routers and other NAT-PMP-compatible devices, Phlix falls back to RFC 6886 NAT-PMP:
+You do **not** need port forwarding, UPnP, or a reverse proxy to get remote access via
+the hub — those are the *self-managed* routes, useful when you want direct control,
+higher throughput, or no dependency on a hub relay at all:
 
-1. Sends a public address request to the router's LAN IP on UDP port 5350.
-2. Uses the response to determine the external IP.
-3. Sends a map request to open the port.
+- **Direct access without the relay** (UPnP-IGD auto-mapping, manual port forwarding,
+  DMZ, IPv6, reverse proxy): the full step-by-step guide is
+  [Remote Access Without the Hub](/advanced/remote-access-without-hub).
+- **A VPN back home** (WireGuard/Tailscale): another way to make a server "local"
+  from anywhere; no Phlix-specific setup.
 
-### STUN (Session Traversal Utilities for NAT)
+## Troubleshooting (hub path)
 
-STUN (RFC 5389) is used to:
-
-1. **Discover your public IP** — Sends a binding request to `stun.l.google.com:19302` (configurable) and reads the XOR-MAPPED-ADDRESS from the response.
-2. **Test port accessibility** — Attempts a TCP connection to your public IP on the configured port to verify the mapping is working.
-
-## Setting Up Port Forwarding
-
-### Automatic (Recommended)
-
-Run the port-forward script with `enable`:
-
-```bash
-php scripts/port-forward.php enable
-```
-
-If UPnP is available on your router, the script will automatically open the port and report the public endpoint.
-
-### Manual Configuration
-
-If automatic discovery fails, you can configure port forwarding manually:
-
-1. Log in to your router's admin panel (typically `http://192.168.1.1` or `http://192.168.0.1`).
-2. Find **Port Forwarding**, **NAT**, or **Firewall** settings.
-3. Create a new rule:
-
-   | Field     | Value                 |
-   | --------- | --------------------- |
-   | Protocol  | TCP                   |
-   | Ext Port  | 8096 (or your choice) |
-   | Int Port  | 8096 (must be `server.port`) |
-   | Int IP    | Your server's LAN IP  |
-
-4. Save and apply. Your router may need a restart.
-
-To find your server's LAN IP, run:
-
-```bash
-php scripts/port-forward.php info
-```
-
-### Verify the Port is Open
-
-After configuring, verify your port is accessible:
-
-```bash
-php scripts/port-forward.php info
-```
-
-Look for the `Port <configured-port> on <public-ip>` line — it prints whatever
-`port_forwarding.port` is set to. It should show `OPEN` if the mapping succeeded.
-
-You can also use an external port checker like [you-get-signal.com](https://www.yougetsignal.com/tools/open-ports/).
-
-## Troubleshooting
-
-### UPnP Discovery Fails
-
-- **Cause:** Router does not support UPnP-IGD or has it disabled.
-- **Fix:** Enable UPnP in your router's settings, or use manual port forwarding.
-
-### Port Shows BLOCKED/FILTERED
-
-- **Cause:** Router did not apply the port mapping, or a firewall is blocking the port.
-- **Fix:** Verify the port forwarding rule is active in your router. Check that your server's firewall allows incoming connections on the configured port.
-
-### STUN Returns No Public IP
-
-- **Cause:** Firewall or symmetric NAT preventing STUN from working.
-- **Fix:** Use manual port forwarding and ensure your router supports UPnP or NAT-PMP.
-
-## Using with the Hub
-
-When direct access is available, your server includes hostname candidates in heartbeats to the hub:
-
-- `http://<lan-ip>:8096` — Local network access
-- `http://phlix.local:8096` — mDNS/local hostname
-- `http://<hostname>.local:8096` — LAN hostname
-- `http://<public-ip>:8096` — Direct internet access (when port is open)
-
-The hub uses these candidates to determine the best connection method for clients.
-
-The port in every candidate is `port_forwarding.port`, **not** `server.port` —
-`PortForwardService::discoverHostnameCandidates()` builds them from its own port.
-That is why the two must be set to the same value; if they are not, the hub is
-handed addresses that no client can connect to.
+- **Relay works but direct candidates never win:** almost always the port trap above.
+- **Everything is slow:** the relay caps out where your hub's tunnel does; prefer a
+  working direct candidate or a reverse proxy for heavy streaming.
+- **Server shows unclaimed/offline:** re-check the claim per
+  [Claim your server](claim-server.md) — the relay depends on the server's outbound
+  dial, so egress firewalls blocking it will sever remote access.
 
 ## See Also
 
-- `docs/hub-admin/network.md` — Network configuration for hub administrators
-- `php scripts/port-forward.php help` — All port-forward commands
-- `docs/dev/relay-protocol.md` — Relay tunnel protocol (fallback when direct access is unavailable)
+- [What Is the Hub?](what-is-the-hub.md) — the relay's role in one page.
+- [Remote Access Without the Hub](/advanced/remote-access-without-hub) — the canonical
+  direct-connection guide (UPnP, manual mapping, firewall, verification).
+- [Hardening](/security/hardening) — what to lock down before exposing anything.
+- [Relay Protocol](/dev/relay-protocol) — the tunnel mechanics (engineer-level).

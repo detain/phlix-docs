@@ -35,9 +35,10 @@ playlist and make a new one — the titles inside are unaffected.
 
 ## Using and managing playlists
 
-One honest quirk of today's app: the playlist list page has **no button or menu that
-opens it** — nothing in the sidebar links to it. Type the address directly into your
-browser: `http(s)://your-server/app/playlists`. It lists all of yours; pick any playlist
+One honest quirk of today's app: nothing in the sidebar links to the playlist list
+page. The only door in the app is in the **Add to playlist** picker: its footer carries
+a "Manage playlists →" link that opens it. (Or type the address directly into your
+browser: `http(s)://your-server/app/playlists`.) It lists all of yours; pick any playlist
 to open it:
 
 - **Remove** takes one title out of the list (it stays in your library, obviously).
@@ -46,9 +47,17 @@ to open it:
 - Start a title from the list like any other item; playing from a playlist doesn't mark
   the playlist "in progress" — watch history is tracked per title as always.
 
-There is no play-button for the whole list, no automatic-updating rules, and no sharing
-a playlist with one specific person. (Sharing that reaches other households works at the
-level of a whole library on the Hub — see [Sharing a library with friends](../hub/share-with-friends.md).)
+There is no play-button for the whole list, and no sharing a playlist with one
+specific person. (Sharing that reaches other households works at the level of a whole
+library on the Hub — see [Sharing a library with friends](../hub/share-with-friends.md).)
+
+Rules-based **smart collections** exist on the server — a saved media query that can be
+attached to a collection — but nothing updates them by itself: the contents are
+re-evaluated only when something asks (request-driven, via the REST
+`POST /api/v1/collections/{id}/refresh`), and today's app has no screen to author the
+rules. In the web app's day-to-day sense, then, playlists do not auto-update — the
+engine is server-side and developer-facing. See
+[Smart Playlists](/developers/smart-playlists) for what is actually wired.
 
 Server **admins** get an extra Collections screen in the admin area that lists *every*
 collection on the server and can bulk-edit membership — that's an operations tool, not a

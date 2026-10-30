@@ -15,7 +15,8 @@ New here? Start with [What Is the Hub?](/hub/what-is-the-hub).
 - [What Is the Hub?](/hub/what-is-the-hub) — what it does and why you might want it.
 - [Claim your server](/hub/claim-server) — link a server to your Hub account.
 - [Server Detail](/hub/server-detail) — the per-server view and what it reports.
-- [Remote Access Without Relay Tunnel](/hub/remote-access) — direct connections
+- [Remote Access via the Hub](/hub/remote-access) — the no-port-forwarding path
+- [Remote Access Without the Hub](/advanced/remote-access-without-hub) — direct connections
   when you do not need the relay.
 
 ## Sharing
@@ -32,10 +33,7 @@ New here? Start with [What Is the Hub?](/hub/what-is-the-hub).
 
 ## Relay internals
 
-For contributors working on the relay itself:
-
-- [Tunnel / TunnelManager / ClientConnection](/hub/relay/tunnel)
-- [FrameDecoder / FrameEncoder](/hub/relay/frame-decoder)
-- [IdleReaper](/hub/relay/idle-reaper)
-- [WebSocket Multiplexed Relay Tunnel — Implementation Plan](/hub/relay/ws-multiplexer-plan)
-- [Relay Protocol Specification](/dev/relay-protocol)
+The relay's engineer-level internals (tunnel manager, frame codec, idle reaper, the
+multiplexer design record) live in the developer tree:
+[Relay Internals](/dev/relay/tunnel) — start there from the [Developer Architecture
+sidebar](/dev/architecture-hub).

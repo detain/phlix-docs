@@ -58,9 +58,24 @@ sudo dnf install -y php-cli php-mysqlnd php-curl php-gd php-zip php-xml \
   php-mbstring php-bcmath mariadb-server ffmpeg git curl unzip
 ```
 
-### 2c. From source (all distros)
+### 2c. PHP Composer (all distros)
 
-Install PHP 8.3 from source, MariaDB from distro packages, and FFmpeg from the jellyfin-ffmpeg PPA or source.
+Step 6 installs the PHP dependencies with Composer, which is not in the package lists
+above (and the distro packages are older than the server expects). Install it with the
+official installer — the same recipe the automated `install.sh` runs when Composer is
+missing:
+
+```bash
+curl -fsSL https://getcomposer.org/installer -o /tmp/composer-setup.php
+sudo php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+rm -f /tmp/composer-setup.php
+composer --version
+```
+
+### 2d. From source (all distros)
+
+Install PHP 8.3 from source, MariaDB from distro packages, FFmpeg from the
+jellyfin-ffmpeg PPA or source, and Composer per §2c.
 
 ---
 
@@ -109,6 +124,8 @@ cd /var/www/phlix
 ---
 
 ## 6. PHP dependencies (Composer)
+
+With Composer installed (§2c):
 
 ```bash
 sudo composer install --no-dev --optimize-autoloader

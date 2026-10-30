@@ -317,7 +317,9 @@ exposed, for the `getInstance()` reason above.
 - Appropriate drivers/gpu for the vendor
 - See [FFmpeg HWAccel Documentation](https://trac.ffmpeg.org/wiki/HWAccelIntro)
 
-## HDR Tone-Mapping (Since 0.11.0)
+## HDR Tone-Mapping
+
+**Since:** 0.11.0
 
 When transcoding HDR (High Dynamic Range) content to SDR (Standard Dynamic Range), the system applies tone-mapping to preserve visual quality while converting the extended luminance range to displayable SDR levels.
 

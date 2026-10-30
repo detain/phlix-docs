@@ -104,6 +104,20 @@ OPDS routes therefore accept Basic in addition to a session or a signed URL:
 Point your reader at `https://<server>/opds/v1.2` and enter your Phlix username (or
 email) and password.
 
+::: danger OPDS must never be reached over plaintext HTTP
+Unlike the signed-URL and Bearer paths on this page, HTTP Basic carries your **account
+password** — and re-sends it on every feed, cover and download request. Anyone who can
+see the wire sees the credential in trivially decodable form. The server accepts Basic
+credentials regardless of transport (the OPDS middleware in `SignedUrlMiddleware` has no
+TLS-context awareness), so nothing stops a reader configured with an `http://` URL — the
+protection is yours to enforce:
+
+- Only ever configure your reader with an **`https://`** URL (direct TLS, or behind the
+  [reverse proxy](../advanced/reverse-proxy.md)).
+- Never expose a plaintext `http://` OPDS endpoint beyond a loopback you fully control.
+- If TLS cannot be guaranteed on a given network, do not enable OPDS there at all.
+:::
+
 ## Client developer notes
 
 - **Web player / browser** — no action needed beyond consuming the signed field:

@@ -6,6 +6,43 @@
 
 import { defineConfig } from 'vitepress'
 
+// The Streaming & Providers pages live under /developers/*, but the sidebar
+// group that lists them has always sat in the '/dev/' tree. VitePress picks a
+// page's sidebar by longest matching key: '/developers/streaming-protocols'
+// does NOT start with '/dev/', so those pages matched only the 1-item
+// '/developers' landing entry and rendered a sidebar with a single link —
+// navigation vanished exactly where their group's siblings point them.
+// The group is defined once here and referenced from BOTH keys, so the trees
+// cannot drift.
+const streamingProvidersGroup = {
+  text: 'Streaming & Providers',
+  items: [
+    { text: 'Streaming Protocols', link: '/developers/streaming-protocols' },
+    { text: 'Stream Quality / ABR', link: '/developers/stream-quality-abr' },
+    { text: 'Music Providers', link: '/developers/music-providers' },
+    { text: 'IPTV', link: '/developers/iptv' },
+    { text: 'HDHomeRun', link: '/developers/hdhomerun' },
+    { text: 'DVB-T', link: '/developers/dvbt' },
+    { text: 'DVR', link: '/developers/dvr' },
+    { text: 'Schedules Direct', link: '/developers/schedules-direct' },
+    { text: 'Live Relay', link: '/developers/live-relay' },
+    { text: 'Media Index API', link: '/developers/media-index-api' },
+    { text: 'Comskip / Live', link: '/developers/comskip-live' },
+    { text: 'Chromaprint', link: '/developers/chromaprint' },
+    { text: 'Scrobbler Plugins', link: '/developers/scrobbler-plugins' },
+    { text: 'Last.fm Plugin', link: '/developers/lastfm-plugin' },
+    { text: 'Intro/Outro Detection', link: '/developers/intro-outro-detection' },
+    { text: 'Subtitle Processing', link: '/developers/subtitle-processing' },
+    { text: 'Theme Media', link: '/developers/theme-media' },
+    { text: 'Trailers & Extras', link: '/developers/trailers-and-extras' },
+    { text: 'Smart Playlists', link: '/developers/smart-playlists' },
+    { text: 'Collections', link: '/developers/collections' },
+    { text: 'Discovery', link: '/developers/discovery' },
+    { text: 'UI Themes', link: '/developers/ui-themes' },
+    { text: 'Hardware Acceleration', link: '/developers/hardware-acceleration' },
+  ]
+}
+
 export default defineConfig({
   title: 'Phlix',
   description: 'Phlix Media Server documentation — end-user, developer, and hub-admin guides',
@@ -18,13 +55,14 @@ export default defineConfig({
       { text: 'FAQ', link: '/faq' },
       { text: 'Get Started', link: '/first-run' },
       { text: 'Libraries', link: '/libraries/overview' },
+      { text: 'Player', link: '/player/chapters' },
       { text: 'Clients', link: '/clients/overview' },
       { text: 'Advanced', link: '/advanced/hardware-transcoding' },
       { text: 'Developers', link: '/dev/architecture-server' },
       { text: 'Reference', link: '/reference' },
       { text: 'Integrations', link: '/integrations/lastfm' },
       { text: 'Security', link: '/security/passkeys' },
-      { text: 'Admin', link: '/admin/webhooks' },
+      { text: 'Admin', link: '/admin/dashboard' },
       { text: 'Hub Admin', link: '/hub-admin/overview' },
     ],
     sidebar: {
@@ -176,19 +214,22 @@ export default defineConfig({
       '/admin/': [
         {
           text: 'Server Admin',
+          // Day-one admin surfaces first (dashboard, settings, users, libraries);
+          // the power-feature pages (webhooks, stats) sit at the end so the tree
+          // opens where an admin actually starts.
           items: [
+            { text: 'Dashboard', link: '/admin/dashboard' },
+            { text: 'Server Settings', link: '/admin/server-settings' },
+            { text: 'User Management', link: '/admin/user-management' },
+            { text: 'Library Management', link: '/admin/library-management' },
+            { text: 'Services', link: '/admin/services' },
+            { text: 'Integrations', link: '/admin/integrations' },
+            { text: 'Remote Access (port forwarding)', link: '/admin/remote-access' },
+            { text: 'DLNA Server', link: '/admin/dlna-server' },
+            { text: 'Live TV', link: '/admin/live-tv' },
+            { text: 'Backup', link: '/admin/backup' },
             { text: 'Webhooks', link: '/admin/webhooks' },
             { text: 'Stats', link: '/admin/stats' },
-            { text: 'Dashboard', link: '/admin/dashboard' },
-            { text: 'Backup', link: '/admin/backup' },
-            { text: 'Library Management', link: '/admin/library-management' },
-            { text: 'User Management', link: '/admin/user-management' },
-            { text: 'Server Settings', link: '/admin/server-settings' },
-            { text: 'Services', link: '/admin/services' },
-            { text: 'Remote Access (port forwarding)', link: '/admin/remote-access' },
-            { text: 'Live TV', link: '/admin/live-tv' },
-            { text: 'Integrations', link: '/admin/integrations' },
-            { text: 'DLNA Server', link: '/admin/dlna-server' },
           ]
         }
       ],
@@ -280,34 +321,13 @@ export default defineConfig({
             { text: 'Console Client Build', link: '/dev/client-console' },
           ]
         },
-        {
-          text: 'Streaming & Providers',
-          items: [
-            { text: 'Streaming Protocols', link: '/developers/streaming-protocols' },
-            { text: 'Stream Quality / ABR', link: '/developers/stream-quality-abr' },
-            { text: 'Music Providers', link: '/developers/music-providers' },
-            { text: 'IPTV', link: '/developers/iptv' },
-            { text: 'HDHomeRun', link: '/developers/hdhomerun' },
-            { text: 'DVB-T', link: '/developers/dvbt' },
-            { text: 'DVR', link: '/developers/dvr' },
-            { text: 'Schedules Direct', link: '/developers/schedules-direct' },
-            { text: 'Live Relay', link: '/developers/live-relay' },
-            { text: 'Media Index API', link: '/developers/media-index-api' },
-            { text: 'Comskip / Live', link: '/developers/comskip-live' },
-            { text: 'Chromaprint', link: '/developers/chromaprint' },
-            { text: 'Scrobbler Plugins', link: '/developers/scrobbler-plugins' },
-            { text: 'Last.fm Plugin', link: '/developers/lastfm-plugin' },
-            { text: 'Intro/Outro Detection', link: '/developers/intro-outro-detection' },
-            { text: 'Subtitle Processing', link: '/developers/subtitle-processing' },
-            { text: 'Theme Media', link: '/developers/theme-media' },
-            { text: 'Trailers & Extras', link: '/developers/trailers-and-extras' },
-            { text: 'Smart Playlists', link: '/developers/smart-playlists' },
-            { text: 'Collections', link: '/developers/collections' },
-            { text: 'Discovery', link: '/developers/discovery' },
-            { text: 'UI Themes', link: '/developers/ui-themes' },
-            { text: 'Hardware Acceleration', link: '/developers/hardware-acceleration' },
-          ]
-        }
+        streamingProvidersGroup
+      ],
+      // Same tree for the /developers/* pages themselves (see the const
+      // docblock): landing link on top, then the full sibling group.
+      '/developers/': [
+        { text: 'Developer Docs', link: '/developers' },
+        streamingProvidersGroup
       ],
       '/hub-admin/': [
         {
@@ -361,6 +381,7 @@ export default defineConfig({
         {
           text: 'Security',
           items: [
+            { text: 'Vulnerability Disclosure', link: '/security/vulnerability-disclosure' },
             { text: 'Passkeys', link: '/security/passkeys' },
             { text: 'SSO (OIDC, LDAP & GitHub)', link: '/security/sso-oidc-ldap' },
             { text: 'Signed Media URLs', link: '/security/signed-media-urls' },

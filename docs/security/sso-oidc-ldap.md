@@ -186,6 +186,16 @@ and link GitHub through `GET /auth/identities/link/github`.
 | `user_filter` | no | `(uid={{username}})` | `{{username}}` is substituted with the submitted username. For Active Directory use e.g. `(sAMAccountName={{username}})`. |
 | `admin_group` | no | — | Members of this group DN are granted admin. |
 
+::: danger The defaults do not guarantee encryption
+`ssl=false` with `port=389` connects in StartTLS mode: the session is only
+encrypted **if** the LDAP server accepts the upgrade — an on-path attacker who
+suppresses the upgrade sees the service `bind_dn` / `bind_pw` and every user
+password in cleartext. Set `ssl=true` with `port=636` (LDAPS: TLS from the
+first byte) unless LDAP traffic genuinely never leaves a network you control
+end-to-end. The `ssl` flag is honored by the connector (`src/Plugins/Ldap/LdapConnection.php`
+opens one connection per host/port/mode with `use_ssl` set from it).
+:::
+
 The LDAP form also has a **Test connection** button
 (`POST /api/v1/admin/auth-providers/ldap/test`) that dry-runs a bind with the
 current form values before you save.

@@ -15,6 +15,9 @@ hero:
     - theme: alt
       text: Developer Docs
       link: /dev/architecture-server
+    - theme: alt
+      text: Plain-English Glossary
+      link: /glossary
 
 features:
   - icon: 🐧
@@ -53,3 +56,17 @@ features:
     link: /hub-admin/overview
     linkText: Hub admin docs
 ---
+
+## What these docs cover
+
+These pages describe the **current** Phlix estate: `phlix-server` (the media
+server), `phlix-hub` (the optional hub and relay service), the `phlix-ui` web
+portal, and the shared contract packages (`phlix-shared`, `@phlix/contracts`).
+The estate moves continuously, so the docs carry their own currency markers:
+feature pages open with a **Since:** stamp, and every page shows a
+**Last updated** date drawn from the source file's git history. If a page's
+stamp predates a feature you're looking for in the project changelogs
+([phlix-server](https://github.com/detain/phlix-server),
+[phlix-hub](https://github.com/detain/phlix-hub)), trust the changelog and
+[nudge us](https://github.com/detain/phlix-docs/issues) — or read
+[Contributing](/dev/contributing) and fix it yourself.

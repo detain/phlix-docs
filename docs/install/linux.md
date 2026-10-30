@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide installs it on Linux (Ubuntu 22.04+, Debian 12+, or Fedora 40+) in roughly 15 minutes using system packages, Composer, and systemd.
+phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Vue `/app` web portal. This guide installs it on Linux (Ubuntu 22.04+, Debian 12+, or Fedora 40+) in roughly 15 minutes using system packages, Composer, and systemd.
 
 **Minimum requirements:** 2 CPU / 4 GB RAM. A non-root sudo user is recommended.
 

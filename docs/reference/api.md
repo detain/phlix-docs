@@ -4,7 +4,7 @@
 
 ## Overview
 
-Phlix exposes a REST API at `/api/v1/` returning JSON. Authentication uses JWT Bearer tokens (except on `/api/v1/auth/*` endpoints, which are unauthenticated).
+Phlix exposes a REST API at `/api/v1/` returning JSON. Authentication uses JWT Bearer tokens. Most `/api/v1/auth/*` sign-in endpoints (register/login/refresh and the provider authorize/callback flows) are public — but not all of them: the account-linking routes (`/api/v1/auth/identities*`) **require** a Bearer JWT (see [SSO, OIDC & LDAP](/security/sso-oidc-ldap)). Check each operation's auth note below.
 
 Machine-readable **OpenAPI specs exist and are kept current**:
 
@@ -15,6 +15,31 @@ Machine-readable **OpenAPI specs exist and are kept current**:
 
 This hand-maintained page remains the *narrative* reference (behavior notes,
 rate-limit semantics, gotchas) alongside those specs.
+
+## SyncPlay WebSocket Authentication
+
+Watch-group (SyncPlay) clients keep a live WebSocket to the server's dedicated
+`:8097` worker. That connection must be authenticated **in the HTTP upgrade
+handshake**, before any frames flow:
+
+- **Preferred:** offer the bearer subprotocol — send
+  `Sec-WebSocket-Protocol: bearer, <jwt>` with a valid access JWT (the same
+  token the REST API accepts). Browsers cannot set `Authorization` on a
+  WebSocket upgrade, so the subprotocol carries the credential. On success the
+  server echoes `Sec-WebSocket-Protocol: bearer` on the `101` response.
+- **Legacy (transitional):** `ws://<host>:8097/?token=<jwt>` is still accepted
+  while older clients retire. A client that offers **both** carriers with
+  *different* tokens is rejected pre-`101` — half-migrated clients fail loudly
+  rather than authenticating on the wrong credential.
+- A missing, invalid, or expired token rejects the handshake (the connection
+  is closed before it is established). Anonymous connections are only allowed
+  when the server runs without an auth secret (development).
+- Connection attempts are rate-limited by IP — `RATE_LIMIT_WS_CONNECT_MAX` /
+  `_WINDOW` defaults, see [Environment variables](/reference/env-vars#auth-rate-limiting-sv-4-15).
+
+The authoritative frame-level protocol (join/sync commands, group state) lives
+in the `phlix-syncplay` repo's `SPEC.md`; this section covers only how the
+socket authenticates.
 
 ## Auth Endpoints
 
@@ -31,6 +56,13 @@ rate-limit semantics, gotchas) alongside those specs.
 
 Register a new user account.
 
+**Signup mode matters:** the shipped default of `auth.signup_mode` is `approval`,
+so unless an admin has switched it to `open`, a new registration is created
+**pending** and receives **no tokens** — it cannot log in until an administrator
+approves it. (The first account ever created is always activated immediately as
+admin, regardless of mode, so a fresh install can bootstrap — see
+[User Management](/admin/user-management).)
+
 **Request body:**
 ```json
 {
@@ -40,7 +72,7 @@ Register a new user account.
 }
 ```
 
-**Response 201:**
+**Response 201** (only when the account is created active — `open` mode, or the first user):
 ```json
 {
   "user": {
@@ -53,7 +85,18 @@ Register a new user account.
 }
 ```
 
+**Response 202** (default `approval` mode — account created pending, no tokens issued):
+```json
+{
+  "status": "pending",
+  "message": "Your account is awaiting administrator approval.",
+  "user": null
+}
+```
+
 **Response 422:** Validation error (missing fields, weak password, email already in use)
+
+**Response 403:** Registration is disabled (`auth.signup_mode=disabled`).
 
 ---
 

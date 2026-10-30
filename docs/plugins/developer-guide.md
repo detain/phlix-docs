@@ -6,11 +6,10 @@ working plugin: pick a type, declare the manifest, implement the
 lifecycle contract, subscribe to events, package, sign (optional),
 publish, and install through the admin UI.
 
-Phase A of `PHLIX_EXPANSION_PLAN.md` (internal planning doc)
-delivers the **loader, manifest, lifecycle, signature, admin UI, and
-reference plugin**. Everything documented here works today (as of the
-Phase A.7 release); sections that anticipate later phases are flagged
-explicitly.
+The plugin system — loader, manifest validation, lifecycle, signature
+checks, admin UI, and a reference plugin — is fully shipped.
+Everything documented here works today; sections that anticipate later
+work are flagged explicitly.
 
 ## Table of contents
 
@@ -126,8 +125,8 @@ and the human-readable field-by-field reference is in
 
 ### Canonical example
 
-This is the example from `PHLIX_EXPANSION_PLAN.md` §5 — the
-authoritative shape of a plugin manifest:
+This is the authoritative manifest shape — it mirrors the machine-readable
+schema (`schemas/manifest.schema.json` in the `phlix-shared` package):
 
 ```json
 {

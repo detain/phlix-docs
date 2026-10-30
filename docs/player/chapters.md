@@ -5,8 +5,6 @@ description: Video chapter extraction, trickplay generation, chapter markers, an
 
 # Player Chapters
 
-**Phase:** P2-S6
-
 Phlix supports video chapters, trickplay thumbnails, chapter markers in the player timeline, and skip intro/outro functionality.
 
 ## Chapter Extraction

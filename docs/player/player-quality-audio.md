@@ -5,8 +5,6 @@ description: Quality selection, audio tracks, subtitles, and Picture-in-Picture 
 
 # Player Quality & Audio
 
-**Phase:** P3B-S8
-
 Phlix supports flexible quality selection, multi-audio tracks, subtitle selection, and Picture-in-Picture (PiP) playback.
 
 ## Quality Selector

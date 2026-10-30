@@ -12,6 +12,7 @@ export default defineConfig({
   base: '/phlix-docs/',
   head: [['link', { rel: 'icon', type: 'image/svg+xml', href: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><text y=%2224%22 font-size=%2224%22>📺</text></svg>' }]],
   themeConfig: {
+    lastUpdated: true,
     nav: [
       { text: 'Install', link: '/install/linux' },
       { text: 'FAQ', link: '/faq' },

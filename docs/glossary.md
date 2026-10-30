@@ -8,9 +8,18 @@ description: Plain-English meanings of the technical words Phlix docs use
 Everyday meanings for the jargon this documentation uses. Each entry is one plain
 sentence; linked pages tell the full story.
 
+**ABR (adaptive bitrate)** — the player automatically stepping video quality up or down
+to match your connection, so a stream keeps playing instead of buffering when the line
+gets busy.
+See [Stream quality / ABR](developers/stream-quality-abr.md).
+
 **Bearer (token)** — "whoever *bears* this string gets in": the way Phlix apps attach
 their login token to each request, like showing a wristband instead of an ID.
 See **Token** below.
+
+**EAC3 (Enhanced AC-3)** — a surround-sound audio format (the "E" version of Dolby
+Digital). You'll see it in client codec lists; a TV or speaker that can't decode it
+needs the server to transcode the audio.
 
 **Federation** — hubs talking to *other hubs*, with cryptographic handshakes, so a
 person on one hub's address book can reach servers shared from another. Advanced; a hub
@@ -34,6 +43,11 @@ the drive, Phlix can't watch it.
 public IP. Its side effect: computers on the internet can't simply knock on your
 server's door — which is exactly the problem the Hub's relay was built to avoid.
 See [Remote access](hub/remote-access.md).
+
+**OPDS** — Open Publication Distribution System: a standard "catalog feed" format that
+ebook readers (Ubooquity, KyBook and friends) use to browse and download books over the
+internet. Phlix's book library serves its shelves as an OPDS 1.2 feed.
+See [Books](libraries/books.md#opds-feed-url).
 
 **Relay** — the Hub's long-lived connection trick: your server dials *out* to the hub
 and keeps the line open, and remote browsing flows back over that already-open line.

@@ -131,3 +131,4 @@ Sync playback is not the same as video delivery: buffering is about the media st
 - [Web client](../clients/web.md) · [Mobile app](../clients/mobile.md) · [Roku channel](../clients/roku.md)
 - [Relay Protocol](/dev/relay-protocol) — Technical details on the relay infrastructure
 - [Pairing Protocol](/dev/pairing-protocol) — How clients authenticate with the server
+- [API Reference — SyncPlay WebSocket Authentication](/reference/api#syncplay-websocket-authentication) — how a device proves its login when opening the `:8097` sync connection

@@ -132,6 +132,9 @@ Clients connect to `http://<server-public-ip>:<port>` directly.
 
 ## See Also
 
-- `docs/hub/remote-access.md` — End-user guide for setting up direct access
-- `docs/dev/relay-protocol.md` — Relay tunnel protocol reference
-- `php scripts/port-forward.php help` — Port forwarding CLI commands
+- [Remote Access via the Hub](/hub/remote-access) — end-user guide for remote access through the hub
+- [Remote Access Without the Hub](/advanced/remote-access-without-hub) — UPnP, manual mapping, and verification
+- [Relay Protocol](/dev/relay-protocol) — relay tunnel protocol reference
+- Port-mapping CLI: `php scripts/port-forward.php help` (lives in the
+  `phlix-server` repo) lists the mapping commands, including the `status`
+  command used above.

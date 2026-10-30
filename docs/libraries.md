@@ -5,8 +5,6 @@ description: Rating system, fuzzy matching, smart collections, and multi-languag
 
 # Library Metadata & Ratings
 
-**Phase:** P1-S9
-
 Phlix implements a comprehensive rating and metadata system that supports numerical ratings, smart collection rules, fuzzy title matching, and multi-language metadata fallback.
 
 ## Numerical Ratings

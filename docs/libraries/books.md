@@ -2,7 +2,7 @@
 
 **Since:** 0.17.0
 
-The books library provides support for electronic book formats (EPUB, PDF, CBZ) with OPDS 1.2 feed generation for third-party client compatibility.
+The books library provides support for electronic book formats (EPUB, PDF, CBZ) with OPDS (Open Publication Distribution System — a standard catalog feed format for ebooks) 1.2 feed generation for third-party client compatibility.
 
 ::: danger A book scan extracts NO metadata from the book file
 Scanning a book library indexes files and nothing more. `LibraryManager::scanLibrary()`
@@ -68,7 +68,7 @@ runs — so the OPDS feed carries no ISBN, and `GET /api/v1/books/{id}/cover` ta
 
 The OPDS feed is available at `/opds/v1.2`. This follows the OPDS 1.2 specification and is compatible with:
 
-- **Uboiquity** (macOS/Windows/Linux)
+- **Ubooquity** (macOS/Windows/Linux)
 - **Komga** (self-hosted)
 - **Kore** (Android)
 - **Moon+ Reader** (Android)
@@ -239,7 +239,7 @@ The built-in reader stub at `/books/{id}/read` provides:
 
 ## Third-Party OPDS Client Setup
 
-### Uboiquity (Recommended for desktop)
+### Ubooquity (Recommended for desktop)
 1. File → Add Catalog
 2. Enter OPDS feed URL: `http://your-server:8080/opds/v1.2`
 3. Browse and download books

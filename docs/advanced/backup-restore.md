@@ -112,12 +112,30 @@ credentials, retention).
 
 ### 2.3 Automated (Cron / systemd timer)
 
-If you prefer OS-level scheduling over the built-in interval, run the manual
-backup from cron:
+If you prefer OS-level scheduling over the built-in interval, the safest cron
+line is the built-in command itself — it reads credentials from the server
+config, never a command line:
 
 ```bash
 # /etc/cron.d/phlix-backup — daily at 03:00
-0 3 * * * root /usr/bin/mysqldump --single-transaction -u phlix -pYOURPASS phlix \
+0 3 * * * root /usr/bin/php /path/to/phlix/bin/phlix backup:create --label="cron"
+```
+
+If you script `mysqldump` directly instead, never put the password in the cron
+file: `/etc/cron.d/*` entries are world-readable, and a password passed on the
+command line (`-pYOURPASS`) is additionally visible in every process listing.
+Keep it in a root-only option file and hand `mysqldump` that file:
+
+```bash
+# /root/phlix-backup.cnf — chmod 600, owned by root
+[mysqldump]
+user=phlix
+password=YOURPASS
+```
+
+```bash
+# /etc/cron.d/phlix-backup — daily at 03:00
+0 3 * * * root umask 077 && /usr/bin/mysqldump --single-transaction --defaults-extra-file=/root/phlix-backup.cnf phlix \
   > /backups/phlix-db-$(date +\%Y\%m\%d).sql && \
   /usr/bin/tar czf /backups/phlix-$(date +\%Y\%m\%d).tar.gz \
   -C /path/to/phlix config/ data/metadata/ data/plugins/ \
@@ -125,7 +143,7 @@ backup from cron:
   /usr/bin/find /backups -name 'phlix-*' -mtime +7 -delete
 ```
 
-This creates a daily backup and removes backups older than 7 days. Adjust `-mtime +7` to retain more or fewer days.
+This creates a daily backup and removes backups older than 7 days. Adjust `-mtime +7` to retain more or fewer days. (The [Hub backup guide](../hub-admin/backup-restore.md) uses the same `chmod 600` option-file idiom.)
 
 For systemd instead of cron:
 

@@ -155,7 +155,7 @@ PHLIX_ENV=production
 EOF
 # The heredoc is quoted, so expand the secret here instead:
 sudo sed -i "s|^JWT_SECRET=$|JWT_SECRET=$(openssl rand -hex 32)|" /etc/phlix/env
-sudo chmod 640 /etc/phlix/env
+sudo chmod 600 /etc/phlix/env
 sudo chown root:phlix /etc/phlix/env
 ```
 

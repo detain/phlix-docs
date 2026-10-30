@@ -79,10 +79,15 @@ compiled-container cache; the compiled definitions land in
 `config/server.php`). Compilation is disabled in development so new bindings
 take effect without a manual cache clear.
 
-> **Caveat:** PHP-DI 7's compiler rejects closures that capture variables via
-> `use`. The current providers rely on closures for the DB / logger
-> factories; Phase B replaces them with invokable classes so the cache works
-> end-to-end. Until then, leave `PHLIX_CONTAINER_COMPILE` unset.
+> **Caveat:** PHP-DI 7's compiler rejects definitions that capture variables via
+> `use`. The shipped provider set still contains such bindings — e.g. the JWT
+> factory in `Phlix\Common\Container\Providers\AuthServicesProvider`
+> (`use ($jwtSecret, $jwtAlgorithm)`) and one wiring closure in
+> `Phlix\Common\Container\Providers\TranscodeServicesProvider` — so the
+> compiled cache cannot be built end-to-end from today's definitions (the
+> limitation is acknowledged in `tests/Unit/Common/Container/ContainerFactoryTest`).
+> Until those closures are replaced with invokable classes, leave
+> `PHLIX_CONTAINER_COMPILE` unset.
 
 ## Request lifecycle
 

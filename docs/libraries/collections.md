@@ -72,6 +72,6 @@ Anything you create today is private to your account.
 
 ## Related pages
 
-- [Adding people to your household](../advanced/adding-people.md) — profiles and who sees what
+- [Adding people to your household](../adding-people.md) — profiles and who sees what
 - [Sharing a library with friends](../hub/share-with-friends.md) — giving access to whole libraries
 - [Watch Together (SyncPlay)](../advanced/syncplay.md) — watching the same thing at the same time

@@ -7,7 +7,7 @@ live in different places. This page tells you which one you want and how to do i
 |---|---|---|
 | Give someone on your couch their own shelf, watch list and limits | a **profile** (inside your account) | **Profiles** page (`/app/profiles`) |
 | Give someone their own login, from their own device | a **user account** | the sign-up page, or **Admin → Users** |
-| Let a friend use your server from far away without touching your library | a **Hub invite link** | the Hub — see [Invite links](../hub/invite-links.md) |
+| Let a friend use your server from far away without touching your library | a **Hub invite link** | the Hub — see [Invite links](hub/invite-links.md) |
 
 ## Profiles: the couch-friendly way
 
@@ -30,7 +30,7 @@ What a profile has of its own:
 - **Optional bedtime windows, tag blocks, and stream limits** — on the Parental Controls
   page, whose tabs are *Schedules*, *Tags*, and *Stream Limits*. (It's currently a
   direct-URL page, not a menu item — the linked guide tells you how to open it.) See
-  [Parental & Session Controls](parental-controls.md).
+  [Parental & Session Controls](advanced/parental-controls.md).
 
 What a profile does **not** have: its own password. Profiles sit inside one account;
 anyone who can open the app can tap any profile. There is a PIN you can set per profile
@@ -64,7 +64,7 @@ Three doors exist:
    **admin** checkbox. Hand out admin only to people you'd hand your password to.
 3. **Via the Hub** — a friend who got a Hub invite link claims *their own* account on
    your server through the Hub flow; that's remote access, not household — see
-   [Invite links](../hub/invite-links.md).
+   [Invite links](hub/invite-links.md).
 
 Every account always has at least one profile — the server quietly creates a default one
 the first time an account needs a profile. More can be added per account on the Profiles
@@ -75,16 +75,16 @@ the content-rating selector and a *Set PIN* option for each.
 ## Who sees what afterwards
 
 - Every account — first or fiftieth — can see and browse the **same library** unless
-  you start using [sharing permissions](../hub/library-sharing.md) or
-  [rating caps](parental-controls.md). Phlix has no per-account library assignments.
+  you start using [sharing permissions](hub/library-sharing.md) or
+  [rating caps](advanced/parental-controls.md). Phlix has no per-account library assignments.
 - Playlists are per account, not per profile — see
-  [Playlists & Collections](../libraries/collections.md).
+  [Playlists & Collections](libraries/collections.md).
 - The dashboard's "who watches most" counts **accounts**, since activity is attributed
   to the logged-in user.
 
 ## Related pages
 
-- [Parental & Session Controls](parental-controls.md) — ratings, curfews, stream caps
-- [User Management](../admin/user-management.md) — the admin side of accounts
-- [Invite links](../hub/invite-links.md) — bringing in remote friends via the Hub
-- [Glossary](../glossary.md) — what "profile", "account", and "claim" mean here
+- [Parental & Session Controls](advanced/parental-controls.md) — ratings, curfews, stream caps
+- [User Management](admin/user-management.md) — the admin side of accounts
+- [Invite links](hub/invite-links.md) — bringing in remote friends via the Hub
+- [Glossary](glossary.md) — what "profile", "account", and "claim" mean here

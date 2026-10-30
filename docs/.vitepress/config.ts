@@ -43,8 +43,20 @@ export default defineConfig({
       ],
       '/first-run': [
         {
-          text: 'First Run',
-          link: '/first-run'
+          text: 'Getting Started',
+          items: [
+            { text: 'First Run', link: '/first-run' },
+            { text: 'Adding People to Your Household', link: '/adding-people' },
+          ]
+        }
+      ],
+      '/adding-people': [
+        {
+          text: 'Getting Started',
+          items: [
+            { text: 'First Run', link: '/first-run' },
+            { text: 'Adding People to Your Household', link: '/adding-people' },
+          ]
         }
       ],
       // Section landing pages. These live at /<section> (no trailing slash), so
@@ -149,7 +161,6 @@ export default defineConfig({
             { text: 'ARR Integration', link: '/advanced/arr-integration' },
             { text: 'Player Experience', link: '/advanced/player-experience' },
             { text: 'Recommendations & Discovery', link: '/advanced/recommendations' },
-            { text: 'Adding People to Your Household', link: '/advanced/adding-people' },
             { text: 'Parental & Session Controls', link: '/advanced/parental-controls' },
             { text: 'Music & Audio', link: '/advanced/music-audio' },
             { text: 'Watch Together (SyncPlay)', link: '/advanced/syncplay' },

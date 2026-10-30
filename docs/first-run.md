@@ -42,7 +42,7 @@ Press the sign-up link and fill in:
 - **Password** — at least 8 characters.
 
 Normally sign-ups on a Phlix server wait for admin approval (the default
-signup mode — see [Adding people](advanced/adding-people.md)). The **first account ever**
+signup mode — see [Adding people](adding-people.md)). The **first account ever**
 is the bootstrap exception: it's created active *and* as an administrator, immediately,
 on any fresh server. No email verification is involved — the "email" is just a label and
 a login handle; Phlix doesn't send mail.
@@ -78,7 +78,7 @@ looks off, your device may have needed the server to convert the video on the fl
 ## Good next steps
 
 - **Add the rest of the household** — profiles vs. real accounts:
-  [Adding People to Your Household](advanced/adding-people.md).
+  [Adding People to Your Household](adding-people.md).
 - **Cast to your TV** — DLNA is shipped **off**; flip it on under **Admin → DLNA**
   (page has a Start/Stop control) and compatible TVs will find the server on the LAN.
 - **Watch from outside the house** — claim the server on a Hub:
@@ -106,6 +106,6 @@ Run these from the Phlix server's own install directory. See
 ## Related pages
 
 - [Libraries overview](libraries/overview.md)
-- [Adding people](advanced/adding-people.md)
+- [Adding people](adding-people.md)
 - [Glossary](glossary.md)
 - [Troubleshooting](troubleshooting.md)

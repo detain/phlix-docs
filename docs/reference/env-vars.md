@@ -8,7 +8,7 @@ that consumes it.
 
 | Variable                   | Default | Description |
 | -------------------------- | ------- | ----------- |
-| `PHLIX_CONTAINER_COMPILE`  | _unset_ | When truthy (`1`, `true`, `yes`, `on`) enables PHP-DI's compiled-container cache in `var/cache/container/`. Disabled by default for dev parity. See `Phlix\Common\Container\ContainerFactory`. |
+| `PHLIX_CONTAINER_COMPILE`  | _unset_ | Mechanically, truthy (`1`, `true`, `yes`, `on`) enables PHP-DI's compiled-container cache in `var/cache/container/` (`Phlix\Common\Container\ContainerFactory`). **Do not set:** the shipped provider set still contains compiler-rejected `use`-capturing closures, so the compiled build cannot complete — leave unset until those bindings become invokable classes (see [Architecture → Compiled containers](/dev/architecture-server#compiled-containers-production)). |
 
 ## Events
 
@@ -145,7 +145,7 @@ These environment variables apply when running `phlix-hub` itself (not when the 
 
 | Variable                       | Default | Description                                                                                                                       |
 | ------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `PHLIX_HUB_CONTAINER_COMPILE`  | unset   | When truthy (`1`, `true`, `yes`, `on`), PHP-DI writes compiled definitions to `var/cache/container/` for faster cold-start. Off for dev. |
+| `PHLIX_HUB_CONTAINER_COMPILE`  | unset   | Mechanically, truthy (`1`, `true`, `yes`, `on`) makes PHP-DI write compiled definitions to `var/cache/container/`. **Do not set:** the hub's providers still contain compiler-rejected `use`-capturing closures (e.g. in `HubServicesProvider`), so the compiled build cannot complete — the same limitation as `PHLIX_CONTAINER_COMPILE` above. |
 
 ## Hub / Arr Integration
 

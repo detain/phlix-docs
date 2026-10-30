@@ -110,9 +110,12 @@ The compose example and the `.env` template it references are two different file
 mkdir -p ~/phlix && cd ~/phlix
 curl -O https://raw.githubusercontent.com/detain/phlix-server/master/docker/examples/server-only/docker-compose.yml
 curl -o .env https://raw.githubusercontent.com/detain/phlix-server/master/docker/examples/.env.example
+chmod 600 .env
 ```
 
-Then edit `.env` — four touches, and the fourth one is a trap worth naming:
+Then edit `.env` — four touches, and the fourth one is a trap worth naming. It will
+hold real credentials, so keep it at mode `600` and never commit it — if you version
+this deploy directory with git, add `.env` to `.gitignore` first:
 
 1. Replace the `MYSQL_ROOT_PASSWORD=…` line with a real value (`openssl rand -hex 16`).
 2. Replace the `PHLIX_DB_PASSWORD=…` line with a real value (`openssl rand -hex 16`).

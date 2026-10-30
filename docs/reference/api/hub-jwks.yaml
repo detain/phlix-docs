@@ -3,8 +3,7 @@ info:
   title: Phlix Hub JWKS API
   description: |
     JWKS endpoint exposing this server's Ed25519 public key(s) for
-    verification of server-signed JWTs by the hub. Introduced in
-    **Step C.2** of `PHLIX_EXPANSION_PLAN.md`.
+    verification of server-signed JWTs by the hub (Hub federation).
 
     This document is self-hosted at `/.well-known/jwks.json` rather
     than proxied through the hub. It is cacheable for up to 1 hour

@@ -208,7 +208,8 @@ available as a deprecated alias through 0.11.x. Each value also appears in:
 - `schemas/manifest.schema.json` in `detain/phlix-shared` (the `type` enum block).
 - `docs/plugins/manifest.md` (the field reference table).
 - `docs/plugins/developer-guide.md` §2 (the type matrix).
-- `PHLIX_EXPANSION_PLAN.md` §5 (the master plan).
+- `Phlix\Shared\Plugin\ManifestType` in `detain/phlix-shared`
+  (`src/Plugin/ManifestType.php` — the code enum itself).
 
 These five sites are kept manually in sync — there is no
 single-source codegen yet. **Adding a new type is therefore a
@@ -231,9 +232,9 @@ multi-file edit** and every site needs to be touched in the same PR.
 4. **Update the field tables** in `docs/plugins/manifest.md` and
    `docs/plugins/developer-guide.md` §2 (the matrix). Flag the
    implementation status honestly — "Loader yes; manager dispatch
-   wired in Phase X" beats over-claiming.
-5. **Update `PHLIX_EXPANSION_PLAN.md` §5** so the master plan and the
-   docs agree.
+   still to come" beats over-claiming.
+5. **Update `Phlix\Shared\Plugin\ManifestType`** in
+   `detain/phlix-shared` so the enum and the docs agree.
 6. **Add a fixture** under `tests/Fixtures/Plugins/valid-<type>.json`
    so the manifest validator tests cover the new type at least once.
 7. **Wire the dispatch path** in the relevant subsystem. The
@@ -402,8 +403,8 @@ Full twelve-event catalog → [`docs/dev/event-reference.md`](event-reference.md
 
 ## 4. `phlix-shared` migration
 
-Step B.3 of `PHLIX_EXPANSION_PLAN.md` extracted the **contracts** —
-the parts of the plugin system that plugin authors depend on — into
+The contracts extraction moved the **contracts** — the parts of the
+plugin system that plugin authors depend on — into
 the separate [`detain/phlix-shared`](https://github.com/detain/phlix-shared)
 Composer package. Plugins can now require:
 
@@ -696,5 +697,5 @@ composer install --no-dev --dry-run  # verify no conflicts
 - [`docs/dev/event-reference.md`](event-reference.md) — event catalog.
 - [`docs/dev/architecture-server.md`](architecture-server.md) —
   container, bootstrap, request lifecycle.
-- `PHLIX_EXPANSION_PLAN.md` §5, §10, and Phase B (internal planning doc) for the
-  long-term plan around contracts, signing, and the `phlix-shared` extraction.
+- [`docs/plugins/trusted-plugin-list.md`](../plugins/trusted-plugin-list.md) —
+  the shipped signing/allowlist trust model.

@@ -45,8 +45,10 @@ This file is the source of truth for the loader (A.4), the admin UI
 }
 ```
 
-This is the same example as `PHLIX_EXPANSION_PLAN.md` §5 — keep them in
-sync. The two `valid-*.json` fixtures under
+This example mirrors the JSON Schema
+(`schemas/manifest.schema.json` in
+[`detain/phlix-shared`](https://github.com/detain/phlix-shared)) and the
+`Phlix\Shared\Plugin\ManifestType` enum. The two `valid-*.json` fixtures under
 `tests/Fixtures/Plugins/` are minimal, working manifests you can copy
 to bootstrap a new plugin.
 
@@ -64,7 +66,7 @@ to bootstrap a new plugin.
 
 ### Plugin types (`type` enum)
 
-Mirrors `PHLIX_EXPANSION_PLAN.md` §5 and `Phlix\Shared\Plugin\ManifestType`:
+Mirrors `Phlix\Shared\Plugin\ManifestType` (from `detain/phlix-shared`):
 
 | Value | Purpose |
 | --- | --- |
@@ -100,14 +102,18 @@ via the admin UI. Each value is an object:
 | --- | --- | --- |
 | `type` | string | One of `string`, `int`, `bool`, `float`, `array`. Required. |
 | `required` | boolean | Whether the operator must set a value. Default `false`. |
-| `secret` | boolean | Hides the value in UI/logs and stores it encrypted. Default `false`. |
+| `secret` | boolean | Masks the value in admin-UI rendering and admin API responses (`SettingsMasker`). The stored value is **plaintext** in `plugins.settings_json` — at-rest encryption has not shipped; treat read access to that column as disclosure of the secret. Default `false`. |
 | `default` | any | Default value when the operator leaves the field blank. |
 
 #### `signature`
 
 Either `null` (unsigned plugin) or a string matching
-`^sha256:[0-9a-f]{64}$`. Signature *verification* lives in A.7; A.3
-only validates the format.
+`^sha256:[0-9a-f]{64}$`. The schema validates the format; verification
+at install time is implemented by `Phlix\Plugins\Signature\SignatureVerifier`
+(see [Trusted plugin signature allowlist](trusted-plugin-list.md) —
+note that with the digest embedded in the hashed file, signed
+installs cannot currently pass the content check, so `"signature":
+null` is the supported value).
 
 ## Parsing and validating in PHP
 
@@ -156,14 +162,16 @@ for top-level keys that the schema does not allow.
    # …or from a phlix-server install:
    npx ajv-cli validate -s vendor/detain/phlix-shared/schemas/manifest.schema.json -d plugin.json
    ```
-4. Commit the manifest alongside your PHP entry class. Wiring the
-   plugin into the runtime arrives in A.4.
+4. Commit the manifest alongside your PHP entry class. The server's
+   `PluginLoader` handles install staging, signature checking,
+   composer install, activation, and event dispatch — enabling the
+   plugin from the admin UI (or `plugin:enable`) is all that remains.
 
 ## See also
 
 - [`docs/plugins/developer-guide.md`](developer-guide.md) — top-level
-  plugin authoring guide (stub; expanded in A.7).
+  plugin authoring guide.
 - [`docs/dev/event-reference.md`](../dev/event-reference.md) — canonical
   alias → FQCN table for `events`.
-- `PHLIX_EXPANSION_PLAN.md` §5 (internal planning doc, not published here) — the
-  master plan that defines the manifest fields and the eleven types.
+- [`Phlix\Shared\Plugin\ManifestType`](https://github.com/detain/phlix-shared/blob/master/src/Plugin/ManifestType.php)
+  — the canonical `type` enum the table above mirrors.

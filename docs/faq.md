@@ -56,7 +56,7 @@ see [Moving a file](/admin/library-management#moving-a-file). See also
 Continue-watching tracks positions per user profile. Make sure:
 - You are logged into the same profile.
 - You have completed at least 90% of the previous session (the threshold for marking "watched").
-- The `session.log` shows a `PlaybackState` save — check `tail -f .logs/session.log` during playback.
+- Positions are persisted through the server's media pipeline — watch `tail -f .logs/app.log` during playback (the server writes every log channel there; there is no separate `session.log` file).
 
 If a resume position is wrong, seeking to the correct point and letting it play for a few seconds updates the record.
 
@@ -134,11 +134,11 @@ Phlix supports passkeys as a passwordless authentication method. See [/security/
 
 Every stream request is gated by a time-limited signed URL. The signing secret is derived from `JWT_SECRET` by default. Rotating it independently is possible — see [/security/signed-media-urls](/security/signed-media-urls).
 
-### I see failed login attempts in the AUTH log — is my server under attack?
+### I see failed login attempts in the logs — is my server under attack?
 
-Failed login attempts are normal. The AUTH log (`auth.log`) records every attempt. If you see a high volume of failures from the same IP, consider:
+Failed login attempts are normal on any internet-facing server. The server records each attempt through its audit logging, which lands in `.logs/app.log` (there is no separate `auth.log` file). If you see a high volume of failures from the same IP, consider:
 - Setting up a reverse proxy with fail2ban or similar rate limiting (see [/advanced/reverse-proxy](/advanced/reverse-proxy)).
-- Enabling `PHLIX_HUB_TLS_ENABLED=1` and using the Hub's tunnel instead of exposing port 8096 directly.
+- Pairing the server with a Hub and using the Hub's relay tunnel instead of exposing port 8096 directly (see [/admin/remote-access](/admin/remote-access)).
 - Using passkeys instead of passwords ([/security/passkeys](/security/passkeys)).
 
 ---

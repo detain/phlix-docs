@@ -241,10 +241,11 @@ PHLIX_LOG_LEVEL=debug php start.php start
 # Valid levels (least → most verbose): emergency, alert, critical, error, warning, notice, info, debug
 ```
 
-Debug output lands in `.logs/phlix.log`. Filter by channel:
+Debug output lands in `.logs/app.log` (every channel, info and above). Filter
+by channel — each line is prefixed with the Monolog channel name:
 
 ```bash
-tail -f .logs/phlix.log | grep -i "debug\|error"
+tail -f .logs/app.log | grep -i "debug\|error"
 ```
 
 ### 2. Xdebug
@@ -269,17 +270,17 @@ php -d xdebug.mode=debug -d xdebug.clientHost=localhost start.php start
 ### 3. Tail logs in real time
 
 ```bash
-# All errors
-tail -f .logs/phlix.log | grep -i error
+# All errors (dedicated error sink, every channel)
+tail -f .logs/error.log
 
-# Auth channel
-tail -f .logs/auth.log
+# Auth channel records (channel-prefixed lines inside app.log)
+tail -f .logs/app.log | grep -E 'auth\.(INFO|NOTICE|WARNING|ERROR)'
 
-# Transcode logs
-tail -f .logs/transcode/*.log
+# Transcode job logs (written next to each job's segment output)
+find /path/to/transcode-cache -name ffmpeg.log -newermt '-10 minutes' -exec tail -f {} +
 
 # Specific server
-tail -f .logs/phlix.log | grep "192.168.1.100"
+tail -f .logs/app.log | grep "192.168.1.100"
 ```
 
 ### 4. Verify phpstan on a single file

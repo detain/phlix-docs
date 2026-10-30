@@ -131,7 +131,7 @@ sudo -u phlix php bin/phlix library:list
 sudo -u phlix php bin/phlix library:scan {libraryId} --rescan
 
 # Watch the scan progress
-tail -f .logs/media.log
+tail -f .logs/app.log
 ```
 
 The equivalent from the admin UI is **Admin → Libraries → Rescan**, or
@@ -209,7 +209,7 @@ Phlix uses [Semantic Versioning](https://semver.org). Minor version bumps are ba
 
 After every major or minor upgrade, check:
 
-1. **Library item metadata** — If a metadata provider changed its response shape, previously matched **movie / TV** items may need re-matching. Queue a [forced metadata re-match](../admin/library-management#force-a-metadata-re-match) (`POST /api/v1/libraries/{id}/refresh-metadata`) and check the `media.log` for mismatches. A rescan will not do this — it does not revisit an already-indexed row. Photo, book and audiobook libraries are unaffected: they have no metadata-fetching provider, and the job skips their rows.
+1. **Library item metadata** — If a metadata provider changed its response shape, previously matched **movie / TV** items may need re-matching. Queue a [forced metadata re-match](../admin/library-management#force-a-metadata-re-match) (`POST /api/v1/libraries/{id}/refresh-metadata`) and check the media-channel records in `.logs/app.log` for mismatches. A rescan will not do this — it does not revisit an already-indexed row. Photo, book and audiobook libraries are unaffected: they have no metadata-fetching provider, and the job skips their rows.
 2. **FFmpeg version** — A newer FFmpeg may change default codec behaviour. If hardware-accelerated transcoding stopped working, verify encoder availability: `ffmpeg -hide_banner -encoders 2>&1 | grep nvenc`.
 3. **Config file keys** — New config keys are added in minor releases; old keys are never removed without a deprecation warning in the release notes. Check `config/*.php` against the release's default templates.
 4. **Plugin compatibility** — If you run plugins from the catalog, check the plugin catalog for version requirements before upgrading.

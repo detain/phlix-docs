@@ -413,7 +413,7 @@ grep "550e8400-e29b-41d4-a716-446655440000" .logs/hub.log | grep relay
 **Diagnosis:**
 ```bash
 # Server-side HubClient logs for claim initiation:
-grep "claim\|pairing" .logs/phlix.log | tail -20
+grep "claim\|pairing" .logs/hub.log | tail -20
 
 # On the hub, check claim code status:
 mysql -h hub-db -u phlix_hub -p phlix_hub \
@@ -441,7 +441,7 @@ mysql -h hub-db -u phlix_hub -p phlix_hub \
       FROM servers WHERE server_name = 'Alice NAS';"
 
 # On the server, check heartbeat loop logs:
-grep "heartbeat" .logs/phlix.log | tail -50
+grep "heartbeat" .logs/hub.log | tail -50
 
 # Check if the enrollment JWT has expired (7-day TTL):
 cat config/hub-enrollment.json | grep enrolled_at
@@ -475,7 +475,7 @@ mysql -h hub-db -u phlix_hub -p phlix_hub \
 grep "relay.*hello\|relay.*close\|relay.*drop\|relay.*error" .logs/hub.log | tail -30
 
 # On the server, check outbound WS connection to hub:
-grep -i "relay\|wss\|hub.*connect" .logs/phlix.log | tail -20
+grep -i "relay\|wss\|connect" .logs/relay.log | tail -20
 
 # Check if outbound port 8800 is blocked (NAT/firewall):
 ss -tnp | grep ":8800"

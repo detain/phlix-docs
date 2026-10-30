@@ -9,39 +9,39 @@ description: Where the logs live and how to work through common server, playback
 
 ## TL;DR
 
-Phlix writes logs to `.logs/`. Most failures trace to file permissions, misconfigured settings, or a missing binary. Start every debugging session with `tail -f .logs/phlix.log` to see what is happening in real time. If playback fails, check that FFmpeg is installed and your GPU encoders are accessible. If the Hub won't connect, verify the JWKS URL is reachable and that your server can make outbound HTTPS connections.
+Phlix writes logs to `.logs/`. Most failures trace to file permissions, misconfigured settings, or a missing binary. Start every debugging session with `tail -f .logs/app.log` to see what is happening in real time — the server funnels every log channel there. If playback fails, check that FFmpeg is installed and your GPU encoders are accessible. If the Hub won't connect, verify the JWKS URL is reachable and that your server can make outbound HTTPS connections.
 
 ## Shell Blocks
 
 ### Log locations
 
 ```text
-.logs/                           # Rotating application logs per channel
-.logs/auth.log                  # AUTH channel — login attempts, token issues
-.logs/http.log                  # HTTP channel — API requests, response codes
-.logs/websocket.log             # WEBSOCKET channel — real-time connections
-.logs/media.log                 # MEDIA channel — library scanner, metadata
-.logs/session.log               # SESSION channel — playback sessions
-.logs/streaming.log            # STREAMING channel — HLS segment writes
-.logs/transcode/                # Per-job FFmpeg transcode logs (one file per job)
-workerman.log                   # Workerman worker stdout (same dir as start command)
+.logs/                           # Rotating application logs (Monolog, size-bounded)
+.logs/app.log                    # ALL channels, info and above — the general log
+.logs/error.log                  # ALL channels, error and above — start here for failures
+.logs/events.log                 # EVENTS channel only (audited events; env-gated)
+.logs/plugins.log                # PLUGINS channel — plugin lifecycle
+workerman.log                    # Workerman worker stdout (same dir as start command)
 ```
+
+There is deliberately one file per *sink*, not one per *channel*: auth, session,
+HTTP, websocket, media and streaming records all land in `app.log` (and, for
+errors, `error.log`). Transcode jobs additionally write an `ffmpeg.log` next to
+their segment output directory.
 
 ### Log tailing commands
 
 ```bash
-tail -f .logs/phlix.log               # All channels combined
-tail -f .logs/auth.log                # AUTH channel only
-tail -f .logs/http.log                # HTTP channel only
-tail -f .logs/websocket.log           # WEBSOCKET channel only
-grep -i error .logs/phlix.log | tail -50   # Last 50 errors across all channels
-tail -f .logs/auth.log                # Channel-specific tail (one file per channel)
+tail -f .logs/app.log                 # Everything, info and above
+tail -f .logs/error.log               # Failures only
+grep -i '"channel":"auth"' .logs/app.log | tail -50   # Recent auth records
+tail -f .logs/plugins.log             # Plugin lifecycle only
 ```
 
 ### Server status checks
 
 ```bash
-curl -s http://localhost:8096/api/v1/system/status  # Is server responding?
+curl -s http://localhost:8096/health  # Is server responding? (status, timestamp, version)
 systemctl status phlix-server                              # systemd service status (Linux)
 ps aux | grep -E 'phlix|workerman' | grep -v grep   # Running processes
 lsof -i :8096                                       # Is port 8096 bound?
@@ -147,7 +147,7 @@ chown -R phlix:phlix /path/to/media
 
 **Cause 2 — File naming not recognized:** The filename does not match the `(Year)` or `S01E02` patterns the scanner expects.
 
-**Fix:** Rename files to match the conventions in [Movies library](libraries/movies.md) or [TV library](libraries/tv-shows.md). Check `.logs/media.log` for "unrecognized file" entries.
+**Fix:** Rename files to match the conventions in [Movies library](libraries/movies.md) or [TV library](libraries/tv-shows.md). Check `.logs/app.log` for "unrecognized file" entries (the scanner logs on the media channel).
 
 **Cause 3 — Database locked:** MySQL/MariaDB lock contention, or a stale SQLite lock on `data/phlix.db`.
 
@@ -252,7 +252,7 @@ PHLIX_LOG_LEVEL=debug php start.php start
 Valid levels (in order of verbosity): `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`. Restart the server for the change to take effect.
 
 **Q: My media is not being found after adding new files. What do I do?**
-A: (1) Check that the media directory has correct permissions (`chmod -R 755 /path/to/media`). (2) Trigger a manual rescan from the web UI (Library → Scan) or check `.logs/media.log` for scanner activity. (3) Verify your file naming matches the conventions in [Movies library](libraries/movies.md) or [TV library](libraries/tv-shows.md). If the scanner logs show "unrecognized file", rename the file to match the expected pattern.
+A: (1) Check that the media directory has correct permissions (`chmod -R 755 /path/to/media`). (2) Trigger a manual rescan from the web UI (Library → Scan) or check `.logs/app.log` for scanner activity. (3) Verify your file naming matches the conventions in [Movies library](libraries/movies.md) or [TV library](libraries/tv-shows.md). If the scanner logs show "unrecognized file", rename the file to match the expected pattern.
 
 **Q: Where are the Workerman/FFmpeg logs?**
-A: Workerman stdout is written to `workerman.log` in the directory where you ran `php start.php start`. FFmpeg transcode logs are in `.logs/transcode/`, one file per job. Phlix application logs are in `.logs/` split by channel (AUTH, HTTP, WEBSOCKET, MEDIA, SESSION, STREAMING).
+A: Workerman stdout is written to `workerman.log` in the directory where you ran `php start.php start`. Each transcode job writes an `ffmpeg.log` next to its segment output directory. Phlix application logs are in `.logs/` split by sink — `app.log` carries every channel (auth, HTTP, websocket, media, session, streaming) at info and above, and `error.log` carries errors from all of them.

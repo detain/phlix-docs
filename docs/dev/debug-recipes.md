@@ -2,7 +2,7 @@
 
 **Since:** 0.18.0
 
-Common debugging scenarios and the commands to diagnose them. Start with `tail -f .logs/phlix.log` in most cases.
+Common debugging scenarios and the commands to diagnose them. Start with `tail -f .logs/app.log` in most cases — it carries every log channel (the channel name prefixes each line); errors also aggregate into `.logs/error.log`.
 
 ---
 
@@ -10,14 +10,16 @@ Common debugging scenarios and the commands to diagnose them. Start with `tail -
 
 ### 1. Check the transcode log
 
-Every transcode job writes a log to `.logs/transcode/<job-id>.log`. Find the job ID from `media.log` or `streaming.log`:
+Every transcode job writes an `ffmpeg.log` next to its segment output
+directory (inside the transcode cache). Find the job ID from the media and
+streaming channel records in `app.log`:
 
 ```bash
-# Watch media channel for transcode job IDs
-tail -f .logs/media.log | grep -i "transcode\|job"
+# Watch the media/transcoding channels for job IDs
+tail -f .logs/app.log | grep -E '(media|transcoding)\.' | grep -i "transcode\|job"
 
 # Read a specific transcode log
-cat .logs/transcode/abc123def.log
+cat /path/to/transcode-cache/<job-dir>/ffmpeg.log
 ```
 
 ### 2. Verify FFmpeg is installed and accessible
@@ -60,10 +62,10 @@ No output for your expected encoder means hardware acceleration is not active. S
 
 ## Library scan is slow or hanging
 
-### 1. Check the media log
+### 1. Watch the media channel
 
 ```bash
-tail -f .logs/media.log
+tail -f .logs/app.log | grep -E 'media\.'
 ```
 
 Look for `Scanning` entries showing progress and `Matched` or `Unmatched` for each file.
@@ -161,7 +163,7 @@ If migrations fail, restore the database from a backup and retry.
 ### 1. Check the hub log channel
 
 ```bash
-tail -f .logs/phlix.log | grep -i hub
+tail -f .logs/app.log | grep -i hub
 ```
 
 ### 2. Verify the JWKS URL is reachable from the server
@@ -183,7 +185,7 @@ An expired or missing enrollment token prevents the server from connecting. Re-e
 ### 4. Check relay tunnel status
 
 ```bash
-tail -f .logs/phlix.log | grep -i relay
+tail -f .logs/app.log | grep -i relay
 ```
 
 If the relay is repeatedly reconnecting, check `config/relay.php` — use `ws://127.0.0.1:8802` for a co-located Hub or the correct `wss://` address for a remote Hub.
@@ -210,7 +212,7 @@ Many concurrent FFmpeg processes indicate the transcode limit (`max_concurrent_t
 ### 3. Check for deadlocks
 
 ```bash
-tail -100 .logs/phlix.log | grep -i "deadlock\|timeout\|fatal"
+tail -100 .logs/error.log | grep -i "deadlock\|timeout\|fatal"
 ```
 
 The DB connection pool is on by default (`DB_POOL_ENABLED` defaults to `1` as of
@@ -254,13 +256,15 @@ If `PHLIX_PLUGINS_REQUIRE_SIGNATURE=1` is set, the plugin must have a valid sign
 
 ## Authentication / login failures
 
-### 1. Check the AUTH log
+### 1. Check the auth records
 
 ```bash
-tail -f .logs/auth.log
+tail -f .logs/app.log | grep -E '(auth|audit)\.'
 ```
 
-This records every login attempt with the user identifier, success/failure status, and IP address.
+Login attempts (with the user identifier, success/failure status and client
+address) are recorded on the auth and audit channels — both land in `app.log`,
+and failures also surface through the audit logger.
 
 ### 2. Verify JWT_SECRET
 

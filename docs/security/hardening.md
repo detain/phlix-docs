@@ -40,15 +40,30 @@ The server refuses admin setting changes that would lock you out (`src/Auth/Auth
 
 ## 2. Enable TLS
 
-### Option A — Phlix Hub (simplest)
+### Option A — Phlix Hub (`*.phlix.media` hostname)
 
-Let the Hub allocate a `*.phlix.media` subdomain and manage TLS for the **public hostname** automatically:
+Pair the server to a Hub and claim an allocated `*.phlix.media` subdomain. The
+Hub handles **DNS/alias allocation** — it does **not** manage TLS for the
+hostname: automated ACME (Let's Encrypt) provisioning is not implemented, and
+a freshly claimed subdomain comes back without a certificate. The Hub expects
+you to place the cert and key out-of-band under its `tls_certs_dir` — see
+[/hub-admin/tls](/hub-admin/tls).
 
 ```bash
 PHLIX_HUB_URL=https://hub.phlix.media
-PHLIX_HUB_ENROLLMENT_TOKEN=<token-from-hub-ui>
-PHLIX_SUBDOMAIN_AUTO_CLAIM=1
 ```
+
+Pairing itself is a script, not an environment variable: `php
+scripts/pair-with-hub.php <hub-url> <server-name>` enrolls the server (an
+Ed25519 keypair plus a `config/hub-enrollment.json` record — there is no
+`PHLIX_HUB_ENROLLMENT_TOKEN`). After enrollment, claim the subdomain with
+`php scripts/claim-subdomain.php` or the admin API (`POST
+/api/v1/admin/remote/subdomain/claim` alongside `subdomain/status` and
+`subdomain/release`; hub pairing is offered on the same admin surface via
+`POST /api/v1/admin/remote/hub/pair` — see
+[/admin/remote-access](/admin/remote-access)).
+`PHLIX_SUBDOMAIN_AUTO_CLAIM=0` only gates the claim **script** (it refuses to
+auto-claim when off); it is not a pairing-time setting.
 
 This secures the **client ↔ Hub** leg with HTTPS. It does **not** by itself encrypt the **server ↔ Hub relay tunnel** (port 8802 — see [Glossary: Relay / Tunnel](/glossary)): by default that tunnel is a plain `ws://` connection. `PHLIX_TLS_ENABLED` controls only the scheme of the server's advertised `public_url` (`https://` vs `http://` + `PHLIX_DOMAIN`) during pairing — it defaults to true when unset and has no effect on the tunnel.
 
@@ -192,10 +207,11 @@ Ensure backups include `/etc/phlix/env` (contains all secrets) and the database.
 
 ## 10. Monitor logs
 
-Watch the AUTH log (`auth.log`) for failed login attempts:
+Watch the auth records for failed login attempts (they land in `.logs/app.log`
+on the auth/audit channels — there is no separate `auth.log` file):
 
 ```bash
-tail -f .logs/auth.log | grep -i "failed\|invalid\|401"
+tail -f .logs/app.log | grep -iE "(auth|audit)\..*(failed|invalid|401)"
 ```
 
 Set up a log aggregation system or use `fail2ban` to auto-block IPs with repeated failed login attempts when using password auth (prefer passkeys — see step 5).

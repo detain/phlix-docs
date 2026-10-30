@@ -34,6 +34,14 @@ server {
 
     ssl_certificate     /path/to/fullchain.pem;
     ssl_certificate_key /path/to/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+
+    # HSTS: Phlix itself already sends `Strict-Transport-Security`
+    # (max-age=1 year + includeSubDomains) on every response — do NOT
+    # `add_header` it here or browsers will see the header twice.
+    # If the proxy must own HSTS, set the app's
+    # `security.hsts_max_age_seconds` to 0 first. See
+    # /security/hardening#hsts-http-strict-transport-security.
 
     # Phlix runs on port 8096
     location /phlix/ {

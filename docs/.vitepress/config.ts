@@ -223,7 +223,7 @@ export default defineConfig({
             { text: 'Tunnel / TunnelManager', link: '/dev/relay/tunnel' },
             { text: 'Frame Decoder / Encoder', link: '/dev/relay/frame-decoder' },
             { text: 'Idle Reaper', link: '/dev/relay/idle-reaper' },
-            { text: 'WS Multiplexer Plan', link: '/dev/relay/ws-multiplexer-plan' },
+            { text: 'WS Multiplexer Plan (design record)', link: '/dev/relay/ws-multiplexer-plan' },
           ]
         },
         {

@@ -428,6 +428,36 @@ The required variables are documented in [`docs/reference/env-vars.md`](../refer
 
 ---
 
+## Documentation writing style
+
+The `docs/` tree follows a few deliberate conventions; keep them intact when
+editing prose.
+
+**Product and artifact names.** Three registers, all correct in their slot:
+
+| Form | Use for | Example |
+|------|---------|---------|
+| `phlix-server` / `phlix-hub` / `phlix-shared` / `phlix-ui` (code font) | the repositories, packages, binaries, units, paths — artifacts | "`phlix-server` 0.18.0 adds …" |
+| "the Phlix server" / "the Phlix hub" (lowercase noun) | a running instance as a generic noun in prose | "restart the Phlix server" |
+| "Phlix Hub" / "Phlix Server" (capitalized brand) | the **product/service name** — page titles, front-matter `description`s, nav labels, headings, and first-persona introductions ("The Phlix Hub is an optional companion service…") | "Operator documentation for the Phlix Hub" |
+
+The split is ratified: repo-slug in code font, lowercase generic in mid-prose,
+capitalized brand in title/label and product-naming positions. Mass-normalizing
+one form over another is a rejected edit.
+
+**Voice.** User-facing pages address the reader as "you" (second person).
+Third-person phrasing — "the user", "users can" — is legitimate in
+admin-facing and reference prose, where "the user" means an account the
+admin manages, not the reader. Do not rewrite one voice into the other, and
+don't mix them inside a single instruction.
+
+**Internal markers.** Public pages carry user-relevant facts only: no phase
+codes, program markers, or private planning-file references (e.g. "Phase:
+P1-S9", or citing documents a reader cannot open). A feature's era belongs in
+a **Since:** stamp, not in planning shorthand.
+
+---
+
 ## Next steps
 
 - [`docs/dev/plugin-sdk.md`](plugin-sdk.md) — Plugin SDK internals (manifest schema, lifecycle, container bindings, events). Start here for plugin development.

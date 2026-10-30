@@ -79,6 +79,30 @@ phlix.example.com {
 
 Do not expose port 8096 directly to the internet without a TLS terminator in front of it.
 
+### HSTS (HTTP Strict Transport Security)
+
+The server ships HSTS **on by default**: every response it generates carries
+
+```
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+```
+
+(one year, subdomains included) — `Phlix\Server\Http\Middleware\SecurityHeaders`.
+Browsers ignore the header over plaintext HTTP, so it only takes effect once
+you serve HTTPS, but plan for it: a wrong subdomain that never gets a
+certificate will be pinned away from by visitors' browsers.
+
+The knob is the server setting `security.hsts_max_age_seconds` — an integer
+`0..31536000` (Admin → Settings; the key is part of the shared settings
+schema, see [Shared schemas](/dev/shared-schemas)). Set it to **`0`** to emit
+`max-age=0`, the standard *clear-the-pin* signal: use it when decommissioning
+HTTPS or before rolling back a TLS change, not as a permanent posture.
+
+Behind a reverse proxy, leave the header to the app: proxies forward response
+headers untouched, so adding `add_header Strict-Transport-Security ...` in
+nginx on top of the app's copy produces duplicate headers, which browsers may
+treat as invalid. If your proxy must own HSTS instead, set the app key to `0`.
+
 ---
 
 ## 3. Restrict network exposure

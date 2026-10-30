@@ -128,7 +128,10 @@ You can register multiple passkeys on a single account. This is useful for:
 ## Security Best Practices
 
 1. **Register at least two passkeys** — one as primary and one as backup
-2. **Keep backup codes safe** — store them in a secure location
+2. **Keep another sign-in method available** — Phlix does not issue one-time backup
+   codes for passkeys; without a second factor or the password method enabled, recovery
+   means an admin resetting your password from the server CLI
+   (`php bin/phlix user:reset-password`)
 3. **Use a hardware key for maximum security** — physical possession required
 4. **Don't delete your last passkey** — always keep a working login method
 5. **Report suspicious activity** — contact admin if you notice unauthorized access

@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Phlix Hub ships hub-to-hub **federation**, and it runs unconditionally — there is no enable/disable flag. Federation uses a **master/leaf** model: one hub is designated the master and other hubs join it as leaves. Once peered, hubs can share libraries across the trust boundary, relay leaf servers through the master, and delegate admin access. Federation is managed from the **Federation page** (`/app/federation`) and the `/api/v1/me/federation/*` REST API; peers are added **manually** (there is no automatic discovery). The one real auth limitation: there is **no cross-hub end-user single-sign-on** — a user account does not span hubs, and each hub issues its own user sessions. A single Phlix Hub instance is meant to serve an entire deployment on its own — the shipped configuration enforces **no cap** on users or claimed servers (`server.max_servers_per_user` and `server.max_users_per_server` both default to `0` = unlimited) — so federation is for genuinely multi-hub deployments rather than capacity overflow.
+Phlix Hub ships hub-to-hub **federation**, gated by the `federation.enabled` hub setting (file default `true`; overridable at boot with `HUB_FEDERATION_ENABLED` and at runtime from Hub Admin → Settings). While off: peer mutations return `409 provider.not_configured`, inbound handshake/DATA frames are refused or dropped, and outbound dials stop; reads and hub-config CRUD stay open and the `:8805` listener stays bound until a restart. Re-enabling instantly re-admits traffic on links that survived the off-window, and links that dropped while off re-establish automatically within ≤60 s (the reconnect chain parks at the ≤60 s backoff cap during the disabled window — no restart or explicit trigger needed). Federation uses a **master/leaf** model: one hub is designated the master and other hubs join it as leaves. Once peered, hubs can share libraries across the trust boundary, relay leaf servers through the master, and delegate admin access. Federation is managed from the **Federation page** (`/app/federation`) and the `/api/v1/me/federation/*` REST API; peers are added **manually** (there is no automatic discovery). The one real auth limitation: there is **no cross-hub end-user single-sign-on** — a user account does not span hubs, and each hub issues its own user sessions. A single Phlix Hub instance is meant to serve an entire deployment on its own — the shipped configuration enforces **no cap** on users or claimed servers (`server.max_servers_per_user` and `server.max_users_per_server` both default to `0` = unlimited) — so federation is for genuinely multi-hub deployments rather than capacity overflow.
 
 ```text
 # Federation REST API (live; gated by admin auth)
@@ -102,7 +102,7 @@ Leaf hubs connect to the master over a persistent **WebSocket** tunnel served by
  ┌─────────────┐   WebSocket federation tunnel (port 8805)   ┌─────────────┐
  │ Master Hub  │◄───────────────────────────────────────────│  Leaf Hub A │
  │             │   /relay/federation/{hub_id}                │             │
- │ - peer reg  │   - HUB_HELLO handshake                     │ - shares to │
+ │ - peer reg  │   - hub_hello / ack / auth ceremony         │ - shares to │
  │ - share agg │   - library share announcements             │   master    │
  │ - admin pool│   - admin-delegation push                   │ - admin from│
  │ - relay agg │   - relay aggregation                       │   master    │
@@ -116,13 +116,23 @@ Leaf hubs connect to the master over a persistent **WebSocket** tunnel served by
 
 ### Hub-to-hub trust
 
-Inter-hub trust uses **per-peer public keys** plus a WebSocket handshake:
+Inter-hub trust uses **per-peer Ed25519 keys** plus a mutual
+proof-of-key handshake (H-4). The canonical signed material is defined
+once, in `Phlix\Hub\Federation\FederationHandshake` (phlix-hub):
 
 1. When you add a peer, you supply that peer's public key; it is stored in `federation_peers.public_key` (this hub's own key lives in `federation_hubs.public_key`).
-2. A connecting leaf opens the WebSocket and sends a `HUB_HELLO` frame identifying itself.
-3. The master verifies the presented public key against the stored `federation_peers` record before establishing the session.
+2. The connecting leaf opens the WebSocket and sends a `hub_hello` frame identifying itself. Knowledge of the (public) key is NOT sufficient — that was the pre-H-4 posture this ceremony replaced.
+3. The master replies with `hub_hello_ack`, carrying a fresh single-use session nonce and an Ed25519 signature over the domain-separated string `phlix-federation/hello-ack/v1` + {session_id, master_hub_id, nonce} — proving the master holds its own registered private key.
+4. The leaf answers with `hub_hello_auth`: an Ed25519 signature over `phlix-federation/hello-auth/v1` + {session_id, nonce, leaf_hub_id}, produced with the private half of ITS registered key and echoing the master's nonce — proving the connector really controls the peer key it claims, bound to exactly this session.
+5. Only after both proofs verify is the session marked channel-verified. Until then, DATA payloads (share offers, revocations, admin delegation) are dropped and audited on BOTH roles.
 
-This is **not** mutual TLS and **not** a single shared pre-shared key — it is a per-peer public-key exchange combined with the `HUB_HELLO` handshake. Each peer relationship has its own key.
+Signatures are sodium detached Ed25519, base64-encoded on the wire;
+nonces are single-use and never persisted or logged. This is **not**
+mutual TLS and **not** a shared pre-shared key — it is mutual
+proof-of-key. Each peer relationship has its own key pair. A
+protocol-version field (`protocol_version`, currently `1`) is
+negotiated on `hub_hello`/`hub_hello_ack`: omission means legacy v1,
+disagreement is refused with `protocol_version_mismatch`.
 
 > **Scope of trust:** this establishes trust *between hub operators*. It does **not** create cross-hub *end-user* identity — see [What is not implemented](#what-is-not-implemented).
 
@@ -284,7 +294,7 @@ Federating two hubs does **not** merge their user accounts. There is no cross-hu
 
 **Symptom:** Two hubs are configured but the federation link never establishes.
 
-**Cause:** Peers are added manually with public keys, and the master validates the leaf's key on the `HUB_HELLO` handshake. A missing peer record, a wrong public key, or the master's federation port (8805) being unreachable will all prevent the link.
+**Cause:** Peers are added manually with public keys, and the leaf must prove knowledge of its registered private key during the `hub_hello_auth` leg of the handshake ceremony. A missing peer record, a wrong public key, a leaf whose private half doesn't match, or the master's federation port (8805) being unreachable will all prevent the link.
 
 **Fix:** Verify the peer exists on **both** hubs and that each side has the other's correct public key (compare against `GET /api/v1/me/federation/hub-config`). Ensure the leaf can reach the master's `/relay/federation/{hub_id}` endpoint on port 8805.
 

@@ -147,7 +147,7 @@ legacy `CdsControlHandler` on `POST /cds/control`) are direct-child scoped.
 
 Lists containers and items under a given ObjectID:
 
-```
+```text
 Browse(ObjectID, BrowseFlag, Filter, StartingIndex, RequestedCount, SortCriteria)
 ```
 
@@ -161,7 +161,7 @@ Browse(ObjectID, BrowseFlag, Filter, StartingIndex, RequestedCount, SortCriteria
 
 Searches for media matching criteria:
 
-```
+```text
 Search(ContainerID, SearchCriteria, Filter, StartingIndex, RequestedCount, SortCriteria)
 ```
 
@@ -173,7 +173,7 @@ Search(ContainerID, SearchCriteria, Filter, StartingIndex, RequestedCount, SortC
 
 ### Object Hierarchy
 
-```
+```text
 0 (Root)
 ├── library-video (container)
 │   └── [media items]
@@ -196,7 +196,7 @@ Phlix's DLNA server serves media in the following formats:
 ### Streaming URLs
 
 Media items include a `upnp:res` element with an HLS streaming URL:
-```
+```text
 http://{phlix}:8096/api/v1/streaming/hls/{itemId}/master.m3u8
 ```
 

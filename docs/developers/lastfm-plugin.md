@@ -56,7 +56,7 @@ function signParams(array $params, string $apiSecret): string
 
 Used to obtain a session key without a web OAuth redirect.
 
-```
+```http
 POST https://ws.audioscrobbler.com/2.0/
 Parameters:
   method=auth.getMobileSession
@@ -83,7 +83,7 @@ expire unless revoked.
 
 ### 2.3 Scrobble (`track.scrobble`)
 
-```
+```http
 POST https://ws.audioscrobbler.com/2.0/
 Parameters:
   method=track.scrobble
@@ -114,7 +114,7 @@ Response:
 
 ### 2.4 Now Playing (`track.updateNowPlaying`)
 
-```
+```http
 POST https://ws.audioscrobbler.com/2.0/
 Parameters:
   method=track.updateNowPlaying
@@ -148,7 +148,7 @@ the user's Last.fm profile as "now playing".
 The `scrobble_threshold` setting (0.0 – 1.0) controls when a
 scrobble is actually submitted on `playback.stopped`.
 
-```
+```text
 scrobble_submitted = (finalPositionTicks / durationTicks) >= scrobbleThreshold
 ```
 
@@ -258,7 +258,7 @@ scrobble should not crash the playback pipeline.
 
 ## 7. Plugin Architecture
 
-```
+```text
 Phlix\Plugins\Lastfm\Plugin
   ├── implements LifecycleInterface        (onEnable/onDisable/subscribedEvents)
   ├── implements EventSubscriberInterface (getSubscribedEvents)

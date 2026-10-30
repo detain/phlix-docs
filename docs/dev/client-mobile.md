@@ -60,7 +60,7 @@
 
 ### 1.3 Architecture Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    Phlix Mobile App                          │
 ├─────────────────────────────────────────────────────────────┤
@@ -88,7 +88,7 @@
 
 ### 2.1 Required Software
 
-```
+```text
 1. Node.js 20+ (LTS recommended)
 2. React Native CLI 0.76+
 3. Xcode 15+ (for iOS)
@@ -219,7 +219,7 @@ cd ios && pod install && cd ..
 
 ## 3. Project Structure
 
-```
+```text
 PhlixMobile/
 ├── src/
 │   ├── App.tsx                    # App entry point

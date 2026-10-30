@@ -18,7 +18,7 @@ below is **HLS only**.
 
 ## Architecture at a glance
 
-```
+```text
 Scan time:  MediaScanner → ffprobe → ItemRepository::addStream()
             persists width/height/video codec/bitrate/pix_fmt/audio codec
             into media_streams + metadata_json['source']  (A1)

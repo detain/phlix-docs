@@ -46,7 +46,7 @@ Samsung Tizen TVs support:
 
 ### 2.1 Required Software
 
-```
+```text
 1. Node.js 18+ (LTS recommended)
 2. Tizen Studio 4.0+ (with TV extension)
 3. Samsung TV SDK (included in Tizen Studio)
@@ -113,7 +113,7 @@ npm install --save-dev tizen-web-manager
 
 ## 3. Project Structure
 
-```
+```text
 phlix-tizen/
 ├── app/
 │   ├── index.html           # Main HTML entry
@@ -3084,7 +3084,7 @@ npm run test:device
 
 ### 9.1 Pre-Submission Checklist
 
-```
+```text
 □ Samsung Seller Office account created
 □ App icon (1920x1080 PNG)
 □ App screenshots (1920x1080 PNG, min 3)

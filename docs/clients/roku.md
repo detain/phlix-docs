@@ -1,3 +1,8 @@
+---
+title: Roku Channel
+description: The Phlix channel for Roku streaming players, installed by developer sideload today
+---
+
 # Roku Channel
 
 **Since:** 0.18.0

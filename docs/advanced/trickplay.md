@@ -31,7 +31,7 @@ When a video is transcoded, the `TrickplayGenerator` class:
 
 For a transcode job with ID `abc123`, the following files are created:
 
-```
+```text
 {trickplay_dir}/trickplay/abc123/
 ├── bif_00.jpg        # First grid image (thumbnails 0-31)
 ├── bif_01.jpg        # Second grid image (thumbnails 32-63)
@@ -71,7 +71,7 @@ Returns a thumbnail grid image.
 - `index` (path) — Grid image index (0, 1, 2, ...)
 
 **Response:**
-```
+```http
 HTTP/1.1 200 OK
 Content-Type: image/jpeg
 Content-Length: 4096
@@ -91,7 +91,7 @@ Returns the BIF index XML for mapping thumbnails to byte offsets.
 - `jobId` (path) — Transcode job identifier
 
 **Response:**
-```
+```http
 HTTP/1.1 200 OK
 Content-Type: application/xml
 Content-Length: 1024
@@ -152,7 +152,7 @@ The total grid image dimensions are:
 
 ### Thumbnails Per Grid
 
-```
+```text
 thumbnails_per_grid = grid_columns × grid_rows
 # Default: 8 × 4 = 32 thumbnails per grid image
 ```
@@ -160,7 +160,7 @@ thumbnails_per_grid = grid_columns × grid_rows
 ### Grid Count Estimation
 
 For a 2-hour movie (7200 seconds) with 10-second intervals:
-```
+```text
 thumbnail_count = ceil(7200 / 10) = 720 thumbnails
 grid_count = ceil(720 / 32) = 23 grid images
 ```

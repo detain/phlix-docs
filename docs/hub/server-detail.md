@@ -1,3 +1,8 @@
+---
+title: Server Detail
+description: The claimed-server page — basic info, live relay session, and recent heartbeat history
+---
+
 # Server Detail
 
 **Since:** 0.19.0
@@ -28,7 +33,7 @@ The top section always shows:
 
 If the server currently has an open relay tunnel, a card appears below the server info:
 
-```
+```text
 ┌─ Active Relay Session ─────────────────────────────────────┐
 │ Worker Node:  Worker#1                                      │
 │ Opened:      2026-05-29 10:00 UTC (2h 14m ago)            │
@@ -40,7 +45,7 @@ If the server currently has an open relay tunnel, a card appears below the serve
 
 If there is **no active relay session**, the card is replaced with a gentle empty state:
 
-```
+```text
 No active relay session.
 The server is not currently relaying traffic.
 ```
@@ -65,7 +70,7 @@ The heartbeat history section is collapsible. Click **Show/Hide Heartbeat Histor
 
 **No heartbeat history** is shown as:
 
-```
+```text
 No heartbeat history available.
 The server has not sent any heartbeats yet.
 ```

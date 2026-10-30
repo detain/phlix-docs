@@ -12,7 +12,7 @@ Theme media allows automatic playback of theme music (`theme.mp3`) and theme vid
 
 Place theme files at the root of your library path:
 
-```
+```text
 /Movies/
   theme.mp3          ← Library-level audio theme
   backdrop.mp4       ← Library-level video backdrop
@@ -24,7 +24,7 @@ Place theme files at the root of your library path:
 
 For TV shows, theme files can be placed at the series level to apply to all episodes:
 
-```
+```text
 /TV Shows/
   The Crown/
     theme.mp3        ← Series-level theme (applies to all episodes)
@@ -77,7 +77,7 @@ structural pin and the shared handler-enumeration helper are documented once in
 
 ### Get Theme Media
 
-```
+```http
 GET /api/v1/libraries/{id}/theme-media
 ```
 
@@ -107,7 +107,7 @@ Returns theme media metadata for a library:
 
 ### Trigger Rescan
 
-```
+```http
 POST /api/v1/libraries/{id}/theme-media/scan
 ```
 
@@ -116,7 +116,7 @@ Triggers a filesystem rescan and updates the cache. **Admin only** — see
 
 ### Delete Theme Media Cache
 
-```
+```http
 DELETE /api/v1/libraries/{id}/theme-media
 ```
 
@@ -125,7 +125,7 @@ Removes the cached theme media entry (files remain on disk). **Admin only** — 
 
 ### Stream Audio
 
-```
+```http
 GET /stream/theme-media/{libraryId}/audio
 ```
 
@@ -133,7 +133,7 @@ Streams the theme audio file. Supports range requests for seeking.
 
 ### Stream Video
 
-```
+```http
 GET /stream/theme-media/{libraryId}/video
 ```
 

@@ -1,3 +1,8 @@
+---
+title: Trusted plugin signature allowlist
+description: How plugin sha256 signatures are checked today and where the canonical trusted-key allowlist is heading
+---
+
 # Trusted plugin signature allowlist
 
 > **Status:** stub. Step A.5 ships the admin UI on top of the loader,

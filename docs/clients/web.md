@@ -1,3 +1,8 @@
+---
+title: Web Portal
+description: The Phlix web portal — stream from any modern browser with nothing to install
+---
+
 # Web Portal
 
 **Since:** 0.18.0
@@ -12,11 +17,11 @@
 - **Mobile browsers:** Fully functional but optimized for desktop
 
 Bookmark your server's web portal URL (the root redirects to the `/app` Vue SPA):
-```
+```text
 https://your-server-domain.com/app
 ```
 Or for local access:
-```
+```text
 http://192.168.1.100:8096/app
 ```
 

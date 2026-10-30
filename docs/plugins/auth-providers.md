@@ -1,3 +1,8 @@
+---
+title: Auth Provider Plugins
+description: The provider-plugin contract behind the built-in OIDC, GitHub, LDAP, SAML, and passkey sign-in options
+---
+
 # Auth Provider Plugins
 
 Phlix supports external authentication providers via a plugin-based
@@ -109,7 +114,7 @@ Authorization Code flow with PKCE.
 
 Register the following callback URL with your OIDC provider:
 
-```
+```text
 https://<your PHLIX_DOMAIN>/auth/oidc/callback
 ```
 

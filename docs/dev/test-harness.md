@@ -110,7 +110,7 @@ whole-workflow log, where several runs share one input.
 
 ## Test structure
 
-```
+```text
 tests/
 ├── Unit/
 │   ├── Auth/

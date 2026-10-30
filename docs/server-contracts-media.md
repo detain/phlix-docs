@@ -10,7 +10,7 @@ This document describes the server contract for the media API, covering authenti
 
 All API endpoints require Bearer token authentication via the `Authorization` header:
 
-```
+```http
 Authorization: Bearer <token>
 ```
 

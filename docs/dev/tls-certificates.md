@@ -25,7 +25,7 @@ documented below under "Planned: ACME Automated Provisioning".
 Operators must provision TLS certificates out-of-band. Place
 certificates in the configured `certs_dir` using the following structure:
 
-```
+```text
 {certs_dir}/
   {subdomain}.phlix.media/
     fullchain.pem   # Certificate chain
@@ -33,7 +33,7 @@ certificates in the configured `certs_dir` using the following structure:
 ```
 
 For example, for subdomain `abc12345`:
-```
+```text
 /home/phlix/certs/abc12345.phlix.media/fullchain.pem
 /home/phlix/certs/abc12345.phlix.media/privkey.pem
 ```

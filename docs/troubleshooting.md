@@ -1,3 +1,8 @@
+---
+title: Troubleshooting & FAQ
+description: Where the logs live and how to work through common server, playback, and network problems
+---
+
 # Troubleshooting & FAQ
 
 **Since:** 0.18.0
@@ -10,7 +15,7 @@ Phlix writes logs to `.logs/`. Most failures trace to file permissions, misconfi
 
 ### Log locations
 
-```
+```text
 .logs/                           # Rotating application logs per channel
 .logs/auth.log                  # AUTH channel — login attempts, token issues
 .logs/http.log                  # HTTP channel — API requests, response codes
@@ -214,7 +219,7 @@ If it times out or is rejected, check egress rules on your firewall or VPS panel
 **Cause 3 — JWT validation fails:** The server's JWKS URL (`PHLIX_HUB_JWKS_URL` env var) points to the wrong endpoint, or the Hub's signing key was rotated.
 
 **Fix:** Verify the `PHLIX_HUB_JWKS_URL` environment variable is set to:
-```
+```text
 https://hub.phlix.example.com/.well-known/jwks.json
 ```
 If the Hub signing key was rotated, re-trigger the Hub handshake from the admin UI or restart the server to clear the JWKS cache.

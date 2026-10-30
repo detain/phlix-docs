@@ -1,3 +1,8 @@
+---
+title: Remote Access via the Hub
+description: Reaching your Phlix server from outside your network through the hub relay, without port forwarding or a VPN
+---
+
 # Remote Access via the Hub
 
 The Hub's primary job is remote access: reaching your Phlix server from outside your

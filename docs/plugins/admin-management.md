@@ -1,3 +1,8 @@
+---
+title: Managing Plugins in the Admin UI
+description: Installing, enabling, configuring, and removing plugins from the admin Plugins page
+---
+
 # Managing Plugins in the Admin UI
 
 **Since:** 0.29.0 (@phlix/ui)

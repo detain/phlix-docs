@@ -48,7 +48,7 @@ Anything else gets `401 {"error":"Unauthorized","code":"auth.required"}`.
 
 ## The signature
 
-```
+```text
 sig = base64url( HMAC-SHA256( key, "phlix-signed-url-v1\n" + resource + "\n" + exp ) )
 ```
 
@@ -68,7 +68,7 @@ sig = base64url( HMAC-SHA256( key, "phlix-signed-url-v1\n" + resource + "\n" + e
 
 A minted URL looks like:
 
-```
+```text
 /media/2f1c…/stream?exp=1750531200&sig=Yp3K8…
 /api/v1/photo/photos/9a…/thumbnail?w=400&h=400&fit=cover&exp=1750531200&sig=Qm2…
 /hls/job-7/master.m3u8?exp=1750531200&sig=Le9…

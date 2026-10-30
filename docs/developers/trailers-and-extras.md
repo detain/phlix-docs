@@ -14,7 +14,7 @@ Phlix scans media directories for trailers in two locations:
 
 Trailers can be placed at the same level as the main media file:
 
-```
+```text
 Movies/
   Avatar (2009)/
     Avatar (2009).mkv
@@ -25,7 +25,7 @@ Movies/
 
 Trailers can also be placed in a `Trailers/` subfolder:
 
-```
+```text
 Movies/
   Avatar (2009)/
     Avatar (2009).mkv
@@ -56,7 +56,7 @@ The suffix of the trailer file is extracted as the display title:
 
 ### Get All Extras
 
-```
+```http
 GET /api/v1/media/{id}/extras
 ```
 
@@ -84,7 +84,7 @@ Returns all trailers and extras (merged, sorted by type priority).
 
 ### Get Trailers Only
 
-```
+```http
 GET /api/v1/media/{id}/trailers
 ```
 
@@ -92,7 +92,7 @@ Returns only trailers (not other extras).
 
 ### Get Non-Trailer Extras
 
-```
+```http
 GET /api/v1/media/{id}/extras/other
 ```
 
@@ -212,7 +212,7 @@ watcher. See [Scan triggering](/libraries/movies#scan-triggering).
 
 ## Architecture
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────┐
 │                      ExtrasController                        │
 │  GET /api/v1/media/{id}/extras                               │

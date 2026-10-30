@@ -1,3 +1,8 @@
+---
+title: Self-Host the Hub
+description: Running your own Phlix Hub instead of the shared one, and where the full operator runbook lives
+---
+
 # Self-Host the Hub
 
 You can run your own Phlix Hub instead of relying on a shared/public hub. A

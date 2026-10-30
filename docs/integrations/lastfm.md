@@ -1,3 +1,8 @@
+---
+title: Last.fm Scrobbling
+description: The built-in scrobbler plugin sending listening records and Now Playing updates to your Last.fm profile
+---
+
 # Last.fm Scrobbling
 
 **Since:** 0.15.0

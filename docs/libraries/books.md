@@ -1,3 +1,8 @@
+---
+title: Books Library Documentation
+description: EPUB, PDF, and CBZ libraries with OPDS 1.2 feeds — and the fact that a scan indexes files without extracting metadata
+---
+
 # Books Library Documentation
 
 **Since:** 0.17.0
@@ -77,19 +82,19 @@ The OPDS feed is available at `/opds/v1.2`. This follows the OPDS 1.2 specificat
 ## OPDS Endpoints
 
 ### Root Feed
-```
+```http
 GET /opds/v1.2
 ```
 Returns the root OPDS catalog with links to libraries.
 
 ### Libraries Navigation
-```
+```http
 GET /opds/v1.2/libraries
 ```
 Returns a navigation feed listing all book libraries.
 
 ### Library Acquisition Feed
-```
+```http
 GET /opds/v1.2/libraries/{library_id}?offset=0&limit=50
 ```
 Returns an acquisition feed listing all books in a library with pagination support.
@@ -114,7 +119,7 @@ rather than for a parser. The stem (minus extension) is normalized by the scene-
 normalizer and stored as the item's `name`; the raw stem is kept as
 `metadata_json.raw_filename`.
 
-```
+```text
 Author - Title.epub
 Title.pdf
 Series Name v01.cbz

@@ -401,7 +401,7 @@ Denies a pending request with an optional reason. Transitions the request status
 
 ## Request Lifecycle
 
-```
+```text
 pending  ──approve──▶  approved  ──import──▶  available
     │
     └──deny──▶  rejected

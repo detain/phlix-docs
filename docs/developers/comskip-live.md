@@ -19,7 +19,7 @@ Comskip is a third-party C application for detecting commercial breaks in video 
 
 Comskip outputs EDL files with 3 tab-separated columns:
 
-```
+```text
 start_seconds  end_seconds  scene_description
 ```
 
@@ -30,7 +30,7 @@ The `scene_description` field is a type indicator:
 - `3` = commercial (main detection type)
 
 Example EDL content:
-```
+```text
 0.0     30.0    3
 60.0    120.0   3
 180.0   210.0   3

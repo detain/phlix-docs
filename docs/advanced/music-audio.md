@@ -20,7 +20,7 @@ See the [Music Library](/libraries/music) page for a full breakdown of supported
 
 Music is organized by the standard hierarchy:
 
-```
+```text
 Artist
   └── Album
         └── Track

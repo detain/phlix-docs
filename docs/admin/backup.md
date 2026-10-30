@@ -70,7 +70,7 @@ All endpoints are gated by `AdminMiddleware` (require admin authentication) and 
 
 ### 1. List backups
 
-```
+```http
 GET /api/v1/admin/backup/list
 ```
 
@@ -89,7 +89,7 @@ Returns all backup records.
 
 ### 2. Create backup
 
-```
+```http
 POST /api/v1/admin/backup/create
 ```
 
@@ -115,7 +115,7 @@ POST /api/v1/admin/backup/create
 
 ### 3. Delete backup
 
-```
+```http
 DELETE /api/v1/admin/backup/{id}
 ```
 
@@ -133,7 +133,7 @@ DELETE /api/v1/admin/backup/{id}
 
 ### 4. Restore backup
 
-```
+```http
 POST /api/v1/admin/backup/{id}/restore
 ```
 
@@ -171,7 +171,7 @@ exception escapes.
 
 ### 5. Upload backup to S3
 
-```
+```http
 POST /api/v1/admin/backup/{id}/upload-s3
 ```
 
@@ -193,7 +193,7 @@ Returns `500` if S3 is not configured in `config/backup.php`.
 
 ### 6. Get schedule settings
 
-```
+```http
 GET /api/v1/admin/backup/schedule
 ```
 
@@ -216,7 +216,7 @@ GET /api/v1/admin/backup/schedule
 
 ### 7. Update schedule settings
 
-```
+```http
 PUT /api/v1/admin/backup/schedule
 ```
 

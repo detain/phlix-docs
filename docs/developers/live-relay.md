@@ -11,7 +11,7 @@ The HLS relay enables remote clients to watch Live TV by relaying HLS streams th
 
 ## Architecture
 
-```
+```text
 Remote Client
       │
       │ WSS Tunnel
@@ -191,7 +191,7 @@ CREATE TABLE livetv_relay_sessions (
 
 Remote clients access the relayed stream at:
 
-```
+```text
 https://{hub-url}/relay/live/{sessionId}/playlist.m3u8
 ```
 

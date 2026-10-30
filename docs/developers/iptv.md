@@ -6,7 +6,7 @@ The IPTV tuner driver enables ingestion of IPTV streams via M3U playlists and op
 
 ## Architecture
 
-```
+```text
 LiveTvManager
 ├── HdHomeRunTunerDriver (SSDP discovery + HTTP API)
 └── IptvTunerDriver (M3U playlist + XMLTV)
@@ -20,7 +20,7 @@ LiveTvManager
 
 The driver supports extended M3U format with `#EXTINF` tags:
 
-```
+```m3u8
 #EXTM3U
 #EXTINF:-1 tvg-id="1" tvg-name="Channel Name" tvg-chno="5" group-title="News",Channel Name
 http://example.com/stream.m3u8

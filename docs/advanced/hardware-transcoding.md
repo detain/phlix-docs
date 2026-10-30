@@ -43,7 +43,7 @@ php bin/phlix hwaccel:probe
 
 Sample output and interpretation:
 
-```
+```text
 HWACCEL=nvidia         # current env var value (empty = software only)
 DEVICE=/dev/dri/renderD128   # VAAPI device (NVIDIA uses /dev/nvidia*)
 ENCODERS=nvenc h264_amf vaapi_h264   # hardware encoders detected by FFmpeg
@@ -58,7 +58,7 @@ If `ENCODERS` shows no hardware encoder, FFmpeg was built without hardware suppo
 
 ### NVIDIA (NVENC + CUDA)
 
-```
+```text
 [x] GPU physically installed — nvidia-smi lists it
 [x] nvidia-driver installed (apt install nvidia-driver-535)
 [x] nvidia-container-runtime configured (for Docker/Podman)
@@ -86,7 +86,7 @@ services:
 
 ### Intel (VAAPI + Quicksync)
 
-```
+```text
 [x] CPU supports Quicksync (8th-gen Intel or newer recommended)
 [x] intel-media-driver installed (apt install intel-media-va-driver)
 [x] vainfo confirms encode capability
@@ -113,7 +113,7 @@ sudo systemctl restart phlix-server
 
 ### AMD (VAAPI + VCN)
 
-```
+```text
 [x] GPU is AMD Radeon (GCN 2.0+ for hardware encoding)
 [x] amdgpu-driver or rocm installed
 [x] VAAPI encode entrypoint visible via vainfo
@@ -132,7 +132,7 @@ Note: AMD VAAPI support in FFmpeg varies by driver version. Using `jellyfin-ffmp
 
 ### Apple Silicon (VideoToolbox)
 
-```
+```text
 [x] macOS 12.3+ (VideoToolbox requires Monterey or later)
 [x] Hardware decode confirmed via Activity Monitor → GPU activity
 [x] Phlix running on macOS (not Linux containers)

@@ -52,7 +52,7 @@ truth from these files.
 For a server allocated the subdomain `abc12345`, the FQDN is
 `abc12345.phlix.media` and the hub expects two files:
 
-```
+```text
 <tls_certs_dir>/abc12345.phlix.media/fullchain.pem
 <tls_certs_dir>/abc12345.phlix.media/privkey.pem
 ```
@@ -73,14 +73,14 @@ operational model is a single wildcard certificate (`*.phlix.media`,
 DNS-01 challenge) issued by your tooling of choice — for example
 `certbot`, `acme.sh`, `lego`, or your existing internal PKI:
 
-```
+```bash
 certbot certonly --manual --preferred-challenges dns -d '*.phlix.media'
 ```
 
 Then symlink (or copy) the issued material into each allocated
 subdomain directory, e.g.:
 
-```
+```bash
 mkdir -p /home/phlix/data/tls/abc12345.phlix.media
 ln -sf /etc/letsencrypt/live/phlix.media/fullchain.pem \
        /home/phlix/data/tls/abc12345.phlix.media/fullchain.pem

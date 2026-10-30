@@ -1,3 +1,8 @@
+---
+title: What Is the Hub?
+description: The optional companion service brokering remote access, sharing, and multi-server management for your Phlix servers
+---
+
 # What Is the Hub?
 
 The Phlix Hub is an optional companion service that lets you reach your

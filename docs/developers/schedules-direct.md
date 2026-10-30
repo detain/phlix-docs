@@ -13,7 +13,7 @@ program guide data after channel discovery. It requires a valid SD account subsc
 
 ### Architecture
 
-```
+```text
 SdApiClient          — HTTP JSON client, token auth, BASE_URL: https://api.schedulesdirect.tmsglobal.com
 SdLineupHandler      — Fetches SD lineups, imports channels via ChannelManager
 SdProgramMapper      — Maps SD schedule/program data to GuideManager::upsertProgram() format
@@ -99,7 +99,7 @@ Add to `config/livetv.php`:
 
 Program IDs are generated deterministically from channel ID + start time:
 
-```
+```php
 program_id = md5(channel_id . '_' . start_timestamp)
 ```
 

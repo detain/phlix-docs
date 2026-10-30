@@ -1,3 +1,8 @@
+---
+title: Media Requests (Radarr / Sonarr Integration)
+description: Requesting movies and shows through a Jellyseerr-class UI, with approvals flowing into Radarr or Sonarr
+---
+
 # Media Requests (Radarr / Sonarr Integration)
 
 ## TL;DR
@@ -10,7 +15,7 @@ Hub's media request system lets users request movies and TV shows through a Jell
 
 The request system bridges three components:
 
-```
+```text
 User submits request
        │
        ▼

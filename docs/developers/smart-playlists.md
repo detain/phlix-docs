@@ -13,7 +13,7 @@ something asks for it. It is **not** triggered by a library scan, and it is not 
 
 ## Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    Smart Playlist System                     │
 ├─────────────────────────────────────────────────────────────┤

@@ -1,3 +1,8 @@
+---
+title: Phlix Plugin Catalog
+description: The officially maintained and community-contributed plugins, and how the catalog is sourced and validated
+---
+
 # Phlix Plugin Catalog
 
 > **Status:** This document lists officially maintained and community-

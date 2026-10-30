@@ -1,3 +1,8 @@
+---
+title: Install from Catalog
+description: Browsing and installing curated plugins from the git-backed plugins.json catalog in the admin Plugins section
+---
+
 **Since:** 0.18.0 (catalog browser reworked to git-repo `plugins.json` sources)
 
 ## TL;DR

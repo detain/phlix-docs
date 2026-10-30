@@ -19,7 +19,7 @@ The pairing protocol establishes a trust relationship between a self-hosted
 
 ## Protocol Flow (Summary)
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────────┐
 │                         PAIRING FLOW                                  │
 ├──────────────────────────────────────────────────────────────────────┤
@@ -80,7 +80,7 @@ Rationale:
 
 Server stores its Ed25519 **private key** in:
 
-```
+```text
 config/hub-server-key.pem     # raw PEM-encoded Ed25519 private key
 ```
 
@@ -139,7 +139,7 @@ The intended design is:
 The server **self-hosts** its JWKS. This is the canonical and preferred
 approach — it avoids the hub having to store and proxy keys.
 
-```
+```text
 https://<server-hostname>:8096/.well-known/jwks.json
 https://<server-hostname>:8096/.well-known/jwks.json?kty=OKP&alg=Ed25519
 ```
@@ -202,7 +202,7 @@ sensitive material.
 Claim codes are **8-character alphanumeric** (two groups of four), uppercase
 letters + digits (excluding 0, O, I, 1 to avoid ambiguity):
 
-```
+```text
 Pattern: [A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}
 Example: "ABCD-2345"
 ```
@@ -240,13 +240,13 @@ function generateClaimCode(): string {
 
 ### Endpoint
 
-```
+```http
 POST https://hub.example.com/api/v1/server-claims/new
 ```
 
 ### Request Headers
 
-```
+```http
 Accept-Phlix-Protocol: v1
 Content-Type: application/json
 ```
@@ -341,7 +341,7 @@ Before accepting a claim request, the hub:
 
 ### Internal Hub Action
 
-```
+```http
 POST /api/v1/server-claims/claim
 {
   "claim_code": "ABCD-1234"
@@ -353,7 +353,7 @@ user_id field) to associate the server with the currently logged-in user.
 
 ### Atomic Claim Process
 
-```
+```text
 BEGIN TRANSACTION
   1. SELECT * FROM server_claims
      WHERE claim_code = ? AND expires_at > NOW()
@@ -412,7 +412,7 @@ The server stores this token and uses it to authenticate heartbeats.
 
 ### Endpoint
 
-```
+```http
 POST https://hub.example.com/api/v1/servers/{server_id}/heartbeat
 Authorization: Bearer <enrollment_jwt>
 Accept-Phlix-Protocol: v1
@@ -480,7 +480,7 @@ Content-Type: application/json
 
 ### URL
 
-```
+```text
 https://hub.example.com/.well-known/jwks.json
 ```
 
@@ -567,7 +567,7 @@ issues a JWT that:
 
 Every request and response on pairing-related endpoints carries:
 
-```
+```http
 Accept-Phlix-Protocol: v1
 ```
 

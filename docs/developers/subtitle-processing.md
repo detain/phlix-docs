@@ -32,7 +32,7 @@ Phlix supports two subtitle rendering modes:
 
 ### Core Classes
 
-```
+```text
 src/Media/Transcoding/Subtitles/
 ├── SubtitleFormat.php          # Enum: SRT, ASS, SSA, VTT, HDMV
 ├── SubtitleTrack.php            # Immutable metadata for a subtitle track
@@ -65,7 +65,7 @@ src/Media/Transcoding/Subtitles/
 
 NVENC has no native subtitle support. The filter chain is:
 
-```
+```text
 subtitles=file.ass,hwupload=extra_hw_frames=4
 ```
 
@@ -75,7 +75,7 @@ This renders subtitles in software, then uploads the frames to GPU for encoding.
 
 VAAPI uses `overlay_vaapi` for subtitle compositing:
 
-```
+```text
 -vaapi_device /dev/dri/renderD128 -vf overlay_vaapi,format=nv12
 ```
 

@@ -188,7 +188,7 @@ This opens a browser for authentication. After auth, your device joins your tail
 
 Once connected, access your server at:
 
-```
+```text
 https://phlixMachineName.tailcale.mesh:8096
 ```
 

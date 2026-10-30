@@ -2461,20 +2461,20 @@ Stream audiobook file directly as raw bytes. Supports HTTP Range requests for se
 **Response 404:** Audiobook not found
 
 **Example range request:**
-```
+```http
 GET /api/v1/audiobooks/550e8400-e29b-41d4-a716-446655440001/stream
 Range: bytes=1000-5000
 ```
 
 **Example response headers (200):**
-```
+```http
 Accept-Ranges: bytes
 Content-Length: 36000000
 Content-Type: audio/mp4
 ```
 
 **Example response headers (206):**
-```
+```http
 Accept-Ranges: bytes
 Content-Range: bytes 1000-5000/36000000
 Content-Length: 4001

@@ -185,7 +185,7 @@ private function refreshCollectionsForPlaylist(string $smartPlaylistId): void
 
 ## Architecture
 
-```
+```text
 CollectionController (REST API)
 └── CollectionManager (orchestrator)
     ├── CollectionRepository (CRUD)

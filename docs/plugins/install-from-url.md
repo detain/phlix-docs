@@ -1,3 +1,8 @@
+---
+title: Install from URL
+description: Installing a public plugin from its plugin.json URL, including the un-pinned-source refusal gate and its opt-out
+---
+
 **Since:** 0.18.0
 
 ## TL;DR
@@ -66,7 +71,7 @@ curl -sS -X DELETE https://phlix.example.com/api/v1/admin/plugins/my-plugin \
 
 Try the install flow on a fresh server using the reference plugin:
 
-```
+```text
 https://raw.githubusercontent.com/detain/phlix-plugin-example/main/plugin.json
 ```
 

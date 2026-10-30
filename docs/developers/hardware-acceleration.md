@@ -335,7 +335,7 @@ The system detects HDR content via ffprobe color metadata:
 
 ### Tone-Mapping Architecture
 
-```
+```text
 HwaccelToneMapper
 ├── Detects HDR from ffprobe results
 ├── Selects appropriate vendor tone mapper
@@ -358,7 +358,7 @@ HwaccelToneMapper
 
 #### NVENC (tonemap_cuda)
 
-```
+```text
 tonemap_cuda=transfer=smpte2084:primaries=bt2020:tonemap=hable:desat=0.5:peak=10.0
 ```
 
@@ -370,13 +370,13 @@ tonemap_cuda=transfer=smpte2084:primaries=bt2020:tonemap=hable:desat=0.5:peak=10
 
 #### VAAPI (tonemap_vaapi)
 
-```
+```text
 tonemap_vaapi=transfer=bt2020:primaries=bt2020:tonemap=hable:desat=0.5
 ```
 
 #### QSV (vpp_tonemap)
 
-```
+```text
 vpp_tonemap=mode=1:desat=0.5:peak=10.0
 ```
 
@@ -386,7 +386,7 @@ vpp_tonemap=mode=1:desat=0.5:peak=10.0
 
 #### Software Fallback (zscale)
 
-```
+```text
 zscale=transfer=bt709:min_luminance=2.0:max_luminance=10.0:param1=0.18:param2=0.14
 ```
 

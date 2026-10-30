@@ -299,7 +299,7 @@ Hub → Server (over relay tunnel): { "type": "client_connect", "client_id": "..
 
 ## Namespace map
 
-```
+```text
 Phlix\Hub\          — Application bootstrap, Router, Config
 Phlix\Hub\Auth\     — JwtHandler (HS256 for user sessions), UserRepository,
                       AuditLogger, AuthManager

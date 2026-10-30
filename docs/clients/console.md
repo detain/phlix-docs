@@ -1,3 +1,8 @@
+---
+title: Phlix Console Client
+description: The terminal (TUI) client — browse poster grids and play media in iTerm2, Kitty, or any sixel-capable terminal
+---
+
 # Phlix Console Client
 
 **Since:** 0.10.0

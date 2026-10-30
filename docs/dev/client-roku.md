@@ -51,7 +51,7 @@ Roku devices support:
 
 ### 2.1 Required Software
 
-```
+```text
 1. Visual Studio Code with "BrightScript" extension
 2. Or BrightScript IDE (Eclipse-based)
 3. Roku SDK (included with device)
@@ -127,7 +127,7 @@ ui_resolutions=hd
 
 ## 3. Project Structure
 
-```
+```text
 phlix-roku-client/
 ├── source/
 │   ├── main.brs              # Entry point — boots PhlixApp scene
@@ -1034,7 +1034,7 @@ curl -v -u rokudev:password -X POST \
 
 ### 9.1 Pre-Submission Checklist
 
-```
+```text
 □ Developer account created at developer.roku.com
 □ App icon (540x405 PNG)
 □ Screenshots (1280x720 PNG, min 3, max 10)

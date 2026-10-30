@@ -6,7 +6,7 @@ High-level relay management for bidirectional WebSocket tunnels between the hub 
 
 ## Overview
 
-```
+```text
 Server (WSS) ←→ [Tunnel] ←→ [TunnelManager] ←→ [ClientConnection] ←→ Client (WSS)
                      ↑
                RelaySessionManager
@@ -20,7 +20,7 @@ Server (WSS) ←→ [Tunnel] ←→ [TunnelManager] ←→ [ClientConnection] �
 
 ## Tunnel State Machine
 
-```
+```text
 PENDING → ACTIVE → CLOSING → CLOSED
 ```
 

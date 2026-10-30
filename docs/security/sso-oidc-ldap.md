@@ -107,7 +107,7 @@ endpoint, **always send the complete settings map** — read it back with
 
 **Redirect / callback URL to register at your IdP:** register
 
-```
+```text
 https://<your PHLIX_DOMAIN>/auth/oidc/callback
 ```
 
@@ -256,7 +256,7 @@ the provider's absolute `redirect_uri` to it and register that with the provider
 
 `GET /auth/oidc/authorize` / `GET /auth/github/authorize` answer:
 
-```
+```http
 HTTP/1.1 503 Service Unavailable
 Content-Type: application/json
 
@@ -421,7 +421,7 @@ account. Linking never changes your primary login and never issues a new session
 
 ### List your linked identities
 
-```
+```http
 GET /auth/identities        (authenticated)
 ```
 
@@ -446,7 +446,7 @@ internal `provider_data` are **never** returned.
 
 ### Link an OIDC identity
 
-```
+```http
 GET /auth/identities/link/oidc        (authenticated)
 ```
 
@@ -458,7 +458,7 @@ is minted** — you stay logged in as yourself.
 
 ### Link a GitHub identity
 
-```
+```http
 GET /auth/identities/link/github        (authenticated)
 ```
 
@@ -471,7 +471,7 @@ the same browser-binding cookie as login, and it never mints tokens.
 
 ### Link an LDAP identity
 
-```
+```http
 POST /auth/identities/link/ldap        (authenticated)
 Body: { "username": "jdoe", "password": "…" }
 ```
@@ -485,7 +485,7 @@ directory/config failure returns `503`.
 
 ### Unlink an identity
 
-```
+```http
 DELETE /auth/identities/{id}        (authenticated)
 ```
 

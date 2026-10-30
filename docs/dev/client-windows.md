@@ -99,7 +99,7 @@ npm run lint
 The renderer entry point is `src/renderer/main.ts`. The module-level call `void boot()` runs at load
 and is exported for testing. The call chain is:
 
-```
+```text
 boot()
   ├─ hubGetConfig()          — read persisted Hub config (null if not configured)
   ├─ getDeviceId()           — read or generate+persist windows-<uuid>
@@ -156,7 +156,7 @@ and `@phlix/ui`'s routing expectations.
 This repo **always builds `dist/` locally before tagging a release**. The tag (`vX.Y.Z`) is a pointer
 to a specific local build — it identifies what was built, not what to build. The workflow is:
 
-```
+```text
 1. Build locally: npm run build  →  dist/ (gitignored, never committed)
 2. git add . && git commit -m "build: vX.Y.Z"
 3. git tag vX.Y.Z

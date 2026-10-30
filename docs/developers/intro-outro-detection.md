@@ -16,7 +16,7 @@ The system uses **Jaccard similarity** to compare audio fingerprints:
 4. The largest group is selected as the canonical intro/outro
 
 **Jaccard Similarity Formula:**
-```
+```text
 J(A, B) = |A ∩ B| / |A ∪ B|
 ```
 
@@ -66,7 +66,7 @@ The worker uses a file-based queue in `/tmp/phlix_marker_jobs/`:
 
 ## Data Flow
 
-```
+```text
 1. Library scan enqueues shows needing detection
 2. BackgroundDetectorWorker polls queue
 3. For each show:

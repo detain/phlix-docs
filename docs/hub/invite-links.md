@@ -1,3 +1,8 @@
+---
+title: Invite Links
+description: Sharing a claimed server's libraries through links with permission level, use caps, and expiry
+---
+
 # Invite Links
 
 **Since:** 0.19.0
@@ -21,7 +26,7 @@ acceptance pages have been retired in favor of this SPA route.)
 
 The invite-links view lists every invite link you have created, one card per link:
 
-```
+```text
 ┌─ Invite Link ────────────────────────────────────────────┐
 │ My Server › All Libraries                                │
 │ [read]  0 / 1 uses  ·  Expires Jun 5 2026                │

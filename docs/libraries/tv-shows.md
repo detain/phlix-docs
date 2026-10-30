@@ -1,3 +1,8 @@
+---
+title: TV Shows Library Setup
+description: Show, season, and episode naming conventions and the TVDB, Fanart.tv, and TMDB matching behind a TV library
+---
+
 # TV Shows Library Setup
 
 **Since:** 0.14.0
@@ -17,7 +22,7 @@ Supported formats: `.mkv`, `.mp4`, `.ts`, and most common video containers.
 
 ### 1a. Standard Season/Episode Format (Recommended)
 
-```
+```text
 /TV/Show Name/Season 01/Show Name S01E01.episode-title.ext
 /TV/Show Name/Season 02/Show Name S02E03.ext
 ```
@@ -29,7 +34,7 @@ Supported formats: `.mkv`, `.mp4`, `.ts`, and most common video containers.
 
 ### 1b. Compact Flat-File Format
 
-```
+```text
 /TV/Show Name/S01E01.ext
 /TV/Show Name/S01E02.ext
 ```
@@ -39,7 +44,7 @@ Supported formats: `.mkv`, `.mp4`, `.ts`, and most common video containers.
 
 ### 1c. Absolute Episode Numbering
 
-```
+```text
 /TV/Show Name/1x01.ext
 /TV/Show Name/1x02.ext
 ```
@@ -50,7 +55,7 @@ Supported formats: `.mkv`, `.mp4`, `.ts`, and most common video containers.
 
 ### 1d. Air-Date Naming
 
-```
+```text
 /TV/Show Name/Show Name - 2012-03-02.ext
 /TV/Show Name/Show Name - 2012-03-09.ext
 ```
@@ -60,7 +65,7 @@ Supported formats: `.mkv`, `.mp4`, `.ts`, and most common video containers.
 
 ### 1e. Multi-Version Episodes
 
-```
+```text
 /TV/Show Name (2020)/S01E01 - directors-cut.ext
 /TV/Show Name (2020)/S01E01 - unrated.ext
 /TV/Show Name (2020)/S01E01 - 4k-restored.ext
@@ -79,7 +84,7 @@ subdirectory as exactly one series** and uses the folder name —
 **`Series Title (Year)`** — as the authoritative series title and year for both
 grouping and TMDB TV matching:
 
-```
+```text
 /vault1/anime/
   Assassination Classroom (2013)/
     Assassination Classroom S01E01.mkv
@@ -102,7 +107,7 @@ for how to set the option.
 
 ### Season 00
 
-```
+```text
 /TV/Show Name/Season 00/Show Name S00E01.pilot.ext
 /TV/Show Name/Season 00/Show Name S00E02.behind-the-scenes.ext
 ```
@@ -112,7 +117,7 @@ for how to set the option.
 
 ### Specials Folder Alias
 
-```
+```text
 /TV/Show Name/Specials/S00E01.ext
 ```
 

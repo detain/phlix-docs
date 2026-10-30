@@ -1,3 +1,8 @@
+---
+title: Mobile App
+description: The Phlix iOS and Android app — APK sideload builds today, store listings pending
+---
+
 # Mobile App
 
 **Since:** 0.18.0

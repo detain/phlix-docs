@@ -1,3 +1,8 @@
+---
+title: Skip Button Integration Brief — Phase M
+description: What client apps must read from playback info to render Skip Intro and Skip Outro buttons
+---
+
 # Skip Button Integration Brief — Phase M
 
 **For client repo developers** | Server Phase F.4 | Version 0.12.0
@@ -12,7 +17,7 @@ The server now provides skip button boundaries in the playback info response. Yo
 
 ### 1. Fetch Playback Info
 
-```
+```http
 GET /api/v1/media/{media_item_id}/playback
 ```
 

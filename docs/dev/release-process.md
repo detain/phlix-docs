@@ -10,7 +10,7 @@ How Phlix releases are versioned, built, and published.
 
 Phlix follows [Semantic Versioning](https://semver.org):
 
-```
+```text
 major.minor.patch   (e.g. 1.2.3)
 ```
 
@@ -24,7 +24,7 @@ major.minor.patch   (e.g. 1.2.3)
 
 Development and release candidate versions use semver pre-release suffixes:
 
-```
+```text
 1.2.3-alpha.1
 1.2.3-beta.2
 1.2.3-rc.1
@@ -44,7 +44,7 @@ Tag format in git: `v1.2.3-rc.1`
 
 ## Branching model
 
-```
+```text
 origin/master          ← main development branch, always shippable
   ├── release/1.2.0    ← release stabilization branch (cut from master)
   └── hotfix/1.2.1     ← emergency fixes off a release tag

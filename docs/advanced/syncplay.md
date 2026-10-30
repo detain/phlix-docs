@@ -53,7 +53,7 @@ Groups created from the player are always open — there is no password box in t
 
 A standalone page exists at `https://your-server/app/syncplay` (after signing in) where you can create a group or join by ID before opening a title. A pre-filled invite link you can send to someone is simply:
 
-```
+```text
 https://your-server/app/syncplay?room=<room-id>
 ```
 

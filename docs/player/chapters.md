@@ -59,7 +59,7 @@ Trickplay provides visual scrubbing previews in the player timeline.
 
 ### Sprite Sheet Layout
 
-```
+```text
 [row 0: ticks 0-9]   (3600×90)
 [row 1: ticks 10-19] (3600×90)
 ...
@@ -80,7 +80,7 @@ Returns sprite sheet URL and metadata.
 
 Chapter markers appear as **clickable dots** on the player timeline:
 
-```
+```text
 |=====●=====●=====●=====●=====|
   Ch1    Ch2    Ch3    Ch4
 ```
@@ -106,7 +106,7 @@ interface ChapterMarker {
 
 Press the **chapters button** (or `C` key) to open the chapter list overlay:
 
-```
+```text
 ┌────────────────────────────────────┐
 │ Chapters                     [×]  │
 ├────────────────────────────────────┤

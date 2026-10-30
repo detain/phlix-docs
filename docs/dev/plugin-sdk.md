@@ -124,7 +124,7 @@ plugins that want to enumerate or introspect other plugins:
 
 ### Install
 
-```
+```text
 1. Operator or API calls  POST /api/v1/admin/plugins/install
 2. HttpInstaller fetches plugin.json from the supplied URL
    — refuses http:// unless PHLIX_PLUGINS_ALLOW_HTTP=1
@@ -141,7 +141,7 @@ plugins that want to enumerate or introspect other plugins:
 
 ### Enable
 
-```
+```text
 1. PATCH /api/v1/admin/plugins/<name>/enable
 2. PluginLoader calls Plugin::onEnable($container)
 3. Loader subscribes every phlix.* listener returned by
@@ -152,7 +152,7 @@ plugins that want to enumerate or introspect other plugins:
 
 ### Disable
 
-```
+```text
 1. POST /api/v1/admin/plugins/<name>/disable
 2. PluginLoader calls Plugin::onDisable($container)
 3. Loader unsubscribes all the plugin's listeners from the registry
@@ -161,7 +161,7 @@ plugins that want to enumerate or introspect other plugins:
 
 ### Uninstall
 
-```
+```text
 1. DELETE /api/v1/admin/plugins/<name>
 2. Loader calls Plugin::onDisable() (cleanup before removal)
 3. Plugin's vendor dir removed (data/plugins/<name>/vendor/)

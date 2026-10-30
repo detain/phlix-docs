@@ -1,3 +1,8 @@
+---
+title: Movies Library Setup
+description: Naming, matching, and artwork for movie libraries, from folder layout to cross-device watch progress
+---
+
 # Movies Library Setup
 
 **Since:** 0.14.0
@@ -28,7 +33,7 @@ Container format matters less than the codec inside. Phlix streams directly when
 
 ### 2a. Flat-File Naming (Simplest)
 
-```
+```text
 Avatar (2009).mkv
 The Matrix (1999).mp4
 ```
@@ -38,7 +43,7 @@ The Matrix (1999).mp4
 
 ### 2b. Folder-Based Naming
 
-```
+```text
 /Movies/
   The Matrix (1999)/
     Matrix, The.mp4
@@ -51,7 +56,7 @@ The Matrix (1999).mp4
 
 ### 2c. Multi-Version Movies
 
-```
+```text
 Avatar (2009) - directors-cut.mkv
 Avatar (2009) - extended.mkv
 Avatar (2009) - 4k-restored.mkv
@@ -62,7 +67,7 @@ Avatar (2009) - 4k-restored.mkv
 
 ### 2d. Disc Folder Structure
 
-```
+```text
 Movie Name (2020)/
   movie.mkv
   trailer.mkv

@@ -70,7 +70,7 @@ Terminate TLS at a reverse proxy (Caddy, nginx, HAProxy). See [/advanced/reverse
 
 Minimum TLS configuration (Caddy example):
 
-```
+```caddy
 phlix.example.com {
     reverse_proxy localhost:8096
     tls you@example.com
@@ -83,7 +83,7 @@ Do not expose port 8096 directly to the internet without a TLS terminator in fro
 
 The server ships HSTS **on by default**: every response it generates carries
 
-```
+```http
 Strict-Transport-Security: max-age=31536000; includeSubDomains
 ```
 

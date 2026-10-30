@@ -1,3 +1,8 @@
+---
+title: MCP (Model Context Protocol)
+description: The hub MCP endpoint letting AI clients reach your relayed media servers with a personal access token
+---
+
 # MCP (Model Context Protocol)
 
 **Surface:** phlix-hub

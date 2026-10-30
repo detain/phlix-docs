@@ -25,7 +25,7 @@ Every term used below that sounds like jargon is defined in the
 
 On any device on the same network, visit:
 
-```
+```text
 http://<your-server>:8096/app
 ```
 
@@ -94,7 +94,7 @@ looks off, your device may have needed the server to convert the video on the fl
 There is no "forgot password" email flow — Phlix sends no mail. Recovery happens on the
 server itself, at a terminal:
 
-```
+```bash
 php bin/phlix user:reset-password <username-or-email>
 php bin/phlix user:promote <username>          # (re)grant admin
 php bin/phlix user:list                        # who exists at all

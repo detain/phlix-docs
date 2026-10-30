@@ -1,3 +1,8 @@
+---
+title: Library Sharing
+description: Granting hub users access to your libraries — invite links today plus the email-based share API that has no UI
+---
+
 # Library Sharing
 
 ## TL;DR
@@ -30,7 +35,7 @@ two pages above.)
 
 The **Shares** page lists every library share you have created, one row per share:
 
-```
+```text
 ┌─ Library   Shared with   Permissions   Created     Expires    Actions ─┐
 │ Movies ★   Alice         read          2026-05-29  Never      [Revoke] │
 │ TV Shows   Bob           write         2026-05-29  2026-08-27 [Revoke] │
@@ -59,7 +64,7 @@ Each row shows six columns:
 The separate **Shared With Me** page (`/app/shared-with-me`) shows one card per
 incoming share:
 
-```
+```text
 ┌─ Library ──────────────────────────────┐
 │ Movies ★                               │
 │ Shared by: Alice                       │

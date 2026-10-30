@@ -1,3 +1,8 @@
+---
+title: Phlix plugin developer guide
+description: Authoring a plugin end-to-end — types, manifest, lifecycle, events, packaging, signing, publishing
+---
+
 # Phlix plugin developer guide
 
 This is the end-to-end guide for authoring a Phlix plugin. Read it
@@ -505,7 +510,7 @@ cd my-plugin
 
 ### File-by-file tour
 
-```
+```text
 my-plugin/
 ├── plugin.json              # the manifest
 ├── composer.json            # autoload map + runtime deps
@@ -604,7 +609,7 @@ stub when the canonical class isn't already loaded. See
 With the plugin admin UI from A.5 enabled, paste this URL into
 **Admin → Plugins → Install from URL** and click **Install**:
 
-```
+```text
 https://raw.githubusercontent.com/detain/phlix-plugin-example/main/plugin.json
 ```
 
@@ -682,7 +687,7 @@ GitHub tarball that unpacks to `<repo>-<sha>/` will end up with
 
 Each installed plugin lives at:
 
-```
+```text
 var/plugins/<plugin-name>/
 ├── plugin.json
 ├── composer.json
@@ -707,7 +712,7 @@ this is the contract.
 
 ### Signature format
 
-```
+```json
 "signature": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
 ```
 
@@ -1113,7 +1118,7 @@ columns set, so the user can later set a local password.
 
 The server exposes auth provider management at:
 
-```
+```http
 GET    /api/v1/admin/auth-providers              — list registered providers
 POST   /api/v1/admin/auth-providers/{name}/enable
 POST   /api/v1/admin/auth-providers/{name}/disable

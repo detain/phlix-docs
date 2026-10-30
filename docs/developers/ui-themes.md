@@ -140,7 +140,7 @@ h1, h2, h3 { color: var(--text-primary); }
 
 ## Directory Structure
 
-```
+```text
 phlix-plugin-my-theme/
 ├── composer.json
 ├── plugin.json

@@ -20,7 +20,7 @@ This is the same pattern as `frp`, `ngrok`, or `cloudflared` but implemented in 
 
 ## Architecture
 
-```
+```text
 Client (remote)                    Hub                       Server (behind NAT)
      |                              |                              |
      |  HTTPS request to           |                              |
@@ -66,7 +66,7 @@ Client (remote)                    Hub                       Server (behind NAT)
 
 All frames share the same binary structure:
 
-```
+```text
 [1-byte type][4-byte seq (big-endian uint32)][4-byte payload_len (big-endian uint32)][payload_bytes]
 ```
 

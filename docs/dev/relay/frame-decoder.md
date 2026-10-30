@@ -6,7 +6,7 @@ Low-level binary framing for all Hub relay messages. Implements a streaming deco
 
 ## Wire Format
 
-```
+```text
 [4-byte sequence][1-byte type][2-byte length][payload]
 ```
 

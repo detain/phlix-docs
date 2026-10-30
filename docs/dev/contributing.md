@@ -122,7 +122,7 @@ Never commit directly to `master`. All work happens in feature branches.
 
 ## Commit format
 
-```
+```text
 {type}: {description}
 ```
 
@@ -138,7 +138,7 @@ Types for conventional contributions:
 | `step-N.M:` | Phase/step deliverable (e.g., `step-N.23:`) |
 
 Examples:
-```
+```text
 step-N.23: add contributing guide (repo structure, dev setup, branch conventions)
 fix: resolve race condition in HubClient heartbeat loop
 feat: add FanartProvider for TV series artwork
@@ -455,6 +455,17 @@ don't mix them inside a single instruction.
 codes, program markers, or private planning-file references (e.g. "Phase:
 P1-S9", or citing documents a reader cannot open). A feature's era belongs in
 a **Since:** stamp, not in planning shorthand.
+
+**Page front matter.** Every live page opens with a YAML block carrying `title`
+and `description` (the home page's hero layout and moved-page redirect stubs may
+carry their additional keys). `title` repeats the page's H1 text — or its sidebar
+label where the page has no H1 — with markdown stripped; `description` is one
+sentence naming what the page covers, written to be read without the page in
+front of you, because it feeds `<title>`, search snippets, and share cards. New
+pages start compliant; when touching a page that predates the pair, add it in the
+same change. The clients, plugins, hub, libraries, and integrations families plus
+`faq.md` and `troubleshooting.md` reached full coverage in the 2026-10-30 pass;
+remaining pre-law pages follow the touch-in rule.
 
 ---
 

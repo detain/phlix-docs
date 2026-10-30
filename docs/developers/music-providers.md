@@ -77,7 +77,7 @@ MusicBrainz requires:
 3. **No commercial use** — see MusicBrainz terms of use
 
 Example User-Agent:
-```
+```text
 Phlix/1.0 (https://phlix.media; contact@phlix.media)
 ```
 
@@ -95,7 +95,7 @@ To add a new music metadata provider:
 
 Music providers are registered with the following priority order:
 
-```
+```text
 artist  → musicbrainz → audiodb → local
 album   → musicbrainz → audiodb → local
 track   → musicbrainz → audiodb → local

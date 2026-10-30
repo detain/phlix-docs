@@ -22,7 +22,7 @@ SSDP is part of the UPnP protocol suite and uses HTTP-like messages over UDP.
 
 #### M-SEARCH (Discovery Request)
 
-```
+```http
 M-SEARCH * HTTP/1.1
 HOST: 239.255.255.250:1900
 MAN: "ssdp:discover"
@@ -33,7 +33,7 @@ USER-AGENT: Phlix/1.0
 
 #### NOTIFY (Announcement)
 
-```
+```http
 NOTIFY * HTTP/1.1
 HOST: 239.255.255.250:1900
 NT: urn:schemas-upnp-org:device:MediaServer:1
@@ -101,7 +101,7 @@ fix.
 
 ### Classes
 
-```
+```text
 src/Discovery/
 ├── Ssdp/
 │   ├── SsdpSocket.php       # Raw UDP socket for SSDP

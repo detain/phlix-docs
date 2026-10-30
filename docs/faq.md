@@ -1,3 +1,8 @@
+---
+title: FAQ
+description: Common operator and end-user questions, from formats and matching to accounts and playback
+---
+
 # FAQ
 
 **Since:** 0.18.0

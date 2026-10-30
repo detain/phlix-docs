@@ -44,7 +44,7 @@ The console client renders in any modern terminal using:
 
 ### 2.1 Required Software
 
-```
+```text
 1. PHP 8.3+ (CLI)
 2. Composer 2.x
 3. Git
@@ -75,7 +75,7 @@ composer install
 
 ## 3. Project Structure
 
-```
+```text
 phlix-console-client/
 ├── bin/
 │   └── phlix                 # CLI entrypoint
@@ -129,7 +129,7 @@ phlix-console-client/
 
 ### 4.1 Application Flow
 
-```
+```text
 bin/phlix
   └── buildContainer()    — Build DI container
         └── App::boot()   — Bootstrap application
@@ -292,7 +292,7 @@ $frames = $this->videoSpike->frames($path, $count = 1, $cols = 60, $rows = 20, $
 
 The home screen displays library rails:
 
-```
+```text
 ┌─ Phlix ─────────────────────────────────────────────┐
 │                                                     │
 │  Movies   TV Shows   Music   Audiobooks   Photos   │

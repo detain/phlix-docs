@@ -373,7 +373,7 @@ php scripts/pair-with-hub.php https://hub.example.com "Alice's NAS"
 
 **Output:**
 
-```
+```text
 Pairing initiated.
 Claim code: ABCD-1234
 Enter this code at https://hub.example.com/claim-server
@@ -423,7 +423,7 @@ relay tunnel.
 
 **Example output (status):**
 
-```
+```text
 Port Forwarding Status
 =======================
 Enabled:  YES
@@ -440,7 +440,7 @@ Hostname Candidates:
 
 **Example output (info):**
 
-```
+```text
 Network Information
 ====================
 Local IP:  192.168.1.100

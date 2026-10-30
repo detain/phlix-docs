@@ -314,7 +314,7 @@ php C:\phlix\public\index.php
 
 Open your browser:
 
-```
+```text
 http://localhost:8096
 ```
 

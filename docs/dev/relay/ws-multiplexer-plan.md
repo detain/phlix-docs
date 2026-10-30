@@ -1,6 +1,6 @@
 # WebSocket Multiplexed Relay Tunnel — Implementation Plan
 
-```
+```yaml
 status: implemented
 phase: complete
 updated: 2026-05-25
@@ -91,7 +91,7 @@ wire format or message types.
 
 ## Architecture
 
-```
+```text
 phlix-server                      phlix-hub                     remote client
      |                                |                               |
      |===== [1] wss://hub/relay/{id] ==============================|======
@@ -156,7 +156,7 @@ phlix-server                      phlix-hub                     remote client
 
 Server sends immediately after WS upgrade completes (before any binary frames):
 
-```
+```text
 → Hub:  {"type":"hello","enrollment_jwt":"<ed25519-jwt>","server_id":"<uuid>"}
 ← Hub:  {"type":"hello_ack","relay_session_id":"<uuid>","tunnel_id":"<uuid>"}
 ```
@@ -168,7 +168,7 @@ close code `1008` (Policy Violation).
 
 All subsequent frames use this binary encoding (all integers big-endian):
 
-```
+```text
 [4-byte channel/seq (uint32)][1-byte frame type][2-byte payload length (uint16)][N payload bytes]
 ```
 

@@ -1,3 +1,8 @@
+---
+title: Photos Library Documentation
+description: Photo browsing, thumbnailing, and slideshows — and the fact that a scan extracts no image metadata
+---
+
 # Photos Library Documentation
 
 **Since:** 0.16.0

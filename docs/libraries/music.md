@@ -1,3 +1,8 @@
+---
+title: Music Library Documentation
+description: The Artist / Album / Track index, the music scanner, and the API behind the web player's Music pages
+---
+
 # Music Library Documentation
 
 **Since:** 0.14.0
@@ -106,7 +111,7 @@ the directory, which is what keeps an album split across several folders in one
 album row. So the layout below is a readability convention rather than something
 the scanner parses:
 
-```
+```text
 /music/
 └── Artist Name/
     └── Album Name (Year)/

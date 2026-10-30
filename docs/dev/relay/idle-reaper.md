@@ -8,7 +8,7 @@ Periodic cleanup of stale server tunnels that have exceeded the idle threshold w
 
 The IdleReaper runs on a configurable interval (default 60 seconds) and checks each tunnel's `lastFrameAt` timestamp. Tunnels idle for longer than the stale threshold (default 90 seconds) are closed with reason `"timeout"` and removed from the `TunnelManager`.
 
-```
+```text
 TunnelManager → [IdleReaper] → closeTunnel(serverId, 'timeout')
                       ↑
                   Workerman Timer

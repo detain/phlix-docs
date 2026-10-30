@@ -1,3 +1,8 @@
+---
+title: DLNA / Play To
+description: Streaming Phlix media to DLNA-certified TVs, consoles, and players on the local network
+---
+
 # DLNA / Play To
 
 **Since:** 0.18.0

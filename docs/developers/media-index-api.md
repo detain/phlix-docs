@@ -99,7 +99,7 @@ Any non-ok HTTP response (401, 404, 500, etc.) is treated the same way: the rail
 
 The `offset` field is the critical contract between server and client. Clicking bucket "C" (offset=240) in a library sorted by name causes the grid to call:
 
-```
+```text
 ensureRange(240, 240 + limit)
 ```
 

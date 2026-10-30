@@ -73,7 +73,7 @@ The script initiates pairing, prints a claim code, and polls the Hub until you
 enter that code at `https://hub.phlix.example.com/claim-server`. On success it
 prints the server ID, stores the enrollment, and starts the heartbeat loop:
 
-```
+```text
 Pairing initiated.
 Claim code: ABCD-1234
 Enter this code at https://hub.phlix.example.com/claim-server

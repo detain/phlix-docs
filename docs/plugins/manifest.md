@@ -1,3 +1,8 @@
+---
+title: Plugin manifest (plugin.json) — A.3 reference
+description: Every field of a plugin plugin.json and how the loader, admin UI, and signature verifier read them
+---
+
 # Plugin manifest (`plugin.json`) — A.3 reference
 
 Every Phlix plugin ships a `plugin.json` at the root of its package.

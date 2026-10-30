@@ -115,7 +115,7 @@ When multiple recordings are due simultaneously:
 
 ### Tuner Conflict Example
 
-```
+```text
 Rule A (priority=10): "News at 6" - Channel 4, 6:00 PM
 Rule B (priority=5):  "Movie" - Channel 4, 6:00 PM
 
@@ -129,7 +129,7 @@ If 2 tuners:
 
 Recordings automatically start and end with configurable padding:
 
-```
+```text
 Actual Program: 6:00 PM - 7:00 PM
 Pre-padding: 2 minutes  -> Recording starts at 5:58 PM
 Post-padding: 1 minute   -> Recording ends at 7:01 PM
@@ -194,7 +194,7 @@ When a recording completes:
 
 Planned REST endpoints for series rules:
 
-```
+```http
 POST   /api/v1/dvr/rules              - Create series rule
 GET    /api/v1/dvr/rules              - List all rules
 GET    /api/v1/dvr/rules/{id}         - Get specific rule

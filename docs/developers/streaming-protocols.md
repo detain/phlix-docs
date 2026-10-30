@@ -67,7 +67,7 @@ Phlix Media Server supports two adaptive streaming protocols: **HLS** (HTTP Live
 
 ### HLS Master Playlist
 
-```
+```m3u8
 #EXTM3U
 #EXT-X-VERSION:3
 #EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080,NAME="1080p"
@@ -135,7 +135,7 @@ hls.attachMedia(document.querySelector('#video'));
 
 ### Class Architecture
 
-```
+```text
 TranscodeManager  → one CMAF encode per job (FFmpeg dash muxer + -hls_playlist)
                     writes manifest.mpd + master.m3u8 + media_N.m3u8 + shared *.m4s
 HlsController  ─┐
@@ -293,7 +293,7 @@ The `offset` and `length` attributes enable byte-range requests, allowing client
 
 ### Server-Side Implementation (Trickplay)
 
-```
+```text
 StreamManager
 ├── HlsStreamer          → generates .m3u8 playlists + .ts segments
 ├── DashStreamer        → generates .mpd manifests + .m4s segments

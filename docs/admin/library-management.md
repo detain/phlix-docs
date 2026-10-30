@@ -71,7 +71,7 @@ title and year used for both **grouping episodes** and **TMDB TV metadata matchi
 This is the recommended layout for collections where each show lives in its own
 directory, e.g.:
 
-```
+```text
 /vault1/anime/
   Assassination Classroom (2013)/
     Assassination Classroom S01E01.mkv
@@ -894,7 +894,7 @@ Because `realpath()` collapses `..` segments **and** resolves symlinks to their
 real targets, a single prefix test against each root is enough to keep the
 listing inside the jail:
 
-```
+```php
 $real === $root  ||  str_starts_with($real . '/', $root . '/')
 ```
 

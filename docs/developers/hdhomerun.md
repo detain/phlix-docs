@@ -10,7 +10,7 @@ This document covers the SSDP discovery protocol, HDHomeRun HTTP API endpoints, 
 
 ## Architecture
 
-```
+```text
 LiveTvManager
     └── TunerDriverInterface
             └── HdHomeRunTunerDriver
@@ -30,7 +30,7 @@ HDHomeRun devices advertise themselves via SSDP (Simple Service Discovery Protoc
 
 ### SSDP Message Format
 
-```
+```http
 M-SEARCH * HTTP/1.1
 HOST: 239.255.255.250:1900
 MAN: "ssdp:discover"
@@ -77,7 +77,7 @@ All API calls are plain HTTP GET requests. Responses are JSON unless noted other
 ### Stream URL Format
 
 HDHomeRun provides HLS streams via URL pattern:
-```
+```text
 http://{device_ip}/watch?channel={channel_number}
 ```
 

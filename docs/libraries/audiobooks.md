@@ -1,3 +1,8 @@
+---
+title: Audiobooks Library
+description: Chapter-aware audiobook playback with per-user progress tracking, and the formats that carry chapter data
+---
+
 # Audiobooks Library
 
 **Since:** 0.18.0
@@ -56,7 +61,7 @@ Progress is saved every 10 seconds via `POST /audiobooks/{id}/progress`.
 
 Audiobook series with multiple files follow the same naming convention as TV shows:
 
-```
+```text
 The Wheel of Time - Book 01 - The Eye of the World.m4b
 The Wheel of Time - Book 02 - The Great Hunt.m4b
 ```

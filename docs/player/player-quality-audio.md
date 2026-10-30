@@ -81,7 +81,7 @@ Auto quality uses adaptive bitrate streaming:
 
 ### Audio Selection UI
 
-```
+```text
 ┌─────────────────────────────┐
 │ Audio Track            [×] │
 ├─────────────────────────────┤
@@ -147,7 +147,7 @@ segment1.aac
 
 ### Subtitle Selection UI
 
-```
+```text
 ┌─────────────────────────────┐
 │ Subtitles / CC         [×] │
 ├─────────────────────────────┤

@@ -87,7 +87,7 @@ return [
 
 Comskip EDL files use 3 tab-separated columns:
 
-```
+```text
 start_seconds  end_seconds  scene_type
 ```
 
@@ -98,7 +98,7 @@ start_seconds  end_seconds  scene_type
 - `3` = Commercial (primary detection type)
 
 Example:
-```
+```text
 0.0      45.0     3
 120.0    180.0    3
 360.0    420.0    0

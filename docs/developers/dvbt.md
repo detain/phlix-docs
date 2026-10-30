@@ -12,7 +12,7 @@ The DVB-T (Digital Video Broadcasting — Terrestrial) USB tuner driver enables 
 
 ## Architecture
 
-```
+```text
 LiveTvManager
 ├── HdHomeRunTunerDriver (SSDP discovery + HTTP API)
 ├── IptvTunerDriver (M3U playlist + XMLTV)
@@ -29,7 +29,7 @@ The Linux DVB API provides access to digital TV hardware through device nodes in
 
 ### Device Structure
 
-```
+```text
 /dev/dvb/
 ├── adapter0/
 │   ├── demux0       # Demultiplexer device

@@ -34,7 +34,7 @@ error is written to output). Commands never call `exit()`/`die()` internally.
 
 ## phlix-server commands
 
-Run from the phlix-server install directory (`phlix-server/`). Twelve commands
+Run from the phlix-server install directory (`phlix-server/`). Twenty commands
 are available.
 
 | Command | Arguments / options | Description |
@@ -50,6 +50,14 @@ are available.
 | `backup:create` | `[--label=]` | Create a new server backup archive. |
 | `backup:list` | — | List stored server backups. |
 | `hwaccel:probe` | — | Probe for available hardware-acceleration encoders. |
+| `media:dedupe-paths` | `[--dry-run]` `[--apply]` `[--batch-size=500]` | Find and merge duplicate media items that share the same filesystem path (preview unless `--apply`). |
+| `user:create` | `{username}` `--email=` `--password=` `[--display-name=]` `[--json]` | Create a new user account (password hashed at rest). |
+| `user:list` | `[--status=pending\|active\|disabled]` `[--json]` | List users, optionally filtered by account status. |
+| `user:promote` | `{user}` `[--revoke]` `[--json]` | Promote a user to admin, or demote with `--revoke`. |
+| `user:approve` | `{user}` `[--json]` | Approve a user (set status to active). |
+| `user:reject` | `{user}` `[--json]` | Reject a pending user by deleting the account. |
+| `user:disable` | `{user}` `[--json]` | Disable a user (set status to disabled; last admin is protected). |
+| `user:delete` | `{user}` `[--force]` `[--json]` | Delete a user account (last admin is protected; `--force` skips only the confirmation prompt). |
 | `user:reset-password` | `{user}` `[--password=]` | Reset a user's password by username or email. |
 
 ### Server `migrate`
@@ -305,13 +313,20 @@ Returns exit `1` if the user is not found.
 
 ## phlix-hub commands
 
-Run from the phlix-hub install directory (`phlix-hub/`). Two commands are
+Run from the phlix-hub install directory (`phlix-hub/`). Nine commands are
 available.
 
 | Command | Arguments / options | Description |
 | --- | --- | --- |
 | `migrate` | — | Apply database migrations (`migrations/*.sql`). |
 | `smoke:jwt` | — | Smoke-test the JWT create-validate round-trip. |
+| `user:create` | `{username}` `--email=` `--password=` `[--display-name=]` `[--json]` | Create a new hub user account. |
+| `user:list` | `[--json]` | List hub user accounts. |
+| `user:promote` | `{user}` `[--revoke]` `[--json]` | Promote a hub user to admin, or demote with `--revoke`. |
+| `user:delete` | `{user}` `[--force]` `[--json]` | Delete a hub user account (last admin is protected). |
+| `oauth:client:register` | `{client-id}` `{name}` `--redirect-uri=` `--scope=` `[--confidential]` `[--secret=]` | Register (or re-provision) an OAuth 2.0 client in the hub client registry. |
+| `oauth:client:list` | — | List every registered OAuth 2.0 client, including disabled and unusable rows. |
+| `oauth:client:disable` | `{client-id}` `[--revoke-tokens]` | Disable an OAuth 2.0 client so it can obtain no further grants (`--revoke-tokens` also kills live tokens). |
 
 ### Hub `migrate`
 

@@ -65,7 +65,7 @@ For the vast majority of deployments this is sufficient, and you may never need 
 ### Why a single hub is often enough
 
 1. **Simplicity:** No second hub to operate, no peer trust to manage.
-2. **Sufficiency:** ~5000 users and ~200 servers cover most deployments.
+2. **Sufficiency:** A single hub enforces **no cap** on users or claimed servers by default — `server.max_servers_per_user` and `server.max_users_per_server` both default to `0` = unlimited, and a cap binds only if an operator sets it positive. How much load one hub can serve is a hardware-sizing question, not a policy one — see [Capacity Planning](./capacity-planning.md).
 3. **Clear path to multi-hub:** When you do need more than one hub, federation is already there — peer them and share.
 
 ### What this means for users

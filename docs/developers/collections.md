@@ -1,6 +1,6 @@
-# Collections (Step H.2)
+# Collections
 
-**Since:** 0.14.0
+**Since:** 0.14.0 (per-user ownership added later via `migrations/112_collections_created_by.sql`)
 
 ## Overview
 
@@ -22,6 +22,7 @@ final class Collection
         public readonly int $sortOrder = 0,
         public readonly \DateTimeImmutable $createdAt,
         public readonly \DateTimeImmutable $updatedAt,
+        public readonly ?string $createdBy = null, // owning user id; null = legacy/unowned
     ) {}
 
     public function isSmart(): bool  // true if smartPlaylistId !== null
@@ -55,9 +56,11 @@ CREATE TABLE collections (
     sort_order INT NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
+    created_by CHAR(36) NULL,          -- added by migration 112
     INDEX idx_col_library (library_id),
     INDEX idx_col_smart_pl (smart_playlist_id),
-    INDEX idx_col_parent (parent_id)
+    INDEX idx_col_parent (parent_id),
+    INDEX idx_col_owner (created_by)   -- added by migration 112
 ) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE collection_items (
@@ -70,12 +73,42 @@ CREATE TABLE collection_items (
 ) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
+## Ownership
+
+Collections are **per-user** (`created_by`), enforced in `CollectionController` and
+`CollectionRepository` (`src/Collections/`):
+
+- **Reads:** a member sees rows where `created_by = <their id>` **or** `created_by IS NULL`;
+  an active admin (`is_admin = 1 AND status = 'active'`, resolved via
+  `UserRepository::findAdminById`, looked up lazily at most once per request, and failing
+  closed to non-admin when unwired) sees everything. List endpoints are SQL-scoped
+  (`findAllVisibleTo` / `findVisibleByLibraryId`).
+- **Writes:** the owner manages their own rows. Foreign rows and legacy `NULL` rows are
+  admin-only.
+- **Misses are indistinguishable from absence:** a foreign or unwritable-by-member id
+  returns the byte-identical `404 {"error":"Collection not found"}` — there is no 403
+  ownership oracle. Anonymous callers get `401 {"error":"Unauthorized","code":"auth.required"}`.
+- **Creation stamps the actor:** `POST /api/v1/collections` (and its `/api/v1/playlists`
+  alias) sets `created_by` to the authenticated user id. The `createdBy` argument is the
+  controller's, never the body's.
+- **Updates carry ownership forward immutably:** `PUT` re-persists the existing
+  `createdBy`; a `created_by` key in the request body is never read.
+- **Backfill:** on upgrade, `migrations/112_collections_created_by.sql` stamps every
+  existing `NULL` row to the earliest **active** admin (else the earliest-created user of
+  any status); if the `users` table is empty, rows stay `NULL` and keep the
+  all-visible/admin-writable policy. Consequence, stated plainly: members lose pre-gate
+  global visibility of stamped legacy lists and gain self-service CRUD on their own.
+- By design, `findById` / `getCollectionWithItems` / `findBySmartPlaylistId` in
+  `CollectionRepository` stay **unscoped and owner-blind** — visibility is applied by the
+  controller predicates (`actorSees` / `actorManages`) and the scoped list queries, not by
+  hiding the repository from callers.
+
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/v1/collections` | List all collections |
-| POST | `/api/v1/collections` | Create collection |
+| GET | `/api/v1/collections` | List collections visible to the caller (own + unowned; all for active admins) |
+| POST | `/api/v1/collections` | Create collection (stamps `created_by` = actor; also aliased at `POST /api/v1/playlists`) |
 | GET | `/api/v1/collections/{id}` | Get collection with items |
 | PUT | `/api/v1/collections/{id}` | Update collection |
 | DELETE | `/api/v1/collections/{id}` | Delete collection |
@@ -83,7 +116,7 @@ CREATE TABLE collection_items (
 | DELETE | `/api/v1/collections/{id}/items/{mediaItemId}` | Remove item from collection |
 | POST | `/api/v1/collections/{id}/bulk-add` | Bulk-add from search results |
 | POST | `/api/v1/collections/{id}/refresh` | Re-evaluate smart collection |
-| GET | `/api/v1/libraries/{libraryId}/collections` | Collections for library |
+| GET | `/api/v1/libraries/{libraryId}/collections` | Collections for library (visibility-scoped like the global list) |
 
 ### Creating a Collection
 
@@ -109,7 +142,8 @@ Response (201):
         "sort_order": 0,
         "is_smart": false,
         "created_at": "2024-01-15 10:30:00",
-        "updated_at": "2024-01-15 10:30:00"
+        "updated_at": "2024-01-15 10:30:00",
+        "created_by": "user-uuid-of-actor"
     }
 }
 ```

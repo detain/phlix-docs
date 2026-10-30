@@ -68,7 +68,7 @@ If a resume position is wrong, seeking to the correct point and letting it play 
 
 No. The Hub is optional. Without it, you can still access Phlix directly over the internet by configuring a reverse proxy with your own TLS certificate. See [/advanced/remote-access-without-hub](/advanced/remote-access-without-hub) and [/advanced/reverse-proxy](/advanced/reverse-proxy).
 
-The Hub provides a simpler experience: it handles TLS, allocates a `*.phlix.media` subdomain, and maintains a persistent tunnel so you do not need to expose ports or manage your own certificate.
+The Hub provides a simpler experience: it allocates a `*.phlix.media` subdomain, terminates TLS on its own edge, and maintains a persistent tunnel so you do not need to expose ports. It does not yet provision a certificate for your allocated subdomain — automated ACME is not implemented (see [/hub-admin/tls](/hub-admin/tls)) — but clients reach your server through the Hub's HTTPS edge over that tunnel.
 
 See [/hub/what-is-the-hub](/hub/what-is-the-hub) for the full comparison.
 
@@ -88,7 +88,7 @@ Without a GPU, 4K HEVC transcoding will be slow and CPU-intensive. See [/advance
 
 1. Verify a GPU is detected: `ffmpeg -hide_banner -encoders 2>&1 | grep -i nvenc` (NVIDIA) or `vainfo` (VAAPI).
 2. If no GPU output, hardware acceleration is not active. See [/advanced/hardware-transcoding](/advanced/hardware-transcoding) to enable it.
-3. Check the transcode log at `.logs/transcode/<job-id>.log` for FFmpeg errors.
+3. Check the FFmpeg log for the failing job at `<segment-output-dir>/ffmpeg.log` (one per transcode job directory, alongside the segments) and the application log at `.logs/app.log`.
 4. Lower the quality preset in **Admin → Server Settings → Transcoding** — a CRF of 28 (lower quality, faster) vs 23 (higher quality, slower) makes a large difference on CPU-only systems.
 
 ---

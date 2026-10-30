@@ -90,15 +90,17 @@ the allowlist/LAN check runs against the proxy's IP, not the real client's. See
 
 ### Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `PHLIX_PUBLIC_URL` | Public URL used in DLNA announcements. Set if behind a reverse proxy. |
+The DLNA stack reads no environment variables of its own. Its behavior is set
+in `config/dlna.php` (`enabled` — the SSDP advertiser, `cds_enabled` — the
+browse/stream endpoints, `friendly_name`), and the earlier-announced
+`PHLIX_PUBLIC_URL` does not exist in phlix-server: the advertised `LOCATION`
+URL is composed from the machine's own IP address and the DLNA port at runtime
+(`SsdpAdvertiser::getLocationUrl()`), so there is no public-URL override.
 
-The HTTP port the server listens on is not an environment variable. It is
-`server.port` in `config/server.php`, default `8096`. (`PHLIX_HTTP_PORT` was
-listed in this table in earlier revisions; it was never implemented in
-phlix-server and setting it has no effect. See
-[Environment variables](/reference/env-vars).)
+The HTTP port the server listens on is `server.port` in `config/server.php`,
+default `8096`; it can be overridden with `PHLIX_HTTP_PORT`, which is honored
+by the listen-endpoint wiring (`src/Server/Runtime/ListenEndpoints.php`). See
+[Environment variables](/reference/env-vars).
 
 ### Device Identification
 
@@ -221,16 +223,23 @@ Renderer discovery happens via:
 
 1. **Verify Phlix is running**:
    ```bash
-   curl http://localhost:8096/api/v1/system/status
+   curl -s http://localhost:8096/health
    ```
+   (The health endpoint answers `{"status":"ok", ...}`. For the DLNA stack
+   specifically, the admin status route is `GET /api/v1/admin/dlna/status`.)
 
 2. **Check SSDP is announced** (requires network debugging tool):
    - Phlix sends UDP packets to `239.255.255.250:1900`
    - Firewalls must allow UDP port 1900 outbound
 
 3. **Check network connectivity**:
-   - Phlix and the TV must be on the same subnet
-   - Check if `PHLIX_PUBLIC_URL` is set correctly if using VLANs
+   - Phlix and the TV must be on the same subnet. SSDP discovery rides link-local
+     multicast (`239.255.255.250`); routers and VLAN boundaries do not forward
+     it, and there is no environment override for the advertised address — the
+     `LOCATION` is built from the server's own IP. Across subnets, point the
+     renderer at the server IP directly or flatten the network (L2).
+   - Firewalls between the TV and the server must also allow inbound TCP to the
+     DLNA port (`8200` by default) — discovery alone is not playback.
 
 ### Media Won't Play on TV
 

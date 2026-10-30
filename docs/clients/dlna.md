@@ -15,8 +15,20 @@ For the complete server-side DLNA documentation, including architecture, configu
 
 ## Quick Status Check
 
+There is no dedicated DLNA status endpoint on the public API. To check the
+pieces that exist:
+
 ```bash
-curl http://localhost:8096/api/v1/system/dlna
+# Is the server up at all?
+curl -s http://localhost:8096/health
+
+# Is the SSDP advertiser running? (admin route — requires an admin bearer token)
+curl -s -H "Authorization: Bearer $ADMIN_TOKEN" \
+  http://localhost:8096/api/v1/admin/dlna/status
+
+# Which renderers has Phlix discovered on the LAN? (authenticated)
+curl -s -H "Authorization: Bearer $TOKEN" \
+  http://localhost:8096/api/v1/dlna/renderers
 ```
 
 ## See Also

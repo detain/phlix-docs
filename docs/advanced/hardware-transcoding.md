@@ -3,13 +3,14 @@
 ::: warning `PHLIX_HWACCEL` is not implemented — do not set it
 Earlier revisions of this page told you to export `PHLIX_HWACCEL=nvidia|vaapi|…`.
 **No code in phlix-server reads that variable** (verified against current
-source). The "Env Var" column and the checklists below are kept only as
-historical narrative. What actually works today:
+source; the phlix-server README lists it among dead env names). What actually
+works today:
 
 - the built-in probe — `php bin/phlix hwaccel:probe` — detects available
   encoders and the transcoder selects among them automatically; and
 - `PREFERRED_ACCELERATOR` (empty default = auto; see `config/transcoding.php`
   and the env census in the phlix-server README) pins a specific accelerator.
+  The admin override is the `transcoding.preferred_accelerator` setting.
 :::
 
 ## TL;DR
@@ -20,16 +21,17 @@ Hardware transcoding offloads video encode/decode to your GPU, making 4K and HDR
 
 ## 1. Vendor Overview
 
-| Vendor | APIs | Linux Check | Env Var |
+| Vendor | APIs | Linux Check | Pin (`PREFERRED_ACCELERATOR`) |
 |--------|------|------------|---------|
-| NVIDIA | NVENC + CUDA | `nvidia-smi` | `PHLIX_HWACCEL=nvidia` |
-| Intel | VAAPI + Quicksync | `vainfo \| grep VAEntrypointEncSlice` | `PHLIX_HWACCEL=vaapi` |
-| AMD | VAAPI + VCN | `vainfo \| grep VAEntrypointEncSlice` | `PHLIX_HWACCEL=vaapi` |
-| Apple Silicon | VideoToolbox | `system_profiler SPHardwareRAIDTool \| grep -i VideoToolbox` | `PHLIX_HWACCEL=videotoolbox` |
+| NVIDIA | NVENC + CUDA | `nvidia-smi` | `cuda` |
+| Intel | VAAPI + Quicksync | `vainfo \| grep VAEntrypointEncSlice` | `vaapi` |
+| AMD | VAAPI + VCN | `vainfo \| grep VAEntrypointEncSlice` | `vaapi` |
+| Apple Silicon | VideoToolbox | `system_profiler SPHardwareRAIDTool \| grep -i VideoToolbox` | `videotoolbox` |
 
-The `PHLIX_HWACCEL` values in the table are **not live** (see the warning
-above). Selection today is automatic via the hardware probe, or pinned with
-`PREFERRED_ACCELERATOR`.
+Pinning is **optional** — selection is automatic via the hardware probe;
+`PREFERRED_ACCELERATOR` (accepted values in `config/transcoding.php`:
+`''` auto-detect, `cuda`, `qsv`, `vaapi`, `videotoolbox`, `amf`, `opencl`,
+`d3d11va`, `dxva2`, `v4l2m2m`) forces a specific accelerator.
 
 ---
 
@@ -63,7 +65,7 @@ If `ENCODERS` shows no hardware encoder, FFmpeg was built without hardware suppo
 [x] nvidia-driver installed (apt install nvidia-driver-535)
 [x] nvidia-container-runtime configured (for Docker/Podman)
 [x] jellyfin-ffmpeg installed — stock ffmpeg does NOT contain NVENC
-[x] PHLIX_HWACCEL=nvidia set in environment or config
+[x] Accelerator auto-selected by the probe, or pinned with PREFERRED_ACCELERATOR=cuda (env or Admin → Transcoding)
 [x] Quality selector shows "Hardware (NVIDIA)" option
 ```
 
@@ -92,7 +94,7 @@ services:
 [x] vainfo confirms encode capability
 [x] User is in the video group (for /dev/dri access)
 [x] jellyfin-ffmpeg installed with VAAPI support
-[x] PHLIX_HWACCEL=vaapi set
+[x] PREFERRED_ACCELERATOR=vaapi set (or left unset for auto-selection)
 [x] Quality selector shows "Hardware (Intel)" option
 ```
 
@@ -118,7 +120,7 @@ sudo systemctl restart phlix-server
 [x] amdgpu-driver or rocm installed
 [x] VAAPI encode entrypoint visible via vainfo
 [x] jellyfin-ffmpeg compiled with AMD VAAPI support
-[x] PHLIX_HWACCEL=vaapi set (same env var as Intel)
+[x] PREFERRED_ACCELERATOR=vaapi set (same lever as Intel)
 [x] Quality selector shows "Hardware (AMD)" option
 ```
 
@@ -136,7 +138,7 @@ Note: AMD VAAPI support in FFmpeg varies by driver version. Using `jellyfin-ffmp
 [x] macOS 12.3+ (VideoToolbox requires Monterey or later)
 [x] Hardware decode confirmed via Activity Monitor → GPU activity
 [x] Phlix running on macOS (not Linux containers)
-[x] PHLIX_HWACCEL=videotoolbox set
+[x] PREFERRED_ACCELERATOR=videotoolbox set (or left unset for auto-selection)
 [x] Quality selector shows "Hardware (Apple)" option
 ```
 
@@ -148,52 +150,57 @@ system_profiler SPHardwareRAIDTool | grep -i VideoToolbox
 
 ---
 
-## 4. Environment Variable Reference
+## 4. Setting the Accelerator
 
-| Vendor | `PHLIX_HWACCEL` value | FFmpeg override |
-|--------|----------------------|-----------------|
-| NVIDIA | `nvidia` | `-hwaccel cuda` |
-| Intel | `vaapi` | `-hwaccel vaapi` |
+| Vendor | `PREFERRED_ACCELERATOR` value | What FFmpeg runs under the hood |
+|--------|-------------------------------|---------------------------------|
+| NVIDIA | `cuda` | CUDA decode + NVENC encode |
+| Intel | `vaapi` (or `qsv`) | `-hwaccel vaapi` |
 | AMD | `vaapi` | `-hwaccel vaapi` |
 | Apple Silicon | `videotoolbox` | (macOS only) |
 
-To set permanently, add to your Phlix startup environment or systemd service file:
+Leaving `PREFERRED_ACCELERATOR` unset (the default, `''`) means the probe
+selects automatically by `vendor_priority` (`config/hwaccel_base.php`).
+The accepted values are listed in `config/transcoding.php`:
+`cuda`, `qsv`, `vaapi`, `videotoolbox`, `amf`, `opencl`, `d3d11va`, `dxva2`,
+`v4l2m2m`.
+
+To set it permanently, add a drop-in to the server's systemd unit (installed
+as `phlix-server.service`):
 
 ```bash
-# /etc/systemd/system/phlix.service.d/hwaccel.conf
+# /etc/systemd/system/phlix-server.service.d/hwaccel.conf
 [Service]
-Environment="PHLIX_HWACCEL=nvidia"
+Environment="PREFERRED_ACCELERATOR=cuda"
 ```
 
 Then `sudo systemctl daemon-reload && sudo systemctl restart phlix-server`.
+The same value is settable at runtime as the admin `transcoding.preferred_accelerator`
+setting (no restart needed — the merged config re-reads it).
 
 ---
 
-## 5. HDR Tone-Mapping (NVIDIA)
+## 5. HDR Tone-Mapping
 
-If you have HDR content and a display that doesn't support direct passthrough, tone-mapping is required. Phlix uses an OpenCL or CUDA filter:
-
-```bash
-# With OpenCL tone-mapping (default for NVIDIA on jellyfin-ffmpeg)
-FFMPEG_HWACCEL=-hwaccel cuda -vf "tonemap_opencl=format=nv12"
-
-# With CUDA tone-mapping
-FFMPEG_HWACCEL=-hwaccel cuda -vf "tonemap_cuda=format=nv12"
-```
-
-Set in the same systemd environment file or in `config/ffmpeg.php`:
-
-```php
-return [
-    'hwaccel' => 'nvidia',
-    'tonemap' => 'opencl',
-];
-```
-
-To verify tone-mapping is active during playback, check the transcode log:
+If you have HDR content and a display that doesn't support direct passthrough, tone-mapping is required. Phlix applies either the CPU `zscale` filter or `libplacebo` (both ship in `jellyfin-ffmpeg` builds); there is no CUDA/OpenCL tone-map filter path in this build:
 
 ```bash
-tail -f .logs/transcode.log | grep -i tonemap
+# CPU zscale
+TONE_MAPPING_MODE=zscale
+
+# libplacebo (higher quality, needs the filter compiled into your FFmpeg)
+TONE_MAPPING_MODE=libplacebo
+```
+
+The default is `none` (no tone-mapping — HDR content passes through or falls
+back per `config/transcoding.php`). Set the mode in the same systemd drop-in,
+in `config/transcoding.php` (`'tone_mapping_mode' => ...`), or at runtime as
+the admin `transcoding.tone_mapping_mode` setting.
+
+To verify tone-mapping is active during playback, check the application log:
+
+```bash
+tail -f .logs/app.log | grep -i tonemap
 ```
 
 ---
@@ -246,7 +253,7 @@ If running in Docker, ensure the container is started with `--group-add video` o
 
 ### Failure 3 — NVIDIA GPU Not Visible Inside Container
 
-**Symptom:** `nvidia-smi` works on the host but fails inside the Docker container. Transcode falls back to software even though `PHLIX_HWACCEL=nvidia` is set.
+**Symptom:** `nvidia-smi` works on the host but fails inside the Docker container. Transcode falls back to software even though `PREFERRED_ACCELERATOR=cuda` is set.
 
 **Cause:** `nvidia-container-runtime` is not configured in the Docker/Podman compose file.
 
@@ -273,20 +280,16 @@ nvidia-smi
 
 **Symptom:** HDR10 content plays but colors look washed out, or tone-mapping is slow and drops frames.
 
-**Cause:** OpenCL/CUDA tone-map not enabled, or the wrong tonemap backend is active for your hardware.
+**Cause:** `transcoding.tone_mapping_mode` is `none` (the default — nothing is applied), or the mode is set to `libplacebo` but your FFmpeg build lacks the libplacebo filter (Phlix then falls back to the CPU `zscale` chain or software).
 
 **Fix:**
 ```bash
-# Force CUDA tonemap for NVIDIA
-FFMPEG_HWACCEL_FLAGS="-hwaccel cuda"
-TONEMAP_BACKEND=cuda
-
-# Force OpenCL tonemap
-TONEMAP_BACKEND=opencl
+# Pick a mode your FFmpeg actually supports
+TONE_MAPPING_MODE=zscale       # CPU zscale chain (works with jellyfin-ffmpeg)
+TONE_MAPPING_MODE=libplacebo   # GPU-assisted; requires libplacebo in the build
 
 # Check what's actually being used during a transcode
-tail -f .logs/transcode.log
-# Look for "tonemap_opencl", "tonemap_cuda", or "tonemap_vaapi"
+tail -f .logs/app.log | grep -iE 'tonemap|transcod'
 ```
 
 Driver version 525+ recommended for good tone-map performance.

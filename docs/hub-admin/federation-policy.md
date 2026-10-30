@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Phlix Hub ships hub-to-hub **federation**, and it runs unconditionally — there is no enable/disable flag. Federation uses a **master/leaf** model: one hub is designated the master and other hubs join it as leaves. Once peered, hubs can share libraries across the trust boundary, relay leaf servers through the master, and delegate admin access. Federation is managed from the **Federation page** (`/app/federation`) and the `/api/v1/me/federation/*` REST API; peers are added **manually** (there is no automatic discovery). The one real auth limitation: there is **no cross-hub end-user single-sign-on** — a user account does not span hubs, and each hub issues its own user sessions. A single Phlix Hub instance comfortably handles ~5000 users and ~200 servers on its own, so federation is for genuinely multi-hub deployments rather than capacity overflow.
+Phlix Hub ships hub-to-hub **federation**, and it runs unconditionally — there is no enable/disable flag. Federation uses a **master/leaf** model: one hub is designated the master and other hubs join it as leaves. Once peered, hubs can share libraries across the trust boundary, relay leaf servers through the master, and delegate admin access. Federation is managed from the **Federation page** (`/app/federation`) and the `/api/v1/me/federation/*` REST API; peers are added **manually** (there is no automatic discovery). The one real auth limitation: there is **no cross-hub end-user single-sign-on** — a user account does not span hubs, and each hub issues its own user sessions. A single Phlix Hub instance is meant to serve an entire deployment on its own — the shipped configuration enforces **no cap** on users or claimed servers (`server.max_servers_per_user` and `server.max_users_per_server` both default to `0` = unlimited) — so federation is for genuinely multi-hub deployments rather than capacity overflow.
 
 ```text
 # Federation REST API (live; gated by admin auth)
@@ -55,8 +55,8 @@ A leaf hub auto-connects to its master on boot and maintains a persistent WebSoc
 
 A single Phlix Hub instance handles, on its own:
 
-- Up to ~5000 user accounts
-- Up to ~200 claimed servers
+- Any number of user accounts (no cap enforced by default)
+- Any number of claimed servers (no cap enforced by default; the two optional `server.max_*` settings above let an operator clamp them)
 - Library sharing within the hub
 - Server relay and streaming through the hub
 

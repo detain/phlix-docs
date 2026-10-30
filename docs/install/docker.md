@@ -29,10 +29,6 @@ Two harmless warnings may scroll by: the obsolete top-level `version:` attribute
 | `ghcr.io/detain/phlix-server:nvidia` | NVIDIA GPU transcoding | NVIDIA GPU with driver 525+ |
 | `ghcr.io/detain/phlix-server:intel` | Intel Quick Sync Video | Intel CPUs with Quicksync (Gen 8+) |
 
-::: tip Screenshots TBD
-This guide is text-first. Screenshots will be added in a follow-up.
-:::
-
 ---
 
 ## 1. Supported Docker variants

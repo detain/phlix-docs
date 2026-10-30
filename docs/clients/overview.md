@@ -22,4 +22,4 @@ Phlix is available on a wide range of platforms — from living-room TVs to phon
 
 ## Skip Button
 
-Phlix supports the [Skip Button protocol](./skip-button-integration-brief) for hands-free navigate during intros and recaps.
+Phlix supports the [Skip Button protocol](./skip-button-integration-brief) for hands-free navigation during intros and recaps.

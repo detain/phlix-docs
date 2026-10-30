@@ -227,7 +227,13 @@ After every major or minor upgrade, check:
 
 ## 5. Rolling back
 
-If an upgrade causes problems:
+If an upgrade causes problems, note that there is **no downgrade path**: database
+migrations are forward-only, so running the old release against a migrated schema is
+unsupported. Going back is always the restore-from-backup hop below — restore the
+database dump (which carries the old schema), not just the code. Take fresh backups
+first if the ones from [§1](#_1-back-up-before-upgrading) predate anything you cannot
+afford to lose; the full backup/restore workflow is in
+[Backup & Restore](../advanced/backup-restore.md).
 
 ```bash
 # 1. Restore the env file

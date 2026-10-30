@@ -35,6 +35,14 @@ Content-Type: application/json
 }
 ```
 
+> [!WARNING]
+> Generate the `secret` with real randomness — for example `openssl rand -hex 32` — and
+> treat the value above as a placeholder, not an example to keep. The server accepts any
+> non-empty string and the whole verification scheme below is only as strong as this key:
+> anyone who guesses or learns a weak secret can forge deliveries that pass
+> `hash_equals` checks. Rotate by re-registering (the secret is stored as supplied,
+> whitespace-trimmed — and is never returned by the list endpoint).
+
 **Response** (201 Created):
 ```json
 {

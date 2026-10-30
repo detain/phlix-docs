@@ -23,10 +23,6 @@ Then open `http://your-server-ip:8096` (or `https://phlix.example.com` if you se
 
 The manual step-by-step below is the same workflow done by hand; you only need it if you want to customise something the script doesn't expose, or if you're on a distro other than Ubuntu/Debian.
 
-::: tip Screenshots TBD
-This guide is text-first. Screenshots will be added in a follow-up.
-:::
-
 ---
 
 ## 1. Supported operating systems

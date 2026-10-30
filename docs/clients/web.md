@@ -257,4 +257,4 @@ Hub login is the recommended way to access your server remotely because the Hub 
 
 - [Mobile app](./mobile.md) — iOS and Android
 - [Windows client](./windows.md) — desktop app with system tray and media key support
-- [First-run wizard](../first-run.md) — complete server setup after your first login
+- [First run](../first-run.md) — create the first account (it becomes the administrator) on the login page

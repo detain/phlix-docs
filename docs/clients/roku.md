@@ -72,5 +72,5 @@ To switch servers later, sign out and back in (the picker returns). To go back t
 
 - [Tizen](./tizen.md) — Samsung Smart TV app
 - [Windows client](./windows.md) — desktop client with additional features
-- [First-run wizard](../first-run.md) — configure your libraries after connecting a client
+- [First run](../first-run.md) — create the first account (it becomes the administrator) via a browser
 - [Roku client build guide](../dev/client-roku.md) — for developers building this channel

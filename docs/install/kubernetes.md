@@ -403,7 +403,7 @@ There are no semver (`v1.2.3`) image tags to upgrade to — the Docker workflow 
 
 ## Next steps
 
-- [First-run wizard](/first-run) — complete the browser-based setup at `https://phlix.example.com`
+- [First run](/first-run) — create the first account (it becomes the administrator) at `https://phlix.example.com`
 - [Linux install](/install/linux) — alternative install method on bare metal
 - [Docker install](/install/docker) — alternative install method using containers
 - [Hardware transcoding](/advanced/hardware-transcoding) — configure NVENC/VAAPI for GPU-accelerated transcoding on Kubernetes nodes

@@ -369,7 +369,7 @@ Expected: phlix-server index page loads (HTTP 200).
 
 ## Next steps
 
-- [First-run wizard](/first-run) — complete the browser-based setup at `http://your-server:8096`
+- [First run](/first-run) — create the first account (it becomes the administrator) at `http://your-server:8096`
 - [Docker install](/install/docker) — alternative install method using containers
 - [Hardware transcoding](/advanced/hardware-transcoding) — configure NVENC/VAAPI for better performance (WSL2+Ubuntu only)
 - [Linux install](/install/linux) — for mixed Windows/Linux environments

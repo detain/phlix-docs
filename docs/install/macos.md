@@ -289,6 +289,6 @@ launchctl list | grep phlix
 
 ## Next steps
 
-- [First-run wizard](/first-run) — complete the browser-based setup at `http://your-mac-ip:8096`
+- [First run](/first-run) — create the first account (it becomes the administrator) at `http://your-mac-ip:8096`
 - [Docker install](/install/docker) — alternative install using containers on macOS
 - [Hardware transcoding](/advanced/hardware-transcoding) — configure VideoToolbox on Apple Silicon for better performance

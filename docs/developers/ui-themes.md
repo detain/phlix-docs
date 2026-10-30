@@ -1,201 +1,184 @@
 # UI Theme Plugin Guide
 
-This guide explains how to create a custom `ui-theme` plugin for the Phlix web portal.
-
 ## Overview
 
-A `ui-theme` plugin is a declarative plugin type that provides custom CSS and optional JavaScript to restyle the Phlix web portal. Unlike other plugin types, ui-theme plugins do **not** subscribe to runtime events — they are purely asset bundles with a manifest.
+A `ui-theme` plugin restyles the Phlix web portal by contributing
+**token themes**: validated maps of semantic CSS custom properties.
+Since server 0.44.0 there are no CSS or JS asset files involved — the
+SPA applies a theme by writing the token values onto the document with
+`el.style.setProperty()`, which is why plugin themes need no CSP
+relaxation. A theme's entry class implements
+`Phlix\Theming\ThemeSourceInterface` (alongside
+`Phlix\Plugins\Contract\LifecycleInterface`) and returns its payloads
+from `providedThemes()`.
+
+> **History note.** Earlier revisions of this page described a
+> manifest-level `theme` block (`css` / `js` / `thumbnail` / `version`
+> fields), a `ThemePluginInterface`, and a server-side `ThemeMiddleware`
+> that substituted Smarty markers in the portal layout. None of that
+> ever shipped: the manifest `theme` key is never read by the loader,
+> and the portal is a SPA with no server-rendered layout to inject
+> into. What ships is the token contract below.
 
 ## Manifest Structure
 
-A ui-theme plugin requires a `plugin.json` manifest with the `ui-theme` type and a `theme` key containing theme metadata:
+A `ui-theme` plugin uses the ordinary manifest — `type: "ui-theme"`
+plus an `entry` class. There is **no `theme` key**; theme data comes
+from the entry class, not the manifest. From the shipped reference
+plugin (`detain/phlix-plugin-sample-theme/plugin.json`):
 
 ```json
 {
-    "name": "phlix-plugin-my-theme",
+    "name": "phlix-plugin-sample-theme",
     "version": "1.0.0",
-    "phlix_min_server_version": "0.14.0",
+    "phlix_min_server_version": "0.44.0",
     "type": "ui-theme",
-    "entry": "Phlix\\Themes\\MyTheme\\Plugin",
-    "theme": {
-        "id": "my-custom-theme",
-        "name": "My Custom Theme",
-        "css": "dist/theme.css",
-        "js": "dist/theme.js",
-        "thumbnail": "screenshots/preview.png",
-        "dark": true
-    }
+    "entry": "Phlix\\PluginSampleTheme\\SampleThemePlugin",
+    "events": [],
+    "signature": null
 }
 ```
 
-### Theme Manifest Fields
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `id` | string | Yes | Unique theme identifier (e.g., `my-custom-theme`) |
-| `name` | string | Yes | Human-readable theme name displayed in the admin UI |
-| `css` | string | Yes | Path to the theme's CSS file (relative to plugin root) |
-| `js` | string | No | Path to optional JavaScript bundle |
-| `thumbnail` | string | No | Path to preview image (1:2 aspect ratio recommended) |
-| `dark` | boolean | No | Whether this is a dark theme (UI hint for client apps) |
-| `version` | string | No | Theme version (defaults to `1.0.0`) |
-
-## Entry Class
-
-The entry class must implement `Phlix\Theming\ThemePluginInterface`:
+## The Entry Class
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace Phlix\Themes\MyTheme;
+namespace Phlix\PluginSampleTheme;
 
-use Phlix\Theming\ThemePluginInterface;
+use Phlix\Plugins\Contract\LifecycleInterface;
+use Phlix\Theming\ThemeSourceInterface;
 
-class Plugin implements ThemePluginInterface
+final class SampleThemePlugin implements LifecycleInterface, ThemeSourceInterface
 {
+    public function themeSourceName(): string
+    {
+        // Canonical, stable, lowercase slug. The host keys provenance
+        // on this name: re-registering the same name REPLACES that
+        // source's themes (never appends), and disabling the plugin
+        // removes exactly the themes it contributed.
+        return 'sample-theme';
+    }
+
+    /**
+     * @return list<array<array-key, mixed>>
+     */
+    public function providedThemes(): array
+    {
+        // MUST be cheap and non-blocking: called synchronously on each
+        // worker during plugin enable. Return a literal / precomputed
+        // array — no network, no filesystem, no sleeping.
+        return [[
+            'id'      => 'sample-dusk',
+            'name'    => 'Sample Dusk',
+            'dark'    => true,
+            'extends' => 'midnight',
+            'tokens'  => [
+                '--accent' => '#6ea8fe',
+                '--bg'     => '#05060a',
+                // …see the allowlist below.
+            ],
+        ]];
+    }
 }
 ```
 
-The entry class itself is not instantiated during normal operation — the ThemeRegistry reads the theme data directly from the manifest. Implementing the interface simply marks the plugin as discoverable.
+The entry class **is** instantiated by the loader. An empty `providedThemes()`
+list is a valid, leak-free registration (a source that is currently
+unconfigured).
 
-## CSS Structure
+## Payload Contract (validated, fail-closed)
 
-Your theme's CSS should define CSS custom properties (variables) to customize the Phlix appearance. The built-in themes use these variables:
+Every payload is checked by `Phlix\Theming\ThemeTokenValidator` before
+registration. Validation is **all-or-nothing**: one bad key or value
+rejects the entire source, and on the enable path fails the plugin
+enable. A `ui-theme` plugin with an invalid payload simply does not
+enable — there is no partial registration.
 
-### Core Variables
+### Payload keys — exactly these five
 
-```css
-:root {
-    /* Background Colors */
-    --bg-primary: #121212;
-    --bg-secondary: #1e1e1e;
-    --bg-tertiary: #2d2d2d;
-    --bg-elevated: #333333;
+| Key       | Type          | Required | Meaning |
+| --------- | ------------- | -------- | ------- |
+| `id`      | string        | yes      | Lowercase ASCII slug (`^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$`), unique across the registry. |
+| `name`    | string        | yes      | Human label, max 64 characters. |
+| `dark`    | bool          | yes      | Drives `color-scheme` in the SPA. |
+| `extends` | string\|null  | yes      | Id of a base theme whose tokens this one layers over; `null` for a standalone theme. |
+| `tokens`  | array<string,string> | yes | CSS custom property → sanitised value. |
 
-    /* Text Colors */
-    --text-primary: #e8e8e8;
-    --text-secondary: #a0a0a0;
-    --text-muted: #6b6b6b;
+Anything else is a typo or an unhandled field and rejects the payload.
 
-    /* Accent Colors */
-    --accent-primary: #6366f1;
-    --accent-secondary: #818cf8;
-    --accent-hover: #4f46e5;
+### Reserved ids
 
-    /* Borders */
-    --border-color: #3d3d3d;
-    --border-light: #4a4a4a;
+`nocturne`, `daylight`, `midnight` are owned by the built-in token set
+(`Phlix\Theming\BuiltInThemes::IDS`). A plugin may not claim one — doing
+so would silently replace a shipped theme for every user.
 
-    /* Buttons */
-    --btn-primary-bg: #6366f1;
-    --btn-primary-color: #ffffff;
-    --btn-secondary-bg: #3d3d3d;
-    --btn-secondary-color: #e8e8e8;
+### Token keys
 
-    /* Cards */
-    --card-bg: #1e1e1e;
-    --card-border: #3d3d3d;
-    --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+`tokens` may only set properties on `Phlix\Theming\ThemeTokenAllowlist`
+— the semantic design tokens the SPA reads. The headline groups:
 
-    /* Form Inputs */
-    --input-bg: #1e1e1e;
-    --input-border: #3d3d3d;
-    --input-focus: #6366f1;
-
-    /* Progress Bar */
-    --progress-bg: #2d2d2d;
-    --progress-fill: #6366f1;
-
-    /* Border Radius */
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-
-    /* Shadows */
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-}
+```php
+// Accent ramp (the six semantic accent tokens are how a plugin re-hues
+// the UI; the raw --amber-*/--blue-* ramps they derive from are
+// theme-invariant and NOT settable):
+'--accent', '--accent-hover', '--accent-active', '--accent-soft',
+'--accent-ring', '--accent-text',
+// Background + elevation stack:
+'--bg', '--surface', '--surface-2', '--surface-3', '--surface-glass',
+'--surface-glass-strong',
+// Text ramp:
+'--text', '--text-muted', '--text-subtle', '--text-faint', '--text-on-accent',
+// Borders:
+'--border', '--border-subtle', '--border-strong',
+// Status colors:
+'--error', '--error-bg', '--success', '--success-bg', '--warning',
+'--warning-bg', '--info', '--info-bg',
+// Atmosphere:
+'--grain-opacity', '--vignette', '--ambient',
 ```
 
-### Selector Overrides
+(See `src/Theming/ThemeTokenAllowlist.php` for the complete list,
+including the legacy `--color-*` compatibility block.)
 
-Beyond CSS variables, you can override specific selectors:
+### Value grammar and contrast rules
 
-```css
-/* Typography */
-h1, h2, h3 { color: var(--text-primary); }
+Values are validated against a strict grammar (`#rgb`/`#rgba`/
+`#rrggbb`/`#rrggbbaa`, `rgb()`/`rgba()`/`hsl()`-family forms, and a
+number set for opacity-style tokens; max 128 characters). Two
+foreground tokens carry computed contrast laws: `--accent-text` (hue
+used as foreground on `--bg`/`--surface`) and `--text-faint` (the
+placeholder tier) must clear WCAG AA body contrast (4.5:1) — tests
+derive it from the hex values, so pick them deliberately. `extends`
+lets you start from a built-in's full token map and override only what
+you want to change.
 
-/* Media Cards */
-.media-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
-}
+## Distribution and Activation
 
-/* Scrollbar */
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); }
-```
+1. Package the plugin (composer-installed `vendor/`, zip or URL or
+   catalog source) and install it through **Admin → Plugins** —
+   upload, install-from-URL, or the in-product catalog.
+2. **Install is not enable**: enabling the plugin is what registers
+   its themes into `ThemeSourceRegistry` (by design).
+3. The theme list is served at `GET /api/v1/themes` (and
+   `GET /api/v1/themes/{id}`); plugin sources are merged with the
+   built-ins. Workers refresh via the registry's fleet-sync staleness
+   flush, so a newly enabled theme appears without a restart.
 
-## Directory Structure
+## Per-User Selection
 
-```text
-phlix-plugin-my-theme/
-├── composer.json
-├── plugin.json
-├── src/
-│   └── Plugin.php          # Entry class
-├── dist/
-│   ├── theme.css           # Compiled CSS
-│   └── theme.js            # Optional JS bundle
-└── screenshots/
-    └── preview.png         # Theme preview (1:2 aspect ratio)
-```
-
-## Packaging
-
-Run `composer install --no-dev` to install dependencies into the plugin's `vendor/` directory, then zip the entire plugin folder for distribution.
-
-## Installation
-
-1. Upload the plugin through **Admin → Plugins → Add New**
-2. Activate the theme in **Admin → Appearance → Themes**
-3. Preview themes using the live preview iframe
-4. Click "Activate" to apply the theme
-
-## Per-User Theme Selection
-
-Users can select their preferred theme in their profile settings. The theme is stored per-profile in `user_profiles.active_theme_id`.
-
-## How theme assets are injected (server internals)
-
-Theme CSS and JS are **not** rendered by Smarty. The portal layout
-template `public/templates/layouts/base.tpl` contains two literal string
-markers in `{literal}…{/literal}` blocks:
-
-```smarty
-{literal}{$theme_css|raw}{/literal}
-…
-{literal}{$theme_js|raw}{/literal}
-```
-
-After Smarty renders the page, `Phlix\Theming\ThemeMiddleware` runs
-`str_replace()` over the response body to swap those exact literal
-strings for the resolved `<link>` / `<script>` tags of the active theme.
-
-> [!WARNING]
-> Do **not** "fix" the markers to look like real Smarty syntax.
-> `|raw` is a Twig modifier; Smarty has no equivalent. Without
-> `{literal}…{/literal}`, Smarty either errors or substitutes an
-> empty string, and ThemeMiddleware can no longer find the marker —
-> the theme silently fails to load.
->
-> If you ever rename or move these markers, update both the template
-> **and** the `str_replace()` calls in
-> `src/Theming/ThemeMiddleware.php` in the same change.
+Users pick the active theme in their profile settings: the portal
+issues `PUT /api/v1/users/me/settings` with `{ "theme": "<id>" }`. The
+server validates the id against the built-ins **and** the live
+`ThemeSourceRegistry`; an unknown or removed id is rejected (400)
+before any write. Clearing the selection back to "unset" is not
+currently supported — pick a theme.
 
 ## See Also
 
-- [Developer Guide](../plugins/developer-guide.md) — Full plugin development guide
-- [Built-in Themes](https://github.com/detain/phlix/tree/master/public/assets/css/themes) — Reference implementations
+- [Plugin Developer Guide](../plugins/developer-guide.md) — manifest,
+  lifecycle, and packaging for all plugin types.
+- [`detain/phlix-plugin-sample-theme`](https://github.com/detain/phlix-plugin-sample-theme)
+  — the reference theme plugin this page's code samples are taken from.

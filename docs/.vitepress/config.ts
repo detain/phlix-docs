@@ -304,6 +304,7 @@ export default defineConfig({
           text: 'Developer Reference',
           items: [
             { text: 'Contributing', link: '/dev/contributing' },
+            { text: 'Media API Contract', link: '/dev/server-contracts-media' },
             { text: 'Admin SPA (admin-ui)', link: '/dev/admin-spa' },
             { text: 'Admin Gate Invariant', link: '/dev/admin-gate-invariant' },
             { text: 'Test Harness', link: '/dev/test-harness' },

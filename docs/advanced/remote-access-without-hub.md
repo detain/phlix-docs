@@ -221,6 +221,19 @@ Funnel exposes `https://phlixMachineName.tailcale.mesh:8096` to the public inter
 
 Manual port forwarding is the fallback when VPN and tunnel solutions aren't available. This method has significant limitations (see What Can Go Wrong).
 
+::: danger Prerequisite: put a TLS front in place first
+Port `8096` is the server's **plaintext HTTP** portal. Forwarding it straight to the internet
+publishes the login page as-is: account passwords, Bearer tokens, and signed stream URLs then
+cross the public internet in cleartext, readable by anyone on the path. The
+[Hardening Checklist](../security/hardening.md) is explicit — *"Do not expose port 8096 directly
+to the internet without a TLS terminator in front of it."*
+
+Before following any method below, set up a TLS front: a reverse proxy (Caddy, nginx, HAProxy)
+with a real certificate, as described in [Reverse Proxy](reverse-proxy.md), and forward the
+**proxy's HTTPS port** instead of the raw `8096` listener. The bare `http://…:8096` addresses
+in this section describe the mapping mechanics — they are not what you should be publishing.
+:::
+
 ### Method A: UPnP (Automatic)
 
 If your router supports UPnP:
@@ -267,7 +280,9 @@ curl ifconfig.me
 curl icanhazip.com
 ```
 
-Users outside your network then access: `http://<your-public-ip>:8096`
+Users outside your network then access the raw listener at `http://<your-public-ip>:8096` —
+the plaintext form the danger box above forbids publishing on its own. With the TLS front in
+place, they instead visit `https://<your-hostname>/` and the proxy forwards to `8096` locally.
 
 ---
 

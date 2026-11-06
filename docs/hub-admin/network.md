@@ -6,6 +6,16 @@ Guide for hub administrators configuring network settings for Phlix server deplo
 
 Phlix Media Server supports automatic port forwarding via UPnP-IGD and NAT-PMP to enable direct client connections without relay tunnel.
 
+::: danger Do not forward the plaintext portal to the internet
+The port being forwarded — `8096`, or whatever `server.port` / `PHLIX_EXTERNAL_PORT` is set to —
+is a **plaintext HTTP** listener. Publishing it to the internet sends login passwords, Bearer
+tokens, and signed stream URLs across the public internet in cleartext. The
+[Hardening Checklist](../security/hardening.md) requires a TLS terminator in front of it: put a
+reverse proxy with a real certificate in front of the server
+([Reverse Proxy guide](../advanced/reverse-proxy.md)) and forward the **proxy's HTTPS port**,
+not the raw listener.
+:::
+
 ### Enabling Automatic Port Forwarding
 
 In `config/port-forward.php`:
@@ -106,8 +116,9 @@ ufw allow out 443/tcp comment 'Phlix Hub'
 
 ```bash
 firewall-cmd --permanent --add-port=8096/tcp
-firewall-cmd --permanent --add-port=19302/udp
 firewall-cmd --permanent --add-port=443/tcp
+# STUN (19302/udp) needs no inbound rule: like the ufw example above it is
+# outbound-only, and firewalld permits outbound traffic by default.
 firewall-cmd --reload
 ```
 
@@ -128,7 +139,10 @@ instance's `config/server.php` to match:
 
 (`8097` is taken by the SyncPlay WebSocket worker.)
 
-Clients connect to `http://<server-public-ip>:<port>` directly.
+Clients connect to `http://<server-public-ip>:<port>` directly — that is the **plaintext**
+form, acceptable only on a trusted LAN or through a VPN. To expose an instance beyond the
+LAN, front it with TLS first (danger box at the top of this page; see
+[Remote Access Without the Hub](../advanced/remote-access-without-hub.md) for the options).
 
 ## See Also
 

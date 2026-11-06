@@ -33,6 +33,14 @@ The plain address `http://<your-server>:8096/` redirects there. You'll see a sig
 card — **Username or email**, **Password**, **Sign in** — and a link to create an
 account.
 
+::: warning Do this on a trusted network
+`8096` is the server's plaintext HTTP portal. Anyone on the same network can see the
+password you type in Step 2. Run the first ritual at home, over the LAN — not over
+public Wi-Fi — and complete the [Hardening Checklist](security/hardening.md) (TLS in
+front before anything reaches the internet) **before** following any of the remote-access
+guides, which build on this same account.
+:::
+
 ## Step 2 — Create the first account (it becomes admin)
 
 Press the sign-up link and fill in:
@@ -77,6 +85,10 @@ looks off, your device may have needed the server to convert the video on the fl
 
 ## Good next steps
 
+- **Harden before you expose** — work through the [Hardening Checklist](security/hardening.md)
+  and, if the server will be reachable from outside the LAN, the
+  [Reverse Proxy guide](advanced/reverse-proxy.md). Every remote-access option below assumes
+  this step is done.
 - **Add the rest of the household** — profiles vs. real accounts:
   [Adding People to Your Household](adding-people.md).
 - **Cast to your TV** — DLNA is shipped **off**; flip it on under **Admin → DLNA**

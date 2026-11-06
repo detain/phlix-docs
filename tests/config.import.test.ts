@@ -113,13 +113,29 @@ describe('Config Module Loading', () => {
 
   it('should have nav items with text and link properties', async () => {
     const configModule = await import('../docs/.vitepress/config.ts')
-    const navItems = configModule.default.themeConfig.nav
+    // Locally mirror the two shapes VitePress accepts (bare-tsc does not
+    // narrow the exported NavItem union through Array.isArray, so pinning
+    // the shape here keeps this file's assertions type-clean): a direct
+    // { text, link } entry, or a dropdown { text, items: [...] } whose leaves
+    // are direct entries. The top-level dropdown exists to keep the bar short
+    // enough that the theme never clips it — so it is validated per-leaf.
+    type NavLeaf = { text: string; link: string }
+    type NavEntry = { text?: string; link?: string; items?: NavLeaf[] }
+    const navItems = (configModule.default.themeConfig?.nav ?? []) as NavEntry[]
 
     for (const item of navItems) {
       expect(item).toHaveProperty('text')
-      expect(item).toHaveProperty('link')
       expect(typeof item.text).toBe('string')
-      expect(typeof item.link).toBe('string')
+      if (Array.isArray(item.items)) {
+        expect(item.items.length).toBeGreaterThan(0)
+        for (const leaf of item.items) {
+          expect(typeof leaf.text).toBe('string')
+          expect(typeof leaf.link).toBe('string')
+        }
+      } else {
+        expect(item).toHaveProperty('link')
+        expect(typeof item.link).toBe('string')
+      }
     }
   })
 

@@ -50,21 +50,35 @@ export default defineConfig({
   head: [['link', { rel: 'icon', type: 'image/svg+xml', href: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><text y=%2224%22 font-size=%2224%22>📺</text></svg>' }]],
   themeConfig: {
     lastUpdated: true,
+    // Twelve direct entries plus one "Help" dropdown = thirteen top-level
+    // items. The dropdown is deliberate: the default theme wraps/clips an
+    // over-long nav on narrow desktop widths, so FAQ and Reference are folded
+    // into a menu that collapses responsively instead of competing for
+    // top-level space. Troubleshooting and Glossary ride along so those
+    // newcomer pages have a visible entry point (they previously lived in
+    // single-item sidebars reachable only via body links).
     nav: [
       { text: 'Get Started', link: '/first-run' },
       { text: 'Install', link: '/install/linux' },
-      { text: 'FAQ', link: '/faq' },
       { text: 'Libraries', link: '/libraries/overview' },
       { text: 'Player', link: '/player/chapters' },
       { text: 'Clients', link: '/clients/overview' },
       { text: 'Hub', link: '/hub/what-is-the-hub' },
       { text: 'Advanced', link: '/advanced/hardware-transcoding' },
       { text: 'Developers', link: '/dev/architecture-server' },
-      { text: 'Reference', link: '/reference' },
       { text: 'Integrations', link: '/integrations/lastfm' },
       { text: 'Security', link: '/security/passkeys' },
       { text: 'Admin', link: '/admin/dashboard' },
       { text: 'Hub Admin', link: '/hub-admin/overview' },
+      {
+        text: 'Help',
+        items: [
+          { text: 'FAQ', link: '/faq' },
+          { text: 'Troubleshooting', link: '/troubleshooting' },
+          { text: 'Glossary', link: '/glossary' },
+          { text: 'Reference', link: '/reference' },
+        ]
+      },
     ],
     sidebar: {
       '/install/': [
@@ -181,7 +195,6 @@ export default defineConfig({
             { text: 'Web App', link: '/clients/web' },
             { text: 'DLNA / Play To', link: '/clients/dlna' },
             { text: 'Console', link: '/clients/console' },
-            { text: 'Skip Button Integration Brief', link: '/clients/skip-button-integration-brief' },
           ]
         }
       ],
@@ -327,9 +340,18 @@ export default defineConfig({
       ],
       // Same tree for the /developers/* pages themselves (see the const
       // docblock): landing link on top, then the full sibling group.
+      // The "Client Integration Briefs" group holds hand-off specs for client
+      // builders — engineering-facing documents that sit in this tree, not in
+      // the consumer /clients/ sidebar readers browse.
       '/developers/': [
         { text: 'Developer Docs', link: '/developers' },
-        streamingProvidersGroup
+        streamingProvidersGroup,
+        {
+          text: 'Client Integration Briefs',
+          items: [
+            { text: 'Skip Button Integration Brief', link: '/developers/skip-button-integration-brief' },
+          ]
+        }
       ],
       '/hub-admin/': [
         {

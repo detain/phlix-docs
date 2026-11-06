@@ -88,7 +88,7 @@ VAAPI uses `overlay_vaapi` for subtitle compositing:
 ```php
 return [
     'enabled' => true,
-    'default_language' => 'eng',
+    'default_language' => 'en',     // ISO 639-1; 'eng' (639-2) was corrected to 'en' so one vocabulary is used end to end
     'burn_in_by_default' => false,  // true = burn unless disabled
     'extract_to_dir' => '/var/subtitles',
     'style' => [

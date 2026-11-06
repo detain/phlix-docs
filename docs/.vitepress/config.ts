@@ -51,12 +51,13 @@ export default defineConfig({
   themeConfig: {
     lastUpdated: true,
     nav: [
+      { text: 'Get Started', link: '/first-run' },
       { text: 'Install', link: '/install/linux' },
       { text: 'FAQ', link: '/faq' },
-      { text: 'Get Started', link: '/first-run' },
       { text: 'Libraries', link: '/libraries/overview' },
       { text: 'Player', link: '/player/chapters' },
       { text: 'Clients', link: '/clients/overview' },
+      { text: 'Hub', link: '/hub/what-is-the-hub' },
       { text: 'Advanced', link: '/advanced/hardware-transcoding' },
       { text: 'Developers', link: '/dev/architecture-server' },
       { text: 'Reference', link: '/reference' },

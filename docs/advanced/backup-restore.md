@@ -1,3 +1,10 @@
+---
+title: Backup & Restore
+description: What Phlix needs backed up to survive a disaster — the database, config files and metadata images — what regenerates itself, and how to test restores
+---
+
+# Backup & Restore
+
 **Since:** 0.18.0
 
 ## TL;DR

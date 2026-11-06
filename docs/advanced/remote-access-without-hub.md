@@ -1,3 +1,10 @@
+---
+title: Remote Access Without the Hub
+description: Reaching your Phlix server from outside your network without the hub relay — Cloudflare Tunnel, WireGuard, Tailscale, and why port forwarding is a last resort
+---
+
+# Remote Access Without the Hub
+
 **Since:** 0.18.0
 
 ## TL;DR

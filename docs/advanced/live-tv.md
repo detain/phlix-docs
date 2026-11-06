@@ -1,3 +1,10 @@
+---
+title: Live TV & DVR
+description: Watching and recording broadcast, cable and IPTV through Phlix — tuner setup (HDHomeRun, USB DVB-T, M3U playlists) and guide data via Schedules Direct or XMLTV
+---
+
+# Live TV & DVR
+
 **Since:** 0.18.0
 
 ## TL;DR

@@ -244,13 +244,20 @@ curl -s https://github.com/detain/phlix-plugins/contents/plugins.json | head -c 
 
 ### 3. Check PHP composer and network access
 
-Plugins are installed via `composer install` over HTTPS. If your server is air-gapped, either:
-- Set `PHLIX_PLUGINS_ALLOW_HTTP=1` and host the plugin on an internal HTTP server, or
-- Install the plugin manually by placing it in `var/plugins/`
+Plugins are installed via `composer install` over HTTPS. If your server is air-gapped, prefer the no-environment-change path first:
+
+- **Install the plugin manually** by placing it in `var/plugins/` — no security
+  control has to move for this to work, so rule it in or out before anything else.
+- Only if manual placement is not viable: set `PHLIX_PLUGINS_ALLOW_HTTP=1` and host
+  the plugin on an internal HTTP server. This is **forbidden in production**
+  ([Security Hardening](../security/hardening.md) tells you to keep it unset — an
+  `http://` install carries no transport security), so time-box it: unset it again
+  as soon as the install is done, do not leave it in the unit file.
 
 ### 4. Verify signature requirements
 
-If `PHLIX_PLUGINS_REQUIRE_SIGNATURE=1` is set, the plugin must have a valid signature from a key in the trusted allowlist. Try setting it to `0` temporarily to see if that resolves the installation.
+If `PHLIX_PLUGINS_REQUIRE_SIGNATURE=1` is set, the plugin must have a valid signature from a key in the trusted allowlist. To check whether the signature gate is what is refusing the install, you may set it to `0` **temporarily** — but restore `PHLIX_PLUGINS_REQUIRE_SIGNATURE=1` immediately after diagnosing: the digest check is the only manifest integrity gate the loader has (it proves the plugin matches what the catalog pinned), and with it off an unsigned or tampered plugin loads silently. See
+[Security Hardening → plugin signature verification](../security/hardening.md) for the full posture.
 
 ---
 

@@ -1,3 +1,10 @@
+---
+title: Hardware Transcoding
+description: GPU-accelerated video encoding for NVIDIA, Intel, AMD and Apple Silicon — probing what works, pinning an accelerator, and the drivers jellyfin-ffmpeg needs
+---
+
+# Hardware Transcoding
+
 **Since:** 0.18.0
 
 ::: warning `PHLIX_HWACCEL` is not implemented — do not set it

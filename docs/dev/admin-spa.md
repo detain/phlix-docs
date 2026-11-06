@@ -296,7 +296,7 @@ controller response.
 | `src/api/libraries.ts` | 100% |
 | `src/api/filesystem.ts` | 100% |
 | `src/components/PathPicker.tsx` | 98.24% (uncovered = a defensively-unreachable early-return guard) |
-| `src/pages/LibrariesPage.tsx` | 95.62% (uncovered ≈ a `||`-fallback template literal and one ternary false-arm v8 reports as a partial branch) |
+| `src/pages/LibrariesPage.tsx` | 95.62% (uncovered ≈ a `\|\|`-fallback template literal and one ternary false-arm v8 reports as a partial branch) |
 
 Overall SPA: **98.73%** statements (2255/2284), 93.98% branches. The 95.62% floor on
 `LibrariesPage.tsx` matches the 0.4 precedent.

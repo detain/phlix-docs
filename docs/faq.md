@@ -55,7 +55,7 @@ see [Moving a file](/admin/library-management#moving-a-file). See also
 
 Continue-watching tracks positions per user profile. Make sure:
 - You are logged into the same profile.
-- You have completed at least 90% of the previous session (the threshold for marking "watched").
+- The item is not already **finished**: an item drops off the continue-watching rail once you have watched **95%** of it, so only items below 95% keep a resume position there. (The separate **90%** figure is the threshold that marks an item "watched" in your history — it is not the resume criterion.)
 - Positions are persisted through the server's media pipeline — watch `tail -f .logs/app.log` during playback (the server writes every log channel there; there is no separate `session.log` file).
 
 If a resume position is wrong, seeking to the correct point and letting it play for a few seconds updates the record.

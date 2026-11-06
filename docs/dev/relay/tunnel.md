@@ -78,7 +78,7 @@ $tunnel = new Tunnel(
 | `openedAt` | `int` | Unix timestamp when tunnel was opened. |
 | `lastFrameAt` | `int` | Unix timestamp of last frame received from server. |
 | `seq` | `int` | Next sequence number for frames sent to server. |
-| `relaySessionId` | `string|null` | Relay session ID (set after HELLO handshake completes). |
+| `relaySessionId` | `string\|null` | Relay session ID (set after HELLO handshake completes). |
 
 ### Lifecycle Methods
 
@@ -304,7 +304,7 @@ $client = new ClientConnection(
 | `serverId` | `string` | Server UUID this client is connected through. |
 | `sessionId` | `string` | Optional relay session ID for this client. |
 | `clientWs` | `TcpConnection` | Workerman connection to the client. |
-| `tunnel` | `Tunnel|null` | Tunnel this client is attached to. |
+| `tunnel` | `Tunnel\|null` | Tunnel this client is attached to. |
 | `lastFrameAt` | `int` | Unix timestamp of last frame received from client. |
 
 ### Message Handling

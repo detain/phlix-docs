@@ -244,16 +244,25 @@ The built-in reader stub at `/books/{id}/read` provides:
 
 ## Third-Party OPDS Client Setup
 
+::: danger Enter OPDS credentials only over TLS
+OPDS readers authenticate with **HTTP Basic** — your account password is re-sent on
+every feed, cover and download request. Point your reader only at an **`https://`**
+URL (direct TLS, or terminated by the [reverse proxy](../advanced/reverse-proxy.md));
+never enter credentials against a plaintext `http://` endpoint. See
+[OPDS feeds](../security/signed-media-urls.md#opds-feeds) for the full warning,
+including that the server accepts Basic credentials regardless of transport.
+:::
+
 ### Ubooquity (Recommended for desktop)
 1. File → Add Catalog
-2. Enter OPDS feed URL: `http://your-server:8080/opds/v1.2`
+2. Enter OPDS feed URL: `https://your-server/opds/v1.2`
 3. Browse and download books
 
 ### Komga
-1. Add server with your Phlix URL
+1. Add server with your Phlix URL — use the `https://` form
 2. Libraries are automatically discovered via OPDS
 
 ### Moon+ Reader
 1. Menu → Online catalog
 2. Add custom catalog
-3. Enter OPDS feed URL
+3. Enter OPDS feed URL (again, an `https://` URL)

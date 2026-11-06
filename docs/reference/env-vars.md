@@ -139,7 +139,7 @@ These environment variables apply when running `phlix-hub` itself (not when the 
 | `HUB_JWT_ACCESS_TTL`   | `3600`    | Access-token lifetime in seconds (default 1 hour).                                                                                           |
 | `HUB_JWT_REFRESH_TTL`  | `604800`  | Refresh-token lifetime in seconds (default 7 days).                                                                                          |
 
-> When `HUB_JWT_SECRET` is unset, the hub generates a random secret at container-build time. Tokens issued with that secret are valid only for the lifetime of the current PHP process — restarting the worker invalidates every existing session. Always set this var explicitly in production.
+> When `HUB_JWT_SECRET` is unset the outcome depends on the environment: outside `dev`/`local` the hub **refuses to boot** — `AuthServicesProvider::resolveSecret()` throws `MissingJwtSecretException` before any token is minted. Only `dev`/`local` fall back to a random per-process secret (with a loud warning); its tokens die on every restart and break across workers. The Docker image sidesteps both paths: `docker/docker-entrypoint.sh` persists a generated key to `/var/phlix/config/hub_jwt_secret` when the var is unset. Always set this var explicitly.
 
 ### Container caching
 

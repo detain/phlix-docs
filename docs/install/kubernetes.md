@@ -19,8 +19,20 @@ tag guidance below was re-derived against the live `ghcr.io` registry and the ti
 IMG_TAG=$(curl -s -H "Authorization: Bearer $(curl -s "https://ghcr.io/token?scope=repository:detain/phlix-server:pull" | jq -r .token)" \
   "https://ghcr.io/v2/detain/phlix-server/tags/list" | jq -r '.tags[]' | grep -E '^[0-9a-f]{40}-latest$' | sort | tail -1)
 git clone --depth 1 https://github.com/detain/phlix-server && cd phlix-server
-# Secrets first, out of argv: create the Secret the chart consumes (see §7), then:
+# Secrets first, out of argv: the chart renders its managed Secret FROM values
+# (there is no existing-secret hook — see §7), so create a local, uncommitted
+# values file and pass it with -f. Never `--set` a secret.
+umask 077
+cat > phlix-secrets.yaml <<EOF
+config:
+  # Must match the password configured for your MySQL user:
+  database_password: "$(openssl rand -hex 32)"
+  # JWT signing key — generate one, never reuse:
+  secret_key: "$(openssl rand -hex 32)"
+EOF
+# phlix-secrets.yaml holds live credentials — never commit it.
 helm install phlix ./k8s/helm/phlix \
+  -f phlix-secrets.yaml \
   --set image.tag="$IMG_TAG" \
   --set ingress.enabled=true \
   --set ingress.hosts[0].host=phlix.example.com

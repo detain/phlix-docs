@@ -259,7 +259,7 @@ services:
     environment:
       MYSQL_DATABASE: phlix_hub
       MYSQL_USER: phlix_hub
-      MYSQL_PASSWORD: CHANGE-ME
+      MYSQL_PASSWORD: "${HUB_DB_PASSWORD}"   # interpolated — same variable the hub container gets below
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
     volumes:
       - hub-db:/var/lib/mysql
@@ -270,7 +270,7 @@ services:
       HUB_DB_HOST: db
       HUB_DB_NAME: phlix_hub
       HUB_DB_USER: phlix_hub
-      HUB_DB_PASSWORD: CHANGE-ME
+      HUB_DB_PASSWORD: "${HUB_DB_PASSWORD}"
       HUB_JWT_SECRET: "${HUB_JWT_SECRET}"
       HUB_PUBLIC_DOMAIN: hub.example.com
     depends_on:
@@ -291,10 +291,13 @@ Run migrations once the database is up:
 docker compose exec hub php /var/www/html/scripts/run-migrations.php
 ```
 
-> `HUB_JWT_SECRET: "${HUB_JWT_SECRET}"` above is interpolated by Compose from
-> the environment or an `.env` file in the project directory (the same mode-`600`
-> file as the `docker run` path) — Compose reads `.env` automatically, so the
-> secret never has to appear in a command line or in the committed YAML.
+> Both `${HUB_JWT_SECRET}` and `${HUB_DB_PASSWORD}` above are interpolated by
+> Compose from the process environment or a `.env` file next to the compose
+> file — put the two values the `docker run` step wrote into its mode-`600`
+> env file there (Compose reads the project `.env` automatically). No secret
+> ever appears on a command line or in the committed YAML, and `db` and `hub`
+> consume the same interpolated variable, so the password cannot drift between
+> the two services.
 
 ### From source
 
@@ -417,14 +420,19 @@ Verify pairing works end-to-end:
 | `HUB_DB_NAME` | Yes | `phlix_hub` | Database name |
 | `HUB_DB_USER` | Yes | `phlix_hub` | Database user |
 | `HUB_DB_PASSWORD` | Yes | `phlix_hub` | Database password |
-| `HUB_JWT_SECRET` | Yes (prod) | random per-process | ≥32-byte JWT signing secret |
+| `HUB_JWT_SECRET` | Yes (prod) | random per-process (dev/local only) | ≥32-byte JWT signing secret — a production Hub **refuses to boot** without it |
 | `HUB_JWT_ACCESS_TTL` | No | `3600` | Access-token lifetime (seconds) |
 | `HUB_JWT_REFRESH_TTL` | No | `604800` | Refresh-token lifetime (seconds) |
 | `HUB_SONARR_URL` / `HUB_SONARR_API_KEY` / `HUB_SONARR_ENABLED` | No | — | Sonarr integration for media requests |
 | `HUB_RADARR_URL` / `HUB_RADARR_API_KEY` / `HUB_RADARR_ENABLED` | No | — | Radarr integration for media requests |
 
-> If `HUB_JWT_SECRET` is unset the Hub falls back to a random per-process secret — usable in dev,
-> but it invalidates every token on restart, so it **must** be set in production.
+> If `HUB_JWT_SECRET` is unset the Hub falls back to a random per-process secret **only in
+> `dev`/`local`** (`APP_ENV`/`HUB_ENV`) — and that fallback invalidates every token on restart.
+> Outside development the Hub refuses to boot instead: `AuthServicesProvider::resolveSecret()`
+> throws `MissingJwtSecretException` (the pre-flight in `start.php` deliberately lets the unset
+> case through to it, while a *set*-but-bad value is refused there and then). The shipped container
+> image is the benign path: its entrypoint persists a generated key when the var is unset. Set the
+> var explicitly everywhere — see [Hardening §1](/security/hardening#_1-change-all-default-secrets).
 
 ---
 
@@ -437,12 +445,18 @@ Verify pairing works end-to-end:
 **Fix:** Use a CA-signed certificate (Let's Encrypt via Traefik/Caddy, or certbot for nginx).
 Self-signed certs are rejected by apps and browsers by default.
 
-### JWT secret not set (random per-process fallback)
+### JWT secret not set (dev fallback; production refuses to boot)
 
-**Symptom:** Users are logged out on every Hub restart; tokens stop validating.
+**Symptom:** On a production install the Hub exits during boot with `MissingJwtSecretException` and
+never serves traffic. On a `dev`/`local` box it boots, but users are logged out on every Hub restart
+and authentication fails intermittently across workers — each process minted its own random secret.
 
 **Fix:** Set `HUB_JWT_SECRET` to a stable random value (`openssl rand -hex 32`) and keep it
-constant across restarts and across all Hub nodes.
+constant across restarts and across all Hub nodes. The shipped container entrypoint
+(`docker/docker-entrypoint.sh`) softens this only for Docker: with the var unset it generates a key
+and persists it to `/var/phlix/config/hub_jwt_secret` on first boot, so a bare `docker run` comes up
+with a stable key that survives restarts as long as that volume does. Set the variable explicitly
+everywhere — a key you never chose is a key you never planned to rotate.
 
 ### Server can't reach the Hub
 

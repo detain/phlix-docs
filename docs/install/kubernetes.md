@@ -19,10 +19,9 @@ tag guidance below was re-derived against the live `ghcr.io` registry and the ti
 IMG_TAG=$(curl -s -H "Authorization: Bearer $(curl -s "https://ghcr.io/token?scope=repository:detain/phlix-server:pull" | jq -r .token)" \
   "https://ghcr.io/v2/detain/phlix-server/tags/list" | jq -r '.tags[]' | grep -E '^[0-9a-f]{40}-latest$' | sort | tail -1)
 git clone --depth 1 https://github.com/detain/phlix-server && cd phlix-server
+# Secrets first, out of argv: create the Secret the chart consumes (see §7), then:
 helm install phlix ./k8s/helm/phlix \
   --set image.tag="$IMG_TAG" \
-  --set config.database_password=SECRET \
-  --set config.secret_key=YOUR_KEY \
   --set ingress.enabled=true \
   --set ingress.hosts[0].host=phlix.example.com
 ```
@@ -163,6 +162,14 @@ tolerations:
     effect: "NoSchedule"
 ```
 
+> The two `REPLACE_…` lines above are placeholders — fill them with generated
+> values (the chart refuses copy-paste placeholder strings like `secret` or
+> `change-me` at template time — see §7), but keep the filled file out of git:
+> `values.yaml` ends up verbatim in the Helm release metadata, which anyone
+> with release read access can dump with `helm get values`. Use a separate
+> mode-`600` secrets file as in §7 rather than committing real credentials
+> here.
+
 Save as `values.yaml` and install with (chart from a `phlix-server` checkout, per §2):
 
 ```bash
@@ -287,16 +294,25 @@ without editing the chart is possible server-side via `PHLIX_HTTP_PORT` /
 no longer match, so prefer the chart defaults inside Kubernetes.
 :::
 
-Set passwords/keys via the chart's secrets mechanism (required), and pass the immutable image tag (also required):
+Passwords and keys are **required** — the chart's `templates/secret.yaml` wraps both in `required`, so an empty `config.database_password` or `config.secret_key` fails `helm template`/`helm install` loudly. (A template-time guard additionally refuses a family of copy-paste placeholder values — `secret`, `change-me`, `replace-me`, `password`, `test`, `demo`, `dev`, … — so install genuinely stalls if you leave an example string in place.)
+
+Prefer feeding real values through a **local, uncommitted secrets file** rather than the command line — `--set` puts the secret in your shell history and in the process argv while helm runs, visible to anyone who can list processes:
 
 ```bash
+umask 077
+cat > phlix-secrets.yaml <<EOF
+config:
+  database_password: "$(openssl rand -hex 32)"
+  secret_key: "$(openssl rand -hex 32)"
+EOF
+# phlix-secrets.yaml holds live credentials — never commit it.
+
 helm install phlix ./k8s/helm/phlix \
   --set image.tag="$IMG_TAG" \
-  --set config.database_password=STRONG_PASSWORD \
-  --set config.secret_key=YOUR_32_CHAR_SECRET
+  -f phlix-secrets.yaml
 ```
 
-Or pre-create a Kubernetes Secret and reference it in `values.yaml`.
+Whatever path you use, the values are rendered into the chart-managed Secret and into the release metadata (`helm get values` shows them), so treat read RBAC on secrets/releases as part of the credential's trust boundary. On GitOps clusters, inject the same `config.*` values from your secret manager at render time — the chart owns its Secret object and has no existing-secret hook, so pre-creating a separate Secret and pointing the chart at it is not supported.
 
 ---
 

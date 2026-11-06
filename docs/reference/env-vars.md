@@ -34,7 +34,7 @@ that consumes it.
 
 | Variable      | Default                       | Description |
 | ------------- | ----------------------------- | ----------- |
-| `JWT_SECRET`  | `default-secret-change-me`    | HMAC secret used to sign / verify JWT access and refresh tokens. The default is intentionally insecure so a missing env var fails closed in production deployments. Read by `Phlix\Common\Container\Providers\AuthServicesProvider`. |
+| `JWT_SECRET`  | _refused at boot_ | HMAC secret used to sign / verify JWT access and refresh tokens. There is no usable default: boot refuses an unset or weak key — `AuthServicesProvider::assertSecretConfigured()` runs in `start.php` before the workers start and aborts on an empty value, the shipped sentinel, or the publicly-known placeholder family (`change-me`, `secret`, …) in every environment, and on anything shorter than 32 bytes outside development. Generate with `openssl rand -hex 32`. Read by `Phlix\Common\Container\Providers\AuthServicesProvider`. |
 | `PHLIX_SIGNED_URL_SECRET` | _derived from `JWT_SECRET`_ | HMAC key for the [signed media URLs](/security/signed-media-urls) that gate the binary/streaming endpoints (`/media/{id}/stream`, `/hls/**`, `/dash/**`, book/audiobook/photo bytes). When unset it is derived from `JWT_SECRET` via a domain-separated HMAC, so a leaked stream token can never be replayed as a JWT (and vice-versa). Set an explicit value to rotate stream tokens independently of JWTs. Read by `Phlix\Auth\SignedUrl::fromEnv()`. |
 | `PHLIX_SIGNED_URL_TTL`    | `21600` (6 h)               | Lifetime, in seconds, of a minted signed media URL before it expires. Must be a positive integer. Read by `Phlix\Auth\SignedUrl::fromEnv()`. |
 

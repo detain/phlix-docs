@@ -106,8 +106,13 @@ If your server is behind a firewall, ensure:
 
 ### UFW Example
 
+8096 is the **plaintext** portal listener — scope the inbound rule to your LAN
+subnet (see
+[Hardening §3 — Restrict network exposure](/security/hardening#_3-restrict-network-exposure)
+for the TLS-fronting options if clients are off-LAN):
+
 ```bash
-ufw allow 8096/tcp comment 'Phlix Media Server'
+ufw allow from 192.168.0.0/16 to any port 8096 proto tcp comment 'Phlix Media Server (LAN only)'
 ufw allow out 19302/udp comment 'STUN'
 ufw allow out 443/tcp comment 'Phlix Hub'
 ```
@@ -115,7 +120,7 @@ ufw allow out 443/tcp comment 'Phlix Hub'
 ### firewalld Example
 
 ```bash
-firewall-cmd --permanent --add-port=8096/tcp
+firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.0.0/16" port port="8096" protocol="tcp" accept'
 firewall-cmd --permanent --add-port=443/tcp
 # STUN (19302/udp) needs no inbound rule: like the ufw example above it is
 # outbound-only, and firewalld permits outbound traffic by default.

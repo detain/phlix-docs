@@ -123,10 +123,13 @@ server {
 ### 3. Firewall — only expose what is needed
 
 Default: expose 8096 (HTTP API) + 1900 (DLNA, optional). Block everything else from ingress.
+8096 is **plaintext HTTP** — carry login and tokens only on a network you
+trust; scope the rule to your LAN and see
+[Hardening §3 — Restrict network exposure](/security/hardening#_3-restrict-network-exposure).
 
 ```bash
-# Allow only HTTP and optional DLNA
-ufw allow 8096/tcp comment "Phlix HTTP API"
+# Allow only HTTP (LAN-scoped) and optional DLNA
+ufw allow from 192.168.0.0/16 to any port 8096 proto tcp comment "Phlix HTTP API (LAN only)"
 ufw allow 1900/udp comment "DLNA discovery (optional)"
 ufw enable
 ```

@@ -8,7 +8,9 @@ entirely through `HUB_*` environment variables. TLS is **not** provisioned autom
 (the Hub's `TlsCertificateManager::provisionCertificate()` throws) — terminate TLS at a reverse
 proxy (Traefik / Caddy / nginx) or place certificates out-of-band; see the
 [TLS Certificates runbook](./tls.md) and the developer [TLS notes](../dev/tls-certificates.md).
-The **first account registered** at `/signup` is automatically promoted to admin.
+The **first account registered** at `/signup` is automatically promoted to admin —
+register before exposing the domain, then close sign-ups; see
+[First Boot](./first-boot.md#initial-setup).
 
 > For an exhaustive bare-metal Ubuntu walkthrough (PHP packages, MySQL hardening, systemd unit,
 > nginx config), see the [README in the `phlix-hub` repo](https://github.com/detain/phlix-hub#readme).
@@ -200,22 +202,43 @@ If the Hub runs on a different host than MySQL, create the user for that host (o
 
 ### Docker
 
+Put the secrets in an env file first — a `docker run -e` argument lands in the
+daemon's process listing, your shell history, and anything that inspects the
+container (`docker inspect`), so generated secrets should never be typed on the
+command line:
+
+```bash
+umask 077
+cat > phlix-hub.env <<EOF
+HUB_DB_PASSWORD=$(openssl rand -hex 16)
+HUB_JWT_SECRET=$(openssl rand -hex 32)
+EOF
+```
+
+(The bare-metal equivalent of this file, `/etc/phlix-hub.env`, is what
+`install.sh` maintains on a managed install; see
+[Updating an existing install](#updating-an-existing-install).)
+
 ```bash
 docker run -d \
   --name phlix-hub \
   -p 8800:8800 -p 8802:8802 -p 8803:8803 \
+  --env-file ./phlix-hub.env \
   -e HUB_DB_HOST=db \
   -e HUB_DB_PORT=3306 \
   -e HUB_DB_NAME=phlix_hub \
   -e HUB_DB_USER=phlix_hub \
-  -e HUB_DB_PASSWORD=CHANGE-ME \
-  -e HUB_JWT_SECRET="$(openssl rand -hex 32)" \
   -e HUB_PUBLIC_DOMAIN=hub.example.com \
   detain/phlix-hub
 
 # Apply migrations against the configured database
 docker exec phlix-hub php /var/www/html/scripts/run-migrations.php
 ```
+
+> A secret may be passed inline (`-e HUB_JWT_SECRET=…`) only as a throwaway,
+> single-boot value that never guards real accounts — anything on a command
+> line is visible to every process on the host until it exits, and stays in
+> your history after that.
 
 ### Docker Compose
 
@@ -268,21 +291,45 @@ Run migrations once the database is up:
 docker compose exec hub php /var/www/html/scripts/run-migrations.php
 ```
 
+> `HUB_JWT_SECRET: "${HUB_JWT_SECRET}"` above is interpolated by Compose from
+> the environment or an `.env` file in the project directory (the same mode-`600`
+> file as the `docker run` path) — Compose reads `.env` automatically, so the
+> secret never has to appear in a command line or in the committed YAML.
+
 ### From source
+
+Keep the real values out of this shell: write them to an env file (mode `600`)
+instead of `export`ing them, so the generated secret never sits in shell
+history or in the process environment of subsequent commands.
 
 ```bash
 git clone https://github.com/detain/phlix-hub.git
 cd phlix-hub
 composer install --no-dev --optimize-autoloader
 
-export HUB_DB_HOST=127.0.0.1 HUB_DB_USER=phlix_hub \
-       HUB_DB_PASSWORD=CHANGE-ME HUB_DB_NAME=phlix_hub
-export HUB_JWT_SECRET="$(openssl rand -hex 32)"
-export HUB_PUBLIC_DOMAIN=hub.example.com
+umask 077
+cat > .env <<EOF
+HUB_DB_HOST=127.0.0.1
+HUB_DB_USER=phlix_hub
+HUB_DB_NAME=phlix_hub
+HUB_DB_PASSWORD=$(openssl rand -hex 16)
+HUB_JWT_SECRET=$(openssl rand -hex 32)
+HUB_PUBLIC_DOMAIN=hub.example.com
+EOF
+# .env is a secret file — never commit it; add it to .gitignore if you
+# version this directory. The loader below is documented below the block.
+
+set -a; . ./.env; set +a
 
 php scripts/run-migrations.php     # create the schema (idempotent)
 php start.php start         # add -d to daemonize
 ```
+
+> The `set -a` source above is a **session-scoped convenience**: the vars live
+> in this shell only, and a shell that dies takes them with it. For the daemon
+> under systemd, point the unit at the file
+> (`EnvironmentFile=/opt/phlix-hub/.env`) rather than repeating values in
+> `Environment=` lines, which land world-readable in `systemctl show`.
 
 For a production host, run `php start.php start` under a process manager such as systemd
 (see the [Overview](./overview.md) for the full CLI and the

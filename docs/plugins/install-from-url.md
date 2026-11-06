@@ -33,8 +33,6 @@ Only a URL that a configured catalog pins (with both `ref` and `artifactSha256`)
 6. Find the plugin in the table — it lands **disabled** by default.
 7. Flip the toggle to enable it.
 
-Screenshot placeholder: `[screenshot: admin/plugins table with phlix-plugin-example row, toggle off]`
-
 ---
 
 ## 3. Install from the Command Line

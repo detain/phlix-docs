@@ -246,17 +246,22 @@ without it.
 
 ## 10. Firewall configuration
 
+The `8096/tcp` portal below is **plaintext HTTP** — scope the rule to your LAN
+subnet rather than opening it to the world, and see
+[Hardening §3 — Restrict network exposure](/security/hardening#_3-restrict-network-exposure)
+before exposing it further.
+
 ### UFW (Ubuntu/Debian)
 
 ```bash
-sudo ufw allow 8096/tcp comment 'Phlix HTTP'
+sudo ufw allow from 192.168.0.0/16 to any port 8096 proto tcp comment 'Phlix HTTP (LAN only)'
 sudo ufw allow 1900/udp comment 'DLNA discovery (optional)'
 ```
 
 ### firewalld (Fedora)
 
 ```bash
-sudo firewall-cmd --permanent --add-port=8096/tcp
+sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.0.0/16" port port="8096" protocol="tcp" accept'
 sudo firewall-cmd --permanent --add-port=1900/udp
 sudo firewall-cmd --reload
 ```

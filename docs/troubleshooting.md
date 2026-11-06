@@ -122,14 +122,23 @@ systemctl start phlix-server
 
 **Cause 3 — Firewall blocking:** Port 8096 is not open on the host firewall.
 
-**Fix:**
-```bash
-# ufw (Debian/Ubuntu)
-sudo ufw allow 8096
+**Fix:** Open it for the network your clients actually live on — 8096 is
+plaintext HTTP, so a rule with no source restriction exposes logins and tokens
+to everyone who can route to the host (see
+[Hardening §3 — Restrict network exposure](/security/hardening#_3-restrict-network-exposure)):
 
-# firewalld (RHEL/CentOS)
-sudo firewall-cmd --add-port=8096/tcp
+```bash
+# ufw (Debian/Ubuntu) — LAN-scoped; adjust the subnet to yours
+sudo ufw allow from 192.168.0.0/16 to any port 8096 proto tcp
+
+# firewalld (RHEL/CentOS) — same LAN-scoping idea
+sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.0.0/16" port port="8096" protocol="tcp" accept'
+sudo firewall-cmd --reload
 ```
+
+If the check that brought you here came from **outside** the LAN, opening the
+port wider is the wrong fix — put a TLS reverse proxy in front instead of
+exposing the plaintext port.
 
 ---
 

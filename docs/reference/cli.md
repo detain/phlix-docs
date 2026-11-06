@@ -300,12 +300,19 @@ The password is hashed with Argon2ID before storage.
 | `--password=` | The new password. When omitted, a strong random password is generated and **printed** to stdout. |
 
 ```bash
-# Generate and print a strong random password
+# Preferred: generate and print a strong random password (nothing on argv)
 php bin/phlix user:reset-password alice@example.com
 
 # Set a specific password (not echoed back)
 php bin/phlix user:reset-password alice --password='S3cret!Passphrase'
 ```
+
+The first form is the safer default: with `--password` omitted the command
+generates a strong password and prints it once for you to hand over. A value
+typed on the command line is not — it sits in your shell history and in the
+process listing while the command runs. Use the inline form only when the
+passphrase itself is throwaway (the account resets its password again at first
+login, or it guards nothing real).
 
 Returns exit `1` if the user is not found.
 

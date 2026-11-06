@@ -49,7 +49,7 @@ A **watch group** keeps playback in lockstep across everyone's devices, so house
    - **Join room** — pick a group from the **Public rooms** list when it shows one, or type the **Room ID** you were given (it looks like `sp_…`) and click **Join**.
 4. A "Joined {name}" confirmation appears and the player's sync controls take over: transport buttons become **"Play for everyone" / "Pause for everyone"**, and rewind/fast-forward move the whole group.
 
-Groups created from the player are always open — there is no password box in the dialog. Room IDs are not guessable, which is the practical privacy control: share the ID only with people you want watching.
+Groups created from the player are always open — there is no password box in the dialog. Room IDs are not guessable, which is the practical privacy control: share the ID only with people you want watching. **Treat the room ID as a shared secret** — anyone who has it (plus an account on your server) can join and see the group's playback state, so don't paste it into public channels.
 
 A standalone page exists at `https://your-server/app/syncplay` (after signing in) where you can create a group or join by ID before opening a title. A pre-filled invite link you can send to someone is simply:
 

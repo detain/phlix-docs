@@ -123,8 +123,9 @@ hub-to-hub federation tunnel (8805) are covered in
   this step is done.
 - **Add the rest of the household** — profiles vs. real accounts:
   [Adding People to Your Household](adding-people.md).
-- **Cast to your TV** — DLNA is shipped **off**; flip it on under **Admin → DLNA**
-  (page has a Start/Stop control) and compatible TVs will find the server on the LAN.
+- **Cast to your TV** — DLNA is shipped **off**; flip it on in `config/dlna.php`
+  and restart the server (the Admin → DLNA toggle alone won't bring discovery up),
+  and compatible TVs will find the server on the LAN.
 - **Watch from outside the house** — claim the server on a Hub:
   [Claim your server](hub/claim-server.md). (A *relay* handles the hard part —
   no router settings to touch.)

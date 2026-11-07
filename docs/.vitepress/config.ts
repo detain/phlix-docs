@@ -61,7 +61,7 @@ export default defineConfig({
       { text: 'Get Started', link: '/first-run' },
       { text: 'Install', link: '/install/linux' },
       { text: 'Libraries', link: '/libraries/overview' },
-      { text: 'Player', link: '/player/chapters' },
+      { text: 'Player', link: '/player/overview' },
       { text: 'Clients', link: '/clients/overview' },
       { text: 'Hub', link: '/hub/what-is-the-hub' },
       { text: 'Advanced', link: '/advanced/hardware-transcoding' },
@@ -178,6 +178,7 @@ export default defineConfig({
         {
           text: 'Player',
           items: [
+            { text: 'Overview', link: '/player/overview' },
             { text: 'Chapters', link: '/player/chapters' },
             { text: 'Quality & Audio', link: '/player/player-quality-audio' },
           ]

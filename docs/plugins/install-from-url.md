@@ -3,6 +3,8 @@ title: Install from URL
 description: Installing a public plugin from its plugin.json URL, including the un-pinned-source refusal gate and its opt-out
 ---
 
+# Install from URL
+
 **Since:** 0.18.0
 
 ## TL;DR

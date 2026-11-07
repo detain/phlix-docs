@@ -7,7 +7,7 @@ description: The optional companion service brokering remote access, sharing, an
 
 The Phlix Hub is an optional companion service that lets you reach your
 self-hosted Phlix server from outside your home network without configuring
-port forwarding or a VPN. You claim your server to a hub once, and the hub then
+port forwarding or a VPN. You add your server to a hub once, and the hub then
 brokers remote access, library sharing, and multi-server management on your
 behalf.
 

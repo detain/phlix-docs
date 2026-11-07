@@ -81,22 +81,27 @@ PHLIX_LOG_LEVEL=debug php start.php start    # Start server with debug-level log
 
 ### Admin password reset
 
-There is no CLI command or self-service password-reset flow yet. To reset a
-password, update the user's Argon2ID hash directly in the database. Generate a
-new hash with PHP, then write it to the `users` table:
+Use the CLI command — it looks the account up by username first, then by email,
+and stores the new password as an Argon2ID hash:
 
 ```bash
-# Generate an Argon2ID hash for the new password
-php -r 'echo password_hash("new-password-here", PASSWORD_ARGON2ID), "\n";'
+# Preferred: generates a strong random password and prints it once
+php bin/phlix user:reset-password admin@example.com
+
+# Or set a specific password (it is not echoed back)
+php bin/phlix user:reset-password admin --password='S3cret!Passphrase'
 ```
 
-```sql
--- Then update the row (use the hash printed above)
-UPDATE users SET password_hash = '<hash-from-above>' WHERE email = 'admin@example.com';
-```
+The generated form is the safer default: a password typed on the command line
+sits in your shell history and in the process listing while the command runs.
 
-Phlix hashes passwords with `PASSWORD_ARGON2ID`, so any replacement hash must use
-the same algorithm.
+The reset itself revokes every existing session for that account (the command
+stamps `tokens_not_valid_after` on the user row), so no server restart is
+needed. If the account carried a forced-password-change flag, the reset clears
+it — whoever ran the command holds the new password. Writing the hash straight
+into the `users` table is **not** supported: it skips the revocation stamp and
+the flag handling. The command's full semantics are in the
+[CLI Reference](reference/cli.md).
 
 ## What Can Go Wrong
 
@@ -241,14 +246,13 @@ A: Not natively. Phlix serves all routes relative to the root of the configured 
 A: It depends on your hardware and playback mode. Direct play (no transcoding) uses minimal CPU — a single-core server can serve 10 or more concurrent direct-play sessions. Transcoding is CPU-bound; a modern 8-core server typically handles 2–4 simultaneous 1080p transcode streams. 4K HEVC transcoding requires significantly more CPU. Enable hardware acceleration to improve throughput.
 
 **Q: How do I reset the admin password?**
-A: There is no CLI or self-service reset yet. Generate an Argon2ID hash and write
-it directly to the `users` table (see [Admin password reset](#admin-password-reset)
-above):
+A: Run the CLI command — with `--password` omitted it generates a strong random
+password and prints it once:
 ```bash
-php -r 'echo password_hash("new-password-here", PASSWORD_ARGON2ID), "\n";'
-# then: UPDATE users SET password_hash = '<hash>' WHERE email = 'admin@example.com';
+php bin/phlix user:reset-password admin@example.com
 ```
-Restart the server after resetting the password to clear existing sessions.
+The reset revokes the account's existing sessions automatically; no server
+restart is needed. Details in [Admin password reset](#admin-password-reset) above.
 
 **Q: How do I enable debug logging?**
 A: Set the `PHLIX_LOG_LEVEL` environment variable before starting the server:

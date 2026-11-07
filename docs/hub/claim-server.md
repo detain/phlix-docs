@@ -3,6 +3,8 @@ title: Hub Claim Guide
 description: Connect your Phlix server to a Phlix Hub for remote access and multi-server management.
 ---
 
+# Hub Claim Guide
+
 **Since:** 0.18.0
 
 ## TL;DR

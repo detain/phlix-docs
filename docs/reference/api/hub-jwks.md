@@ -3,8 +3,9 @@
 The server publishes its Ed25519 **public** key(s) as a JWKS document so the hub
 can verify JWTs the server signed.
 
-The machine-readable OpenAPI spec for this endpoint lives alongside this page at
-`docs/reference/api/hub-jwks.yaml`.
+The machine-readable OpenAPI spec for this endpoint is served alongside this
+page at `/reference/api/hub-jwks.yaml` — it lives in the repo under
+`docs/public/reference/api/` so the build ships it verbatim.
 
 ## Endpoint
 

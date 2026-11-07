@@ -191,29 +191,48 @@ tailscale up --accept-routes
 
 This opens a browser for authentication. After auth, your device joins your tailnet.
 
-### Access Phlix (Tailscale)
+### Access Phlix over your tailnet
 
-Once connected, access your server at:
+Once every device is on the tailnet, reach the portal at the server's MagicDNS
+name or its Tailscale IPv4 address — both resolve only for devices inside your
+tailnet:
 
 ```text
-https://phlixMachineName.tailcale.mesh:8096
+http://phlix-machine.home-ab12cd.ts.net:8096
+http://100.101.102.103:8096
 ```
 
-Replace `phlixMachineName` with the hostname of your Phlix server (run `hostname` on the server to find it).
+Run `tailscale ip -4` on the server (or check the Tailscale admin console) for
+its exact addresses, and substitute your machine and tailnet names for
+`phlix-machine` / `home-ab12cd`. The portal listens plain HTTP on `8096`, so
+these are `http://` links — Tailscale carries the traffic privately inside your
+network; it does not add HTTPS on the private path.
 
 ### Tailscale Funnel (public HTTP without port forwarding)
 
-To make Phlix publicly accessible via your tailnet without port forwarding:
+Funnel is a different arrangement from the steps above: it publishes the
+service to the **public internet** through Tailscale's relay, so anyone — not
+just your own devices — can reach the printed URL.
 
 ```bash
-# Enable Funnel on port 8096
+# Expose local port 8096 through the public relay
 tailscale funnel 8096
 
-# Check Funnel status
+# Prints the public https:// URL the relay serves it at
 tailscale funnel status
 ```
 
-Funnel exposes `https://phlixMachineName.tailcale.mesh:8096` to the public internet via Tailscale's relay — no router port forwarding needed.
+::: danger Funnel publishes your login portal to the whole internet
+The URL `funnel status` prints is reachable by anyone who has it — including
+automated scanners. Your login page and REST API are then exposed to
+internet-wide credential-stuffing and enumeration. This is the same exposure
+the [Hardening Checklist](../security/hardening.md) warns about for raw port
+forwarding: work through it before turning a Funnel up, and use strong
+passwords (unique per account, never defaults). If you only need to reach your
+own devices, stay on the private MagicDNS addresses above — or use the
+[Hub](../hub/what-is-the-hub.md), whose relay needs no inbound hole at all and
+never publishes your portal.
+:::
 
 ---
 
@@ -354,7 +373,8 @@ Also verify the client has `PersistentKeepalive = 25` and that `AllowedIPs` incl
 
 ### Failure 3: Tailscale — Device Not Showing Up in Tailnet
 
-**Symptom:** Cannot reach server via `phlixMachineName.tailcale.mesh:8096`; device missing from Tailscale admin console.
+**Symptom:** Cannot reach server via its MagicDNS name or Tailscale IP
+(e.g. `phlix-machine.home-ab12cd.ts.net:8096`); device missing from Tailscale admin console.
 
 **Diagnosis:**
 

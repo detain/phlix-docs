@@ -88,24 +88,32 @@ looks off, your device may have needed the server to convert the video on the fl
 
 ## Ports at a glance
 
-A fresh Phlix server listens on two ports; enabling DLNA (off by default) adds
-two LAN-facing ones. Open only what you actually use, and scope your firewall
-rules to your LAN (worked `ufw`/`firewalld` examples:
-[Troubleshooting](troubleshooting.md)):
+A fresh Phlix server listens on two TCP ports; enabling DLNA (off by default)
+adds exactly one more — the UDP :1900 discovery listener on the LAN. Open only
+what you actually use, and scope your firewall rules to your LAN (worked
+`ufw`/`firewalld` examples: [Troubleshooting](troubleshooting.md)):
 
 | Port | Protocol | What it is | Who needs it |
 | --- | --- | --- | --- |
 | 8096 | TCP | Web portal (`/app`), REST API, streaming | Every client device on your network |
-| 8097 | TCP | WebSocket — watch parties (SyncPlay) and live updates | Only if friends join your watch parties from outside |
-| 8200 | TCP | DLNA casting: device description and media | Only TVs/players you cast to, on the LAN |
-| 1900 | UDP | SSDP multicast — DLNA discovery announcements | LAN multicast only, with DLNA on |
+| 8097 | TCP | WebSocket — watch parties (SyncPlay) | Only if clients connect to SyncPlay directly rather than through the Hub relay |
+| 1900 | UDP | SSDP multicast — DLNA discovery (announcements and search replies) | LAN only, and only once DLNA is switched on in `config/dlna.php` and the service is restarted |
+
+DLNA is not a separate port: its device description, browse and streaming
+endpoints ride the already-open :8096, so turning the feature on opens **no**
+new inbound TCP hole. The switch must be set in the config file followed by a
+full restart — a fresh install never spawns the discovery worker, so the
+admin-UI toggle alone cannot bring :1900 up
+([DLNA Server](advanced/dlna.md)).
 
 Nothing else needs an inbound hole. If you claim the server to a Hub, remote
 access rides a single **outbound** connection the server keeps to the Hub's
 tunnel port (8802 by default) — your router and firewall stay untouched
 ([Claim your server](hub/claim-server.md)). If you self-host a Hub of your own,
-its listener map — 8800 dashboard/API plus the 8802/8803/8804 relay surfaces —
-is in [Hub architecture](dev/architecture-hub.md).
+its listener map — 8800 dashboard/API plus the 8802/8803 relay surfaces — is in
+[Hub architecture](dev/architecture-hub.md); the SyncPlay relay (8804) and the
+hub-to-hub federation tunnel (8805) are covered in
+[Federation policy](hub-admin/federation-policy.md).
 
 ## Good next steps
 

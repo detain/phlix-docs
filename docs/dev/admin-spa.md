@@ -9,27 +9,38 @@
 > `/admin` + `/admin/*` behind the existing `AdminMiddleware` (non-admin →
 > 302 `/login`) and talks to the existing JWT-authed JSON API. After editing
 > `admin-ui/src/`, re-run `npm run build` and commit the refreshed bundle.
+>
+> **Status.** This React console was later decommissioned in favour of the
+> vendored `/app` SPA (see the status update in section 5). The `admin-ui/`
+> directory and its build commands no longer exist; this page is kept as the
+> console's contributor history.
 
 This page covers the admin SPA scaffold introduced in step **0.4** of the UI
 coverage plan. Step 0.4 ships a working *shell* — nav, router, a typed API
 client, and shared components — with **no feature pages yet** (those land in
-Phase 1). The viewer-facing portal stays server-side-rendered (Smarty); only
-the admin console is a client-side SPA.
+Phase 1). When 0.4 shipped, the viewer-facing portal was still
+server-side-rendered (Smarty) and the admin console was the only client-side
+SPA. That split has since gone: the viewer portal is itself a Vue SPA served
+under `/app`, and the server's `HttpHandler` redirects the former SSR paths to
+their `/app` equivalents (see section 5).
 
 ---
 
 ## 1. Why a client-side SPA for the admin console
 
-The viewer portal (`/`, `/music`, `/books`, …) is server-side-rendered with
-Smarty and stays that way: it is largely read-oriented, benefits from fast
-first paint and shareable URLs, and is already built. The **admin console** is
-the opposite shape — dense, stateful, form-heavy CRUD over libraries, users,
-and settings, with tables, modals, and optimistic updates. A client-side SPA
-backed by the existing JSON API keeps that interaction local to the browser,
-avoids a full-page round-trip per action, and lets the admin surface evolve
-without touching server-render code. The two coexist: the SSR routes
-(`/admin/plugins`, `/admin/dashboard`) keep working until they are folded into
-the SPA in a later phase.
+When step 0.4 shipped, the viewer portal (`/`, `/music`, `/books`, …) was
+server-side-rendered with Smarty, and the plan was for it to stay that way: it
+was largely read-oriented, benefited from fast first paint and shareable URLs,
+and was already built. The **admin console** was the opposite shape — dense,
+stateful, form-heavy CRUD over libraries, users, and settings, with tables,
+modals, and optimistic updates. A client-side SPA backed by the existing JSON
+API kept that interaction local to the browser, avoided a full-page round-trip
+per action, and let the admin surface evolve without touching server-render
+code. The final shape broke this page's plan in both directions: the viewer
+portal later became the Vue `/app` SPA too, and this React console was
+decommissioned into that same bundle — the legacy `/admin/plugins` and
+`/admin/dashboard` paths now being plain redirects (see the
+status update in section 5).
 
 ---
 

@@ -206,7 +206,7 @@ Clients that support HLS (most modern DLNA renderers) can stream directly. For o
 
 ## Play To Feature
 
-The Play To feature allows you to "push" media from Phlix to a specific DLNA renderer (e.g., cast a video to your smart TV):
+The Play To feature allows you to "push" media from Phlix to a specific DLNA renderer (e.g. cast a video to your smart TV):
 
 1. In the Phlix web interface, click the cast icon on any media item
 2. Select a discovered DLNA renderer from the device list

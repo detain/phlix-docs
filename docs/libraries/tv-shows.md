@@ -220,7 +220,7 @@ playlists is never dispatched. New episodes appear after you scan.
 ### What a rescan does — and does not — do
 
 The TV scanner has **no per-file skip index and does not look at mtime at all**.
-It decides by *path*: an episode file whose path is already in the catalogue takes
+It decides by *path*: an episode file whose path is already in the catalog takes
 the existing-item branch, which backfills any missing source technical metadata
 (duration, the `metadata_json['source']` summary, `media_streams` rows) and then
 moves on. A file whose path is new is parsed for show/season/episode, probed and
@@ -299,7 +299,7 @@ series. See
 
 **Symptom:** Wrong show information appears, or no metadata is found despite correct episode numbers.
 
-**Cause:** TVDB and TMDB use different IDs for some shows; country-specific variants (e.g., "The Office" UK vs. US) can cross-match incorrectly.
+**Cause:** TVDB and TMDB use different IDs for some shows; country-specific variants (e.g. "The Office" UK vs. US) can cross-match incorrectly.
 
 **Fix:** Create a `show.nfo` in the show root with the correct `tmdbid` to lock metadata to the correct provider record, then re-scan to apply. Alternatively, use the per-item **Match metadata** action (see [section 8](#_8-fixing-a-wrong-or-missing-match)) to pick the right TMDB record interactively.
 
@@ -313,7 +313,7 @@ Phlix resolves TV series, season, and episode metadata through **TheMovieDB (TMD
 
 **Symptom:** The same show appears twice (or more) in the library, each with a partial episode list.
 
-**Cause:** The same show root folder was added via two different library paths (e.g., symlinks or copies).
+**Cause:** The same show root folder was added via two different library paths (e.g. symlinks or copies).
 
 **Fix:** Use a single library path per show. Run **Empty Library** then re-scan with a single path per show.
 

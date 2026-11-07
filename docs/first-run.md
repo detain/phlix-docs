@@ -148,7 +148,7 @@ php bin/phlix user:list                        # who exists at all
 Run these from the Phlix server's own install directory. See
 [CLI reference](reference/cli.md) for the rest of the toolbox.
 
-## Related pages
+## Related Pages
 
 - [Libraries overview](libraries/overview.md)
 - [Adding people](adding-people.md)

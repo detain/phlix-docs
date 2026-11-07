@@ -199,7 +199,7 @@ ffmpeg -hwaccels            # methods FFmpeg was built with
 ffmpeg -encoders | grep -E 'nvenc|vaapi|qsv|videotoolbox'   # available HW encoders
 ls -l /dev/dri/             # VAAPI/QSV render nodes (Linux)
 ```
-Review the output for available adapters (VAAPI, NVENC, QSV, VideoToolbox). Set `hwaccel.enabled` in `config/ffmpeg.php` and ensure the correct device node is accessible (e.g., `/dev/dri/renderD128` for VAAPI on Linux).
+Review the output for available adapters (VAAPI, NVENC, QSV, VideoToolbox). Set `hwaccel.enabled` in `config/ffmpeg.php` and ensure the correct device node is accessible (e.g. `/dev/dri/renderD128` for VAAPI on Linux).
 
 **Cause 3 — Disk I/O bottleneck:** Slow storage causes HLS segment writes to block, starving the player.
 
@@ -240,7 +240,7 @@ If the Hub signing key was rotated, re-trigger the Hub handshake from the admin 
 ## FAQ
 
 **Q: Can I run Phlix in a subfolder instead of at the root domain?**
-A: Not natively. Phlix serves all routes relative to the root of the configured port. Running in a subfolder (e.g., `https://example.com/phlix/`) requires a reverse proxy (nginx, Caddy, or Apache) to rewrite the path before forwarding to Phlix. See [Reverse proxy](advanced/reverse-proxy.md).
+A: Not natively. Phlix serves all routes relative to the root of the configured port. Running in a subfolder (e.g. `https://example.com/phlix/`) requires a reverse proxy (nginx, Caddy, or Apache) to rewrite the path before forwarding to Phlix. See [Reverse proxy](advanced/reverse-proxy.md).
 
 **Q: How many concurrent streams can Phlix handle?**
 A: It depends on your hardware and playback mode. Direct play (no transcoding) uses minimal CPU — a single-core server can serve 10 or more concurrent direct-play sessions. Transcoding is CPU-bound; a modern 8-core server typically handles 2–4 simultaneous 1080p transcode streams. 4K HEVC transcoding requires significantly more CPU. Enable hardware acceleration to improve throughput.

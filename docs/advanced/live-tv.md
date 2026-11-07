@@ -72,7 +72,7 @@ Each HDHomeRun model specifies a maximum number of simultaneous streams (commonl
 ### Requirements
 
 - Linux server with a kernel supporting DVB-T/T2 (most modern kernels)
-- A supported USB DVB-T/T2 stick (e.g., RTL-SDR, Astro DMW, Hauppauge WinTV)
+- A supported USB DVB-T/T2 stick (e.g. RTL-SDR, Astro DMW, Hauppauge WinTV)
 - Antenna connected to the tuner
 
 ### Step-by-step
@@ -145,7 +145,7 @@ If you prefer not to pay for Schedules Direct, you can use free XMLTV data from 
 
 **Step-by-step:**
 
-1. Download an XMLTV schedule for your region (e.g., from xmltv.org).
+1. Download an XMLTV schedule for your region (e.g. from xmltv.org).
 2. In Phlix: go to **Settings → Live TV → EPG Source → XMLTV Import**.
 3. Upload the `.xml` or `.xml.gz` file.
 4. Phlix parses and imports the guide data.
@@ -181,7 +181,7 @@ When two shows are scheduled to record at the same time:
 
 ### Storage
 
-Recordings are stored in the path configured in **Settings → Live TV → Storage**. This can be a dedicated folder (e.g., `/var/recordings`) or a subfolder of an existing media library.
+Recordings are stored in the path configured in **Settings → Live TV → Storage**. This can be a dedicated folder (e.g. `/var/recordings`) or a subfolder of an existing media library.
 
 Storage usage is shown in **Settings → Live TV → Storage** with total / used / free bytes.
 

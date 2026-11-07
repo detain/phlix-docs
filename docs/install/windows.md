@@ -44,7 +44,7 @@ This guide is text-first. Screenshots will be added in a follow-up.
 ### 2a. Download and install XAMPP
 
 1. Download XAMPP PHP 8.3 from [apachefriends.org](https://www.apachefriends.org/download.html)
-2. Run the installer — deselect unnecessary components (e.g., Tomcat)
+2. Run the installer — deselect unnecessary components (e.g. Tomcat)
 3. Install to default `C:\xampp`
 4. Start the XAMPP Control Panel
 
@@ -322,7 +322,7 @@ Expected: phlix-server index page loads (HTTP 200).
 
 ---
 
-## What can go wrong
+## What Can Go Wrong
 
 ### WSL2 not enabled or wrong version
 
@@ -333,7 +333,7 @@ Expected: phlix-server index page loads (HTTP 200).
 ### Hyper-V conflicts preventing WSL2
 
 - **Symptom:** WSL2 fails to start, or Ubuntu stuck at "Installing"
-- **Fix:** Ensure Windows is fully updated (21H2 or later); disable conflicting virtualization software (e.g., older VirtualBox)
+- **Fix:** Ensure Windows is fully updated (21H2 or later); disable conflicting virtualization software (e.g. older VirtualBox)
 - **Verify:** `systeminfo | findstr /C:"Hyper-V"` should show Hyper-V present
 
 ### PHP version mismatch
@@ -367,7 +367,7 @@ Expected: phlix-server index page loads (HTTP 200).
 
 ---
 
-## Next steps
+## Next Steps
 
 - [First run](/first-run) — create the first account (it becomes the administrator) at `http://your-server:8096`
 - [Docker install](/install/docker) — alternative install method using containers

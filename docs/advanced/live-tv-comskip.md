@@ -117,7 +117,7 @@ If you see `Comskip is not available at path: /usr/bin/comskip`:
 ### No chapters detected
 
 1. Check the comskip log output in `storage/logs/`
-2. Try lowering `min_commercial_length` (e.g., 20 seconds)
+2. Try lowering `min_commercial_length` (e.g. 20 seconds)
 3. Verify the recording has clear commercial breaks (not all recordings do)
 4. Try adjusting comskip's detection parameters in a custom ini file
 

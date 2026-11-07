@@ -70,7 +70,7 @@ recording owners (a legacy of early versions) have no owner stamped on them, and
 server treats ownerless lists as shared heritage that signed-in members may still see.
 Anything you create today is private to your account.
 
-## Related pages
+## Related Pages
 
 - [Adding people to your household](../adding-people.md) — profiles and who sees what
 - [Sharing a library with friends](../hub/share-with-friends.md) — giving access to whole libraries

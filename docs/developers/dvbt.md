@@ -6,7 +6,7 @@ The DVB-T (Digital Video Broadcasting — Terrestrial) USB tuner driver enables 
 
 ## Supported Hardware
 
-- RTL2832U-based USB dongles (e.g., ezcap, FlightAware Pro Stick)
+- RTL2832U-based USB dongles (e.g. ezcap, FlightAware Pro Stick)
 - Other chipsets with Linux DVB-T driver support
 - Any device exposing `/dev/dvb/adapter*/frontend*`
 
@@ -276,7 +276,7 @@ The `livetv_tuners` table stores tuner information with type `dvb_t`:
 
 | Column | Type | Description |
 |--------|------|-------------|
-| tuner_id | VARCHAR(36) | Unique identifier (e.g., `dvbt_0_0`) |
+| tuner_id | VARCHAR(36) | Unique identifier (e.g. `dvbt_0_0`) |
 | name | VARCHAR(255) | Display name |
 | type | VARCHAR(20) | Tuner type (`dvb_t`, `hdhomerun`, `iptv`) |
 | status | VARCHAR(20) | Current status |

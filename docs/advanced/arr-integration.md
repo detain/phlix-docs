@@ -82,7 +82,7 @@ ARR applications interact with Phlix through the standard media library API:
 
 ::: warning Rescan does not re-match a movie or episode
 ARR libraries are movie/TV, and on those types a rescan does **not** revisit a
-path that is already indexed — the "re-read every file" behaviour is consumed by
+path that is already indexed — the "re-read every file" behavior is consumed by
 the music scanner only. Use `rescan` after an ARR **adds, renames or deletes** a
 file, and `match-metadata` when an item is **unmatched**.
 :::

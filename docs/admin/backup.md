@@ -64,7 +64,7 @@ interface BackupSchedule {
 
 ---
 
-## API Contract
+## API contract
 
 All endpoints are gated by `AdminMiddleware` (require admin authentication) and return JSON envelopes.
 
@@ -274,7 +274,7 @@ Automatic backups need an explicit truthy `enabled`. The boot-time check reads i
 `empty($backupConfig['enabled'])`, so a `config/backup.php` that **omits** the key
 registers no timer at all, whatever `auto_backup_interval_days` says. (A second
 reader defaults the same key to `true`, but nothing consumes that value — the
-boot-time check is the only live consumer, so the behaviour is unambiguous: no
+boot-time check is the only live consumer, so the behavior is unambiguous: no
 `enabled`, no automatic backups.) Manual backups from the admin page are unaffected.
 
 Both gates — `enabled` and `auto_backup_interval_days > 0` — are evaluated **once,

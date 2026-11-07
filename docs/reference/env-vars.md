@@ -1,4 +1,4 @@
-# Environment variables
+# Environment Variables
 
 Reference list of every environment variable read by the Phlix Media Server,
 its default, and a one-line description. Each entry links back to the file
@@ -14,7 +14,7 @@ that consumes it.
 
 | Variable               | Default | Description |
 | ---------------------- | ------- | ----------- |
-| `PHLIX_DEBUG_EVENTS`   | `0`     | When truthy (`1`, `true`, `yes`, `on`) it (1) wraps the PSR-14 dispatcher in Tukio's `DebugEventDispatcher`, which logs every dispatched event class at debug level on the `events` channel, and (2) enables the `events` log handler so those records are actually written to `.logs/events.log`. When off, `events.log` stays empty. Useful for tracing plugin behaviour; leave off in production. See `Phlix\Common\Events\EventDispatcherFactory`, `config/logger.php`, and `docs/dev/event-reference.md`. |
+| `PHLIX_DEBUG_EVENTS`   | `0`     | When truthy (`1`, `true`, `yes`, `on`) it (1) wraps the PSR-14 dispatcher in Tukio's `DebugEventDispatcher`, which logs every dispatched event class at debug level on the `events` channel, and (2) enables the `events` log handler so those records are actually written to `.logs/events.log`. When off, `events.log` stays empty. Useful for tracing plugin behavior; leave off in production. See `Phlix\Common\Events\EventDispatcherFactory`, `config/logger.php`, and `docs/dev/event-reference.md`. |
 
 ## Plugins
 
@@ -92,7 +92,7 @@ of env vars named for the surface. `<SURFACE>` ∈ `REGISTER`, `REFRESH`,
 **absolute** `redirect_uri`. Phlix builds `<scheme>://<Host><callback path>` from
 the request **only** when the request's `Host` equals `PHLIX_DOMAIN` — the port is
 part of the comparison, with the scheme's default port (`:443` https, `:80` http)
-normalised away on both sides. `Host` is client-supplied, so an unvouched-for value
+normalized away on both sides. `Host` is client-supplied, so an unvouched-for value
 could otherwise be turned into a `redirect_uri` pointing at an attacker's host.
 
 **It fails closed.** If `PHLIX_DOMAIN` is unset *or* malformed, nothing is derived
@@ -164,7 +164,7 @@ Controls Radarr (movies) and Sonarr (series) connectivity for the Hub's media-re
 
 See [`docs/hub/requests.md`](../hub/requests.md) for the full media-request workflow.
 
-## Relay tunnel
+## Relay Tunnel
 
 | Variable                       | Default                            | Description |
 | ------------------------------ | ---------------------------------- | ----------- |
@@ -300,7 +300,7 @@ any of the others when your database is remote or renamed. See `config/database.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `TZ` | system TZ | PHP `date_default_timezone_set()` value. Controls timestamps in logs and EPG data. Set to your local timezone (e.g., `America/New_York`, `Europe/London`). |
+| `TZ` | system TZ | PHP `date_default_timezone_set()` value. Controls timestamps in logs and EPG data. Set to your local timezone (e.g. `America/New_York`, `Europe/London`). |
 
 > The production database credentials live in `config/database.php`
 > (which reads `DB_PASSWORD` from the environment via `getenv('DB_PASSWORD')`).

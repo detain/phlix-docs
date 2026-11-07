@@ -98,7 +98,7 @@ These are stored in the plugins settings JSON for each user:
 
 ---
 
-## Scheduled Sync Behaviour
+## Scheduled Sync Behavior
 
 The Trakt → Phlix sync runs on a configurable interval (default 30 minutes):
 
@@ -115,7 +115,7 @@ The push direction (Phlix → Trakt) is triggered immediately on `PlaybackStoppe
 
 ### "Scrobble failed (auth)" in logs
 
-**Cause:** Access token expired and refresh failed (e.g., refresh token revoked).
+**Cause:** Access token expired and refresh failed (e.g. refresh token revoked).
 
 **Fix:** Disconnect and reconnect the account in **Settings → Integrations → Trakt.tv**.
 

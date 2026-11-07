@@ -128,7 +128,7 @@ sets are a movie concept, and the scanner only syncs collections for movie items
 ::: tip Setting the option
 The flag can be sent at the top level of the create/update body — as a bare boolean
 (`autoCollections: true`) or a map (`autoCollections: { "enabled": false }`) — or
-nested inside `options`; either way it is normalised to the canonical
+nested inside `options`; either way it is normalized to the canonical
 `{ "enabled": bool }` shape and merged into the library's `options` blob (so it
 coexists with `series_per_directory`, `metadata_priority`, and `image_types`). It
 **defaults to enabled when absent**, so libraries created before this option existed
@@ -176,7 +176,7 @@ which one you want:
 | Action | What it does | When to use |
 |--------|--------------|-------------|
 | **Scan** | Adds new files and updates changed ones, **keeping** existing items. On a music library it will usually **skip** any file whose `(mtime, size)` is unchanged since the last scan, without opening it — but see [when the skip does not fire](#when-a-plain-music-scan-still-opens-every-file). | The routine, everyday update after dropping in new media. |
-| **Rescan** | Re-walks the tree, indexes files at paths that are not yet in the catalogue, backfills missing source metadata on the `video` / `movie` / `episode` / `audio` / `audiobook` rows that already exist, then prunes the items whose source file has disappeared. Non-destructive **except** where a file was moved — see [Moving a file](#moving-a-file). On a **music** library it *additionally* re-reads every file's tags — on every other library type it does not. | To drop items whose files are gone, and — on a **music** library — after **retagging**. ⚠ **Not** the tool to reach for after moving files around; see [Moving a file](#moving-a-file). |
+| **Rescan** | Re-walks the tree, indexes files at paths that are not yet in the catalog, backfills missing source metadata on the `video` / `movie` / `episode` / `audio` / `audiobook` rows that already exist, then prunes the items whose source file has disappeared. Non-destructive **except** where a file was moved — see [Moving a file](#moving-a-file). On a **music** library it *additionally* re-reads every file's tags — on every other library type it does not. | To drop items whose files are gone, and — on a **music** library — after **retagging**. ⚠ **Not** the tool to reach for after moving files around; see [Moving a file](#moving-a-file). |
 | **Match metadata** | Re-fetches posters / details for items **already** in the library (no filesystem changes). Visits **only** `movie`, `video` and `series` rows — see [what it skips](#what-match-metadata-skips). | When a **movie or series** is unmatched, or its art/details are missing or stale. On its own it does **not** repair a match that resolved to the *wrong* title — see [Fixing a wrong match](#fixing-a-wrong-match). |
 
 ::: tip Rescan is NOT destructive
@@ -186,7 +186,7 @@ exists updates its **existing** row in place — same UUID, so every watch-histo
 and `user_item_data` row that references it survives — and the pass that follows
 removes **only** items whose source file is gone (plus any series/season container
 left empty by that removal). Watch history, continue-watching positions,
-favourites and fetched metadata are all preserved.
+favorites and fetched metadata are all preserved.
 
 The prune is guarded: if the library's configured roots are not present on disk
 (an unmounted vault, a permissions fault), pruning is **skipped entirely** rather
@@ -199,7 +199,7 @@ returns `400` without the flag.
 ⚠ One case still loses a row: the **standalone `prune` job**. It does not scan, so
 it cannot tell a deleted file from a moved one, and an item whose file was moved is
 deleted. A **Rescan** handles the same move safely. Read
-[Moving a file](#moving-a-file) before you reorganise storage.
+[Moving a file](#moving-a-file) before you reorganize storage.
 :::
 
 #### Moving a file {#moving-a-file}
@@ -215,7 +215,7 @@ different scanner (`MusicLibraryScanner`), which has no canonical-key reuse bran
 at all.
 
 **What happens.** When the scanner meets a file whose path is not in the
-catalogue, it looks the file up by path (a miss, since the path changed) and
+catalog, it looks the file up by path (a miss, since the path changed) and
 then, for a parent-less row, by a **canonical key** derived from the title and
 year alone. That key is path-independent, so a file that moved but kept its name
 still matches its existing row. Since **S158** the scanner does not just walk away
@@ -231,7 +231,7 @@ What you observe depends on which action you ran:
 |---|---|
 | **Scan** (`scan` job) | No prune runs, so no adoption runs either. The row survives, still pointing at the path the file no longer occupies — the item is listed but will not play. A later **Rescan** repairs it. |
 | **Rescan** (`rescan` job) | The row is re-pointed at the new path. Nothing is deleted and nothing is lost. |
-| **Prune** (standalone `prune` job) | The prune did not scan, so it has no candidate to adopt: the row is `DELETE`d, taking its `user_item_data` (watch history, resume position, favourite) with it via `ON DELETE CASCADE`. |
+| **Prune** (standalone `prune` job) | The prune did not scan, so it has no candidate to adopt: the row is `DELETE`d, taking its `user_item_data` (watch history, resume position, favorite) with it via `ON DELETE CASCADE`. |
 
 (The cascade is a real foreign key: `user_item_data.item_id REFERENCES
 media_items(id) ON DELETE CASCADE`.)
@@ -243,8 +243,8 @@ watch state. Rename *or* move, not both, if you want to keep watch state.
 
 **Bounds.** Adoption is capped at 20,000 moved items per rescan pass; past the cap
 the surplus rows are pruned exactly as they were before S158. A separate
-2,000-entry probe budget means a very large reorganisation may adopt a row without
-re-deriving its duration and codec details. If you are reorganising storage at that
+2,000-entry probe budget means a very large reorganization may adopt a row without
+re-deriving its duration and codec details. If you are reorganizing storage at that
 scale, take a database backup first — see
 [Backup and restore](/advanced/backup-restore).
 :::
@@ -260,7 +260,7 @@ music path:
 > the music path above and by nothing else.
 
 So on a **movie, TV, photo, book or audiobook** library a rescan does **not**
-re-derive a row that is already indexed. A path already in the catalogue takes the
+re-derive a row that is already indexed. A path already in the catalog takes the
 existing-item branch, which performs a *missing*-source-metadata backfill and
 nothing else — no filename re-parse, no title/year re-derivation, no metadata
 re-fetch, no re-match. Even that backfill is type-gated: it runs only for `video`,

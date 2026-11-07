@@ -33,15 +33,15 @@ API errors surface as error toasts.
 
 ### Guide / EPG
 
-Displays programme listings in a scrollable grid. A **date picker** at the
+Displays program listings in a scrollable grid. A **date picker** at the
 top switches between Today, +1 Day, and +2 Day — clicking a date button calls
 `GET /api/v1/admin/livetv/guide?start_time=…&end_time=…` with the appropriate
-ISO time window. Each programme card shows the title, start/end time, category
+ISO time window. Each program card shows the title, start/end time, category
 badge, and a rating indicator.
 
-Clicking a programme card **expands it in-place** to show the full description,
+Clicking a program card **expands it in-place** to show the full description,
 season/episode info, and a **Record** button. The Record button opens the
-**Schedule Recording** modal pre-filled with the programme's channel and time
+**Schedule Recording** modal pre-filled with the program's channel and time
 range. A **Refresh Guide** button at the section header triggers
 `POST /api/v1/admin/livetv/guide/refresh`.
 
@@ -84,10 +84,10 @@ section heading is clicked, following the same expand-then-fetch pattern as
 To schedule a recording from the Guide:
 
 1. Navigate to the **Guide / EPG** section.
-2. Select a date to load programmes for that day.
-3. Click a programme card to expand it.
+2. Select a date to load programs for that day.
+3. Click a program card to expand it.
 4. Click **Record** — the Schedule Recording modal opens pre-filled with the
-   programme's `channel_id`, `program_id`, and time window.
+   program's `channel_id`, `program_id`, and time window.
 5. Adjust the time window if needed and click **Schedule**. This calls
    `POST /api/v1/admin/livetv/recordings`.
 
@@ -298,7 +298,7 @@ Returns all recordings made under a series rule.
 
 ## Series Rules
 
-Series rules define automatic recording behaviour for a TV series.
+Series rules define automatic recording behavior for a TV series.
 
 ### List series rules
 
@@ -347,6 +347,6 @@ Migration `028_livetv_base.sql` creates 6 tables:
 | `livetv_tuners` | Registered TV tuners (IPTV / DVB-T / ATSC) |
 | `livetv_channels` | Channel lineup with numbers, transport, and modulation |
 | `livetv_programs` | EPG entries with title, time window, and series metadata |
-| `livetv_favorites` | Per-user favourite channels |
+| `livetv_favorites` | Per-user favorite channels |
 | `livetv_lineups` | Channel lineups (antenna / cable / satellite) |
 | `livetv_lineup_channels` | Mapping of lineups to channels with guide numbers |

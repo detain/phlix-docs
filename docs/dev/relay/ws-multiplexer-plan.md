@@ -194,7 +194,7 @@ remote clients are demultiplexed over one server tunnel. The binary header
 - Routing:
   - **server→client** `DATA`: the hub delivers to the single client owning the
     frame's channel (`Tunnel::sendToClient(channelId, frame)`), replacing the
-    old broadcast-to-all behaviour.
+    old broadcast-to-all behavior.
   - **client→server** `DATA`: the server writes the bytes to the local
     connection mapped to the frame's channel
     (`RelayConsumer` `channel → AsyncTcpConnection` map).
@@ -207,7 +207,7 @@ The JSON `client_id` / `session_id` payload on `CLIENT_CONNECT` /
 `CLIENT_DISCONNECT` is retained for logging/observability only — routing is
 keyed solely on the channel id. This is a pre-release (v0.5.0) protocol change
 with **no backward compatibility** (no flags/shims); the old
-single-active-client `seq`-as-counter behaviour is removed. The shared contract
+single-active-client `seq`-as-counter behavior is removed. The shared contract
 exposes `Phlix\Shared\Relay\RelayFrame::channelId()` as a semantic accessor for
 the leading field (it returns `$seq`).
 

@@ -23,7 +23,7 @@ On your Phlix server, log in as an administrator and navigate to:
 
 **Settings → Hub**
 
-If this is the first time opening Hub settings, you will be prompted to set a friendly server name (e.g., "Living Room Server" or "NAS-Phlix") which will appear in the Hub dashboard.
+If this is the first time opening Hub settings, you will be prompted to set a friendly server name (e.g. "Living Room Server" or "NAS-Phlix") which will appear in the Hub dashboard.
 
 ### 2 — Server Admin: Generate a Claim Code
 

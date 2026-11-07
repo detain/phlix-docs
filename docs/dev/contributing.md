@@ -114,7 +114,7 @@ Use a consistent prefix so the purpose of each branch is obvious at a glance:
 |--------|---------|
 | `feature/{slug}` | New features |
 | `fix/{slug}` | Bug fixes |
-| `step-{phase}.{step}-{slug}` | Phase/step deliverables (e.g., `step-n.23-contributing`, `step-c.2-hubclient`) |
+| `step-{phase}.{step}-{slug}` | Phase/step deliverables (e.g. `step-n.23-contributing`, `step-c.2-hubclient`) |
 
 Never commit directly to `master`. All work happens in feature branches.
 
@@ -134,8 +134,8 @@ Types for conventional contributions:
 | `fix:` | Bug fix |
 | `chore:` | Tooling, dependencies, config |
 | `docs:` | Documentation only |
-| `refactor:` | Code restructure without behaviour change |
-| `step-N.M:` | Phase/step deliverable (e.g., `step-N.23:`) |
+| `refactor:` | Code restructure without behavior change |
+| `step-N.M:` | Phase/step deliverable (e.g. `step-N.23:`) |
 
 Examples:
 ```text
@@ -352,13 +352,13 @@ See [`docs/plugins/developer-guide.md`](../plugins/developer-guide.md) for the f
 
 ---
 
-## What can go wrong
+## What Can Go Wrong
 
 ### PHP version mismatch
 
 **Symptom:** `composer install` succeeds but the server crashes with `Error: Class 'Workerman\MySQL\Connection' not found`.
 
-**Cause:** The project requires PHP 8.3+. Older PHP versions lack required features (e.g., attributes, `readonly` properties, first-class enum constants).
+**Cause:** The project requires PHP 8.3+. Older PHP versions lack required features (e.g. attributes, `readonly` properties, first-class enum constants).
 
 **Fix:**
 ```bash
@@ -467,9 +467,22 @@ same change. The clients, plugins, hub, libraries, and integrations families plu
 `faq.md` and `troubleshooting.md` reached full coverage in the 2026-10-30 pass;
 remaining pre-law pages follow the touch-in rule.
 
+**Orthography and typography.** US spelling is the house standard across the
+prose (behavior, color, catalog, program, defense, favorite, organize,
+normalize). British variants are legacy noise and normalize to the US form on
+touch; code identifiers, package names, and quoted upstream strings keep their
+own spelling — they are code, not prose. `e.g.` and `i.e.` take no comma after
+the period; the comma-less form is the house rule and the corpus majority.
+
+**Shared section headings.** Boilerplate sections that recur across pages
+("See Also", "Next Steps", "What Can Go Wrong", "How It Works") follow one
+casing family per heading, majority-dominant, with ties resolved to title
+case. Capitalization does not change a heading's anchor slug, so unifying
+casing never breaks in-page links.
+
 ---
 
-## Next steps
+## Next Steps
 
 - [`docs/dev/plugin-sdk.md`](plugin-sdk.md) — Plugin SDK internals (manifest schema, lifecycle, container bindings, events). Start here for plugin development.
 - [`docs/dev/architecture-hub.md`](architecture-hub.md) — Hub internals (pairing protocol, relay tunnel, namespace map).

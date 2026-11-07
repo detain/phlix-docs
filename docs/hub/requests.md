@@ -52,7 +52,7 @@ User submits request
 
 ## 2. Configuration
 
-### Environment variables
+### Environment Variables
 
 Radarr and Sonarr are configured via environment variables on the Hub. See [Hub environment variables](../reference/env-vars.md#hub-arr-integration) for the full list.
 
@@ -239,7 +239,7 @@ curl -H "X-Api-Key: your-api-key" \
 
 **Symptom:** Approve succeeds in the hub but the title never appears in the library.
 
-**Fix:** Log into Radarr or Sonarr, create at least one quality profile (e.g., "HD-1080p") and set a root folder (e.g., `/movies`). The hub uses the first available profile and root folder automatically.
+**Fix:** Log into Radarr or Sonarr, create at least one quality profile (e.g. "HD-1080p") and set a root folder (e.g. `/movies`). The hub uses the first available profile and root folder automatically.
 
 ---
 

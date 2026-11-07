@@ -238,7 +238,7 @@ return [
 
 ---
 
-## Error handling
+## Error Handling
 
 All four clients throw `RuntimeException` on:
 

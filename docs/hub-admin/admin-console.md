@@ -147,7 +147,7 @@ The console pages are thin clients over a JSON API. Every route below is gated
   each behind `[AuthMiddleware, AdminMiddleware]`, with controllers in `src/Http/Controllers/`
   registered via `HubServicesProvider`.
 
-## See also
+## See Also
 
 - [Hub Admin Overview](./overview.md) — the web UI + operational CLI
 - [Audit Log](./audit-log.md) — the administrative audit trail

@@ -26,7 +26,7 @@ Every claim below that names a `file:line` was checked against `phlix-server`
 `0a2b95d0`. The wall-clock figures under
 [Scan and Rescan Behavior](#scan-and-rescan-behavior) are dated observations of
 one production library on one box, carried over from an earlier revision and
-**not** re-measured — they are labelled as such in place.
+**not** re-measured — they are labeled as such in place.
 :::
 
 ## Supported Audio Formats
@@ -95,7 +95,7 @@ when both getID3 and ffprobe fail, and it returns the **whole filename stem as
 `Artist - Album - Track` parser and no directory-name parser: a name like
 `01 - Track Name.mp3` becomes the literal title `01 - Track Name`.
 
-Two consequences follow, both worth knowing before organising a library:
+Two consequences follow, both worth knowing before organizing a library:
 
 - **A track with no readable artist tag is dropped.** A missing `artist` becomes
   the literal `'Unknown Artist'` (`:873`), and `flushAlbum()` **skips the whole
@@ -164,7 +164,7 @@ A rescan re-reads every file from disk, re-derives each track's album and artist
 from its tags, and then prunes the items whose source file has disappeared. It is
 **non-destructive**: a file that still exists updates its existing row in place
 (same UUID, so all referencing user data survives), nothing else is deleted, and
-watch history, favourites and fetched metadata are preserved. If the library's
+watch history, favorites and fetched metadata are preserved. If the library's
 configured roots are not present on disk, the prune is skipped entirely rather
 than treating the whole library as removed.
 
@@ -206,7 +206,7 @@ whole scan, so a rescan has nothing to skip — including the files the interrup
 run had already read.
 
 What the interrupted run's work *does* buy is fewer writes, not fewer reads. The
-identity stamps it left behind are honoured by the re-run, which therefore does not
+identity stamps it left behind are honored by the re-run, which therefore does not
 re-write the rows it already stamped; it still opens and tag-reads every one of
 their files.
 
@@ -290,7 +290,7 @@ already written.
 That method exists (`src/Media/Library/AudioScanner.php:107`) and does return a
 `Generator`, but it is on the dormant class — see
 [below](#the-audioscanner-musiclibrarytype-pair-is-dormant). Earlier revisions of
-this page credited it with the streaming behaviour described here.
+this page credited it with the streaming behavior described here.
 :::
 
 ## Metadata Provider Priority

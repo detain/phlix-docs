@@ -21,7 +21,7 @@ curl -fsSL https://raw.githubusercontent.com/detain/phlix-server/master/scripts/
 
 Then open `http://your-server-ip:8096` (or `https://phlix.example.com` if you set up TLS) in your browser.
 
-The manual step-by-step below is the same workflow done by hand; you only need it if you want to customise something the script doesn't expose, or if you're on a distro other than Ubuntu/Debian.
+The manual step-by-step below is the same workflow done by hand; you only need it if you want to customize something the script doesn't expose, or if you're on a distro other than Ubuntu/Debian.
 
 ---
 
@@ -476,7 +476,7 @@ the coroutine runtime on every push.
 
 ---
 
-## What can go wrong
+## What Can Go Wrong
 
 ### PHP extension missing
 
@@ -525,7 +525,7 @@ the coroutine runtime on every push.
 
 ---
 
-## Next steps
+## Next Steps
 
 - [First run](/first-run) — create the first account (it becomes the administrator) at `http://your-server:8096`
 - [Docker install](/install/docker) — alternative install method using containers

@@ -29,7 +29,7 @@ See [/advanced/hardware-transcoding](/advanced/hardware-transcoding) for hardwar
 
 ::: warning A rescan will not re-match an already-indexed movie or episode
 Only the **music** scanner acts on a rescan's "read every file" flag. On a movie,
-TV, photo, book or audiobook library a path that is already in the catalogue is
+TV, photo, book or audiobook library a path that is already in the catalog is
 not re-parsed and not re-matched — the rescan does a missing-source-metadata
 backfill on that row and moves on (and not even that on a `photo` or `book` row,
 where the backfill is skipped by type). For a **movie or TV** library, reach for the
@@ -98,7 +98,7 @@ Without a GPU, 4K HEVC transcoding will be slow and CPU-intensive. See [/advance
 ### I updated Phlix and now library items are missing or playback fails
 
 For **missing items**, re-walk the library so every file at a path that is not yet in
-the catalogue is indexed and anything whose file is gone is pruned:
+the catalog is indexed and anything whose file is gone is pruned:
 
 ```bash
 sudo -u phlix php bin/phlix library:list                       # get the library ids

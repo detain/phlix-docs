@@ -152,7 +152,7 @@ scrobble is actually submitted on `playback.stopped`.
 scrobble_submitted = (finalPositionTicks / durationTicks) >= scrobbleThreshold
 ```
 
-| Value | Behaviour |
+| Value | Behavior |
 | ----- | --------- |
 | `0.0` | Scrobble immediately on every stop |
 | `0.5` | Default — scrobble after 50% of track played |
@@ -175,7 +175,7 @@ threshold check is bypassed and the scrobble is always submitted.
 | `submit_now_playing` | bool   | `true`  | Send `updateNowPlaying` on `playback.started` |
 | `scrobble_threshold` | float  | `0.5`   | Fraction of track required before scrobble    |
 
-### Obtaining credentials
+### Obtaining Credentials
 
 1. Go to https://www.last.fm/api/account/create
 2. Create an API account (name can be "Phlix Media Server")

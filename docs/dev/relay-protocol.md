@@ -70,7 +70,7 @@ All frames share the same binary structure:
 [1-byte type][4-byte seq (big-endian uint32)][4-byte payload_len (big-endian uint32)][payload_bytes]
 ```
 
-### Frame types
+### Frame Types
 
 | Constant              | Value | Direction        | Description |
 | --------------------- | ----- | --------------- | ----------- |

@@ -282,7 +282,7 @@ not introspect the server's library tree.
 - `grantee_user_id` `CHAR(36)` — FK → `users.id` (CASCADE).
 - `server_id` `CHAR(36)` — FK → `servers.id` (CASCADE).
 - `library_id` `CHAR(36)` — opaque to the hub.
-- `library_name` `VARCHAR(128)` — denormalised display label.
+- `library_name` `VARCHAR(128)` — denormalized display label.
 - `created_at`, `revoked_at` `DATETIME` (`revoked_at` IS NULL
   means the grant is active).
 
@@ -377,7 +377,7 @@ dispatcher worker.
    - Executes each statement.
    - Inserts a row into `migrations` once the file completes.
 4. Recorded files are skipped — but since HB-4.11 the runner also
-   compares the file's comment-normalised MD5 checksum against the
+   compares the file's comment-normalized MD5 checksum against the
    recorded value: a **divergence is surfaced instead of silently
    skipped**, rows that predate the checksum column are backfilled
    without re-executing, and the checksum flush is deferred to the end

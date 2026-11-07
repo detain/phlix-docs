@@ -175,7 +175,7 @@ the server to WebVTT and offered as selectable tracks in the player's captions m
 each with a language and label. Pick a track or turn captions off from the menu; your
 choice is remembered. (Bitmap subtitle formats such as PGS/dvdsub are not extracted.)
 
-### Player controls
+### Player Controls
 
 The player's control menus (such as the speed and quality selectors) use a
 translucent dark styling that matches the player chrome.

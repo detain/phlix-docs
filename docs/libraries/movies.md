@@ -105,7 +105,7 @@ Place `movie.nfo` alongside the video file:
 |-------|-------------|
 | `title` | Movie title |
 | `year` | Release year (4 digits) |
-| `tmdbid` | TMDB movie ID (e.g., `241` for Avatar) |
+| `tmdbid` | TMDB movie ID (e.g. `241` for Avatar) |
 | `tvdbid` | TVDB ID (fallback) |
 | `plot` | Synopsis text |
 | `genre` | Genre tags |
@@ -165,7 +165,7 @@ playlists is never dispatched. New files appear after you scan.
 ### What a rescan does — and does not — do
 
 The movie scanner has **no per-file skip index and does not look at mtime at all**.
-It decides by *path*: a file whose path is already in the catalogue takes the
+It decides by *path*: a file whose path is already in the catalog takes the
 existing-item branch, which backfills any missing source technical metadata
 (duration, the `metadata_json['source']` summary, `media_streams` rows) and then
 moves on. A file whose path is new is parsed, probed and inserted. Afterwards the
@@ -185,7 +185,7 @@ to the existing row by a canonical key built from title and year alone, and the 
 in the same rescan re-points that row at the new path instead of deleting it, keeping
 the UUID, watch history and resume position. Episodes were never affected.
 
-After reorganising storage run a **Rescan**, not a standalone **Prune** — a prune
+After reorganizing storage run a **Rescan**, not a standalone **Prune** — a prune
 does not scan and so deletes the rows it cannot match. See
 [Moving a file](/admin/library-management#moving-a-file).
 :::

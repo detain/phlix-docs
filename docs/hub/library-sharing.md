@@ -1,6 +1,6 @@
 ---
 title: Library Sharing
-description: Granting hub users access to your libraries — invite links today plus the email-based share API that has no UI
+description: Granting Hub users access to your libraries — invite links today plus the email-based share API that has no UI
 ---
 
 # Library Sharing

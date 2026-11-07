@@ -1,6 +1,6 @@
 ---
 title: MCP (Model Context Protocol)
-description: The hub MCP endpoint letting AI clients reach your relayed media servers with a personal access token
+description: The Hub MCP endpoint letting AI clients reach your relayed media servers with a personal access token
 ---
 
 # MCP (Model Context Protocol)
@@ -82,7 +82,7 @@ itself out.
 
 ## Creating and revoking a token
 
-### In the hub UI
+### In the Hub UI
 
 Open **MCP Tokens** in the hub web app (`/app/mcp-tokens`). It is an ordinary
 per-user page — not an admin one — because every hub user manages their own
@@ -142,7 +142,7 @@ Notes on the mint body:
 
 - Unknown scope values are **dropped**, not rejected. A list with nothing known
   left in it is a `400` (`mcp_token.no_valid_scopes`) rather than a token that
-  authenticates but authorises nothing.
+  authenticates but authorizes nothing.
 - **Any `scopes` value that is not a JSON array or object grants every scope**
   the hub offers, including the write scope `mcp:playback:control`. The check is
   `is_array($rawScopes)` in `McpTokenController::create()`, so omitting the key,
@@ -254,7 +254,7 @@ Roku and AirPlay were found not production-functional in a prior audit of
 phlix-server, and DLNA renderer control is only present when the operator has
 separately configured it.
 
-A call can be correctly authorised, correctly routed, correctly forwarded **and
+A call can be correctly authorized, correctly routed, correctly forwarded **and
 still do nothing**, because the device backend on the far end does not work. Do
 not treat a successful response as evidence that playback changed — re-read the
 `status` action instead.
@@ -286,7 +286,7 @@ Carries client → server JSON-RPC. Four methods are implemented:
 | ------ | ----- |
 | `initialize` | Negotiates the protocol revision; see below. |
 | `ping` | Returns an empty result. |
-| `tools/list` | The tool catalogue. |
+| `tools/list` | The tool catalog. |
 | `tools/call` | Invokes a tool. |
 
 - A JSON-RPC **notification** (a request with no `id`) is answered with an empty
@@ -389,7 +389,7 @@ request without it is assumed to be using `2025-03-26`.
   server is separate future work.
 - **Resources, prompts, sampling, progress.** The hub implements tools only.
 
-## See also
+## See Also
 
 - [What is the Hub](../hub/what-is-the-hub.md) — how claiming and the relay work
 - [Trakt.tv](./trakt.md) and [Last.fm](./lastfm.md) — the other integrations

@@ -160,7 +160,7 @@ If migrations fail, restore the database from a backup and retry.
 
 ## Hub connection fails
 
-### 1. Check the hub log channel
+### 1. Check the Hub log channel
 
 ```bash
 tail -f .logs/app.log | grep -i hub

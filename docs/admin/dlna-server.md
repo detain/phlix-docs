@@ -57,7 +57,7 @@ The page has a single **status card** showing:
 
 Below the status card are two action buttons:
 
-| Button | Behaviour |
+| Button | Behavior |
 |--------|-----------|
 | **Start** | `POST /api/v1/admin/dlna/start` → persists `dlna.cds_enabled = true` + schedules a graceful reload → success toast ("workers are reloading to apply it") |
 | **Stop** | `POST /api/v1/admin/dlna/stop` → persists `dlna.cds_enabled = false` + schedules a graceful reload → success toast |

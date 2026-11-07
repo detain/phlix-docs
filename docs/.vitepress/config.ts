@@ -50,13 +50,17 @@ export default defineConfig({
   head: [['link', { rel: 'icon', type: 'image/svg+xml', href: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><text y=%2224%22 font-size=%2224%22>📺</text></svg>' }]],
   themeConfig: {
     lastUpdated: true,
-    // Twelve direct entries plus one "Help" dropdown = thirteen top-level
+    // Thirteen direct entries plus one "Help" dropdown = fourteen top-level
     // items. The dropdown is deliberate: the default theme wraps/clips an
     // over-long nav on narrow desktop widths, so FAQ and Reference are folded
     // into a menu that collapses responsively instead of competing for
     // top-level space. Troubleshooting and Glossary ride along so those
     // newcomer pages have a visible entry point (they previously lived in
-    // single-item sidebars reachable only via body links).
+    // single-item sidebars reachable only via body links). The two technical
+    // trees split by audience: "Developers" lands the task-oriented API guide
+    // (/developers) and "Engineering" lands the internals docs (/dev); a
+    // single mixed label previously sent both audiences to whichever page the
+    // nav author happened to link.
     nav: [
       { text: 'Get Started', link: '/first-run' },
       { text: 'Install', link: '/install/linux' },
@@ -65,7 +69,8 @@ export default defineConfig({
       { text: 'Clients', link: '/clients/overview' },
       { text: 'Hub', link: '/hub/what-is-the-hub' },
       { text: 'Advanced', link: '/advanced/hardware-transcoding' },
-      { text: 'Developers', link: '/dev/architecture-server' },
+      { text: 'Developers', link: '/developers' },
+      { text: 'Engineering', link: '/dev' },
       { text: 'Integrations', link: '/integrations/lastfm' },
       { text: 'Security', link: '/security/passkeys' },
       { text: 'Admin', link: '/admin/dashboard' },

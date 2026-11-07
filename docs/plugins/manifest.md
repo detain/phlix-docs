@@ -167,7 +167,7 @@ for top-level keys that the schema does not allow.
    composer install, activation, and event dispatch — enabling the
    plugin from the admin UI (or `plugin:enable`) is all that remains.
 
-## See also
+## See Also
 
 - [`docs/plugins/developer-guide.md`](developer-guide.md) — top-level
   plugin authoring guide.

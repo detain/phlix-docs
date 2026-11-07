@@ -97,4 +97,4 @@ unset (the default).
   check usable, and automatic pin renewal on new versions.
 
 Until those land, the contract is unchanged: **the operator vouches
-for what they install**, with the digest check as defence-in-depth.
+for what they install**, with the digest check as defense-in-depth.

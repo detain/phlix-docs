@@ -207,7 +207,7 @@ kubectl get pvc | grep phlix
 | `phlix-data` | Application data (DB, watch history) | 10 Gi | ReadWriteOnce |
 | `phlix-config` | Config directory | 1 Gi | ReadWriteOnce |
 
-> **StorageClass:** If your cluster has no default StorageClass, you must set `persistence.media.storageClass` explicitly (e.g., `local-path`, `nfs`, `cephfs`). Using a StorageClass that supports `ReadWriteMany` (e.g., NFS) is required for the media PVC to be mounted read-only by multiple pods.
+> **StorageClass:** If your cluster has no default StorageClass, you must set `persistence.media.storageClass` explicitly (e.g. `local-path`, `nfs`, `cephfs`). Using a StorageClass that supports `ReadWriteMany` (e.g. NFS) is required for the media PVC to be mounted read-only by multiple pods.
 
 ---
 
@@ -394,7 +394,7 @@ There are no semver (`v1.2.3`) image tags to upgrade to — the Docker workflow 
 
 ---
 
-## What can go wrong
+## What Can Go Wrong
 
 ### PVC pending — storage class not found
 
@@ -433,7 +433,7 @@ There are no semver (`v1.2.3`) image tags to upgrade to — the Docker workflow 
 
 ---
 
-## Next steps
+## Next Steps
 
 - [First run](/first-run) — create the first account (it becomes the administrator) at `https://phlix.example.com`
 - [Linux install](/install/linux) — alternative install method on bare metal

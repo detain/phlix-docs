@@ -107,11 +107,11 @@ Clamp rules actually enforced:
 If the source's video is H.264 (h264/avc1/avc) and audio is AAC (aac/mp4a), has known
 dimensions, and fits the device-profile cap, `Original` is a genuine **`-c:v copy`**
 (and `-c:a copy` if the audio also qualifies) segment at the source's exact
-resolution/bitrate — near-zero CPU, labelled `Original (<h>p)`. `LadderResult` then
+resolution/bitrate — near-zero CPU, labeled `Original (<h>p)`. `LadderResult` then
 treats it as a real *additional* highest-priority master variant.
 
 Otherwise `Original` is the **same Rendition as the top clamped transcode rung**,
-relabelled `Original (best available)`; `LadderResult::streamVariants()` does not
+relabeled `Original (best available)`; `LadderResult::streamVariants()` does not
 duplicate a master entry for it — the UI's "Original" choice maps onto that existing
 rung.
 
@@ -355,7 +355,7 @@ D3s ships. It is the final hub relay architecture for streaming and is ready to 
 separate D4-style hub version bump follows once D1–D3s are sealed together). Treat the
 architecture above as current.
 
-## Client behavior
+## Client Behavior
 
 ### Web player (`@phlix/ui` v0.74.0) — shipped
 
@@ -460,7 +460,7 @@ fallback):
 - `GET /api/v1/media/{id}/playback-info` on an un-backfilled item → `quality_ladder:
   null`, the expected graceful degradation.
 
-## See also
+## See Also
 
 - [Streaming Protocols](./streaming-protocols) — HLS/DASH fundamentals, manifest
   structure, and the legacy single-CMAF-job DASH pipeline (still current for DASH).

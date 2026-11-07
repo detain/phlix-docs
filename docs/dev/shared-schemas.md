@@ -31,7 +31,7 @@ added in **phlix-shared v0.7.0**; the other four landed in later releases.
 
 `Phlix\Shared\Schema\SchemaPaths` is a `final` class of pure static path
 resolvers. It performs **string computation only** — no `is_file()`,
-`realpath()`, or `file_get_contents()` — so it honours the package's Zero-I/O
+`realpath()`, or `file_get_contents()` — so it honors the package's Zero-I/O
 charter. The returned paths are correct whether the package is checked out for
 development or installed under `vendor/detain/phlix-shared/`.
 

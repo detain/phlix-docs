@@ -787,7 +787,7 @@ end sub
 
 ### 6.1 Key Event Handling (R6.9)
 
-Roku remote handling is built into the Scene's `OnKeyEvent` method. Each button maps to a specific behaviour:
+Roku remote handling is built into the Scene's `OnKeyEvent` method. Each button maps to a specific behavior:
 
 | Button | Action |
 |--------|--------|

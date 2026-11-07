@@ -41,7 +41,7 @@ http://example.com/radio.m3u8
 
 ## XMLTV Format
 
-The driver parses XMLTV-ng format for programme guide data:
+The driver parses XMLTV-ng format for program guide data:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -122,7 +122,7 @@ $entries = $parser->parseUrl('https://example.com/playlist.m3u8');
 
 ### XmlTvProgramme
 
-Immutable value object for a programme entry.
+Immutable value object for a program entry.
 
 ```php
 new XmlTvProgramme(
@@ -208,7 +208,7 @@ The `livetv_tuners` table stores tuner information with type `iptv`:
 
 | Column | Type | Description |
 |---------|------|-------------|
-| tuner_id | VARCHAR(36) | Unique identifier (e.g., `iptv_mysource`) |
+| tuner_id | VARCHAR(36) | Unique identifier (e.g. `iptv_mysource`) |
 | name | VARCHAR(255) | Display name |
 | type | VARCHAR(20) | Tuner type (`iptv`, `hdhomerun`) |
 | status | VARCHAR(20) | Current status |
@@ -243,7 +243,7 @@ $tuners = $manager->discoverTuners();
 
 ## EPG Matching
 
-When `GuideManager::upsertProgram()` is called with `xmltv_id`, it can match programme entries to channels by their XMLTV channel ID:
+When `GuideManager::upsertProgram()` is called with `xmltv_id`, it can match program entries to channels by their XMLTV channel ID:
 
 ```php
 $guideManager->upsertProgram([

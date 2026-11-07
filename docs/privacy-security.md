@@ -31,7 +31,7 @@ iptables -A OUTPUT -j DROP
 
 ### What is NOT collected
 
-- No viewing habits sent to any third party unless you connect one yourself. The opt-in Trakt and Last.fm integrations scrobble playback to those services; both need an operator to configure them and a user to authorise them, and neither sends anything until then.
+- No viewing habits sent to any third party unless you connect one yourself. The opt-in Trakt and Last.fm integrations scrobble playback to those services; both need an operator to configure them and a user to authorize them, and neither sends anything until then.
 - No device IDs shared externally.
 - No media filenames transmitted anywhere.
 - No analytics, crash reports, or usage telemetry.
@@ -222,7 +222,7 @@ Phlix ships no VPN of its own; the documented no-port-forward options are **Clou
 
 ### 5. No egress filtering (unintended outbound connections)
 
-**Symptom:** Server makes outbound connections to unknown external IPs (e.g., metadata providers, update checkers).
+**Symptom:** Server makes outbound connections to unknown external IPs (e.g. metadata providers, update checkers).
 
 **Cause:** Egress not restricted; metadata auto-refresh or update checker making external calls.
 

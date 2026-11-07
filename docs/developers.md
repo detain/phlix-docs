@@ -47,7 +47,7 @@ specifics, see the [Reference](/reference).
 - [Last.fm Scrobble Plugin](/developers/lastfm-plugin)
 - [UI Theme Plugin Guide](/developers/ui-themes)
 
-## See also
+## See Also
 
 - [Plugin SDK](/dev/plugin-sdk) — plugin internals reference.
 - [Contributing to Phlix](/dev/contributing)

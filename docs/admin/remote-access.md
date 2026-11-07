@@ -51,7 +51,7 @@ non-admin → `403`). All responses are JSON.
 
 ### Hub Pairing
 
-#### Get hub status
+#### Get Hub status
 
 ```http
 GET /api/v1/admin/remote/hub/status
@@ -79,7 +79,7 @@ When not paired: `{ "paired": false, "hub_id": null, "hub_name": null,
 | `hub_name` | `string\|null` | Human-readable Hub name |
 | `last_heartbeat` | `string\|null` | ISO 8601 timestamp of last heartbeat |
 
-#### Pair with hub
+#### Pair with Hub
 
 ```http
 POST /api/v1/admin/remote/hub/pair
@@ -93,7 +93,7 @@ Body: `{ "hub_id": "srv-456" }`
 
 Returns `400` if already paired or if `hub_id` is invalid.
 
-#### Unenroll from hub
+#### Unenroll from Hub
 
 ```http
 POST /api/v1/admin/remote/hub/unenroll

@@ -24,9 +24,9 @@ The top section always shows:
 | Field | Description |
 |---|---|
 | **Server Name** | The name you gave the server when you claimed it. |
-| **Version** | The running `phlix-server` version (e.g., `0.9.4`). |
+| **Version** | The running `phlix-server` version (e.g. `0.9.4`). |
 | **Status** | `online` (green badge) or `offline` (grey badge). Derived from the last heartbeat timestamp — a server that has not reported in over 2 minutes is considered offline. |
-| **Last Seen** | When the server last sent a heartbeat — shown as a relative time (e.g., "2 minutes ago") and as an absolute datetime on hover. |
+| **Last Seen** | When the server last sent a heartbeat — shown as a relative time (e.g. "2 minutes ago") and as an absolute datetime on hover. |
 | **Hostname Candidates** | Zero or more hostnames or IP addresses the server is advertising. These are the values the server reports as its possible network addresses. |
 
 ### Active Relay Session Card
@@ -63,7 +63,7 @@ Below the relay session card, a **Heartbeat History** section shows the last 20 
 
 - **Uptime** — how long the server's `phlix-server` process has been running, formatted as `Xd Xh Xm`.
 - **Active Sessions** — the number of concurrent streaming sessions the server is handling right now.
-- **Active Transcodes** — how many of those sessions are currently transcoding (e.g., converting a file to a different format or resolution).
+- **Active Transcodes** — how many of those sessions are currently transcoding (e.g. converting a file to a different format or resolution).
 - **Received At** — absolute timestamp of when the hub received this heartbeat; shown as relative time with absolute tooltip on hover.
 
 The heartbeat history section is collapsible. Click **Show/Hide Heartbeat History** to expand or collapse it. It starts collapsed.

@@ -88,7 +88,7 @@ API call your clients make. An empty feed simply reads "No recent activity".
   panels load when the page loads (or when you change the range) and stay put until
   you reload.
 
-## See also
+## See Also
 
 - [Stats](./stats.md) — the detailed numbers behind Top Users / Top Media
 - [Webhooks](./webhooks.md) — get told about these events somewhere else instead

@@ -18,7 +18,7 @@ major.minor.patch   (e.g. 1.2.3)
 |-----------|-------------------|----------------------|
 | `patch` | Bug fixes, security patches | Yes |
 | `minor` | New features, new config keys, new API endpoints | Yes |
-| `major` | Breaking changes: removed keys, changed behaviour, removed API endpoints | No |
+| `major` | Breaking changes: removed keys, changed behavior, removed API endpoints | No |
 
 ### Pre-release versions
 

@@ -118,7 +118,7 @@ immediately unavailable and any JWT still bearing the old `kid` fails verificati
 The hub-side manager (`phlix-hub/src/Hub/Ed25519KeyManager.php`) *does* retain the
 outgoing public key for a 24-hour overlap, but its `rotate()` is likewise uncalled
 in production. Treat everything below as the intended design, not current
-behaviour.
+behavior.
 :::
 
 The intended design is:
@@ -278,7 +278,7 @@ Content-Type: application/json
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `server_name` | `string` | Yes | Operator-chosen friendly name shown on hub dashboard |
-| `version` | `string` | Yes | Server semver (e.g., `0.11.0`). Hub may reject incompatible versions |
+| `version` | `string` | Yes | Server semver (e.g. `0.11.0`). Hub may reject incompatible versions |
 | `public_keys` | `object` | Yes | JWK of the server's Ed25519 public key (kid references current active key) |
 | `hostname_candidates` | `list<string>` | Yes | Hostnames/IPs the server believes it is reachable at. Hub uses the first publicly reachable one; falls back to relay |
 | `protocol_version` | `string` | Yes | Fixed at `"v1"`. Hub validates this header value |
@@ -319,7 +319,7 @@ Before accepting a claim request, the hub:
 }
 ```
 
-### Error Responses
+### Error responses
 
 | HTTP Status | Error Code | Meaning |
 |-------------|-----------|---------|
@@ -397,7 +397,7 @@ The `enrollment_jwt` is signed by the hub with **its own Ed25519 key**.
 
 The server stores this token and uses it to authenticate heartbeats.
 
-### Error Responses
+### Error responses
 
 | HTTP Status | Error Code | Meaning |
 |-------------|-----------|---------|
@@ -646,7 +646,7 @@ All pairing protocol errors use this envelope:
   `AuthMiddleware`: its guesser is an authenticated hub user, attributable and
   account-metered, grinding an ~2^40 code space with a 600 s TTL — even at the
   limiter's ceiling (roughly `60 × HUB_WORKERS` guesses/minute/IP) the window
-  outlasts any feasible grind. The code space and TTL remain the real defence;
+  outlasts any feasible grind. The code space and TTL remain the real defense;
   the limiter is cost control, not a second secret.
 - Operational note: sustained bursts of `429`s or `claim_code_rate_limited` audit
   rows on these surfaces mean someone is probing pairing — see the rate-limit

@@ -446,7 +446,7 @@ Verify pairing works end-to-end:
 
 ---
 
-## What can go wrong
+## What Can Go Wrong
 
 ### TLS cert not trusted by clients (self-signed)
 
@@ -488,7 +488,7 @@ tracks applied migrations in a `migrations` table) — to start completely clean
 
 ---
 
-## Next steps
+## Next Steps
 
 - [Overview](./overview.md) — dashboard and CLI reference
 - [First Boot](./first-boot.md) — create the first admin and pair a server

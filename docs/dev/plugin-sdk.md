@@ -354,7 +354,7 @@ events are `readonly` DTOs. The current PHP type system enforces this
 at the language level (assigning to a `readonly` property after
 construction is a fatal `Error`); plugins that try will crash hard.
 
-If a plugin needs to influence behaviour (block playback, rewrite a
+If a plugin needs to influence behavior (block playback, rewrite a
 download URL, …), the right pattern is a **separate command-side API
 on the relevant service**, exposed through the container — not a
 mutable event payload. Phase A intentionally does not ship any
@@ -395,7 +395,7 @@ Full twelve-event catalog → [`docs/dev/event-reference.md`](event-reference.md
    dispatch in a try/catch only if you genuinely want broken
    listeners to break the dispatching code path; otherwise let Tukio
    bubble exceptions out of the dispatcher and rely on its built-in
-   error-isolation behaviour.
+   error-isolation behavior.
 6. If the new event corresponds to a plugin type's typical
    subscription, update the type matrix in the developer guide.
 
@@ -494,12 +494,12 @@ The loader itself reads one more, outside the provider:
   `PluginLoader::assertVerifiedOrOverride()` install a remote source whose
   catalog entry has no pinned artifact `sha256`. Unset means refuse.
 
-When you add a new env var that the loader honours, document it both
+When you add a new env var that the loader honors, document it both
 here and in `docs/reference/env-vars.md`.
 
 ---
 
-## Plugin manifest reference
+## Plugin Manifest Reference
 
 Every field in `plugin.json`:
 
@@ -633,7 +633,7 @@ sha256sum phlix-plugin-example-1.0.0.tar.gz
 
 ---
 
-## What can go wrong
+## What Can Go Wrong
 
 ### Missing required manifest fields
 
@@ -678,13 +678,13 @@ composer install --no-dev --dry-run  # verify no conflicts
 
 ---
 
-## Next steps
+## Next Steps
 
 - [`docs/plugins/developer-guide.md`](../plugins/developer-guide.md) — full author-facing guide (lifecycle, types, distribution, FAQ).
 - [`docs/plugins/manifest.md`](../plugins/manifest.md) — exhaustive `plugin.json` field reference.
 - [`docs/dev/event-reference.md`](event-reference.md) — all twelve events with payload shapes and dispatch sites.
 - [`docs/plugins/install-from-catalog.md`](../plugins/install-from-catalog.md) — how users install your plugin from the in-product catalog.
-- [`docs/plugins/install-from-url.md`](../plugins/install-from-url.md) — manual URL install for pre-release / not-yet-catalogued plugins.
+- [`docs/plugins/install-from-url.md`](../plugins/install-from-url.md) — manual URL install for pre-release / not-yet-cataloged plugins.
 
 ---
 

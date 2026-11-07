@@ -456,9 +456,9 @@ The **Access** tab exposes `auth.signup_mode`, which controls how new account
 registrations are handled. It is an enum string with three values (the
 config-file default is **`approval`**):
 
-| Value | Behaviour |
+| Value | Behavior |
 |-------|-----------|
-| `open` | New registrations become **active** immediately and receive a session — the classic open-signup behaviour. |
+| `open` | New registrations become **active** immediately and receive a session — the classic open-signup behavior. |
 | `approval` | New registrations are created with status **pending**: no session/token is issued, and the user cannot log in or browse media until an admin approves them. Registering returns a `202` with a "your account is awaiting administrator approval" message. **(default)** |
 | `disabled` | New registrations are rejected with a `403` — no account is created. |
 
@@ -530,7 +530,7 @@ is a deliberate future behavior change, not part of this release.
 `metadata.genres_mode` controls how genres are combined across sources during
 resolution. It is an enum string (config-file default **`first`**):
 
-| Value | Behaviour |
+| Value | Behavior |
 |-------|-----------|
 | `first` | Use the genre list from the first source (in priority order) that supplies one. **(default)** |
 | `union` | Merge genres from every source into a de-duplicated union. |

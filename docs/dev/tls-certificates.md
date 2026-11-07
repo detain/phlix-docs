@@ -5,7 +5,7 @@
 **ACME/Let's Encrypt automated provisioning is NOT implemented.**
 
 The `TlsCertificateManager` class throws a `RuntimeException` when
-`provisionCertificate()` is called. This is the current build behaviour.
+`provisionCertificate()` is called. This is the current build behavior.
 
 **What is implemented:**
 - Manual, out-of-band certificate provisioning (see below)
@@ -47,7 +47,7 @@ curl -X POST /api/v1/servers/{id}/subdomain \
   -H "Authorization: Bearer {token}"
 ```
 
-The response will include your assigned subdomain (e.g., `abc12345.phlix.media`).
+The response will include your assigned subdomain (e.g. `abc12345.phlix.media`).
 
 ### Certificate Storage Paths
 

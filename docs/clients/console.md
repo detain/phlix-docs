@@ -132,11 +132,11 @@ The `--mode` flag controls how media is rendered:
 | `sixel` | graphics | Sixel protocol (highest fidelity on supported terminals) |
 | `kitty` | graphics | Kitty protocol |
 | `iterm2` | graphics | iTerm2 inline images |
-| `halfblock` (default) | cell | 24-bit colour half-block characters |
-| `quarterblock` | cell | Dense colour blocks |
+| `halfblock` (default) | cell | 24-bit color half-block characters |
+| `quarterblock` | cell | Dense color blocks |
 | `ascii` | cell | Monochrome character ramp |
-| `ansi256` | cell | 256-colour character ramp |
-| `truecolor` | cell | 24-bit colour character ramp |
+| `ansi256` | cell | 256-color character ramp |
+| `truecolor` | cell | 24-bit color character ramp |
 | `auto` | mixed | Half-block by default; pass `--mode=sixel` for graphics |
 
 ```sh

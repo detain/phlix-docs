@@ -232,13 +232,13 @@ against an IdP that accepts wildcard redirect registrations — receive that use
 authorization code. So a `Host` is only turned into a `redirect_uri` when it *is*
 your configured authority.
 
-**The port is part of the origin**, with the scheme's default port normalised away
+**The port is part of the origin**, with the scheme's default port normalized away
 on both sides:
 
 | `PHLIX_DOMAIN` | Request `Host` | Scheme | Result |
 |---|---|---|---|
 | `media.example.com` | `media.example.com` | https | derives `https://media.example.com/auth/…/callback` |
-| `media.example.com` | `media.example.com:443` | https | same — `:443` is the default for https and is normalised away |
+| `media.example.com` | `media.example.com:443` | https | same — `:443` is the default for https and is normalized away |
 | `media.example.com` | `media.example.com:8096` | https | **refused** (`503`) — a different origin |
 | `media.example.com` | `192.168.1.10` | https | **refused** (`503`) |
 | `media.example.com:8443` | `media.example.com:8443` | https | derives `https://media.example.com:8443/auth/…/callback` |
@@ -291,7 +291,7 @@ If the provider is not enabled and configured at all, you get
 a provider up.
 
 Because `/auth/{provider}/authorize` is a top-level browser navigation, the user
-sees that JSON in the tab. That is the same behaviour as the other authorize-time
+sees that JSON in the tab. That is the same behavior as the other authorize-time
 errors.
 
 ### The escape hatch, and when to use it
@@ -361,7 +361,7 @@ document and no `id_token`):
 2. Phlix redirects to `https://github.com/login/oauth/authorize` with the
    configured scopes, a PKCE challenge and a one-shot `state`, and sets the
    browser-binding cookie.
-3. The user authorises the OAuth App, and GitHub redirects back to
+3. The user authorizes the OAuth App, and GitHub redirects back to
    `GET /auth/github/callback`.
 4. Phlix consumes the `state`, checks the browser-binding cookie, exchanges the
    code at `https://github.com/login/oauth/access_token` (replaying the *same*

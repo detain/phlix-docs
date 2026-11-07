@@ -229,7 +229,7 @@ php start.php start
 
 Log in, check your library items are visible, confirm watch history is present.
 
-If *items* are missing, trigger a library rescan from the admin UI or via the API — it re-walks the tree and indexes every file at a path that is not yet in the catalogue:
+If *items* are missing, trigger a library rescan from the admin UI or via the API — it re-walks the tree and indexes every file at a path that is not yet in the catalog:
 
 ```bash
 curl -X POST http://localhost:8096/api/v1/libraries/{id}/rescan \
@@ -328,7 +328,7 @@ sha256sum phlix-backup-20250601.tar.gz
 # Store the checksum alongside the backup or in a separate log
 ```
 
-Test restores periodically (e.g., monthly) in a staging environment. A backup that was never tested is not a reliable backup.
+Test restores periodically (e.g. monthly) in a staging environment. A backup that was never tested is not a reliable backup.
 
 ---
 
@@ -405,4 +405,4 @@ Active transcode job state is not recoverable anyway — excluding it saves spac
 
 - [Troubleshooting](../troubleshooting.md) — general recovery help if restore has unexpected issues, including reading server logs in `.logs/`
 - [Reverse proxy](reverse-proxy.md) — verify your server is correctly exposed after restore
-- Consider setting up monitoring/alerting on backup job success/failure (e.g., check your cron/timer exit status, or the `backups` table for recent successful entries)
+- Consider setting up monitoring/alerting on backup job success/failure (e.g. check your cron/timer exit status, or the `backups` table for recent successful entries)

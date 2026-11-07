@@ -59,7 +59,7 @@ For a controller that takes its own admin decision:
    nullable `$this->container`, `?? throw` is the shape used.
 
 5. **Add the structural pin** (next section). It is not optional: a re-added
-   setter that nobody calls changes no behaviour, so **no behavioural test can
+   setter that nobody calls changes no behavior, so **no behavioral test can
    detect it**. That was measured as mutation M2 in S282 and reproduced in each
    later phase.
 
@@ -69,7 +69,7 @@ The dependency is wired by PHP-DI. **`autowire()` silently skips optional
 constructor parameters**, so a nullable-with-default gate does not fail when the
 wiring is wrong — it arrives as `null`, and an in-body
 `if ($this->adminMiddleware === null) { return null; }` then reports
-"authorised" *without any admin decision having been taken*. The guard is absent
+"authorized" *without any admin decision having been taken*. The guard is absent
 rather than loud. phlix-server has shipped silently-`null` dependencies this way
 before, so "the production wiring calls the setter" is a property of today's
 wiring, not of the class.
@@ -98,12 +98,12 @@ list, plus a source-level check that the gate is not compared against `null`:
 |---|---|
 | the constructor parameter is required and non-nullable | a defaulted or omitted gate |
 | the property is non-nullable with no default | a nullable gate |
-| the class exposes no `AdminMiddleware` setter | setter injection (invisible to behavioural tests) |
+| the class exposes no `AdminMiddleware` setter | setter injection (invisible to behavioral tests) |
 | constructing without the gate raises `ArgumentCountError` | the positive control for the three above |
 | the gate method contains no null comparison | `if (… === null) return null;` |
 | every dispatchable handler is classified | a **new, ungated** handler |
 
-**Behavioural** — every gated handler driven three ways: anonymous (401),
+**Behavioral** — every gated handler driven three ways: anonymous (401),
 authenticated non-admin (403 `auth.not_admin`), and admin. The admin arm is the
 succeeding control beside the 403 experiment, so a blanket-deny regression
 cannot read as a pass; its expected status is a body-only outcome the gate can
@@ -279,10 +279,10 @@ assertion in `RouterDispatchableHandlersTest` is 7, not 6.
 
 ---
 
-## See also
+## See Also
 
 - [Server architecture → Adding a new binding](architecture-server#adding-a-new-binding)
-  — where the `autowire()` behaviour that makes a nullable gate dangerous lives.
+  — where the `autowire()` behavior that makes a nullable gate dangerous lives.
 - [Theme media → Authorization](../developers/theme-media#authorization) — the
   worked example, endpoint by endpoint.
 - [Security hardening](../security/hardening) — operator-facing checklist.

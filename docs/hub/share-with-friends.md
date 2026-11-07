@@ -1,6 +1,6 @@
 ---
 title: Share Libraries with Friends and Family
-description: Giving friends and family access through hub invite links, and what the sharing model does not enforce
+description: Giving friends and family access through Hub invite links, and what the sharing model does not enforce
 ---
 
 # Share Libraries with Friends and Family

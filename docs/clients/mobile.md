@@ -55,7 +55,7 @@ Once the app is connected to a server directly, you can additionally link it to 
 
 1. Tap **Settings** (gear icon).
 2. In the **Hub** section, tap **Sign in to Hub** (hint: "Access your claimed servers remotely").
-3. Enter your **Hub URL (e.g., https://hub.example.com)**, plus your Hub username and password.
+3. Enter your **Hub URL (e.g. https://hub.example.com)**, plus your Hub username and password.
 4. After signing in, the app shows **Connection Mode** with a **Direct | Via Hub** toggle, an **Active Server** picker, and your **Claimed Servers** list — pick the server you want to use.
 
 Via Hub mode routes the app's traffic through the Hub relay, so the server itself does not need to be exposed to the internet. Tap **Sign Out** in the same section to unlink the Hub account.
@@ -78,7 +78,7 @@ Via Hub mode routes the app's traffic through the Hub relay, so the server itsel
 
 **Symptom:** Tapping **Sign in to Hub** and entering your credentials returns "Authentication failed."
 
-**Fix:** Verify your Hub username and password. Confirm the Hub URL is entered without a trailing slash (e.g., `https://hub.phlix.example.com` not `https://hub.phlix.example.com/`). If you have forgotten your Hub password, use the password reset flow on the Hub login page.
+**Fix:** Verify your Hub username and password. Confirm the Hub URL is entered without a trailing slash (e.g. `https://hub.phlix.example.com` not `https://hub.phlix.example.com/`). If you have forgotten your Hub password, use the password reset flow on the Hub login page.
 
 ## Next Steps
 

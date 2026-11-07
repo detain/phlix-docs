@@ -100,7 +100,7 @@ queues a job; see the [Library Scan Worker](../dev/library-scan-worker).)
 | Argument / option | Description |
 | --- | --- |
 | `libraryId` (required) | The library identifier to scan. |
-| `--rescan` | Full rescan: re-walk the tree, index files at paths not yet in the catalogue, backfill missing source metadata on `video` / `movie` / `episode` / `audio` / `audiobook` rows, then prune items whose file is gone. User data is preserved, including for a top-level item whose file was **moved without being renamed** — the prune re-points the row instead of deleting it (S158). A move that also renames still creates a new row; see [Moving a file](../admin/library-management#moving-a-file). On a **music** library it additionally re-reads every track's tags (this can take hours) and is what repairs tracks filed under the wrong album/artist; on every other library type the re-read flag is ignored. |
+| `--rescan` | Full rescan: re-walk the tree, index files at paths not yet in the catalog, backfill missing source metadata on `video` / `movie` / `episode` / `audio` / `audiobook` rows, then prune items whose file is gone. User data is preserved, including for a top-level item whose file was **moved without being renamed** — the prune re-points the row instead of deleting it (S158). A move that also renames still creates a new row; see [Moving a file](../admin/library-management#moving-a-file). On a **music** library it additionally re-reads every track's tags (this can take hours) and is what repairs tracks filed under the wrong album/artist; on every other library type the re-read flag is ignored. |
 | `--force` | Start even when the library already has a `queued`/`running` scan job. |
 
 ```bash
@@ -112,7 +112,7 @@ php bin/phlix library:scan 3 --rescan
 
 `--rescan` never purged, and the old description of this flag ("clear existing
 items and rescan from scratch") was wrong in both halves. What it does is re-walk
-the library tree, index files at paths that are not yet in the catalogue, backfill
+the library tree, index files at paths that are not yet in the catalog, backfill
 missing source metadata on the already-existing rows whose type is `video`,
 `movie`, `episode`, `audio` or `audiobook` (`photo` and `book` rows get nothing),
 and then prune the items whose source file has disappeared. Use a plain scan for an
@@ -142,7 +142,7 @@ consumes it** — the other scanners have no skip index for it to switch off:
   identity stamps that are already correct, never to suppress a read. See
   [Rescan loads the index on purpose](../libraries/music#rescan-loads-the-index-on-purpose).)
 - On a **movie, TV, photo, book or audiobook** library a path that is already in
-  the catalogue is **not** re-parsed and **not** re-matched. The scan does a
+  the catalog is **not** re-parsed and **not** re-matched. The scan does a
   missing-source-metadata backfill on that row and moves on — and even that is
   type-gated to `video` / `movie` / `episode` / `audio` / `audiobook`, so on a
   **photo** or **book** library the existing-item branch does nothing at all.
@@ -196,7 +196,7 @@ a `kill -9` or a power loss, which no in-process handler can clean up. (Restarti
 `phlix-server` also clears such rows — the scan worker reaps every `running` row
 at boot.)
 
-Two residual behaviours, stated rather than glossed: a `phlix-server` restart
+Two residual behaviors, stated rather than glossed: a `phlix-server` restart
 during a long CLI scan marks that row `failed` while the CLI keeps running (the
 worker's boot reaper is unscoped and has no age guard), and `SIGKILL` cannot be
 trapped by anyone, so it leaves the row `running` until the next server boot reaps
@@ -342,7 +342,7 @@ real migration-tracking table (`migrations`, managed by
 `Phlix\Hub\Common\Database\MigrationRunner`), so already-applied migrations are
 skipped by filename. Since HB-4.11 the table also carries a checksum column
 (added by `041_migrations_checksum.sql`): a recorded file whose (comment-
-normalised) checksum diverges from the on-disk file is surfaced rather than
+normalized) checksum diverges from the on-disk file is surfaced rather than
 silently skipped, and pre-checksum rows are backfilled without re-executing
 them. Unlike the server, the hub has no idempotent-error-code squelch list —
 the tracking table is its sole idempotency mechanism, and every hub migration

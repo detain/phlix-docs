@@ -272,7 +272,7 @@ Trickplay (also called "scrub preview" or "thumbnail seek") allows users to prev
 ### How It Works
 
 1. **Generation** — After transcoding completes, `TrickplayGenerator` extracts frames at fixed intervals using FFmpeg batch extraction
-2. **Grid Assembly** — Frames are assembled into grid images using FFmpeg's `tile` filter (e.g., `tile=8x4:margin=2:padding=3`)
+2. **Grid Assembly** — Frames are assembled into grid images using FFmpeg's `tile` filter (e.g. `tile=8x4:margin=2:padding=3`)
 3. **Index Generation** — A BIF index XML maps each thumbnail index to its time position and byte offset in the grid file
 4. **Serving** — `TrickplayController` serves grid images and the index XML with correct `Content-Type` headers
 

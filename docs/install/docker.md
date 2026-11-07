@@ -332,7 +332,7 @@ being *alive*, not broken.
 
 ---
 
-## What can go wrong
+## What Can Go Wrong
 
 ### Docker not installed or wrong version
 
@@ -389,7 +389,7 @@ being *alive*, not broken.
 
 ---
 
-## Next steps
+## Next Steps
 
 - [First run](/first-run) — create the first account (it becomes the administrator) at `http://your-server:32400`
 - [Hardware transcoding](/advanced/hardware-transcoding) — configure NVENC/VAAPI/Quicksync for better transcoding performance

@@ -57,7 +57,7 @@ If either condition is not met, the scrobble is silently skipped. Tracks with un
 You need a Last.fm API account:
 
 1. Go to [https://www.last.fm/api/account/create](https://www.last.fm/api/account/create)
-2. Enter an app name (e.g., "Phlix Media Server")
+2. Enter an app name (e.g. "Phlix Media Server")
 3. Copy the **API Key** and **Shared Secret**
 
 ### Connect Flow

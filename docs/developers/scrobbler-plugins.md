@@ -2,7 +2,7 @@
 
 ## Overview
 
-A scrobbler plugin integrates Phlix with external media tracking services (e.g., Last.fm, Trakt.tv) to submit playback data and synchronize watch history.
+A scrobbler plugin integrates Phlix with external media tracking services (e.g. Last.fm, Trakt.tv) to submit playback data and synchronize watch history.
 
 ## Plugin Type
 
@@ -73,7 +73,7 @@ Scrobbler plugins should store these settings:
 
 ### Trakt → Phlix (Pull)
 
-Run on a schedule (e.g., every 30 minutes via cron):
+Run on a schedule (e.g. every 30 minutes via cron):
 
 1. Fetch watched history from Trakt API
 2. For each item, check local `watch_history` table

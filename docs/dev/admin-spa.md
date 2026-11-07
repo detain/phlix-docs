@@ -10,7 +10,7 @@
 > 302 `/login`) and talks to the existing JWT-authed JSON API. After editing
 > `admin-ui/src/`, re-run `npm run build` and commit the refreshed bundle.
 >
-> **Status.** This React console was later decommissioned in favour of the
+> **Status.** This React console was later decommissioned in favor of the
 > vendored `/app` SPA (see the status update in section 5). The `admin-ui/`
 > directory and its build commands no longer exist; this page is kept as the
 > console's contributor history.
@@ -51,7 +51,7 @@ The SPA source lives under `phlix-server/admin-ui/`:
 | Path | Contents |
 |---|---|
 | `admin-ui/src/api/` | `client.ts` (the typed `ApiClient`) + `tokenStore.ts` (JWT token storage). |
-| `admin-ui/src/auth/` | `useAdminGuard.ts` — the client-side admin guard (defence in depth over the server gate). |
+| `admin-ui/src/auth/` | `useAdminGuard.ts` — the client-side admin guard (defense in depth over the server gate). |
 | `admin-ui/src/components/` | Shared components: `DataTable`, `Form`, `Modal`, `Toast`. All render untrusted values as text/children (no `dangerouslySetInnerHTML`) — XSS-safe by construction. |
 | `admin-ui/src/nav/` | `navItems.ts` (nav source-of-truth) + `AdminNav.tsx` (sidebar). |
 | `admin-ui/src/pages/` | `DashboardPage` (empty for 0.4) + `NotFoundPage`. |
@@ -113,7 +113,7 @@ that:
   it (200) for `/admin` and any `/admin/*` deep link, so client-side routing
   survives a page reload. It returns **503** (with a "run `npm run build`"
   message) when the bundle is absent, and path-traversal-guards the read
-  (`realpath` + `str_starts_with` under the public root) as defence in depth.
+  (`realpath` + `str_starts_with` under the public root) as defense in depth.
 - `gateRedirect(?int)` centralises the gate→response mapping: a `null` gate
   result means "allowed" (render the shell); a non-null result (**401**
   unauthenticated or **403** non-admin) maps to a **302 redirect to
@@ -131,7 +131,7 @@ are retained as history: `public/index.php` was since removed (`start.php` is
 now the only server entry point), and `gateRedirect()` no longer exists in the
 source.
 
-The client-side `useAdminGuard` is **defence in depth only** — the
+The client-side `useAdminGuard` is **defense in depth only** — the
 authoritative gate is the server-side `AdminMiddleware`.
 
 ---
@@ -155,13 +155,13 @@ shape, so a green suite still mis-handled the real backend):
    this.get<{ user: AuthUser }>('/api/v1/auth/me'); return user;`).
 2. **`is_admin` is a DB `TINYINT`, not a JSON boolean.** The `users.is_admin`
    column serialises as `1` / `0` (or `"1"` / `"0"`), never JSON `true`. A
-   strict `=== true` check fails for a real admin. The client normalises it at
+   strict `=== true` check fails for a real admin. The client normalizes it at
    the API boundary via an exported `normalizeBool()` (treats
    `true` / `1` / `"1"` / `"true"` as true) so the rest of the app sees a real
    boolean.
 
 If you add code that reads `auth/me` (or any endpoint that returns
-DB-`TINYINT` flags), mirror this: unwrap envelopes and normalise integer
+DB-`TINYINT` flags), mirror this: unwrap envelopes and normalize integer
 booleans at the client boundary, and write the Vitest mock to match the
 **real** wire shape (`{ user: { …, is_admin: 1 } }`) so the test guards the
 true contract.
@@ -433,7 +433,7 @@ The page renders a single **status card** showing:
 - The friendly name from `friendly_name` (e.g. `Phlix Media Server`)
 - An `enabled` guard that hides both action buttons when DLNA is not configured
 
-### Action button behaviour
+### Action button behavior
 
 | Button | Call | Success | Error |
 |--------|------|---------|-------|
@@ -442,7 +442,7 @@ The page renders a single **status card** showing:
 
 Both buttons set `aria-busy={acting}` and disable during the in-flight request.
 `409` responses (already running / already stopped) surface as **info toasts**,
-not error toasts — the no-op case is expected user behaviour, not an error condition.
+not error toasts — the no-op case is expected user behavior, not an error condition.
 
 ### Architecture note — stable `push` from `useToast()`
 
@@ -475,7 +475,7 @@ and all user-facing render and action states.
 
 ---
 
-## 17. RemoteAccessPage (step 2.3 — hub pairing / subdomain / relay / port-forward)
+## 17. RemoteAccessPage (step 2.3 — Hub pairing / subdomain / relay / port-forward)
 
 `RemoteAccessPage` (`admin-ui/src/pages/RemoteAccessPage.tsx`) is the admin
 console's **remote access control page** at `/admin/remote-access`. Four
@@ -541,7 +541,7 @@ Each section renders a `<section>` element with:
 All four sections start collapsed. Hub Pairing and Relay Tunnel data loads
 **on expand**, not on page load, to avoid unnecessary API calls.
 
-### Action button behaviour
+### Action button behavior
 
 | Section | Button | Call | Success | Error |
 |----------|--------|------|---------|-------|
@@ -666,7 +666,7 @@ carry-over note from the 2.4 docs.
 | `admin-ui/src/api/liveTv.test.ts` | 22 unit tests for `LiveTvApi` (100% coverage) |
 | `admin-ui/src/pages/LiveTvPage.tsx` | React page — 4 collapsible sections (Tuners / Guide-EPG / Recordings / Series Rules) with expand/collapse state machine; each section lazy-loads on expand |
 | `admin-ui/src/pages/LiveTvPage.test.tsx` | 10 component tests — all section render states, empty states, modals, expand/collapse |
-| `admin-ui/src/styles.css` | Live TV page styles (`.page--live-tv`, tuner grid, programme cards, recording tabs, series rules list, modal styles) |
+| `admin-ui/src/styles.css` | Live TV page styles (`.page--live-tv`, tuner grid, program cards, recording tabs, series rules list, modal styles) |
 
 ### LiveTvApi wrapper (20 methods across 5 resource groups)
 
@@ -682,7 +682,7 @@ carry-over note from the 2.4 docs.
 | `updateChannel(id, data)` | `PUT /api/v1/admin/livetv/channels/{id}` | Update channel |
 | `getStreamUrl(id)` | `GET /api/v1/admin/livetv/channels/{id}/stream` | Get stream URL + redirect |
 | `listGuide(params)` | `GET /api/v1/admin/livetv/guide` | List EPG entries (channel, time range) |
-| `getProgram(id)` | `GET /api/v1/admin/livetv/guide/programs/{id}` | Get a specific programme |
+| `getProgram(id)` | `GET /api/v1/admin/livetv/guide/programs/{id}` | Get a specific program |
 | `refreshGuide()` | `POST /api/v1/admin/livetv/guide/refresh` | Trigger EPG refresh |
 | `listRecordings(status?)` | `GET /api/v1/admin/livetv/recordings` | List recordings, optionally filtered |
 | `getRecording(id)` | `GET /api/v1/admin/livetv/recordings/{id}` | Get a single recording |
@@ -701,7 +701,7 @@ carry-over note from the 2.4 docs.
 | Section | Content | Key interactions |
 |---------|---------|-----------------|
 | **Tuners** | Card grid: type badge, status dot, name, host, last-seen | Scan / Delete per card; enable/disable toggle; Add Tuner modal |
-| **Guide / EPG** | Date picker (Today / +1 Day / +2 Day) + programme grid | Click card to expand details + Record button; Refresh Guide button |
+| **Guide / EPG** | Date picker (Today / +1 Day / +2 Day) + program grid | Click card to expand details + Record button; Refresh Guide button |
 | **Recordings** | Tab bar (All / Upcoming / By Series) + recording cards | Delete per card; Schedule Recording modal (pre-fills from Guide) |
 | **Series Rules** | Rule rows: title, channel, priority | Edit / Delete per row; Add Rule modal with channel picker |
 

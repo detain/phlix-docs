@@ -82,7 +82,7 @@ the content-rating selector and a *Set PIN* option for each.
 - The dashboard's "who watches most" counts **accounts**, since activity is attributed
   to the logged-in user.
 
-## Related pages
+## Related Pages
 
 - [Parental & Session Controls](advanced/parental-controls.md) — ratings, curfews, stream caps
 - [User Management](admin/user-management.md) — the admin side of accounts

@@ -80,6 +80,6 @@ The user objects returned by the list endpoint (and `/auth/me`) carry the
 
 ## See Also
 
-- [Server Settings](./server-settings) — the `auth.signup_mode` setting and its behaviour
+- [Server Settings](./server-settings) — the `auth.signup_mode` setting and its behavior
 - [Dashboard](./dashboard) — visual admin dashboard overview
 - [Library Management](./library-management) — managing libraries and metadata

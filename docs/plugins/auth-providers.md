@@ -50,7 +50,7 @@ interface ProviderInterface
 
 ### Methods
 
-- **`name()`** — Returns a unique lowercase identifier (e.g., `"oidc"`,
+- **`name()`** — Returns a unique lowercase identifier (e.g. `"oidc"`,
   `"ldap"`, `"saml"`). Used as the prefix when parsing provider-prefixed
   usernames (`"oidc:alice@provider.com"`).
 
@@ -102,7 +102,7 @@ Authorization Code flow with PKCE.
 
 1. Navigate to **Admin → Integrations → Auth providers → OIDC**
 2. Configure:
-   - **Provider URL**: Base URL of your OIDC provider (e.g., `https://keycloak.example.com`)
+   - **Provider URL**: Base URL of your OIDC provider (e.g. `https://keycloak.example.com`)
    - **Client ID**: Registered client ID with the provider
    - **Client Secret**: Registered client secret
    - **Scopes**: Space-separated scopes (default: `openid profile email`)
@@ -239,7 +239,7 @@ Recommended settings:
 - **Host**: Your AD domain controller
 - **Port**: 389 (or 636 for SSL)
 - **Base DN**: `DC=yourdomain,DC=com`
-- **Bind DN**: Service account (e.g., `CN=Phlix Service,OU=Service Accounts,DC=yourdomain,DC=com`)
+- **Bind DN**: Service account (e.g. `CN=Phlix Service,OU=Service Accounts,DC=yourdomain,DC=com`)
 - **User Filter**: `(&(objectClass=user)(sAMAccountName={{username}}))`
 - **Admin Group**: `CN=Domain Admins,CN=Users,DC=yourdomain,DC=com`
 

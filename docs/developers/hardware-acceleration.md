@@ -34,9 +34,9 @@ vendor_priority => [
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `vendor` | string | Vendor identifier (e.g., 'nvenc', 'vaapi') |
-| `encoder` | string | FFmpeg encoder name (e.g., 'h264_nvenc') |
-| `decoder` | string | FFmpeg decoder name (e.g., 'hevc_cuvid') |
+| `vendor` | string | Vendor identifier (e.g. 'nvenc', 'vaapi') |
+| `encoder` | string | FFmpeg encoder name (e.g. 'h264_nvenc') |
+| `decoder` | string | FFmpeg decoder name (e.g. 'hevc_cuvid') |
 | `supports_hdr_tone_mapping` | bool | Whether HDR tone mapping is supported |
 | `supported_codecs` | string[] | List of supported codecs |
 | `supported_profiles` | string[] | List of supported profiles |
@@ -330,7 +330,7 @@ The system detects HDR content via ffprobe color metadata:
 - **color_transfer**: `smpte2084` (PQ) or `arib-std-b67` (HLG) indicates HDR
 - **color_space**: Typically `bt2020nc` for HDR content
 - **color_primaries**: Typically `bt2020` for HDR content
-- **max_luminance**: Extracted from `mastering_display_luminance` tag (e.g., 1000, 4000 nits)
+- **max_luminance**: Extracted from `mastering_display_luminance` tag (e.g. 1000, 4000 nits)
 - **avg_luminance**: Extracted from `ambient_luminance` tag
 
 ### Tone-Mapping Architecture

@@ -132,6 +132,16 @@ describe('VitePress Configuration', () => {
     })
   })
 
+  it('nav splits the two developer trees by audience', () => {
+    const configContent = readFileSync(configPath, 'utf-8')
+    // 'Developers' lands the task-oriented API guide, 'Engineering' lands
+    // the internals docs. One mixed label pointing at a single deep page of
+    // either tree is the audience-confusion defect this pins against.
+    expect(configContent).toContain("{ text: 'Developers', link: '/developers' }")
+    expect(configContent).toContain("{ text: 'Engineering', link: '/dev' }")
+    expect(configContent).not.toContain("{ text: 'Developers', link: '/dev/architecture-server' }")
+  })
+
   it('sidebar has installation section with linux link', () => {
     const configContent = readFileSync(configPath, 'utf-8')
     expect(configContent).toContain("'/install/'")

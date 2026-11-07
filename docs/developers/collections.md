@@ -231,11 +231,11 @@ CollectionController (REST API)
 
 ## Extending Collection Types
 
-To add a new collection type (e.g., "Recently Added" auto-collection):
+To add a new collection type (e.g. "Recently Added" auto-collection):
 
 1. Add a `type` column to the `collections` table via migration
 2. Add `$type` to the `Collection` entity
-3. Add type-specific logic in `CollectionManager` (e.g., query recently added items)
+3. Add type-specific logic in `CollectionManager` (e.g. query recently added items)
 4. Document the new type in this file
 
 ## Testing

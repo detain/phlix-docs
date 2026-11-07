@@ -209,7 +209,7 @@ Create a new library.
 **Movie-library option — `autoCollections`:** movie libraries accept an optional
 `autoCollections` field (a bare boolean, or `{ "enabled": bool }`) at the body top
 level — or nested in `options` — that gates the scanner's TMDB box-set
-auto-collection generation. It is normalised to `{ "enabled": bool }`, stored in the
+auto-collection generation. It is normalized to `{ "enabled": bool }`, stored in the
 library's `options` blob, and **defaults to enabled when absent**. The same field is
 accepted on the library update (`PUT /api/v1/libraries/{id}`), where it is merged into
 the existing options. Every library object returned by `GET /api/v1/libraries` carries
@@ -242,12 +242,12 @@ background worker performs the scan. Poll `GET .../scan-status` for progress.
 ### POST /api/v1/libraries/`{id}`/rescan
 
 Enqueue a **full rescan**: re-walk the library tree, index files at paths that are
-not yet in the catalogue, backfill missing source metadata on the already-existing
+not yet in the catalog, backfill missing source metadata on the already-existing
 rows whose type is `video`, `movie`, `episode`, `audio` or `audiobook` (`photo`
 and `book` rows get nothing), then prune the items whose source file is gone. Same
 contract as `scan`, with a `rescan`-typed job.
 
-A rescan is **non-destructive** for items whose file is still where the catalogue
+A rescan is **non-destructive** for items whose file is still where the catalog
 says it is — it does not delete them, their watch history or their fetched
 metadata.
 
@@ -1125,7 +1125,7 @@ List all active playback sessions for the authenticated user.
 
 ### DELETE /api/v1/sessions/`{id}`
 
-Terminate a specific playback session (e.g., remote control of another device).
+Terminate a specific playback session (e.g. remote control of another device).
 
 **Auth:** Required (Bearer token)
 
@@ -1949,7 +1949,7 @@ Verified against `phlix-server` `96dbb3a4`:
 `/music/artists`, `/music/albums` and `/music/tracks` are **all** offset-paged and all
 return a real `total`.
 
-| Parameter | Behaviour |
+| Parameter | Behavior |
 | --- | --- |
 | `limit` | Clamped server-side into `[1, 100]`. **100 is both the default and the hard ceiling** — it is not raisable by a client. A non-numeric or absent value becomes 100; a larger value is silently clamped down to 100. |
 | `offset` | Clamped to `>= 0`. No upper bound. |
@@ -2444,7 +2444,7 @@ Stream audiobook file directly as raw bytes. Supports HTTP Range requests for se
 - `id` (path) — Audiobook ID
 
 **Request headers (optional):**
-- `Range` — Byte range request (e.g., `bytes=1000-5000`). Returns 206 Partial Content.
+- `Range` — Byte range request (e.g. `bytes=1000-5000`). Returns 206 Partial Content.
 
 **Response 200:**
 - **Content-Type:** Detected from file extension (`audio/mp4`, `audio/mpeg`, `audio/aac`, etc.)

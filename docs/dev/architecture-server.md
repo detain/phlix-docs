@@ -89,7 +89,7 @@ take effect without a manual cache clear.
 > Until those closures are replaced with invokable classes, leave
 > `PHLIX_CONTAINER_COMPILE` unset.
 
-## Request lifecycle
+## Request Lifecycle
 
 `start.php`:
 
@@ -133,7 +133,7 @@ aliases through 0.11.x via `src/Plugins/AliasCompatShim.php` and the
 3-line interface bridge at `src/Plugins/Contract/LifecycleInterface.php`.
 They are removed in 0.12.0.
 
-## See also
+## See Also
 
 - `src/Common/Container/ContainerFactory.php` – the factory itself
 - `src/Common/Container/Providers/` – all default providers

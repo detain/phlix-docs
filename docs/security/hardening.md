@@ -220,7 +220,7 @@ Set up a log aggregation system or use `fail2ban` to auto-block IPs with repeate
 
 ## 11. Auth rate limiting (built-in)
 
-Phlix rate-limits its abuse-prone auth surfaces out of the box (SV-4.15) — this is defence-in-depth on top of any `fail2ban` you add in step 10. The `register`, `refresh`, WebAuthn login `start`/`finish`, public JWKS, and WS-connect (`:8097`) surfaces each have their own limiter (`login` keeps its long-standing DB-backed IP limiter).
+Phlix rate-limits its abuse-prone auth surfaces out of the box (SV-4.15) — this is defense-in-depth on top of any `fail2ban` you add in step 10. The `register`, `refresh`, WebAuthn login `start`/`finish`, public JWKS, and WS-connect (`:8097`) surfaces each have their own limiter (`login` keeps its long-standing DB-backed IP limiter).
 
 - **Over-limit HTTP responses:** `429 Too Many Requests` + a `Retry-After` header, body `{"error":"Too Many Requests","code":"rate_limited"}`. WS-connect rejects the handshake.
 - **Tune per surface** with `RATE_LIMIT_<SURFACE>_MAX` / `RATE_LIMIT_<SURFACE>_WINDOW` — see [/reference/env-vars](/reference/env-vars#auth-rate-limiting-sv-4-15).

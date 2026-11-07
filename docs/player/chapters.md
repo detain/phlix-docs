@@ -18,7 +18,6 @@ Chapters are extracted from multiple container formats:
 | MKV | mkvmerge | Binary chapter atoms |
 | MP4/M4A/M4B | mp4 chpl atom | Native MP4 chapter support |
 | WebM | Matroska spec | WebM containers |
-| AVI | IDIAVIMultiPartMPL | Legacy format |
 
 ### Extraction Tools
 

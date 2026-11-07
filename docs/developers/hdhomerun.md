@@ -128,7 +128,7 @@ interface TunerDriverInterface
 
 ## Adding Another Tuner Type
 
-To add support for a new tuner type (e.g., DVB-T, SiliconDust TV):
+To add support for a new tuner type (e.g. DVB-T, SiliconDust TV):
 
 1. Create the device descriptor class (similar to `HdHomeRunDevice`)
 2. Implement `TunerDiscoveryInterface` for device discovery

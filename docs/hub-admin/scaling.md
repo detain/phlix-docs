@@ -291,7 +291,7 @@ curl -s -H "Authorization: Bearer $ADMIN_JWT" \
 
 **Symptom:** Users see 502s or connection timeouts; hub logs show requests from unhealthy instance.
 
-**Cause:** Health check interval too long (e.g., 60s); or you rely solely on `/health`, which is a static liveness payload that checks nothing — it returns 200 even when the instance is actually degraded (DB connection pool depleted, relay tunnels exhausted), so the load balancer keeps routing to a broken instance.
+**Cause:** Health check interval too long (e.g. 60s); or you rely solely on `/health`, which is a static liveness payload that checks nothing — it returns 200 even when the instance is actually degraded (DB connection pool depleted, relay tunnels exhausted), so the load balancer keeps routing to a broken instance.
 
 **Fix:** Use `/health` only as a liveness probe (process up / not up) and keep the interval tight — `interval: 5s`, `timeout: 3s`. For deeper health, layer on out-of-band checks your tooling controls: probe the DB, and poll `/api/v1/admin/dashboard/summary` for relay-session counts; drain an instance from the pool when those checks fail. Test the health check manually before deploying.
 

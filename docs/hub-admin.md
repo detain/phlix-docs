@@ -37,7 +37,7 @@ Start at the [Hub Admin Overview](/hub-admin/overview).
 - [Abuse Handling](/hub-admin/abuse-handling)
 - [GDPR & Data Rights](/hub-admin/gdpr-data-rights)
 
-## See also
+## See Also
 
 - [Hub architecture](/dev/architecture-hub)
 - [Self-Host the Hub](/hub/self-host-the-hub)

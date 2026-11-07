@@ -194,7 +194,7 @@ Sets the like level for a media item.
 
 | Field | Type    | Description                            |
 |-------|---------|----------------------------------------|
-| `level` | integer | Like level (e.g., 0 = none, 1 = like) |
+| `level` | integer | Like level (e.g. 0 = none, 1 = like) |
 
 **Handler:** registered on `Phlix\Server\WebPortal\WebPortalRouter` (`src/Server/WebPortal/WebPortalRouter.php`).
 

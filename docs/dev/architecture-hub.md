@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-The hub is a Workerman HTTP + WebSocket server that holds server claim codes, validates Ed25519 enrollment tokens, runs a 60-second heartbeat loop with each paired server, multiplexes relay tunnels for remote client access, and issues HS256 user-session JWTs. Its primary UI is the shared Vue SPA (`@phlix/ui`) served at `/app`. This guide covers the hub-specific architecture, the complete pairing protocol flow (claim code → enrollment JWT → heartbeat → user-session JWT), relay tunnel design (outbound WS from server to hub, client multiplexing), namespace map, and debug recipes. If pairing fails, check the 10-minute claim-code expiry and the heartbeat logs. If a relay tunnel drops, check the relay logs. If auth is failing, check the audit log.
+The Hub is a Workerman HTTP + WebSocket server that holds server claim codes, validates Ed25519 enrollment tokens, runs a 60-second heartbeat loop with each paired server, multiplexes relay tunnels for remote client access, and issues HS256 user-session JWTs. Its primary UI is the shared Vue SPA (`@phlix/ui`) served at `/app`. This guide covers the hub-specific architecture, the complete pairing protocol flow (claim code → enrollment JWT → heartbeat → user-session JWT), relay tunnel design (outbound WS from server to hub, client multiplexing), namespace map, and debug recipes. If pairing fails, check the 10-minute claim-code expiry and the heartbeat logs. If a relay tunnel drops, check the relay logs. If auth is failing, check the audit log.
 
 ---
 
@@ -145,7 +145,7 @@ Deliberately omitted for MVP:
 
 ---
 
-## Audit logging
+## Audit Logging
 
 All auth events are written to `.logs/audit.log` via the `audit` channel:
 
@@ -404,7 +404,7 @@ grep "550e8400-e29b-41d4-a716-446655440000" .logs/hub.log | grep relay
 
 ---
 
-## What can go wrong
+## What Can Go Wrong
 
 ### Failure 1: Claim code expired
 
@@ -485,7 +485,7 @@ ss -tnp | grep ":8800"
 
 ---
 
-## Next steps
+## Next Steps
 
 - [`docs/dev/schema-hub.md`](schema-hub.md) — complete hub DB schema with ER diagram, table columns, indexes, and FK relationships
 - [`docs/dev/pairing-protocol.md`](pairing-protocol.md) — full protocol specification with sequence diagrams

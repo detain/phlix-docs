@@ -16,7 +16,7 @@ checks, admin UI, and a reference plugin — is fully shipped.
 Everything documented here works today; sections that anticipate later
 work are flagged explicitly.
 
-## Table of contents
+## Table of Contents
 
 1. [Overview](#_1-overview)
 2. [Plugin types](#_2-plugin-types)
@@ -417,7 +417,7 @@ way to confirm that your listener is actually being called.
 
 Every event class is a `readonly` DTO. Listeners must **not** mutate
 the payload (the underlying PHP types make this a hard error
-anyway). If your plugin needs to influence downstream behaviour,
+anyway). If your plugin needs to influence downstream behavior,
 either talk directly to the relevant service through the container or
 wait for a phase that introduces a typed extension point.
 
@@ -757,7 +757,7 @@ and, for operators who want trust-on-allowlist installs,
 The host's `Phlix\Plugins\Signature\SignatureVerifier` returns one of
 three results per install:
 
-| Manifest state                  | `PHLIX_PLUGINS_REQUIRE_SIGNATURE` | Result    | Loader behaviour                                                |
+| Manifest state                  | `PHLIX_PLUGINS_REQUIRE_SIGNATURE` | Result    | Loader behavior                                                |
 | ------------------------------- | --------------------------------- | --------- | --------------------------------------------------------------- |
 | Signature present               | any                               | `invalid` | The content-integrity check re-hashes the on-disk bytes; with the digest embedded in the hashed file it can never match (see above), so the install fails and the staged directory is removed. |
 | No signature                    | unset / `0`                       | `unsigned`| Install proceeds; loader logs a `warning` on the `plugins` channel. |
@@ -768,7 +768,7 @@ of the exact bytes on disk — with today's embedded-field layout that
 requires a hash fixed point, so treat it as reserved for a future
 detached-signature flow.)
 
-The only env var honoured today is **`PHLIX_PLUGINS_REQUIRE_SIGNATURE`**.
+The only env var honored today is **`PHLIX_PLUGINS_REQUIRE_SIGNATURE`**.
 When unset or falsy (the default) unsigned plugins install with a
 warning on the `plugins` log channel; set it to `1`, `true`, `yes`, or
 `on` to refuse unsigned installs.
@@ -794,7 +794,7 @@ operator playbook. The in-product catalog
 ([install-from-catalog](install-from-catalog.md)) is a *distribution*
 list, not a trust list: a **shared, hub-distributed** trust allowlist
 has not shipped. Don't oversell signing yet: today's contract is "the
-operator vouches for what they install" plus a defence-in-depth digest
+operator vouches for what they install" plus a defense-in-depth digest
 check.
 
 ---
@@ -1162,7 +1162,7 @@ and
 | `phlix.playback.started` | (Optional) Submit "Now Playing" — updates the user's profile live         |
 | `phlix.playback.stopped`  | Submit scrobble when the track has been played past the threshold          |
 
-### Core classes
+### Core Classes
 
 | Class                                       | Role                                                      |
 | ------------------------------------------- | --------------------------------------------------------- |

@@ -143,7 +143,7 @@ disagreement is refused with `protocol_version_mismatch`.
 3. An admin on the receiving hub **accepts** or **rejects** it (`POST .../incoming/{id}/accept` or `.../reject`).
 4. Once accepted, the shared library is available across the peer link.
 
-### Database schema
+### Database Schema
 
 Federation is backed by migration `028_federation.sql`, which creates six tables:
 
@@ -214,7 +214,7 @@ Beyond the mechanics, federation between independent operators carries policy ex
 
 Before peering with another operator, publish:
 
-- The public URL of your hub (e.g., `https://hub.example.com`)
+- The public URL of your hub (e.g. `https://hub.example.com`)
 - A terms of service document covering content policy, acceptable use, and DMCA procedures
 - A privacy policy covering what user data the hub collects and how it is handled
 

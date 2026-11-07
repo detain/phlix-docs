@@ -75,7 +75,7 @@ child asks, they just have to wait for the window to end.
 
 ## 2. Tag Blocking (hiding labeled items)
 
-### How it works
+### How It Works
 
 Phlix stores free-text tags in each item's metadata. You type a tag into the profile's
 **Tags** tab and mark it **Blocked** (hide it) or **Allowed** (see the warning below),
@@ -113,7 +113,7 @@ Tag blocking is a **hiding rule for library listings**, not a wall. Concretely:
 
 ## 3. Stream Limits (how many at once)
 
-### How it works
+### How It Works
 
 You set one number: how many streams this profile may have active simultaneously.
 Try to start one more and the server says no. Phlix has no household-wide budget and no

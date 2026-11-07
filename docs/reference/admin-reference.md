@@ -6,7 +6,7 @@
 
 ## TL;DR
 
-This page is the single admin landing page for three pillars of Phlix server operation: environment variables (control startup), CLI commands (control ongoing operation), and config files (control runtime behaviour). For the complete tables of every variable or command, see [Environment variables](env-vars.md) and [CLI commands](cli.md).
+This page is the single admin landing page for three pillars of Phlix server operation: environment variables (control startup), CLI commands (control ongoing operation), and config files (control runtime behavior). For the complete tables of every variable or command, see [Environment variables](env-vars.md) and [CLI commands](cli.md).
 
 ## Environment Variables
 
@@ -46,7 +46,7 @@ Ongoing operation is driven by the `php bin/phlix <command>` console. Run `php b
 | `php bin/phlix plugin:list` | List installed plugins and their enabled state. |
 | `php bin/phlix plugin:enable {name}` / `plugin:disable {name}` | Enable / disable an installed plugin by manifest name. |
 | `php bin/phlix plugin:install {source}` / `plugin:uninstall {name}` | Install from an HTTPS / `file://` source, or uninstall by name. |
-| `php bin/phlix backup:create [--label=]` | Create a server backup archive (optionally labelled). |
+| `php bin/phlix backup:create [--label=]` | Create a server backup archive (optionally labeled). |
 | `php bin/phlix backup:list` | List stored server backups. |
 | `php bin/phlix hwaccel:probe` | Probe for available hardware-acceleration encoders. |
 | `php bin/phlix user:reset-password {user} [--password=]` | Reset a user's password by username or email (Argon2ID; generates and prints a strong random password when `--password` is omitted). |
@@ -182,7 +182,7 @@ return [
 ];
 ```
 
-- `vendor_priority` — ordered list; first available is used. Override with `PHLIX_HWACCEL` env var (e.g., `PHLIX_HWACCEL=vaapi`).
+- `vendor_priority` — ordered list; first available is used. Override with `PHLIX_HWACCEL` env var (e.g. `PHLIX_HWACCEL=vaapi`).
 - `max_concurrent_transcodes` — set to `1` on low-end NAS devices.
 
 ### config/hub.php

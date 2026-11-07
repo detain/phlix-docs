@@ -123,7 +123,7 @@ See [Watch Together (SyncPlay)](advanced/syncplay.md).
 requests that ask-and-hang-up, a WebSocket stays open both ways, which is how watch
 groups deliver "someone just paused" a quarter-second later instead of on page refresh.
 
-## Related pages
+## Related Pages
 
 - [What is the Hub?](hub/what-is-the-hub.md)
 - [First run](first-run.md) — where most of these words first appear

@@ -10,7 +10,7 @@ per-user relay bandwidth quotas, a concurrent-stream cap, and a per-user bandwid
 records relay observability metrics you can query for capacity planning. All of it is
 operator-configurable.
 
-## Rate limiting
+## Rate Limiting
 
 Each surface has its **own** rate limiter (a single login-grade limiter is wrong for everything
 but login). Five surfaces use a per-worker in-memory limiter; **`login` alone is shared and

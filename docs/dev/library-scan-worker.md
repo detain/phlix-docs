@@ -36,7 +36,7 @@ never touches the database directly: all access goes through
 
 The repository's `claimNext()` is the heart of the design. It is an **atomic
 conditional `UPDATE`** (`... WHERE id = ? AND status = 'queued'`) that flips the
-oldest queued row to `running` and only honours the claim when the affected-row
+oldest queued row to `running` and only honors the claim when the affected-row
 count is ≥ 1. That single atomic operation is what makes concurrent claimers
 safe (see [Double-run safety](#double-run-safety)).
 
@@ -149,7 +149,7 @@ for the infrequent-scan workload.
 shape the `metadata` (match-metadata) job already reported. The numerator is the
 processed-file count and the denominator is the total media-file count, so a
 polling UI can render `items_updated / items_found` plus the `current_path`.
-(This corrects the original 1.1b behaviour, where `LibraryManager` emitted no
+(This corrects the original 1.1b behavior, where `LibraryManager` emitted no
 counts and the row's `items_*` / `current_path` stayed at their defaults.)
 
 The pipeline is end-to-end:
@@ -237,7 +237,7 @@ warning — it can never stop the HTTP workers from booting.
 
 `scripts/run-library-scan-worker.php` runs the scan worker as its **own isolated
 service** — e.g. a dedicated systemd unit on a host where `start.php` serves HTTP
-only. It reads the **same** `config/process.php` settings: it initialises the
+only. It reads the **same** `config/process.php` settings: it initializes the
 coroutine runtime the same way `start.php` does (the Swoole
 `Worker::$eventLoopClass` guard), builds the container, creates the single
 `phlix-library-scan` worker, resolves `LibraryScanWorker` in `onWorkerStart`, and
@@ -315,7 +315,7 @@ The command now:
   `SIGTERM`/`SIGINT`/`SIGHUP`, and on a fatal-error shutdown.
 
 Job tracking is **observability and must never refuse an operator's scan**: an
-absent or unreachable job store degrades to the pre-S150 behaviour with a warning
+absent or unreachable job store degrades to the pre-S150 behavior with a warning
 on stderr.
 
 ### The CLI refuses to start when a job is already in flight
@@ -328,7 +328,7 @@ non-terminal (`queued`/`running`) job. `--force` overrides it, for the one case
 the check cannot distinguish: a row stranded `running` by a `kill -9` or a power
 loss, which no in-process handler can clean up.
 
-Two residual behaviours, stated rather than glossed:
+Two residual behaviors, stated rather than glossed:
 
 - `reapStaleJobs()` is unscoped and has no age guard (see
   [Double-run safety](#double-run-safety)), so a `phlix-server` restart during a

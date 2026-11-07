@@ -35,7 +35,7 @@ guides instead, start at [First Run](/first-run) or the
 - [Skip Button Protocol](/reference/skip-button-protocol) — the wire format
   clients use for intro/outro skip.
 
-## See also
+## See Also
 
 - [Server architecture](/dev/architecture-server) — how the pieces fit together.
 - [Event reference](/dev/event-reference) — events emitted across the system.

@@ -257,7 +257,7 @@ launchctl list | grep phlix
 
 ---
 
-## What can go wrong
+## What Can Go Wrong
 
 ### Homebrew path conflicts
 
@@ -282,12 +282,12 @@ launchctl list | grep phlix
 ### Port 8096 already in use
 
 - **Symptom:** `bind(): Address already in use` or `Port 8096 in use`
-- **Fix:** `sudo lsof -i :8096` to find the conflicting process (e.g., another web server or AirPlay receiver). Stop it, or change the port by editing `server.port` in `config/server.php` and restarting. There is no environment variable for the HTTP port — `APP_URL` was named here in earlier revisions and is not read by phlix-server at all.
+- **Fix:** `sudo lsof -i :8096` to find the conflicting process (e.g. another web server or AirPlay receiver). Stop it, or change the port by editing `server.port` in `config/server.php` and restarting. There is no environment variable for the HTTP port — `APP_URL` was named here in earlier revisions and is not read by phlix-server at all.
 - **Verify after fix:** `curl -I http://localhost:8096`
 
 ---
 
-## Next steps
+## Next Steps
 
 - [First run](/first-run) — create the first account (it becomes the administrator) at `http://your-mac-ip:8096`
 - [Docker install](/install/docker) — alternative install using containers on macOS

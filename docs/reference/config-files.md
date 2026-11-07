@@ -4,7 +4,7 @@
 
 Reference for every `config/*.php` file in phlix-server and what each key controls. All connection parameters in `database.php` are environment-variable-driven — see the [Database](#config-database-php) section for the full list.
 
-For environment variables that control runtime behaviour, see [/reference/env-vars](/reference/env-vars).
+For environment variables that control runtime behavior, see [/reference/env-vars](/reference/env-vars).
 
 ---
 
@@ -252,7 +252,7 @@ When `enabled`, an EBU R128 `loudnorm` audio filter (`I`/`LRA`/`TP`) is applied 
 'subtitles' => require __DIR__ . '/subtitles.php',
 ```
 
-Controls embedded subtitle extraction and burn-in behaviour.
+Controls embedded subtitle extraction and burn-in behavior.
 
 ### DASH streaming
 
@@ -328,7 +328,7 @@ the derived scheme; when it is a `wss://` URL, pair it with `PHLIX_RELAY_TLS=1`.
 
 ## `config/plugins.php`
 
-Plugin catalog sources and auto-update behaviour.
+Plugin catalog sources and auto-update behavior.
 
 ```php
 'catalog' => [

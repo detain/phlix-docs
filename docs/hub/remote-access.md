@@ -1,6 +1,6 @@
 ---
 title: Remote Access via the Hub
-description: Reaching your Phlix server from outside your network through the hub relay, without port forwarding or a VPN
+description: Reaching your Phlix server from outside your network through the Hub relay, without port forwarding or a VPN
 ---
 
 # Remote Access via the Hub

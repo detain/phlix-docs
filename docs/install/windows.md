@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide installs it on Windows 10 21H2+ or Windows 11 in roughly 20 minutes.
+phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Vue `/app` web portal. This guide installs it on Windows 10 21H2+ or Windows 11 in roughly 20 minutes.
 
 **Minimum requirements:** Windows 10 21H2+ or Windows 11, 2 CPU / 4 GB RAM.
 

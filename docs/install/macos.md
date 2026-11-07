@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide installs it on macOS 12+ (Monterey or later) in roughly 15 minutes using Homebrew or MacPorts.
+phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Vue `/app` web portal. This guide installs it on macOS 12+ (Monterey or later) in roughly 15 minutes using Homebrew or MacPorts.
 
 **Minimum requirements:** macOS 12+ (Monterey or later), 2 CPU / 4 GB RAM, Homebrew or MacPorts.
 

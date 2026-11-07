@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Smarty web portal. This guide deploys it on Kubernetes via Helm in roughly 10 minutes.
+phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time sync, DLNA, and a Vue `/app` web portal. This guide deploys it on Kubernetes via Helm in roughly 10 minutes.
 
 **Minimum requirements:** Kubernetes 1.21+, Helm 3.8+, a `default` or named StorageClass, 2 CPU / 4 GB RAM per pod.
 

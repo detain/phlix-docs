@@ -493,7 +493,7 @@ endpoint that backs the SPA Browse rails and the per-library Browse grid.
 | --- | --- | --- |
 | `libraryId` | UUID | Scope results **and** `total` to a single library. Absent or blank = all libraries (the default — unchanged). |
 | `parentId` | UUID | Scope to the **direct children** of one item — the seasons/episodes of a series (or the episodes of a season). Drives the series detail drill-down. Mutually exclusive with `topLevel`. |
-| `topLevel` | `1`/`true` | Return only **top-level** items (those with no parent: movies + series), excluding seasons and episodes. Browse rails and library grids set this so a series library shows shows, not a flat dump of every episode. Ignored when `search` is set (so search still spans the whole library). Mutually exclusive with `parentId`. |
+| `topLevel` | `1`/`true` | Return only **top-level** items (those with no parent: movies + series), excluding seasons and episodes. Browse rails and library grids set this so a series library lists only its top-level shows, not a flat dump of every episode. Ignored when `search` is set (so search still spans the whole library). Mutually exclusive with `parentId`. |
 | `search` | string | Free-text title match. |
 | `genres[]` | string[] | Filter by one or more genres. |
 | `yearFrom` / `yearTo` | int | Release-year range. |

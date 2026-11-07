@@ -14,7 +14,7 @@ honest stubs:
   throws a `\RuntimeException` with the stable, machine-grep-able
   message:
 
-  ```
+  ```text
   ACME certificate provisioning is not implemented in this build.
   Provision certs out-of-band — see docs/hub-admin/tls.md.
   ```

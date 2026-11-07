@@ -86,6 +86,27 @@ looks off, your device may have needed the server to convert the video on the fl
 (*transcoding*) — that's normal; see
 [Hardware transcoding](advanced/hardware-transcoding.md) if your server struggles.
 
+## Ports at a glance
+
+A fresh Phlix server listens on two ports; enabling DLNA (off by default) adds
+two LAN-facing ones. Open only what you actually use, and scope your firewall
+rules to your LAN (worked `ufw`/`firewalld` examples:
+[Troubleshooting](troubleshooting.md)):
+
+| Port | Protocol | What it is | Who needs it |
+| --- | --- | --- | --- |
+| 8096 | TCP | Web portal (`/app`), REST API, streaming | Every client device on your network |
+| 8097 | TCP | WebSocket — watch parties (SyncPlay) and live updates | Only if friends join your watch parties from outside |
+| 8200 | TCP | DLNA casting: device description and media | Only TVs/players you cast to, on the LAN |
+| 1900 | UDP | SSDP multicast — DLNA discovery announcements | LAN multicast only, with DLNA on |
+
+Nothing else needs an inbound hole. If you claim the server to a Hub, remote
+access rides a single **outbound** connection the server keeps to the Hub's
+tunnel port (8802 by default) — your router and firewall stay untouched
+([Claim your server](hub/claim-server.md)). If you self-host a Hub of your own,
+its listener map — 8800 dashboard/API plus the 8802/8803/8804 relay surfaces —
+is in [Hub architecture](dev/architecture-hub.md).
+
 ## Good next steps
 
 - **Harden before you expose** — work through the [Hardening Checklist](security/hardening.md)

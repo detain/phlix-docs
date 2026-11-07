@@ -76,7 +76,7 @@ Samsung Tizen TVs support:
    - Register or import Samsung certificate
 
 2. **Create Author Certificate**
-   ```
+   ```text
    Tools > Tizen > Certificate Manager > +
    Certificate profile name: Phlix Dev
    Publisher name: Phlix

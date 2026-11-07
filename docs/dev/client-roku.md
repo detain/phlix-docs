@@ -84,7 +84,7 @@ mkdir -p tests
    - Register as a developer
 
 2. **Enable Developer Mode on Device**
-   ```
+   ```text
    Home: Press Home 5 times
    Up: Press Up 2 times
    Right: Press Right

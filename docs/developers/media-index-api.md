@@ -8,7 +8,7 @@ The Media Index API provides bucket-based navigation data for the adaptive index
 
 ## Endpoint
 
-#### `GET /api/v1/media/index`
+### `GET /api/v1/media/index`
 
 Returns index bucket metadata for a library, scoped to the current sort field and any active filters.
 

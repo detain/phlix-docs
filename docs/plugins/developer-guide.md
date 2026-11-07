@@ -649,7 +649,7 @@ The loader accepts three URL flavours pointing at your release:
   manifest to a tarball/zip if present. For a single-repo plugin
   published on GitHub `main`, the canonical install URL is:
 
-  ```
+  ```text
   https://raw.githubusercontent.com/<owner>/<repo>/<ref>/plugin.json
   ```
 
@@ -927,7 +927,7 @@ Once your plugin is in shape:
    release.
 4. **Share the install URL.** Operators paste:
 
-   ```
+   ```text
    https://raw.githubusercontent.com/<owner>/<repo>/v0.1.0/plugin.json
    ```
 

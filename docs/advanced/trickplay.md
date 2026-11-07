@@ -170,12 +170,12 @@ grid_count = ceil(720 / 32) = 23 grid images
 Clients like the Phlix web player use trickplay as follows:
 
 1. **During playback initialization**, check if trickplay exists:
-   ```
+   ```http
    GET /trickplay/{jobId}/index.xml
    ```
 
 2. **Display thumbnail strip** by rendering grid images:
-   ```
+   ```http
    GET /trickplay/{jobId}/thumb-0.jpg
    GET /trickplay/{jobId}/thumb-1.jpg
    ...

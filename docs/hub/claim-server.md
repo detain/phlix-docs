@@ -111,7 +111,7 @@ inaccessible to Hub users immediately.
 
 **Symptom:** The Hub dashboard spins indefinitely after you submit the claim code, then reports "Could not reach server."
 
-**Fix:** The server needs outbound HTTPS access to the Hub's URL (port 443). Check that your server's firewall allows outbound HTTPS connections. If the server is on an isolated network, a proxy or VPN may be required for initial claim. After the claim, the Hub maintains its own outbound relay tunnel so ongoing remote access does not depend on the server initiating outbound connections.
+**Fix:** The server needs outbound HTTPS access to the Hub's URL (port 443). Check that your server's firewall allows outbound HTTPS connections. If the server is on an isolated network, a proxy or VPN may be required for initial claim. After the claim, ongoing remote access rides the same direction: the server keeps a single outbound relay tunnel open to the Hub (the Hub's tunnel listener is port 8802 by default), so no inbound port is ever needed on the server — but blocking the server's egress will sever remote access.
 
 ### Claim code entered incorrectly
 

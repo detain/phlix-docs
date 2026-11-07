@@ -70,3 +70,30 @@ stamp predates a feature you're looking for in the project changelogs
 [phlix-hub](https://github.com/detain/phlix-hub)), trust the changelog and
 [nudge us](https://github.com/detain/phlix-docs/issues) — or read
 [Contributing](/dev/contributing) and fix it yourself.
+
+## Why Phlix?
+
+The question a newcomer actually has: what does this do differently from the names
+you've already heard?
+
+- **Your machine is the product.** Phlix runs entirely on hardware you own. No vendor
+  account is needed to install, sign in, or watch anything — the first account you
+  create lives on your server and that server alone
+  ([First run](/first-run)).
+- **Remote access without opening ports.** The *optional* Hub keeps your media at home
+  and still lets you reach it from anywhere: your server dials one outbound connection
+  and the relay rides that open line — no port-forwarding, no public IP, and your media
+  never lives on the hub ([What is the Hub?](/hub/what-is-the-hub)).
+- **Watch parties, built in.** Play/pause kept in sync across browsers, TVs, and phones
+  in one shared room — a core feature, not a bolt-on plugin
+  ([Watch Together (SyncPlay)](/advanced/syncplay)).
+- **First-party clients, not just a web page.** Native apps ship for Samsung Tizen and
+  Roku TVs, Windows, iOS and Android, and even a full-window terminal client, beside
+  the web portal ([Clients](/clients/overview)).
+
+In short: Plex is the polished commercial option, but much of it routes through the
+vendor's cloud and account; Jellyfin shares Phlix's fully-local philosophy; Emby sits
+between them with some features behind a paid tier. Phlix's bet is that the hub relay,
+watch-party sync, and TV-native clients belong **in** the product. It is also a younger
+project with a smaller plugin ecosystem than any of the three — read the pages, weigh
+it honestly, and decide.

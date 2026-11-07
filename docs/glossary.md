@@ -17,6 +17,20 @@ See [Stream quality / ABR](developers/stream-quality-abr.md).
 their login token to each request, like showing a wristband instead of an ID.
 See **Token** below.
 
+**CRF (constant rate factor)** — the quality dial for software video encoding: instead
+of a fixed bitrate, each frame gets the bits it needs to hold a chosen quality level —
+lower numbers mean better picture and bigger files.
+See [Stream quality / ABR](developers/stream-quality-abr.md).
+
+**DLNA** — the family of standards that lets smart TVs, game consoles, and media players
+on your local network find a media server by themselves and stream from it. Phlix answers
+those discovery calls out of the box.
+See [DLNA server](advanced/dlna.md).
+
+**DTS (Digital Theater Systems)** — a surround-sound audio codec common on movie discs.
+Many TVs and receivers can't decode it bit-faithfully, so Phlix often re-encodes DTS
+tracks for those clients.
+
 **EAC3 (Enhanced AC-3)** — a surround-sound audio format (the "E" version of Dolby
 Digital). You'll see it in client codec lists; a TV or speaker that can't decode it
 needs the server to transcode the audio.
@@ -24,6 +38,15 @@ needs the server to transcode the audio.
 **Federation** — hubs talking to *other hubs*, with cryptographic handshakes, so a
 person on one hub's address book can reach servers shared from another. Advanced; a hub
 administrator can switch it off.
+
+**HEVC (H.265)** — the modern video codec that delivers roughly half the file size of
+H.264 at the same picture quality. Older devices often can't decode it, in which case the
+server transcodes on the fly.
+
+**HLS (HTTP Live Streaming)** — how Phlix actually delivers video to players: each title
+is cut into small segments served over ordinary HTTP, so the player keeps playing through
+a busy connection and can change quality mid-stream.
+See [Streaming protocols](developers/streaming-protocols.md).
 
 **Hub** — a separate, optional service that acts as your address book and remote door:
 you claim your servers on it, and it helps your devices find and reach them from outside
@@ -44,6 +67,10 @@ public IP. Its side effect: computers on the internet can't simply knock on your
 server's door — which is exactly the problem the Hub's relay was built to avoid.
 See [Remote access](hub/remote-access.md).
 
+**NVENC** — Nvidia's dedicated on-GPU video encoder. When a supported Nvidia card is
+configured, transcoding runs there instead of eating CPU cores.
+See [Hardware transcoding](advanced/hardware-transcoding.md).
+
 **OPDS** — Open Publication Distribution System: a standard "catalog feed" format that
 ebook readers (Ubooquity, KyBook and friends) use to browse and download books over the
 internet. Phlix's book library serves its shelves as an OPDS 1.2 feed.
@@ -63,6 +90,11 @@ See [Reverse proxy](advanced/reverse-proxy.md).
 devices and some apps discover your server without you typing an address. Home-LAN only;
 it's the first thing that stops working when you leave the house.
 
+**TMDB (The Movie Database)** — the community-run database of movie and TV metadata
+(titles, years, posters, plots, cast) that Phlix queries to match your scanned files to
+real entries. Metadata lookups go out; your media never does.
+See [Movies library](libraries/movies.md).
+
 **Token** — the login receipt your server hands the app after the right password: a
 signed string (`JWT`) that says "this is Maya, expires at 9pm." Apps show it with every
 request instead of your password. It can expire and be refreshed — and anyone holding it
@@ -76,6 +108,11 @@ See [Hardware transcoding](advanced/hardware-transcoding.md).
 **Tunnel** — inside a relay connection, each browsing session gets its own private pipe
 (a "tunnel" multiplexed over one socket) so your server's HTTP responses find their way
 back to the right remote device. You'll mostly meet the word in logs.
+
+**VAAPI (Video Acceleration API)** — the Linux interface that lets Intel and AMD GPUs do
+the video encode/decode work. On a Linux machine with a supported GPU, this is the
+accelerator Phlix's transcoding settings point at.
+See [Hardware transcoding](advanced/hardware-transcoding.md).
 
 **Watch group** — the everyday name for what the tech calls a **SyncPlay** room: a
 group of people watching the same title, with play/pause kept in sync. One person hosts;

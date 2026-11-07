@@ -631,14 +631,26 @@ All pairing protocol errors use this envelope:
 ### Claim Code Security
 
 - 8-char alphanumeric is ~40 bits of entropy
-- ⚠ **Claim submission is not rate-limited today.**
-  `POST /api/v1/server-claims/claim` runs behind `[AuthMiddleware,
-  HubProtocolMiddleware]` only, and `/server-claims/new` behind
-  `HubProtocolMiddleware` alone. Neither is a limiter, and there is no
-  attempt counter in the database. The hub's rate-limit profiles cover login,
-  proxy, heartbeat, JWKS, relay-connect, client-mount, MCP and Alexa — there is
-  no claim surface. The 2^40 code space and the 10-minute TTL are the only
-  brute-force defences.
+- **The claim surfaces are rate-limited per client IP.** All three endpoints —
+  `POST /api/v1/server-claims/new`, `GET /api/v1/server-claims/{claimId}`, and
+  `POST /api/v1/server-claims/claim` — consume one unit of a per-action,
+  trusted-proxy-IP bucket (`server_claims:{new,status,claim}:<ip>`) before any
+  handler or database work runs: 60 requests / 60 s per bucket per hub worker. A
+  tripped bucket answers through the hub's central mapping — `429` +
+  `Retry-After` + `{"error":"Too Many Requests","code":"rate_limited"}` — and
+  writes one `claim_code_rate_limited` audit row per over-budget transition.
+- The posture is deliberately per-worker (soft-global), not a DB-backed attempt
+  counter like login's, because the three surfaces guard different secrets: the
+  two public ones carry a UUIDv4 claim id (~2^122 — unguessable by repetition, so
+  the bucket caps anonymous flood cost), while `POST …/claim` sits behind
+  `AuthMiddleware`: its guesser is an authenticated hub user, attributable and
+  account-metered, grinding an ~2^40 code space with a 600 s TTL — even at the
+  limiter's ceiling (roughly `60 × HUB_WORKERS` guesses/minute/IP) the window
+  outlasts any feasible grind. The code space and TTL remain the real defence;
+  the limiter is cost control, not a second secret.
+- Operational note: sustained bursts of `429`s or `claim_code_rate_limited` audit
+  rows on these surfaces mean someone is probing pairing — see the rate-limit
+  pointer in the [hub-admin install guide](../hub-admin/install.md).
 - Single-use: the claim is marked `claimed_by` under `SELECT … FOR UPDATE`, so a
   replay gets `CLAIM_CODE_ALREADY_CLAIMED`
 - 10-minute TTL prevents indefinite exposure

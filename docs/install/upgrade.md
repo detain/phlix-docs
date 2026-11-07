@@ -53,10 +53,6 @@ sudo -u phlix cp /etc/phlix/env /var/phlix/backups/env-$(date +%Y%m%d-%H%M%S)
 
 # Full DB dump (replace with your credentials)
 mysqldump -u root -p phlix > /var/phlix/backups/phlix-db-$(date +%Y%m%d-%H%M%S).sql
-
-# Media metadata (optional — the DB dump above captures this)
-# If using SQLite instead of MySQL:
-# sqlite3 data/phlix.db ".backup /var/phlix/backups/phlix-db-$(date +%Y%m%d-%H%M%S).db"
 ```
 
 ---

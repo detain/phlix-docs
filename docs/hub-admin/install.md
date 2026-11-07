@@ -405,6 +405,16 @@ Verify pairing works end-to-end:
 5. Create a second account, sign in as that user, and confirm shared libraries and
    media are visible.
 
+> [!NOTE]
+> Pairing traffic is budget-guarded on the hub: every `/api/v1/server-claims/*`
+> endpoint is rate-limited per client IP and per action (60 requests / 60 s per hub
+> worker); tripped buckets answer `429` with `Retry-After`, and one
+> `claim_code_rate_limited` audit row is written per over-budget transition.
+> Sustained bursts of those rows mean someone is probing claim codes — the guesser
+> must hold a hub account, so closing sign-ups (`auth.signups_disabled`; see
+> [First Boot](./first-boot.md)) is the other wall. Full analysis:
+> [Pairing protocol — Claim Code Security](../dev/pairing-protocol.md#claim-code-security).
+
 ---
 
 ## Environment variables reference

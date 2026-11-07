@@ -7,7 +7,10 @@ description: From a freshly installed Phlix server to your first playing title
 
 **TL;DR:** There is no separate setup wizard. A fresh Phlix server is simply a login
 page: you create the first account (which automatically becomes the administrator),
-then add a library folder and press scan. Ten minutes, start to watch.
+then add a library folder and press scan. Ten minutes — start to watch — once the
+server itself is installed. Not there yet? The install guides add roughly 10–20
+minutes (about 15 on Linux), so plan for about half an hour from blank machine to
+first title.
 
 Every term used below that sounds like jargon is defined in the
 [Glossary](glossary.md).

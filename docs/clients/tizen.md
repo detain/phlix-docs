@@ -12,7 +12,8 @@ description: The Phlix app for 2018-and-newer Samsung Smart TVs, sideloaded as a
 
 ## Install / Store Links
 
-- **Samsung Galaxy Store:** [Phlix on Galaxy Store](#) <!-- placeholder: pending Samsung store submission -->
+- **Samsung Galaxy Store:** listing is pending — the store submission does not exist yet,
+  so there is nothing to link. Install by sideloading the `.wgt` package below.
 - **Direct `.wgt` download:** [github.com/detain/phlix-tizen-client/releases](https://github.com/detain/phlix-tizen-client/releases) — for sideloading
 
 ## Platform-Specific Install Steps

@@ -51,7 +51,6 @@ lsof -i :8096                                       # Is port 8096 bound?
 
 ```bash
 chmod -R 755 /media               # Fix permissions on media directories
-lsof data/phlix.db                # Check SQLite locks (if using SQLite)
 php scripts/run-migrations.php    # Verify DB schema is up to date
 ```
 
@@ -158,14 +157,12 @@ chown -R phlix:phlix /path/to/media
 
 **Fix:** Rename files to match the conventions in [Movies library](libraries/movies.md) or [TV library](libraries/tv-shows.md). Check `.logs/app.log` for "unrecognized file" entries (the scanner logs on the media channel).
 
-**Cause 3 — Database locked:** MySQL/MariaDB lock contention, or a stale SQLite lock on `data/phlix.db`.
+**Cause 3 — Database locked:** MySQL/MariaDB lock contention. Phlix stores everything in
+MySQL/MariaDB — every install path uses it, and there is no SQLite mode to be in.
 
 **Fix:**
 ```bash
-# For SQLite
-lsof data/phlix.db
-
-# For MariaDB/MySQL — check for lock-waiting threads
+# Check for lock-waiting threads (MySQL/MariaDB)
 mysql -e "SHOW PROCESSLIST;"
 ```
 Restart the Phlix service to clear stale locks.

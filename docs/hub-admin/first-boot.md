@@ -27,6 +27,13 @@ before publishing the public domain**, and close the door right after
 the `HUB_SIGNUPS_ENABLED` env default live — no restart needed).
 :::
 
+Pairing follows the same ordering logic: a claim code can only be redeemed by a
+signed-in hub account, and every `/server-claims/*` surface is IP rate-limited (a
+prober meets `429` responses and leaves `claim_code_rate_limited` audit rows behind) —
+but an issued code is still live for ten minutes, so generate it at the moment you
+pair, not before. See
+[Claim Code Security](../dev/pairing-protocol.md#claim-code-security).
+
 3. **Open the admin console.** Once signed in as an admin, an **Admin** entry
    appears in the top navigation. It leads to the **Hub Dashboard** at
    `/app/admin/dashboard`. The console is gated by `AdminMiddleware` (a

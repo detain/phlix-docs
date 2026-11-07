@@ -25,15 +25,18 @@ git clone --depth 1 https://github.com/detain/phlix-server && cd phlix-server
 umask 077
 cat > phlix-secrets.yaml <<EOF
 config:
-  # Must match the password configured for your MySQL user:
+  # Generated fresh here — create your MySQL user with this password:
   database_password: "$(openssl rand -hex 32)"
   # JWT signing key — generate one, never reuse:
   secret_key: "$(openssl rand -hex 32)"
 EOF
 # phlix-secrets.yaml holds live credentials — never commit it.
+# config.database_host is REQUIRED — the chart deploys no database; replace
+# mysql.example.com with the host of a MySQL that serves your phlix database.
 helm install phlix ./k8s/helm/phlix \
   -f phlix-secrets.yaml \
   --set image.tag="$IMG_TAG" \
+  --set config.database_host=mysql.example.com \
   --set ingress.enabled=true \
   --set ingress.hosts[0].host=phlix.example.com
 ```
@@ -55,7 +58,7 @@ This guide is text-first. Screenshots will be added in a follow-up.
 | Ingress controller | nginx-ingress or Traefik | with cert-manager for automated TLS |
 | StorageClass | default or named | Required for PVCs |
 | NVIDIA GPU (optional) | Driver 525+ | For hardware transcoding |
-| MySQL (optional) | External or in-cluster | Or use the chart's embedded DB |
+| MySQL | External or in-cluster | Required — the chart deploys no database; `config.database_host` must point at a real MySQL (§3) |
 
 ---
 
@@ -284,7 +287,7 @@ The chart passes these to the pod automatically via `PHLIX_*` env vars:
 
 | Env var | Description | Example |
 |---------|-------------|---------|
-| `PHLIX_DATABASE_HOST` | MySQL host | `mysql.default.svc.cluster.local` |
+| `PHLIX_DATABASE_HOST` | MySQL host — **required**; the chart deploys no database | `mysql.default.svc.cluster.local` |
 | `PHLIX_DATABASE_PORT` | MySQL port | `3306` |
 | `PHLIX_DATABASE_NAME` | Database name | `phlix` |
 | `PHLIX_DATABASE_USER` | Database user | `phlix` |
@@ -306,7 +309,7 @@ without editing the chart is possible server-side via `PHLIX_HTTP_PORT` /
 no longer match, so prefer the chart defaults inside Kubernetes.
 :::
 
-Passwords and keys are **required** — the chart's `templates/secret.yaml` wraps both in `required`, so an empty `config.database_password` or `config.secret_key` fails `helm template`/`helm install` loudly. (A template-time guard additionally refuses a family of copy-paste placeholder values — `secret`, `change-me`, `replace-me`, `password`, `test`, `demo`, `dev`, … — so install genuinely stalls if you leave an example string in place.)
+Passwords and keys are **required** — the chart's `templates/secret.yaml` wraps both in `required`, so an empty `config.database_password` or `config.secret_key` fails `helm template`/`helm install` loudly. (A template-time guard additionally refuses a family of copy-paste placeholder values — `secret`, `change-me`, `replace-me`, `password`, `test`, `demo`, `dev`, … — so install genuinely stalls if you leave an example string in place.) A third `required` guard sits in `templates/deployment.yaml` on `config.database_host`: the chart ships no database, so an unset host fails the install with `config.database_host is required` instead of booting a pod doomed to CrashLoopBackOff.
 
 Prefer feeding real values through a **local, uncommitted secrets file** rather than the command line — `--set` puts the secret in your shell history and in the process argv while helm runs, visible to anyone who can list processes:
 
@@ -318,9 +321,10 @@ config:
   secret_key: "$(openssl rand -hex 32)"
 EOF
 # phlix-secrets.yaml holds live credentials — never commit it.
-
+# config.database_host is required — point it at your real MySQL host:
 helm install phlix ./k8s/helm/phlix \
   --set image.tag="$IMG_TAG" \
+  --set config.database_host=mysql.example.com \
   -f phlix-secrets.yaml
 ```
 

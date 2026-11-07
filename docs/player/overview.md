@@ -18,7 +18,7 @@ pages; this page orients you first.
 | Audio tracks | Switch between tracks on multi-audio sources (per-track language, channel layout) | [Player Quality & Audio](player-quality-audio) |
 | Subtitles | Embedded and sidecar subtitle tracks; selection modes and burn-in behavior | [Player Quality & Audio](player-quality-audio) |
 | Picture-in-Picture | Detach playback into a floating window (browser support varies) | [Player Quality & Audio](player-quality-audio) |
-| Chapters | Markers from MKV/MP4/WebM/AVI containers, chapter list overlay, timeline display | [Player Chapters](chapters) |
+| Chapters | Markers from MKV/MP4/WebM containers, chapter list overlay, timeline display | [Player Chapters](chapters) |
 | Trickplay | Sprite-sheet previews when scrubbing the timeline | [Player Chapters](chapters) |
 | Skip intro/outro | Detected intro/outro ranges with skip buttons on the timeline | [Player Chapters](chapters) |
 

@@ -98,6 +98,10 @@ pull request but does not by itself block a merge.
 ## API reference pages
 
 Pages under `docs/reference/api/` pair a prose `.md` with a machine-readable
-OpenAPI `.yaml` sibling — e.g. `docs/reference/api/hub-jwks.md` alongside
-`docs/reference/api/hub-jwks.yaml` — and the prose page references the spec by
-path.
+OpenAPI `.yaml` — e.g. `docs/reference/api/hub-jwks.md` alongside
+`docs/public/reference/api/hub-jwks.yaml`. The spec must live under
+`docs/public/`, never beside the `.md`: VitePress ships non-markdown assets
+only from the public directory, so a `.yaml` under `docs/reference/api/`
+404s at runtime (the defect TW-089 cured). Pages reference the spec by its
+served path — `/reference/api/<name>.yaml`, reached relatively from other
+sections as `../reference/api/<name>.yaml`.

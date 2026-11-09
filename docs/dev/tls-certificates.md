@@ -111,6 +111,6 @@ The intended design for automated certificate provisioning:
 ## Security Considerations
 
 - Private keys should have restricted permissions (0600)
-- Certificates are stored in `config/tls/` which should be backed up
+- The application stores no certificates (there is no certificate-path config; TLS terminates at the reverse proxy — see "Self-Signed Certificates (Development)" above). On managed hosts, back up certbot's `/etc/letsencrypt/` — the `live/` symlinks, `archive/` keys, and `renewal-hooks/deploy/` scripts the haproxy and hub surfaces depend on — not an application path
 - Let's Encrypt certificates expire after 90 days
 - Self-signed certificates should only be used in development

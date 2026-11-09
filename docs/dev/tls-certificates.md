@@ -67,14 +67,24 @@ openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -node
 ```
 
 **Configuration:**
-```php
-// config/hub.php
-return [
-    'tls_enabled' => true,
-    'tls_cert_path' => __DIR__ . '/tls/cert.pem',
-    'tls_key_path' => __DIR__ . '/tls/key.pem',
-];
-```
+
+There is no certificate-path config to point at these files. The
+server's `config/hub.php` ships `tls_enabled` only; `tls_cert_path`
+and `tls_key_path` are read by nothing in server code — the only
+places those names appear are fields of the hub subdomain-allocation
+wire response (`SubdomainResult`). In development, TLS terminates at
+your reverse proxy: configure the generated `cert.pem`/`key.pem` on
+the proxy frontend, and set `PHLIX_TLS_ENABLED` (default on when
+unset) only to toggle whether the announced `public_url` is built
+with the `https://` or `http://` scheme.
+
+The same reference-not-copy direction applies at haproxy frontends:
+a `bind ... crt /etc/letsencrypt/live/<domain>/fullchain.pem key-file
+/etc/letsencrypt/live/<domain>/privkey.pem` line (haproxy ≥ 2.9)
+reads renewals in place instead of serving a merged copy from
+`/etc/haproxy/certs/`; switching the managed hub/server installers
+to that bind form is in flight in those repos — see the
+[Linux install guide](/install/linux) for the shipped shape.
 
 ## Planned: ACME Automated Provisioning
 
@@ -95,7 +105,7 @@ The intended design for automated certificate provisioning:
 
 | Variable         | Default | Description |
 | ---------------- | ------- | ----------- |
-| `PHLIX_TLS_ENABLED` | `1`   | Enable TLS for the server |
+| `PHLIX_TLS_ENABLED` | `1`   | Toggles the scheme (`https://`/`http://`) of the announced `public_url`; TLS itself terminates at the reverse proxy |
 | `PHLIX_DOMAIN`   | `phlix.media` | Base domain for subdomains |
 
 ## Security Considerations

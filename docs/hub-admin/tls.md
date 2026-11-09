@@ -77,8 +77,12 @@ DNS-01 challenge) issued by your tooling of choice — for example
 certbot certonly --manual --preferred-challenges dns -d '*.phlix.media'
 ```
 
-Then symlink (or copy) the issued material into each allocated
-subdomain directory, e.g.:
+Then symlink the issued material into each allocated subdomain
+directory — do **not** copy it. A copy freezes the leaf: the files at
+those paths never change, so `TlsCertificateManager` keeps reporting
+the aging copied certificate and any proxy consuming these directories
+serves the stale chain until it expires. Symlinks into
+`/etc/letsencrypt/live/` pick up every renewal in place. Example:
 
 ```bash
 mkdir -p /home/phlix/data/tls/abc12345.phlix.media
@@ -90,6 +94,14 @@ ln -sf /etc/letsencrypt/live/phlix.media/privkey.pem \
 
 A wildcard cert covers every subdomain at once, so a single renewal
 keeps all servers current.
+
+The same reference-not-copy direction applies upstream at the
+haproxy frontend: a `bind ... crt /etc/letsencrypt/live/<domain>/fullchain.pem
+key-file /etc/letsencrypt/live/<domain>/privkey.pem` line (haproxy
+≥ 2.9) reads renewals in place, instead of serving a merged copy from
+`/etc/haproxy/certs/`. Switching the managed hub/server installers to
+that bind form is in flight in those repos — not yet reflected in this
+site's [install guides](/hub-admin/install).
 
 ### Renewal monitoring
 

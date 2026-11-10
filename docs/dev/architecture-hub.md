@@ -97,7 +97,11 @@ Both auth cookies are `HttpOnly`, `SameSite=Lax`, and `Secure` unless the scheme
 ```text
 Browser → Hub:  POST /api/v1/auth/logout   (credentials included)
 Hub:    clear both auth cookies
-        (no server-side token revocation — tokens expire naturally)
+        + cut the presented refresh token's jti (body token first, else the
+          phlix_hub_refresh cookie) via RefreshTokenRevocationService — that
+          lineage can never refresh again (auth_revoked_refresh_tokens)
+        (no per-user bulk revocation: stateless access JWTs, and refresh
+          tokens never presented here, expire naturally)
 Browser: drops any in-memory token mirror
 ```
 

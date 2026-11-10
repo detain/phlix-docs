@@ -98,7 +98,13 @@ take effect without a manual cache clear.
 3. Resolve `AuthManager`, `LibraryManager`, `ItemRepository`,
    `PlaybackController` from the container.
 4. Parse the request with `Phlix\Server\Http\Request::fromGlobals()`.
-5. Authenticate the bearer token (if present) via `AuthManager`.
+5. Authenticate the request via `AuthManager` — bearer-token precedence, with the
+   `phlix_session` cookie consulted only when no bearer header is present. A
+   cookie-sourced state-changing request first passes the CSRF origin gate
+   (`RequestAuthenticator::validateCsrfOrigin()`; refusal is the
+   `csrf.invalid_origin` 403 frame). Custody classification, the cookie
+   emission/rotation laws, and the WebSocket carrier table:
+   [Auth architecture](/dev/auth-architecture).
 6. Route: `/api/*` goes to the JSON API placeholder; everything else is handed
    to `PageRenderer` for Smarty rendering.
 

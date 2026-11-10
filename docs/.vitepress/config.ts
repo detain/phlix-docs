@@ -281,6 +281,7 @@ export default defineConfig({
           items: [
             { text: 'Server Architecture', link: '/dev/architecture-server' },
             { text: 'Hub Architecture', link: '/dev/architecture-hub' },
+            { text: 'Auth Architecture (Bearer & Cookie)', link: '/dev/auth-architecture' },
             { text: 'Coroutine Runtime', link: '/dev/coroutine-runtime' },
             { text: 'Pairing Protocol', link: '/dev/pairing-protocol' },
             { text: 'Relay Protocol', link: '/dev/relay-protocol' },

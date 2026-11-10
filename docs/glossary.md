@@ -22,6 +22,12 @@ of a fixed bitrate, each frame gets the bits it needs to hold a chosen quality l
 lower numbers mean better picture and bigger files.
 See [Stream quality / ABR](developers/stream-quality-abr.md).
 
+**Cookie custody** — the browser's arrangement for holding your login token: the site
+stores it in an HttpOnly cookie that page scripts can't read, and the browser attaches it
+to requests automatically. Native apps (TVs, phones, consoles) keep **bearer custody**
+instead — they hold the token themselves and send it as a header. See
+[Auth architecture](dev/auth-architecture.md).
+
 **DLNA** — the family of standards that lets smart TVs, game consoles, and media players
 on your local network find a media server by themselves and stream from it. Phlix answers
 those discovery calls out of the box.
@@ -98,7 +104,10 @@ See [Movies library](libraries/movies.md).
 **Token** — the login receipt your server hands the app after the right password: a
 signed string (`JWT`) that says "this is Maya, expires at 9pm." Apps show it with every
 request instead of your password. It can expire and be refreshed — and anyone holding it
-holds the access, so it's kept in secure storage. See **Bearer (token)** above.
+holds the access, so who holds it matters: TV/phone/console apps keep it in the device's
+secure storage, while a browser session hands it to the site's HttpOnly cookie jar, where
+page scripts can't read it. See **Bearer (token)** above and
+[Auth architecture](dev/auth-architecture.md).
 
 **Transcode** — re-encoding video *while you watch* so a picky device can play it, or
 shrinking it to fit a slow connection. Costs the server real CPU; a direct connection

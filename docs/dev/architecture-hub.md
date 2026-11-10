@@ -68,6 +68,7 @@ $app->boot();
 Browser → Hub:  POST /api/v1/auth/register  {email, password, display_name}
 Hub:    create user row (unprivileged), issue HS256 access + refresh JWTs
 Hub → Browser: {access_token, refresh_token, user}
+                + Set-Cookie: phlix_hub_token, phlix_hub_refresh   (dual emit)
 ```
 
 ### Login
@@ -76,24 +77,28 @@ Hub → Browser: {access_token, refresh_token, user}
 Browser → Hub:  POST /api/v1/auth/login  {email, password}
 Hub:    verify Argon2ID password hash, issue HS256 JWTs
 Hub → Browser: {access_token, refresh_token, user}
+                + Set-Cookie: phlix_hub_token, phlix_hub_refresh   (dual emit)
 ```
 
-### Protected request (Bearer or cookie)
+### Protected request (Bearer first, cookie second)
 
 ```text
-Browser → Hub:  GET /api/v1/libraries  (Authorization: Bearer <access_token>)
+Browser → Hub:  GET /api/v1/libraries
+                (Authorization: Bearer <access_token>  — bearer wins precedence)
+                or, with no bearer header, the HttpOnly phlix_hub_token cookie (jar auth)
 Hub:    validate HS256 JWT (iss=phlix-hub, aud=hub)
 Hub → Browser: {libraries: [...]}
 ```
 
-All cookies use `SameSite=Lax` — cross-origin requests cannot auto-attach cookies, so browser JS clients use the `Authorization: Bearer` header instead.
+Both auth cookies are `HttpOnly`, `SameSite=Lax`, and `Secure` unless the scheme law exempts it (HTTPS or an addressed `localhost` host, or an explicit `HUB_COOKIE_INSECURE` / `auth.cookie.insecure` opt-in). Same-origin SPA sessions authenticate through the jar; cross-origin clients send the `Authorization: Bearer` header, which the browser cannot auto-attach. Refresh rotation happens only for requests the hub classifies into cookie custody. Full law — custody split, classification, CSRF guard, WS carriers: [Auth architecture](/dev/auth-architecture).
 
 ### Logout
 
 ```text
-Browser → Hub:  POST /api/v1/auth/logout
-Hub:    (no server-side token revocation — tokens expire naturally)
-Browser: clears access_token from memory / cookie
+Browser → Hub:  POST /api/v1/auth/logout   (credentials included)
+Hub:    clear both auth cookies
+        (no server-side token revocation — tokens expire naturally)
+Browser: drops any in-memory token mirror
 ```
 
 ---
@@ -137,11 +142,14 @@ if ($this->countAll() === 1) {
 
 ## CSRF
 
-Deliberately omitted for MVP:
+Cookie custody is protected by an **origin guard**, not a synchronizer token — `src/Http/Middleware/CsrfOriginGuard.php`, enforced before identity hydration:
 
-- JSON APIs use `Authorization: Bearer` — browsers do not auto-attach cookies to cross-origin `fetch()` calls, so CSRF is not applicable
-- HTML pages use `SameSite=Lax` cookies — the browser suppresses cookie send on dangerous cross-origin POSTs
-- Logout is the only state-changing operation on the HTML portal and carries no privilege escalation risk
+- Cookie-sourced state-changing requests — the exact verb list `POST/PUT/DELETE/PATCH` (no GET carve: the hub has no GET-logout route, unlike the server's single form-era path) — are guarded in two places that share this class: inside `AuthMiddleware` after a cookie-sourced token validates, and inside the two middleware-less auth routes that consume cookie lineage, `POST /auth/refresh` and `POST /auth/logout`. They must carry an `Origin` (or `Referer` fallback) naming the hub host; **neither header present → refused** (fail-closed), as is a cross-site `Sec-Fetch-Site` value (a belt the hub enforces; the server reads that header only as a classification signal).
+- Refusal is `403` with `{"error":"CSRF validation failed","code":"csrf.invalid_origin"}` — byte-for-byte the server's ratified frame, code pre-registered in `openapi.yaml` and the vendored contracts fixture, zero new wire vocabulary — and, like the server's, it logs nothing: origin refusals are high-volume noise on a public relay front, and the frame itself is the observability.
+- Bearer-lineage requests are CSRF-immune by pinned law (a header the browser cannot auto-attach). Auth failure (`401`) answers **before** the guard, so guard responses cannot be used to probe whether a request carried a live cookie.
+- `SameSite=Lax` and exact-origin CORS remain the first line of defense; the guard is same-layer enforcement for anything that still arrives.
+
+Full law table (both hosts, classification, WS carriers): [Auth architecture](/dev/auth-architecture).
 
 ---
 

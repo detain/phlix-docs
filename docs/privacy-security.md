@@ -67,13 +67,15 @@ When traffic **is** relayed through the Hub, all of the above passes through the
 
 ## How the Web App Stores Tokens
 
-Phlix's API authenticates with **Bearer JWTs** — the token rides in an `Authorization: Bearer` header ([what's a bearer token?](/glossary)). The web SPA persists its access token in browser `localStorage` and sends it as a header on every API call.
+Phlix's API authenticates with **JWTs** ([what's a bearer token?](/glossary)). Who *holds* the token depends on the client class. A same-origin browser session of the web app runs in **cookie custody**: on login the server (or hub) sets `HttpOnly` + `Secure` + `SameSite=Lax` session and refresh cookies alongside the JSON response, the app sends them with every same-origin call, and scripts on the page can read **neither** token — there is no `localStorage` copy to exfiltrate. Apps pointed at a cross-origin API base, and every non-browser client (TVs, phones, consoles, CLI), run in **bearer custody**: the token is held by the app and sent as an `Authorization: Bearer` header, which no browser will auto-attach.
 
-Be aware of the trade-off this makes:
+Be aware of the trade-offs this makes:
 
-- **localStorage is readable by any script on the page.** A cross-site scripting (XSS) flaw in any loaded code — including third-party artwork or embeds — could exfiltrate the token. This is the known cost of header-based bearer auth in browsers.
-- **Why bearer instead of cookies-only:** the identical scheme serves every client in the estate — TVs, phones, consoles and CLI tools have no cookie jar — and a header the browser cannot auto-attach is inherently resistant to CSRF.
-- **Browser sessions are not localStorage-only:** the server's browser login flow additionally sets `HttpOnly` + `Secure` + `SameSite=Lax` session and refresh cookies (unreadable to scripts), so XSS exposure of the stored token is one credential among several, and `PHLIX_COOKIE_INSECURE` exists only as a local-dev opt-out.
+- **XSS degrades, not disappears.** The HttpOnly jar is unreadable to injected scripts, but an XSS flaw can still *use* the session (drive the app's own credentialed calls) and can read anything the page renders. The app keeps a brief in-memory copy of the access token where structurally required (e.g. to dial WebSockets); that mirror is gone on reload by design.
+- **Cookie custody imports the CSRF surface — closed by an origin guard.** Every state-changing request that authenticated from the cookie jar must carry an `Origin` (or `Referer`) naming your host; requests with neither are refused fail-closed, with a `403 csrf.invalid_origin`. The hub additionally rejects a cross-site `Sec-Fetch-Site`. Bearer-lineage requests need no such check because the browser cannot auto-attach a header. Full mechanics: [Auth architecture](/dev/auth-architecture).
+- **The identical scheme serves every client.** Bearer remains the estate-wide floor so devices without a cookie jar speak the same API; cookie custody is an added browser path, not a replacement.
+- **Local-dev plaintext opt-in.** Cookies carry `Secure` whenever the request arrives over HTTPS or an addressed `localhost` host. Only an explicit opt-out (`PHLIX_COOKIE_INSECURE=1` on the server, `HUB_COOKIE_INSECURE=1` on the hub, or the matching `auth.cookie.insecure` admin setting) drops the flag for LAN-IP dev URLs — and on the server, running that opt-in under `PHLIX_ENV=production` logs a warning once per worker. Do not run it in production.
+- **WebSockets do not ride the jar (yet).** Watch-party/relay sockets authenticate with the bearer token in the `Sec-WebSocket-Protocol` handshake. A cookie-custody browser session that has reloaded (in-memory token gone) cannot open a socket until a cookie-carried WebSocket lands on the server — see [Not (yet) shipped](/dev/auth-architecture#not-yet-shipped).
 - Revocation levers: the per-user `tokens_not_valid_after` watermark kills a user's issued JWTs (automatic on password change), and rotating `JWT_SECRET` invalidates every token server-wide — see [Hardening §1](/security/hardening).
 
 ## Security Hardening Checklist

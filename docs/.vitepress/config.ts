@@ -224,6 +224,7 @@ export default defineConfig({
             { text: 'Parental & Session Controls', link: '/advanced/parental-controls' },
             { text: 'Music & Audio', link: '/advanced/music-audio' },
             { text: 'Watch Together (SyncPlay)', link: '/advanced/syncplay' },
+            { text: 'Appearance & Themes', link: '/advanced/appearance' },
           ]
         }
       ],

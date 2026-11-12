@@ -176,6 +176,9 @@ server validates the id against the built-ins **and** the live
 before any write. Clearing the selection back to "unset" is not
 currently supported — pick a theme.
 
+For the end-user view of applying and switching themes, see
+[Appearance and Themes](../advanced/appearance.md).
+
 ## See Also
 
 - [Plugin Developer Guide](../plugins/developer-guide.md) — manifest,

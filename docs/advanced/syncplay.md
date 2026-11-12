@@ -123,6 +123,10 @@ Wait a moment — automatic correction kicks in at roughly a two-second gap (the
 
 Sync playback is not the same as video delivery: buffering is about the media stream, not the group. Try a lower quality for that viewer, or check their bandwidth to the server. The group keeps its logical position even if one player buffers; that player catches up automatically when it can.
 
+### "Queue limit exceeded" when setting the group queue
+
+A group's shared queue is capped: the server refuses a queue with more than **1,000 items**, or any item whose extra details (`media_info`) take more than **4,096 bytes** once encoded (or whose `media_id` is longer than 64 bytes). The refusal arrives as the error code `syncplay.queue_limit_exceeded`, and the group's existing queue stays exactly as it was — nothing is trimmed or partly applied. Send a shorter queue (or slimmer item details) and try again.
+
 ---
 
 ## Related Pages

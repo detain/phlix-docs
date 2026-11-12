@@ -1,7 +1,7 @@
 # Arr API clients developer guide
 
 > **Note** — The `Arr/` classes are the sole exception to the `phlix-shared`
-> "Zero I/O" policy. They perform real HTTP/cURL calls because they model
+> "Zero I/O" policy. They perform real HTTP calls (via an injectable transport, curl by default) because they model
 > cross-repository integration for media indexers (Sonarr, Radarr, Prowlarr,
 > Bazarr). See [`phlix-shared/AGENTS.md`](https://github.com/detain/phlix-shared/blob/main/AGENTS.md)
 > for the full rationale.
@@ -19,10 +19,16 @@ API version; see the per-client tables below):
 | **Prowlarr** | Indexer management (handles multiple indexer APIs) | 9696 |
 | **Bazarr** | Subtitle management (search, download subtitles) | 6767 |
 
-All eight classes live in `src/Arr/` under the `Phlix\Shared\Arr` namespace
-and ship in the `detain/phlix-shared` Composer package.
+The ten classes in `src/Arr/` plus the two in `src/Arr/Transport/` (twelve in
+all) live under the `Phlix\Shared\Arr` namespace and ship in the
+`detain/phlix-shared` Composer package.
 
-## The eight classes
+## The classes
+
+Ten files sit directly in `src/Arr/`: `ArrClientInterface`, `AbstractArrClient`,
+`SonarrClient`, `RadarrClient`, `ProwlarrClient`, `BazarrClient`, `SyncResult`,
+`TrashGuidesProvider`, `ArrClientFactory` and `SecretRedactor`. The `Transport/`
+subdirectory adds `ArrTransportInterface` and `CurlArrTransport`.
 
 ### `ArrClientInterface` (`ArrClientInterface.php`)
 
@@ -46,7 +52,7 @@ or tag lists in the same way.
 
 ### `SonarrClient` (`SonarrClient.php`)
 
-Implements `ArrClientInterface`. Wraps the Sonarr v3 API using cURL.
+Implements `ArrClientInterface`. Wraps the Sonarr v3 API through the `ArrTransportInterface` seam (default `CurlArrTransport`).
 
 **Key methods beyond the interface:**
 
@@ -64,7 +70,7 @@ Implements `ArrClientInterface`. Wraps the Sonarr v3 API using cURL.
 
 ### `RadarrClient` (`RadarrClient.php`)
 
-Implements `ArrClientInterface`. Wraps the Radarr v3 API using cURL.
+Implements `ArrClientInterface`. Wraps the Radarr v3 API through the `ArrTransportInterface` seam (default `CurlArrTransport`).
 
 **Key methods beyond the interface:**
 
@@ -87,7 +93,7 @@ Implements `ArrClientInterface`. Wraps the Radarr v3 API using cURL.
 ### `ProwlarrClient` (`ProwlarrClient.php`)
 
 Standalone client (does **not** implement `ArrClientInterface`). Wraps the
-Prowlarr v1 API using cURL.
+Prowlarr v1 API through the `ArrTransportInterface` seam (default `CurlArrTransport`).
 
 | Method | Description |
 |--------|-------------|
@@ -102,7 +108,7 @@ Prowlarr v1 API using cURL.
 ### `BazarrClient` (`BazarrClient.php`)
 
 Standalone client (does **not** implement `ArrClientInterface`). Wraps the
-Bazarr v1 API using cURL.
+Bazarr v1 API through the `ArrTransportInterface` seam (default `CurlArrTransport`).
 
 | Method | Description |
 |--------|-------------|
@@ -156,6 +162,43 @@ Features:
 
 ---
 
+### `AbstractArrClient` (`AbstractArrClient.php`)
+
+Shared base class of the four clients. It performs all HTTP I/O through an
+`ArrTransportInterface` (injected, or the bundled `CurlArrTransport` when none is
+given; building the default requires `ext-curl`), builds headers, maps non-2xx
+statuses to errors, and does not follow redirects.
+
+### `SecretRedactor` (`SecretRedactor.php`)
+
+Final static utility that replaces API keys with `***` in log and exception
+messages (longest secret first). Used in the clients' catch blocks so keys never
+reach logs.
+
+### `ArrTransportInterface` and `CurlArrTransport` (`Transport/`)
+
+```php
+interface ArrTransportInterface
+{
+    /** @return array{status:int, body:string} */
+    public function request(string $method, string $url, array $headers, ?string $body): array;
+}
+```
+
+Implementations return the status and raw body without throwing on non-2xx, and
+may throw on genuine transport failure (DNS, refused, timeout). `CurlArrTransport`
+is the only bundled implementation and is blocking.
+
+**Async-injection posture.** Event-loop consumers (Workerman/Webman) should inject
+a non-blocking transport (for example one backed by `workerman/http-client`) so a
+slow *arr instance cannot stall the worker. Exception: phlix-hub keeps the default
+`CurlArrTransport` (adjudicated at S425) because its Swoole worker start enables
+`SWOOLE_HOOK_NATIVE_CURL`, which makes curl calls coroutine-friendly.
+`TrashGuidesProvider` is outside this seam: it does its own blocking stream fetches
+and has nothing to inject.
+
+---
+
 ### `ArrClientFactory` (`ArrClientFactory.php`)
 
 Factory that builds `SonarrClient` or `RadarrClient` from a configuration
@@ -164,14 +207,17 @@ array. Returns `null` if the target is disabled or has an empty API key.
 ```php
 class ArrClientFactory
 {
+    /**
+     * @param array{
+     *     sonarr?: array{url?: string, api_key?: string, enabled?: bool},
+     *     radarr?: array{url?: string, api_key?: string, enabled?: bool}
+     * } $config
+     * @param ArrTransportInterface|null $transport propagated to every created
+     *     client; null selects the default CurlArrTransport
+     */
     public function __construct(
-        /**
-         * @param array{
-         *     sonarr?: array{url?: string, api_key?: string, enabled?: bool},
-         *     radarr?: array{url?: string, api_key?: string, enabled?: bool}
-         * } $config
-         */
-        private readonly array $config
+        private readonly array $config,
+        private readonly ?ArrTransportInterface $transport = null
     ) {}
 
     public function createSonarrClient(?LoggerInterface $logger = null): ?SonarrClient;
@@ -287,9 +333,10 @@ The `Arr/` classes are an explicit exception to this rule. The rationale:
    integration logic across two repositories.
 2. **Typed DTOs for responses.** `SyncResult` and the paginated queue
    response shapes are genuine shared contracts, not server-specific.
-3. **cURL is a system-level primitive.** The clients use raw `curl_*`
-   functions (no Guzzle, no Httplug), keeping the dependency footprint
-   minimal and avoiding framework lock-in.
+3. **A pluggable transport, curl by default.** HTTP goes through
+   `ArrTransportInterface`; the bundled `CurlArrTransport` uses `ext-curl` (no
+   Guzzle, no Httplug), keeping the dependency footprint minimal, while
+   consumers may inject their own (async) transport.
 
 > A future refactor may extract the I/O classes into a new
 > `phlix-arr-client` package, leaving `phlix-shared` entirely I/O-free.

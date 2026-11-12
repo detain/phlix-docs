@@ -13,7 +13,7 @@ hero:
       text: Get Started
       link: /first-run
     - theme: alt
-      text: Developer Docs
+      text: Architecture & Internals
       link: /dev/architecture-server
     - theme: alt
       text: Plain-English Glossary
@@ -45,10 +45,10 @@ features:
     linkText: Advanced guides
 
   - icon: ⚛️
-    title: Developers
+    title: Architecture & Internals
     details: "Server & hub architecture, plugin SDK, pairing protocol, event reference, and test harness"
     link: /dev/architecture-server
-    linkText: Developer docs
+    linkText: Engineering docs
 
   - icon: 🌐
     title: Hub Admin

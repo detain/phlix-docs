@@ -161,6 +161,7 @@ Controls Radarr (movies) and Sonarr (series) connectivity for the Hub's media-re
 | `HUB_SONARR_URL` | `http://localhost:8989` | Base URL of the Sonarr instance (API v3). |
 | `HUB_SONARR_API_KEY` | _empty_ | Sonarr API key. Generate in Sonarr → Settings → General → Security → API Key. |
 | `HUB_SONARR_ENABLED` | `0` | When truthy (`1`, `true`, `yes`, `on`) enables Sonarr integration. When falsy, series approvals fail with `approve_failed`. |
+| `HUB_REQUESTS_AUTO_APPROVE` | `false` | When truthy (`1`, `true`, `yes`, `on`) approves every new media request automatically instead of queueing it for an admin. Boot default for the `requests.auto_approve` hub setting, which Hub Admin → Settings can override at runtime. See [Skipping approval](../hub/requests.md#skipping-approval-auto-approve). |
 
 > **Tip:** Both Arr instances must have at least one quality profile and root folder configured before requests can be approved. The hub uses the first available profile and root folder automatically.
 

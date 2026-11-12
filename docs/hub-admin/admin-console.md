@@ -76,6 +76,12 @@ Shows the Hub's effective settings from the `hub_settings` table, marks which va
 and lets an admin change them. Saving re-reads the effective values so the "custom" badges stay in
 sync.
 
+Settings that change a user-facing workflow:
+
+| Setting | Type | Default | Boot env var | Effect |
+|---------|------|---------|--------------|--------|
+| `requests.auto_approve` | bool | `false` | `HUB_REQUESTS_AUTO_APPROVE` | When on, new media requests are approved automatically and sent to Radarr/Sonarr with no admin review; a failed auto-approval leaves the request `pending`. Applies to the next request without a restart. See [Media Requests → Skipping approval](../hub/requests.md#skipping-approval-auto-approve). |
+
 ### Audit Logs
 
 A searchable view of administrative actions (who did what, to what, when). Backed by the

@@ -9,6 +9,8 @@ description: Requesting movies and shows through a Jellyseerr-class UI, with app
 
 Hub's media request system lets users request movies and TV shows through a Jellyseerr-class UI. When an admin approves a request, the hub automatically adds the title to Radarr (movies) or Sonarr (series) for download and import into the library.
 
+Admin approval is the default, not a requirement: a hub can turn on [auto-approve](#skipping-approval-auto-approve) so new requests go to Radarr/Sonarr without waiting for an admin.
+
 ---
 
 ## 1. Overview
@@ -64,6 +66,7 @@ Radarr and Sonarr are configured via environment variables on the Hub. See [Hub 
 | `HUB_SONARR_URL` | Yes | `http://localhost:8989` | Sonarr instance base URL |
 | `HUB_SONARR_API_KEY` | Yes | — | Sonarr API key |
 | `HUB_SONARR_ENABLED` | No | `0` | Set to `1` to enable Sonarr integration |
+| `HUB_REQUESTS_AUTO_APPROVE` | No | `false` | Approve new requests automatically — see [Skipping approval](#skipping-approval-auto-approve) |
 
 > **Prerequisite:** Radarr or Sonarr must be running and reachable from the Hub host. The Hub uses the Arr API (v3) to add titles and query quality profiles and root folders.
 
@@ -90,6 +93,17 @@ services:
       HUB_SONARR_API_KEY: "your-sonarr-api-key"
       HUB_SONARR_ENABLED: "1"
 ```
+
+### Skipping approval (auto-approve)
+
+By default every request waits in the queue as `pending` until an admin approves or denies it — the workflow §3 describes. The `requests.auto_approve` hub setting (boolean, **default `false`**) removes that step:
+
+- **Where to set it.** At boot with `HUB_REQUESTS_AUTO_APPROVE` (`true`, `1`, `yes` or `on`), or at runtime from **Hub Admin → Settings** (`/app/admin/settings`, backed by `PUT /api/v1/admin/settings`) — see [Hub Admin Console → Settings](../hub-admin/admin-console.md#settings). The hub re-reads the setting for every new request, so a change applies without a restart.
+- **What changes.** Each new request is still stored as `pending` first; the hub then immediately runs the same approval as `POST /api/v1/admin/requests/{id}/approve` and sends the title to Radarr/Sonarr. When that succeeds, the create response already shows status `approved`.
+- **When it fails.** Auto-approval is best-effort. If the approval fails (Arr unreachable, integration disabled, wrong API key — see §6), the request simply stays `pending` in the admin queue for manual review, and the hub logs an `Auto-approve failed; request stays pending` warning. Filing the request itself never fails because of it.
+- **Notifications.** The user gets the usual submission notification. The separate "approved" notification is sent only by the manual approve endpoint, so a user whose request was auto-approved does not receive it.
+
+> **Warning:** With auto-approve on, there is no admin review: any signed-in user's request is sent straight to Radarr/Sonarr and starts a download. Enable it only on a hub where you trust everyone who can file requests.
 
 ---
 
@@ -135,6 +149,8 @@ Each request shows:
 - Submitted timestamp
 
 ### 3.3 Admin approves or denies
+
+> If [auto-approve](#skipping-approval-auto-approve) is on, the hub runs this approval step itself as soon as a request is filed; only requests whose automatic approval failed are left here for an admin.
 
 **Approve** — `POST /api/v1/admin/requests/{id}/approve`
 

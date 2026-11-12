@@ -10,9 +10,7 @@ phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time 
 
 **Recommendation:** Use **WSL2 + Ubuntu** for production. Use **XAMPP** for quick dev / non-Docker users.
 
-::: tip Screenshots TBD
-This guide is text-first. Screenshots will be added in a follow-up.
-:::
+<!-- screenshots TBD — text-first -->
 
 ---
 

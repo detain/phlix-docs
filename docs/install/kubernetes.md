@@ -43,9 +43,7 @@ helm install phlix ./k8s/helm/phlix \
 
 Then open `https://phlix.example.com` in your browser.
 
-::: tip Screenshots TBD
-This guide is text-first. Screenshots will be added in a follow-up.
-:::
+<!-- screenshots TBD — text-first -->
 
 ---
 

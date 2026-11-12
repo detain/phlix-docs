@@ -20,9 +20,7 @@ phlix-server is a PHP 8.3+ media server with HLS streaming, WebSocket real-time 
 
 Then open `http://localhost:8096` in your browser.
 
-::: tip Screenshots TBD
-This guide is text-first. Screenshots will be added in a follow-up.
-:::
+<!-- screenshots TBD — text-first -->
 
 ---
 

@@ -254,7 +254,7 @@ Hub login is the recommended way to access your server remotely because the Hub 
 **Fix:** Your server is using a self-signed SSL certificate. For production, replace it with a properly signed certificate — [Let's Encrypt](https://letsencrypt.org) provides free automatic certificates. For local testing over HTTPS with a self-signed cert, the better route is to make your browser trust the certificate: import your server's CA certificate into the browser or operating-system trust store, or issue a locally-trusted certificate with [mkcert](https://github.com/FiloSottile/mkcert). As a last resort on your own machine, typing `thisisunsafe` on the Chrome warning page skips the warning (Chrome only).
 
 ::: warning Never bypass the certificate warning for a remote or shared server
-`thisisunsafe` turns off Chrome's certificate check for that host, and Chrome offers no per-site switch to revoke that bypass afterwards. If the warning comes from a remote or shared server, it may mean someone is intercepting your connection; skipping it would send your login and tokens to them. Use it only against a server on your own machine or LAN that you set up yourself, and fix the certificate instead wherever you can.
+`thisisunsafe` turns off Chrome's certificate check for that host, and the exception stays in place for that host after you leave the warning page. If the warning comes from a remote or shared server, it may mean someone is intercepting your connection; skipping it would send your login and tokens to them. Use it only against a server on your own machine or LAN that you set up yourself, and fix the certificate instead wherever you can.
 :::
 
 ## Next Steps

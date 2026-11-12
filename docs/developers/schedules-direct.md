@@ -37,6 +37,15 @@ Token caching: Tokens are cached with a 23-hour TTL and refreshed automatically.
 2. Subscription required (typically ~$25/year)
 3. Add username/password to `config/livetv.php` under `schedules_direct`
 
+::: warning The password is stored in plaintext
+The server reads `password` straight out of `config/livetv.php` — there is no
+encryption or secret-store indirection. `config/livetv.php` is a **tracked file** in
+the server repository, so in a git checkout never commit or push your edited copy, and
+lock the file down to the account the server runs as (for example
+`chmod 0600 config/livetv.php`). See [Security Considerations](#security-considerations)
+below.
+:::
+
 ## Configuration
 
 Add to `config/livetv.php`:
@@ -214,6 +223,13 @@ will automatically re-fetch when the cached token expires.
 
 ## Security Considerations
 
-- Store SD password securely (encrypted at rest in production)
-- Token cache file should be readable only by the application
+- The SD password sits in plaintext in `config/livetv.php` — the server does not
+  encrypt or decrypt it. Make the file readable only by the account the server runs as
+  (`chmod 0600`), keep it out of git (it is a tracked file, so check `git status`/`git diff`
+  before any commit from a deployment checkout), and treat backups of the config
+  directory as containing a credential. The
+  [hardening checklist](/security/hardening#secrets-you-created-yourself) lists the other
+  credentials that need the same care.
+- Token cache file should be readable only by the application (the server writes it
+  `0600` inside a `0700` directory)
 - Tokens grant access to SD data; treat similarly to API keys

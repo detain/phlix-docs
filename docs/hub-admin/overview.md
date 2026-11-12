@@ -122,6 +122,7 @@ Docker walkthrough.
 
 ## Where to next
 
+- [Hub Admin map](/hub-admin) — the landing page listing every operator guide
 - [Admin Console](./admin-console.md) — the web admin console (Hub Dashboard, Users, Logs, Settings, Audit Logs)
 - [Install](./install.md) — deploy the Hub (Docker, source, reverse-proxy TLS)
 - [First Boot](./first-boot.md) — create the first admin and pair a server

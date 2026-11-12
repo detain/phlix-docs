@@ -31,7 +31,7 @@ Play time:  AbrLadder::build(SourceProfile, deviceProfile)  →  LadderResult   
                  │  (falls back to a live ffprobe when metadata is absent)
                  ├─ persists the ladder as transcode_jobs.variants (JSON)      (A3)
                  └─ writes master.m3u8 (N × #EXT-X-STREAM-INF, highest-first)
-                    + one media_v{id}.m3u8 per variant
+                    + one media_v{id}.m3u8 and media_v{id}_master.m3u8 per variant
 
 Segment request:  HlsController::serveFile()                                  (A6)
                  ├─ parses `seg-v{id}-NNNNN.ts` (or legacy `seg-NNNNN.ts`)
@@ -145,10 +145,27 @@ The segment path from before this program (dedup, in-flight cap, cache sweep) is
   migration of in-flight jobs required). Segments stay flat inside the job directory
   (no `v{id}/` subdirectory) because the route's `{file}` placeholder is a single
   non-slash segment.
-- **Media playlists.** One `media_v{id}.m3u8` per variant, referencing only that
-  variant's own segments; `master.m3u8` lists every clamped rung plus Original as
-  `#EXT-X-STREAM-INF` entries (highest bandwidth first) pointing at each
-  `media_v{id}.m3u8`.
+- **Media playlists and mini-masters.** One `media_v{id}.m3u8` per variant, referencing
+  only that variant's own segments, plus a per-rung **mini-master**
+  `media_v{id}_master.m3u8` for **every** rung (including a copy rung or an `original`
+  that duplicates the top rung, which the master withholds). A mini-master is the
+  master's exact shape restricted to one variant: a legal one-variant master carrying
+  the same `#EXT-X-MEDIA:TYPE=AUDIO` group (`GROUP-ID="aud"`) when the job has multiple
+  audio tracks. It exists because a client that loads one rung directly can only
+  discover the audio group from a master-shaped document (hls.js's media-playlist
+  parser has no `EXT-X-MEDIA` handling). `master.m3u8` lists only the
+  **ABR-switchable** subset (every rung except a copy and except an `original` that
+  duplicates the top rung) as `#EXT-X-STREAM-INF` entries, highest bandwidth first,
+  pointing at each `media_v{id}.m3u8`. Audio renditions are separate audio-only
+  playlists `media_a{N}.m3u8` (`N` is the audio-relative index; `media_a0.m3u8` is the
+  first audio stream) with `seg-a{N}-NNNNN.ts` segments.
+- **`playlist_url` is the pinning contract.** Each `variants[]` entry returned by
+  `POST /api/v1/media/{id}/transcode` carries `url` (the bare `media_v{id}.m3u8`) and
+  `playlist_url` (its mini-master), **both signed by the server**. A client that pins a
+  rung (manual quality, or Original) **MUST load `playlist_url` verbatim** and must
+  never derive it by string manipulation of `url` or the master URL: the signature is
+  part of the URL, and only the mini-master exposes the audio group. Use `url` only
+  where a bare media playlist is explicitly wanted.
 - **`HlsController::serveFile()`** (A6) recognizes both the legacy and multi-variant
   segment filename shapes via a strict `[a-z0-9]+` id allowlist and routes to
   `TranscodeManager::ensureSegment($jobId, $variant, $index)` — a `null` `$variant`
@@ -227,7 +244,7 @@ Three endpoints advertise the ladder, all using the same flat "Rendition" shape
 
 | Endpoint | When | `variants[]` semantics |
 |---|---|---|
-| `POST /api/v1/media/{id}/transcode` | Starting (or reusing) a job | The **playable** ladder for this job; each `url` is a signed, per-variant `media_v{id}.m3u8`. `null` for a legacy job whose `transcode_jobs.variants` column is `NULL`. |
+| `POST /api/v1/media/{id}/transcode` | Starting (or reusing) a job | The **playable** ladder for this job; each `url` is a signed, per-variant `media_v{id}.m3u8` and each `playlist_url` its signed mini-master `media_v{id}_master.m3u8` (pinning clients use `playlist_url` verbatim). `null` for a legacy job whose `transcode_jobs.variants` column is `NULL`. |
 | `GET /api/v1/transcode/{jobId}/status` | Polling job readiness | Same shape/signing as `start()`, keyed by job id. |
 | `GET /api/v1/media/{id}/playback-info` | Pre-flight, before pressing Play | A **preview** ladder built from A1's persisted `metadata_json['source']` — no transcode job is created and the source is **not** probed. Every `url` is `null` (nothing is playable yet). Returns `null` for the whole `quality_ladder` key when the item has no usable source metadata (pre-scan/pre-A1). |
 

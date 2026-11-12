@@ -9,7 +9,7 @@ description: The built-in scrobbler plugin sending listening records and Now Pla
 **Plugin type:** `scrobbler`
 
 ::: info Note
-Last.fm scrobbling is a built-in server plugin. No separate install is required.
+Last.fm scrobbling runs as the **`phlix-plugin-lastfm`** catalog plugin, maintained in its [own repository](https://github.com/detain/phlix-plugin-lastfm). It is not bundled with the server: install it from the admin **Plugins** page or with `php bin/phlix plugin:install https://github.com/detain/phlix-plugin-lastfm`. See the [Plugin Catalog](../plugins/plugin-catalog.md#phlix-plugin-lastfm).
 :::
 
 ## Overview

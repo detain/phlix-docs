@@ -137,8 +137,9 @@ documented in the [Admin Plugins API](../reference/api/admin-plugins.yaml).
 
 The first-party plugins below are published in the default
 [`detain/phlix-plugins`](https://github.com/detain/phlix-plugins) catalog —
-`phlix-plugin-anidb`, `phlix-plugin-myanimelist`, and `phlix-plugin-trakt` —
-and each installs from its own repository.
+including `phlix-plugin-anidb`, `phlix-plugin-myanimelist`,
+`phlix-plugin-trakt`, and `phlix-plugin-lastfm` — and each installs from its
+own repository.
 
 ### phlix-plugin-anidb
 
@@ -161,6 +162,15 @@ Listed as a catalog plugin in `detain/phlix-plugins`.
 Trakt scrobbler / sync integration. Previously bundled into the server, Trakt
 is now maintained in its **own repository** and is published as a catalog
 plugin in `detain/phlix-plugins`.
+
+### phlix-plugin-lastfm
+
+**Type:** `scrobbler` | **Repository:** `detain/phlix-plugin-lastfm`
+
+Last.fm scrobbler: marks Now Playing on playback start and submits the
+scrobble on stop. Like Trakt it is not bundled with the server; it is
+published as a catalog plugin in `detain/phlix-plugins`. See the
+[Last.fm guide](../integrations/lastfm.md).
 
 ### phlix-plugin-oidc
 

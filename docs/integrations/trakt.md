@@ -9,7 +9,7 @@ description: Two-way watch-history sync and real-time scrobbling for movies and 
 **Plugin type:** `scrobbler`
 
 ::: info Note
-Trakt.tv integration is a built-in server plugin. No separate install is required.
+Trakt.tv scrobbling and sync run as the **`phlix-plugin-trakt`** catalog plugin, maintained in its [own repository](https://github.com/detain/phlix-plugin-trakt). It is not bundled with the server: install it from the admin **Plugins** page or with `php bin/phlix plugin:install https://github.com/detain/phlix-plugin-trakt`. See the [Plugin Catalog](../plugins/plugin-catalog.md#phlix-plugin-trakt).
 :::
 
 ## Overview

@@ -66,7 +66,7 @@ Via Hub mode routes the app's traffic through the Hub relay, so the server itsel
 
 **Symptom:** On first launch, the app shows "Unable to connect — certificate invalid" immediately after entering the server URL.
 
-**Fix:** Your server is using a self-signed SSL certificate. Either replace it with a properly signed certificate (Let's Encrypt is free and automatic), or install your server's CA certificate on the mobile device. For local-only use, you can also connect over HTTP by using `http://` instead of `https://` in the server URL.
+**Fix:** Your server is using a self-signed SSL certificate. Either replace it with a properly signed certificate (Let's Encrypt is free and automatic), or install your server's CA certificate on the mobile device. For local-only use on a network you trust, you can also connect over HTTP by using `http://` instead of `https://` in the server URL — but over `http://` your login and tokens cross the wire in cleartext, so never use it on public Wi-Fi, mobile data, or any server reached over the internet (see [Hardening §3 — Restrict network exposure](/security/hardening#_3-restrict-network-exposure)).
 
 ### Server not reachable when away from home
 

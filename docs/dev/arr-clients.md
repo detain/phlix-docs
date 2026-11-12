@@ -290,7 +290,7 @@ All four clients throw `RuntimeException` on:
 
 | Condition | Message pattern |
 |-----------|----------------|
-| cURL fails to initialize or call | `cURL error: {message}` |
+| Transport failure (default CurlArrTransport: `cURL error: {message}`) | `cURL error: {message}` |
 | HTTP 401 | `{App} API authentication failed (401)` |
 | HTTP 404 | `{App} API resource not found (404): {path}` |
 | HTTP ≥ 400 | `{App} API error: HTTP {code}` |

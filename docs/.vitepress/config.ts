@@ -225,6 +225,7 @@ export default defineConfig({
             { text: 'Music & Audio', link: '/advanced/music-audio' },
             { text: 'Watch Together (SyncPlay)', link: '/advanced/syncplay' },
             { text: 'Appearance & Themes', link: '/advanced/appearance' },
+            { text: 'Device Sessions', link: '/advanced/device-sessions' },
           ]
         }
       ],

@@ -1098,7 +1098,42 @@ will not finalize watch-time until each client is updated to POST `/complete`.
 This is a tracked follow-up.
 :::
 
+## Login Session Endpoints
+
+These manage **login sessions** (signed-in devices), shown in Settings → Sessions. They are not the playback registry below. See [Device Sessions](../advanced/device-sessions.md).
+
+### GET /api/v1/auth/sessions
+
+List the account's live login families: one row per sign-in whose token lineage is still alive, with `id`, `created_at`, `last_used_at`, `device_type`, `device_name` (null when the signing-in app reported none) and a server-computed `current` flag for the family the caller authenticated with. Bounded to the 200 most recently active families.
+
+**Auth:** Required (Bearer token or session cookie)
+
+**Response 200:** object containing the family rows
+
+**Response 401:** Unauthorized
+
+---
+
+### DELETE /api/v1/auth/sessions/`{id}`
+
+End exactly one login family (per-device sign-out). Every other device keeps its session and the account-wide revocation watermark is not bumped. Unknown and foreign-owned ids answer an identical 404; ending an already-ended family is idempotent and answers 204.
+
+**Auth:** Required (Bearer token or session cookie)
+
+**Parameters:**
+- `id` (path) — Family id (the `sid` claim)
+
+**Response 204:** Family ended (or already ended); no body
+
+**Response 401:** Unauthorized
+
+**Response 404:** Not found
+
 ## Session Endpoints
+
+::: info Playback sessions, not logins
+The endpoints in this section are the legacy **playback-device** registry. To list or sign out signed-in devices, use the [login session endpoints](#login-session-endpoints) above.
+:::
 
 ### GET /api/v1/me/sessions
 

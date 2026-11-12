@@ -106,6 +106,8 @@ it's the first thing that stops working when you leave the house.
 real entries. Metadata lookups go out; your media never does.
 See [Movies library](libraries/movies.md).
 
+**Login session** — one signed-in device on your account (technically a *login family*: a sign-in plus every token refreshed from it). You review and end these in Settings → Sessions. Not the same as a **playback session**, the legacy registry of devices that are playing or remote-controllable. See [Device Sessions](advanced/device-sessions.md).
+
 **Token** — the login receipt your server hands the app after the right password: a
 signed string (`JWT`) that says "this is Maya, expires at 9pm." Apps show it with every
 request instead of your password. It can expire and be refreshed — and anyone holding it

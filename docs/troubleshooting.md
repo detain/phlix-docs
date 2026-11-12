@@ -119,6 +119,10 @@ printf '%s' "$ADMIN_PASSWORD" | php bin/phlix user:create admin2 --email=admin2@
 php bin/phlix user:promote admin2
 ```
 
+### Sign out another device
+
+To sign out a lost or unrecognized device without changing your password, open **Settings → Sessions** in the web app, find the device and press **Sign out** (or **Sign out others** to keep only the current device). The other devices keep their sessions. See [Device Sessions](advanced/device-sessions.md). A password reset, by contrast, revokes every session including your own.
+
 ## What Can Go Wrong
 
 ### A. Connection refused on port 8096
@@ -277,6 +281,7 @@ php bin/phlix user:reset-password admin@example.com
 ```
 The reset revokes the account's existing sessions automatically; no server
 restart is needed. Details in [Admin password reset](#admin-password-reset) above.
+To sign out just one device instead, see [Sign out another device](#sign-out-another-device).
 
 **Q: How do I enable debug logging?**
 A: Set the `PHLIX_LOG_LEVEL` environment variable before starting the server:

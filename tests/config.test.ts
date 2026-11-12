@@ -174,6 +174,8 @@ describe('VitePress Configuration', () => {
     expect(configContent).toContain("text: 'Advanced'")
     expect(configContent).toContain("text: 'Hardware Transcoding'")
     expect(configContent).toContain("text: 'Live TV & DVR'")
+    expect(configContent).toContain("'/advanced/appearance'")
+    expect(configContent).toContain("'/advanced/device-sessions'")
   })
 
   it('sidebar has reference section with environment variables', () => {

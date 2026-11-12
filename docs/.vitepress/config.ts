@@ -81,6 +81,7 @@ export default defineConfig({
           { text: 'FAQ', link: '/faq' },
           { text: 'Troubleshooting', link: '/troubleshooting' },
           { text: 'Glossary', link: '/glossary' },
+          { text: 'Privacy & Security', link: '/privacy-security' },
           { text: 'Reference', link: '/reference' },
         ]
       },

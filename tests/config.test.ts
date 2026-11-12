@@ -124,6 +124,7 @@ describe('VitePress Configuration', () => {
       'Reference',
       'Integrations',
       'Security',
+      'Privacy & Security',
       'Admin',
       'Hub Admin'
     ]

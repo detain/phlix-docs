@@ -78,6 +78,10 @@ php start.php start            # starts the hub on 0.0.0.0:8800
 
 The hub holds server claim codes, runs heartbeat loops, multiplexes relay tunnels, and issues HS256 user-session JWTs. See [`docs/dev/architecture-hub.md`](architecture-hub.md) for internals.
 
+::: warning Dev servers bind all interfaces
+Both `php start.php start` commands listen on `0.0.0.0` by default, and on a fresh database the first account registered becomes admin (see [first boot](/hub-admin/first-boot)). On an untrusted network, bind to loopback instead: `PHLIX_HTTP_HOST=127.0.0.1` for the server, `HUB_HOST=127.0.0.1` for the hub.
+:::
+
 ### Mobile client (phlix-mobile-client)
 
 ```bash

@@ -28,7 +28,7 @@ The table above covers secrets that ship with an insecure default. The credentia
 | Schedules Direct password | `config/livetv.php` (`schedules_direct.password`), a tracked file in the server repo | `chmod 0600` the file for the server's account and never commit your edited copy. See [Schedules Direct → Security Considerations](/developers/schedules-direct#security-considerations). |
 | LDAP bind password | `ldap` provider row in the plugin settings table | Write-only over the API, but readable in the database. Use a least-privilege, read-only bind account. See [LDAP Security Considerations](/plugins/auth-providers#ldap-security-considerations). |
 | Webhook signing secrets | `webhooks.secret` column (server); `webhooks.secret` (Hub) | The server's admin API never returns it, but it is readable in the database. Rotate a webhook's secret if a dump or backup leaks. See [Integrations](/admin/integrations). |
-| Plugin API keys and tokens | `plugins.settings_json` (fields marked `"secret": true`) | Masked in the admin UI and API only. Revoke and reissue the key upstream if the database leaks. See [Plugin manifest](/plugins/manifest). |
+| Plugin API keys and tokens | `plugins.settings_json` (fields marked `"secret": true`) | Masked in the admin UI and API only. Revoke and reissue the key upstream if the database leaks. See [Plugin manifest](/plugins/manifest). (Exception: Trakt OAuth tokens are encrypted at rest when `TRAKT_TOKEN_ENCRYPTION_KEY` is set — set it.) |
 
 For all four rows: restrict database access to the Phlix service account, encrypt or access-control database dumps and backups, and keep config files that hold credentials out of version control.
 

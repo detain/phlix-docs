@@ -50,7 +50,8 @@ lsof -i :8096                                       # Is port 8096 bound?
 ### Library / filesystem checks
 
 ```bash
-chmod -R 755 /media               # Fix permissions on media directories
+chown -R :phlix /media            # Give the Phlix service group access to media directories
+chmod -R 750 /media               # Owner full, group read + traverse, other local users nothing
 php scripts/run-migrations.php    # Verify DB schema is up to date
 ```
 
@@ -152,11 +153,19 @@ exposing the plaintext port.
 
 **Cause 1 — Wrong permissions:** The Phlix worker process (running as `phlix` or `www-data`) cannot read the media directory.
 
-**Fix:**
+**Fix:** grant the worker's group read access, without opening the files to every account on the host:
 ```bash
-chmod -R 755 /path/to/media
-chown -R phlix:phlix /path/to/media
+chown -R :phlix /path/to/media   # use the group the worker runs as (e.g. www-data)
+chmod -R 750 /path/to/media      # owner full, group read + traverse, others nothing
 ```
+
+::: warning Privacy
+Avoid the common `chmod -R 755` one-liner: it makes your entire library world-readable, so every local
+account and service on the host can list and read your media. Use it only on a single-user machine where that
+does not matter. Every parent directory of the library also needs execute (`x`) permission for the worker's group.
+Docker installs are the exception: the container's daemons run as `nobody`, so follow
+[Docker → Volume mounts](/install/docker#_4-volume-mounts) instead.
+:::
 
 **Cause 2 — File naming not recognized:** The filename does not match the `(Year)` or `S01E02` patterns the scanner expects.
 
@@ -262,7 +271,7 @@ PHLIX_LOG_LEVEL=debug php start.php start
 Valid levels (in order of verbosity): `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`. Restart the server for the change to take effect.
 
 **Q: My media is not being found after adding new files. What do I do?**
-A: (1) Check that the media directory has correct permissions (`chmod -R 755 /path/to/media`). (2) Trigger a manual rescan from the web UI (Library → Scan) or check `.logs/app.log` for scanner activity. (3) Verify your file naming matches the conventions in [Movies library](libraries/movies.md) or [TV library](libraries/tv-shows.md). If the scanner logs show "unrecognized file", rename the file to match the expected pattern.
+A: (1) Check that the worker's group can read the media directory (`chown -R :phlix /path/to/media && chmod -R 750 /path/to/media` — see [Library not scanning](#b-library-not-scanning-files-not-appearing); avoid `chmod -R 755`, which makes the library world-readable). (2) Trigger a manual rescan from the web UI (Library → Scan) or check `.logs/app.log` for scanner activity. (3) Verify your file naming matches the conventions in [Movies library](libraries/movies.md) or [TV library](libraries/tv-shows.md). If the scanner logs show "unrecognized file", rename the file to match the expected pattern.
 
 **Q: Where are the Workerman/FFmpeg logs?**
 A: Workerman stdout is written to `workerman.log` in the directory where you ran `php start.php start`. Each transcode job writes an `ffmpeg.log` next to its segment output directory. Phlix application logs are in `.logs/` split by sink — `app.log` carries every channel (auth, HTTP, websocket, media, session, streaming) at info and above, and `error.log` carries errors from all of them.

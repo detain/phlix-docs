@@ -41,6 +41,11 @@ tracks for those clients.
 Digital). You'll see it in client codec lists; a TV or speaker that can't decode it
 needs the server to transcode the audio.
 
+**Estate** — the whole family of Phlix projects taken together: the server, the Hub, the
+web portal, the client apps, and the shared packages they all build on. When these docs
+say "the estate", they mean everything at once rather than any single app.
+See [What these docs cover](index.md#what-these-docs-cover).
+
 **Federation** — hubs talking to *other hubs*, with cryptographic handshakes, so a
 person on one hub's address book can reach servers shared from another. Advanced; a hub
 administrator can switch it off.

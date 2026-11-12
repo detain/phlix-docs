@@ -154,3 +154,4 @@ Run these from the Phlix server's own install directory. See
 - [Adding people](adding-people.md)
 - [Glossary](glossary.md)
 - [Troubleshooting](troubleshooting.md)
+- [Plugins](plugins/install-from-catalog.md)

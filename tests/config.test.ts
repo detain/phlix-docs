@@ -232,6 +232,14 @@ describe('VitePress Configuration', () => {
     expect(configContent).toContain("text: 'User Management'")
   })
 
+  it('sidebar has plugins section and admin Plugins row', () => {
+    const configContent = readFileSync(configPath, 'utf-8')
+    expect(configContent).toContain("'/plugins/'")
+    expect(configContent).toContain("text: 'Building Plugins'")
+    expect(configContent).toContain("{ text: 'Plugins', link: '/plugins/admin-management' }")
+    expect(configContent).toContain("{ text: 'Plugins', link: '/plugins/install-from-catalog' }")
+  })
+
   it('sidebar has troubleshooting section', () => {
     const configContent = readFileSync(configPath, 'utf-8')
     expect(configContent).toContain("'/troubleshooting'")

@@ -148,3 +148,7 @@ Failed login attempts are normal on any internet-facing server. The server recor
 ### How do I integrate Sonarr/Radarr with Phlix?
 
 Sonarr (TV) and Radarr (Movies) can be configured as clients pointing at Phlix. See the developer guide at [/dev/arr-clients](/dev/arr-clients) for API endpoint details, or [/advanced/arr-integration](/advanced/arr-integration) for the end-user setup guide.
+
+### How do I add or manage plugins?
+
+Admins install plugins from the catalog or a URL and manage them on the admin Plugins page. See [Install from Catalog](/plugins/install-from-catalog), [Install from URL](/plugins/install-from-url) and [Managing Plugins](/plugins/admin-management).

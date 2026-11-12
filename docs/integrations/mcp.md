@@ -393,3 +393,4 @@ request without it is assumed to be using `2025-03-26`.
 
 - [What is the Hub](../hub/what-is-the-hub.md) — how claiming and the relay work
 - [Trakt.tv](./trakt.md) and [Last.fm](./lastfm.md) — the other integrations
+- [Plugins](../plugins/install-from-catalog.md) — installing and managing server plugins

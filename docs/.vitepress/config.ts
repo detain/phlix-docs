@@ -82,6 +82,7 @@ export default defineConfig({
           { text: 'Troubleshooting', link: '/troubleshooting' },
           { text: 'Glossary', link: '/glossary' },
           { text: 'Privacy & Security', link: '/privacy-security' },
+          { text: 'Plugins', link: '/plugins/install-from-catalog' },
           { text: 'Reference', link: '/reference' },
         ]
       },
@@ -249,6 +250,7 @@ export default defineConfig({
             { text: 'DLNA Server', link: '/admin/dlna-server' },
             { text: 'Live TV', link: '/admin/live-tv' },
             { text: 'Backup', link: '/admin/backup' },
+            { text: 'Plugins', link: '/plugins/admin-management' },
             { text: 'Webhooks', link: '/admin/webhooks' },
             { text: 'Stats', link: '/admin/stats' },
           ]
@@ -396,6 +398,27 @@ export default defineConfig({
             { text: 'Invite Links', link: '/hub/invite-links' },
             { text: 'Media Requests', link: '/hub/requests' },
             { text: 'Self-Host the Hub', link: '/hub/self-host-the-hub' },
+          ]
+        }
+      ],
+      '/plugins/': [
+        {
+          text: 'Plugins',
+          items: [
+            { text: 'Install from Catalog', link: '/plugins/install-from-catalog' },
+            { text: 'Install from URL', link: '/plugins/install-from-url' },
+            { text: 'Managing Plugins (Admin UI)', link: '/plugins/admin-management' },
+            { text: 'Plugin Catalog', link: '/plugins/plugin-catalog' },
+            { text: 'Trusted Plugin List', link: '/plugins/trusted-plugin-list' },
+          ]
+        },
+        {
+          text: 'Building Plugins',
+          items: [
+            { text: 'Plugin SDK', link: '/dev/plugin-sdk' },
+            { text: 'Plugin Developer Guide', link: '/plugins/developer-guide' },
+            { text: 'Plugin Manifest', link: '/plugins/manifest' },
+            { text: 'Auth Providers', link: '/plugins/auth-providers' },
           ]
         }
       ],

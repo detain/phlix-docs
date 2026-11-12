@@ -95,5 +95,5 @@ In short: Plex is the polished commercial option, but much of it routes through 
 vendor's cloud and account; Jellyfin shares Phlix's fully-local philosophy; Emby sits
 between them with some features behind a paid tier. Phlix's bet is that the hub relay,
 watch-party sync, and TV-native clients belong **in** the product. It is also a younger
-project with a smaller plugin ecosystem than any of the three — read the pages, weigh
+project with a smaller [plugin ecosystem](/plugins/plugin-catalog) than any of the three — read the pages, weigh
 it honestly, and decide.

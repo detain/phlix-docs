@@ -1,3 +1,6 @@
+<!-- HISTORICAL-BANNER -->
+> **HISTORICAL — MAY DESCRIBE NOW-FIXED WEAKNESSES.** This file is an archived working document and is not maintained. Report anything still live per `/security/vulnerability-disclosure` (docs/security/vulnerability-disclosure.md).
+
 # Coordinator Prompt v3 — Hub UI Coverage Build (Session Resume)
 
 **Generated:** 2026-05-30

@@ -1,3 +1,6 @@
+<!-- HISTORICAL-BANNER -->
+> **HISTORICAL — MAY DESCRIBE NOW-FIXED WEAKNESSES.** This file is an archived working document and is not maintained. Report anything still live per `/security/vulnerability-disclosure` (docs/security/vulnerability-disclosure.md).
+
 # Phlix — Gaps to "Fully Working" Status
 
 > Audit date: 2026-05-22.

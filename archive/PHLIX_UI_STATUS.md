@@ -1,3 +1,6 @@
+<!-- HISTORICAL-BANNER -->
+> **HISTORICAL — MAY DESCRIBE NOW-FIXED WEAKNESSES.** This file is an archived working document and is not maintained. Report anything still live per `/security/vulnerability-disclosure` (docs/security/vulnerability-disclosure.md).
+
 # Phlix UI Coverage — Build Status
 
 > Single source of truth for progress. Every subagent reads its row first and writes its result back.

@@ -1,3 +1,6 @@
+<!-- HISTORICAL-BANNER -->
+> **HISTORICAL — MAY DESCRIBE NOW-FIXED WEAKNESSES.** This file is an archived working document and is not maintained. Report anything still live per `/security/vulnerability-disclosure` (docs/security/vulnerability-disclosure.md).
+
 # Coordinator Prompt v2 (Claude) — Phlix UI Coverage Build
 
 > Paste everything below the line into a fresh **Claude Code** session to start/continue the build.

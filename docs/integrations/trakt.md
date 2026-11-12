@@ -1,6 +1,6 @@
 ---
 title: Trakt.tv Integration
-description: Two-way watch-history sync and real-time scrobbling for movies and shows via the built-in Trakt plugin
+description: Two-way watch-history sync and real-time scrobbling for movies and shows via the catalog Trakt plugin
 ---
 
 # Trakt.tv Integration

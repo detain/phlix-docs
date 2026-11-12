@@ -5,7 +5,7 @@
 **Reference implementation:** `Phlix\Plugins\Lastfm\Plugin`
 
 This document covers the Last.fm API protocol, scrobble semantics,
-session key management, and configuration options for the built-in
+session key management, and configuration options for the catalog
 Last.fm scrobble plugin.
 
 ---

@@ -1,3 +1,6 @@
+<!-- HISTORICAL-BANNER -->
+> **HISTORICAL — MAY DESCRIBE NOW-FIXED WEAKNESSES.** This file is an archived working document and is not maintained. Report anything still live per `/security/vulnerability-disclosure` (docs/security/vulnerability-disclosure.md).
+
 # Coordinator Handoff Prompt — Phlix UI Coverage Build
 
 > ⚠️ **SUPERSEDED — use `coordinator_prompt_2.md` instead.** This v1 targets OpenCode + MiniMax M2.7;

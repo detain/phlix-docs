@@ -1,3 +1,6 @@
+<!-- HISTORICAL-BANNER -->
+> **HISTORICAL — MAY DESCRIBE NOW-FIXED WEAKNESSES.** This file is an archived working document and is not maintained. Report anything still live per `/security/vulnerability-disclosure` (docs/security/vulnerability-disclosure.md).
+
 # Phlix — UI Coverage Plan (server + hub)
 
 > **Authoritative plan.** Executed by an agent hierarchy (OpenCode + MiniMax M2.7). Start via

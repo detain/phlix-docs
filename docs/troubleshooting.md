@@ -104,6 +104,21 @@ into the `users` table is **not** supported: it skips the revocation stamp and
 the flag handling. The command's full semantics are in the
 [CLI Reference](reference/cli.md).
 
+`user:reset-password` has no file or stdin form, so the generated password is
+its only argv-free route. If you would rather create a fresh admin account,
+`user:create` takes `--password-file` to keep the password off the command line,
+and `user:promote` then grants the admin role:
+
+```bash
+# Read the password from a file (a trailing newline is trimmed)...
+php bin/phlix user:create admin2 --email=admin2@example.com --password-file=/root/admin2.pass
+
+# ...or from stdin
+printf '%s' "$ADMIN_PASSWORD" | php bin/phlix user:create admin2 --email=admin2@example.com --password-file=-
+
+php bin/phlix user:promote admin2
+```
+
 ## What Can Go Wrong
 
 ### A. Connection refused on port 8096

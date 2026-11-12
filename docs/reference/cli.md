@@ -51,7 +51,7 @@ are available.
 | `backup:list` | — | List stored server backups. |
 | `hwaccel:probe` | — | Probe for available hardware-acceleration encoders. |
 | `media:dedupe-paths` | `[--dry-run]` `[--apply]` `[--batch-size=500]` | Find and merge duplicate media items that share the same filesystem path (preview unless `--apply`). |
-| `user:create` | `{username}` `--email=` `--password=` `[--display-name=]` `[--json]` | Create a new user account (password hashed at rest). |
+| `user:create` | `{username}` `--email=` `--password=` or `--password-file=` `[--display-name=]` `[--json]` | Create a new user account (password hashed at rest). Prefer `--password-file=<path>` (or `--password-file=-` to read stdin) so the password never lands in argv, `ps` or shell history; a trailing newline is trimmed, and an explicit non-empty `--password=` wins over the file. |
 | `user:list` | `[--status=pending\|active\|disabled]` `[--json]` | List users, optionally filtered by account status. |
 | `user:promote` | `{user}` `[--revoke]` `[--json]` | Promote a user to admin, or demote with `--revoke`. |
 | `user:approve` | `{user}` `[--json]` | Approve a user (set status to active). |
@@ -327,7 +327,7 @@ available.
 | --- | --- | --- |
 | `migrate` | — | Apply database migrations (`migrations/*.sql`). |
 | `smoke:jwt` | — | Smoke-test the JWT create-validate round-trip. |
-| `user:create` | `{username}` `--email=` `--password=` `[--display-name=]` `[--json]` | Create a new hub user account. |
+| `user:create` | `{username}` `--email=` `[--password=]` `[--display-name=]` `[--json]` | Create a new hub user account. Omit `--password` to be prompted (hidden input) or, when not interactive, to read the password from one stdin line — either keeps it off argv. The hub has no `--password-file` option. |
 | `user:list` | `[--json]` | List hub user accounts. |
 | `user:promote` | `{user}` `[--revoke]` `[--json]` | Promote a hub user to admin, or demote with `--revoke`. |
 | `user:delete` | `{user}` `[--force]` `[--json]` | Delete a hub user account (last admin is protected). |

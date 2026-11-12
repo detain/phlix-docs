@@ -104,7 +104,7 @@ Inside `@phlix/ui` (v0.99.26 era), custody is a store choice resolved at boot:
 ## Devices, CLI, and the e-reader contract
 
 - **Windows** keeps its OS-credential (DPAPI) vault under bearer custody by ruling; **mobile** migrated its WS dial from the query carrier to the bearer subprotocol and keeps tokens in secure storage — both are CLASS DEVICE: the cookie program changes nothing for them.
-- **CLI**: `bin/phlix user create --password-file <path>` (or `--password-file -` for stdin) keeps passwords off the process argv, where `ps` and shell history would leak them; the flag's resolution and the `-` stdin form live in `src/Console/Commands/UserCreateCommand.php`.
+- **CLI**: `php bin/phlix user:create <username> --email=<email> --password-file=<path>` (or `--password-file=-` for stdin) keeps passwords off the process argv, where `ps` and shell history would leak them; the flag's resolution and the `-` stdin form live in `src/Console/Commands/UserCreateCommand.php`.
 - **OPDS / HTTP Basic** (e-readers) is a **separate credentials contract** and was confirmed untouched by the entire program: no cookies are set or read on that path, no CSRF guard applies (nothing cookie-sourced exists there), and the dual-emit work explicitly routes around it. E-reader clients keep sending `Authorization: Basic` per request exactly as before.
 
 ---

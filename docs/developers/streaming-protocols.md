@@ -171,7 +171,9 @@ protocol is served by a generic per-job file handler (plus a JSON info route):
 > on-demand transcode** (see the status note at the top of this page; DASH is tracked
 > for updates.md #57 / S56-S60). For HLS, `master.m3u8`/`media_N.m3u8` are
 > now **multi-variant** (one `media_v{renditionId}.m3u8` per ABR rung, segments named
-> `seg-v{renditionId}-NNNNN.ts`; plus a per-rung mini-master `media_v{renditionId}_master.m3u8` for every rung and `media_a{N}.m3u8` audio renditions) and segments are plain `.ts`, not shared `.m4s` — see
+> `seg-v{renditionId}-NNNNN.ts`; plus a per-rung mini-master
+> `media_v{renditionId}_master.m3u8` for every rung and `media_a{N}.m3u8` audio
+> renditions) and segments are plain `.ts`, not shared `.m4s` — see
 > [Stream Quality / ABR](./stream-quality-abr#on-demand-per-variant-segments-d2-a5-a6-s1-s3)
 > for the current route/filename reference.
 

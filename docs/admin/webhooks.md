@@ -42,6 +42,11 @@ Content-Type: application/json
 > anyone who guesses or learns a weak secret can forge deliveries that pass
 > `hash_equals` checks. Rotate by re-registering (the secret is stored as supplied,
 > whitespace-trimmed — and is never returned by the list endpoint).
+>
+> Register `https://` endpoints only. The HMAC signature proves a delivery's integrity and
+> origin, not its confidentiality: an `http://` URL ships every payload — library file
+> paths, usernames and email addresses, login IP addresses, playback activity — across the
+> network in cleartext.
 
 **Response** (201 Created):
 ```json

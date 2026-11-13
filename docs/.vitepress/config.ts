@@ -170,12 +170,12 @@ export default defineConfig({
           text: 'Libraries',
           items: [
             { text: 'Overview', link: '/libraries/overview' },
-            { text: 'Movies', link: '/libraries/movies' },
+            { text: 'Movies Library', link: '/libraries/movies' },
             { text: 'TV Shows', link: '/libraries/tv-shows' },
-            { text: 'Music', link: '/libraries/music' },
+            { text: 'Music Library', link: '/libraries/music' },
             { text: 'Photos', link: '/libraries/photos' },
             { text: 'Books', link: '/libraries/books' },
-            { text: 'Audiobooks', link: '/libraries/audiobooks' },
+            { text: 'Audiobooks Library', link: '/libraries/audiobooks' },
             { text: 'Metadata & Ratings', link: '/libraries' },
             { text: 'Playlists & Collections', link: '/libraries/collections' },
           ]
@@ -196,9 +196,9 @@ export default defineConfig({
           text: 'Clients',
           items: [
             { text: 'Overview', link: '/clients/overview' },
-            { text: 'Mobile', link: '/clients/mobile' },
-            { text: 'Samsung Tizen', link: '/clients/tizen' },
-            { text: 'Roku', link: '/clients/roku' },
+            { text: 'Mobile App', link: '/clients/mobile' },
+            { text: 'Samsung Tizen App', link: '/clients/tizen' },
+            { text: 'Roku Channel', link: '/clients/roku' },
             { text: 'Windows App', link: '/clients/windows' },
             { text: 'Web Portal', link: '/clients/web' },
             { text: 'DLNA / Play To', link: '/clients/dlna' },
@@ -342,7 +342,7 @@ export default defineConfig({
           text: 'Client App Build Guides',
           items: [
             { text: 'Mobile (iOS & Android)', link: '/dev/client-mobile' },
-            { text: 'Samsung Tizen', link: '/dev/client-tizen' },
+            { text: 'Samsung Tizen App', link: '/dev/client-tizen' },
             { text: 'Roku', link: '/dev/client-roku' },
             { text: 'Windows', link: '/dev/client-windows' },
             { text: 'Console Client Build', link: '/dev/client-console' },

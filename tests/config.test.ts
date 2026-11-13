@@ -155,16 +155,16 @@ describe('VitePress Configuration', () => {
     const configContent = readFileSync(configPath, 'utf-8')
     expect(configContent).toContain("'/libraries/'")
     expect(configContent).toContain("text: 'Libraries'")
-    expect(configContent).toContain("text: 'Movies'")
+    expect(configContent).toContain("text: 'Movies Library'")
     expect(configContent).toContain("text: 'TV Shows'")
-    expect(configContent).toContain("text: 'Music'")
+    expect(configContent).toContain("text: 'Music Library'")
   })
 
   it('sidebar has clients section', () => {
     const configContent = readFileSync(configPath, 'utf-8')
     expect(configContent).toContain("'/clients/'")
     expect(configContent).toContain("text: 'Clients'")
-    expect(configContent).toContain("text: 'Mobile'")
+    expect(configContent).toContain("text: 'Mobile App'")
     expect(configContent).toContain("text: 'Web Portal'")
   })
 

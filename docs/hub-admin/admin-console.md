@@ -16,7 +16,7 @@ Hub's Vue single-page app at **`/app/admin/*`** and is gated to admins.
 
 ## Access &amp; gating
 
-- The Hub's web UI is the Vue SPA served at `/app` (the bare root `/` redirects to `/app/servers`).
+- The Hub's web portal is the Vue SPA served at `/app` (the bare root `/` redirects to `/app/servers`).
 - The **first account registered becomes an admin automatically** — there is no separate
   "create admin" step. Additional admins are granted by setting `is_admin = 1` on the user's row, or
   from the **Users** page below.
@@ -155,7 +155,7 @@ The console pages are thin clients over a JSON API. Every route below is gated
 
 ## See Also
 
-- [Hub Admin Overview](./overview.md) — the web UI + operational CLI
+- [Hub Admin Overview](./overview.md) — the web portal + operational CLI
 - [Audit Log](./audit-log.md) — the administrative audit trail
 - [First Boot](./first-boot.md) — create the first admin and pair a server
 - [Hub Architecture](../dev/architecture-hub.md) — how the SPA, API, and relay fit together

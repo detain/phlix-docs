@@ -24,7 +24,7 @@ Every term used below that sounds like jargon is defined in the
   [Libraries](libraries/overview.md)). Phlix scans the server's own folders; it cannot
   browse your laptop's disk from across the room.
 
-## Step 1 — Open the web app
+## Step 1 — Open the web portal
 
 On any device on the same network, visit:
 

@@ -82,7 +82,7 @@ The honest picture:
 
 ## Staying in Step (Drift and Re-syncing)
 
-Followers continuously compare their own clock with the host's reported position (the group exchanges position reports and clock-offset messages; the web client reports its position every five seconds and on every command). Behavior you can actually see:
+Followers continuously compare their own clock with the host's reported position (the group exchanges position reports and clock-offset messages; the web portal reports its position every five seconds and on every command). Behavior you can actually see:
 
 - A tiny gap is tolerated — no micro-seeks interrupting anyone.
 - Once a player is more than **~2 seconds** off, it seeks to the host automatically.
@@ -90,7 +90,7 @@ Followers continuously compare their own clock with the host's reported position
 
 There is deliberately **no manual "resync" button** — corrections are automatic. If someone is still visibly off, check their connection, or have them leave and rejoin the group.
 
-If a connection drops: web clients retry the sync connection automatically with growing delays; a Roku drop ends that device's session and it re-joins manually.
+If a connection drops: web portals retry the sync connection automatically with growing delays; a Roku drop ends that device's session and it re-joins manually.
 
 ---
 

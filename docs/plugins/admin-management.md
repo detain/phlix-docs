@@ -10,7 +10,7 @@ description: Installing, enabling, configuring, and removing plugins from the ad
 ## TL;DR
 
 The admin console has a dedicated **Plugins** page (`/admin/plugins`) for managing
-every installed plugin from the web UI: install by URL, enable/disable, uninstall,
+every installed plugin from the web portal: install by URL, enable/disable, uninstall,
 and **configure** each plugin's settings through a schema-driven form. Secret fields
 (API keys, tokens) are masked and preserved unless you actually change them.
 

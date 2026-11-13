@@ -25,7 +25,7 @@ Only a URL that a configured catalog pins (with both `ref` and `artifactSha256`)
 
 ---
 
-## 2. Install from the Web UI
+## 2. Install from the Web Portal
 
 1. Browse to **Settings → Plugins** (or `/admin/plugins`).
 2. Locate **Install from URL** panel.

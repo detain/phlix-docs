@@ -1091,7 +1091,7 @@ Top Users watch time and the [Most Watched](#get-api-v1-media-most-watched) rail
 ::: tip Which clients send this today
 The web SPA sends this automatically: both the full player and the persistent
 mini-player POST `/complete` (with `reached_end: true`) on the browser `ended`
-event, so a title watched to the end in the web app leaves Continue Watching on
+event, so a title watched to the end in the web portal leaves Continue Watching on
 its own. **Native clients (Roku, mobile, Tizen, Windows) do not call this endpoint
 yet** — titles finished on those clients will still linger in Continue Watching and
 will not finalize watch-time until each client is updated to POST `/complete`.

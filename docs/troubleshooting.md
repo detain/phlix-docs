@@ -121,7 +121,7 @@ php bin/phlix user:promote admin2
 
 ### Sign out another device
 
-To sign out a lost or unrecognized device without changing your password, open **Settings → Sessions** in the web app, find the device and press **Sign out** (or **Sign out others** to keep only the current device). The other devices keep their sessions. See [Device Sessions](advanced/device-sessions.md). A password reset, by contrast, revokes every session including your own.
+To sign out a lost or unrecognized device without changing your password, open **Settings → Sessions** in the web portal, find the device and press **Sign out** (or **Sign out others** to keep only the current device). The other devices keep their sessions. See [Device Sessions](advanced/device-sessions.md). A password reset, by contrast, revokes every session including your own.
 
 ## What Can Go Wrong
 
@@ -291,7 +291,7 @@ PHLIX_LOG_LEVEL=debug php start.php start
 Valid levels (in order of verbosity): `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`. Restart the server for the change to take effect.
 
 **Q: My media is not being found after adding new files. What do I do?**
-A: (1) Check that the worker's group can read the media directory (`chown -R :phlix /path/to/media && chmod -R 750 /path/to/media` — see [Library not scanning](#b-library-not-scanning-files-not-appearing); avoid `chmod -R 755`, which makes the library world-readable). (2) Trigger a manual rescan from the web UI (Library → Scan) or check `.logs/app.log` for scanner activity. (3) Verify your file naming matches the conventions in [Movies library](libraries/movies.md) or [TV library](libraries/tv-shows.md). If the scanner logs show "unrecognized file", rename the file to match the expected pattern.
+A: (1) Check that the worker's group can read the media directory (`chown -R :phlix /path/to/media && chmod -R 750 /path/to/media` — see [Library not scanning](#b-library-not-scanning-files-not-appearing); avoid `chmod -R 755`, which makes the library world-readable). (2) Trigger a manual rescan from the web portal (Library → Scan) or check `.logs/app.log` for scanner activity. (3) Verify your file naming matches the conventions in [Movies library](libraries/movies.md) or [TV library](libraries/tv-shows.md). If the scanner logs show "unrecognized file", rename the file to match the expected pattern.
 
 **Q: Where are the Workerman/FFmpeg logs?**
 A: Workerman stdout is written to `workerman.log` in the directory where you ran `php start.php start`. Each transcode job writes an `ffmpeg.log` next to its segment output directory. Phlix application logs are in `.logs/` split by sink — `app.log` carries every channel (auth, HTTP, websocket, media, session, streaming) at info and above, and `error.log` carries errors from all of them.

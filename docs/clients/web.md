@@ -47,7 +47,7 @@ Open `https://your-server-domain.com/app` (or `http://192.168.1.100:8096/app` at
 
 ### Sign In to the Hub Portal
 
-Open your **Hub's** address instead (e.g. `https://hub.phlix.example.com`) and sign in with your **Hub account**. The hub's home is **My Servers** — the list of servers claimed under your account. Each row offers **Browse** (opens that server's libraries inside the hub portal, routed over the relay proxy — available once the server's relay is connected), **Manage** (opens the server's own web UI in a new tab at the address it advertised), and **Remove**. Browsing through the hub is also how you reach servers you have not exposed to the internet at all; see [What is the Hub?](../hub/what-is-the-hub.md).
+Open your **Hub's** address instead (e.g. `https://hub.phlix.example.com`) and sign in with your **Hub account**. The hub's home is **My Servers** — the list of servers claimed under your account. Each row offers **Browse** (opens that server's libraries inside the hub portal, routed over the relay proxy — available once the server's relay is connected), **Manage** (opens the server's own web portal in a new tab at the address it advertised), and **Remove**. Browsing through the hub is also how you reach servers you have not exposed to the internet at all; see [What is the Hub?](../hub/what-is-the-hub.md).
 
 ### No Downloads or Permissions
 
@@ -68,7 +68,7 @@ Libraries appear in the order the admin set (their display order), then alphabet
 
 Each library rail has a **See all** link that opens a dedicated page for that library at `/app/library/<library-id>`. That page is the full grid for the single library, with the filter bar (search, genres, year range, ratings, cast) and pagination — so you can drill into one library at a time instead of one flat all-libraries grid. The media server's sidebar also shows a **Browse** link per library, so you can jump straight to any library's page from the nav.
 
-> The hub's web UI has no libraries, so it shows no per-library rails or links — its home is **My Servers**.
+> The hub's web portal has no libraries, so it shows no per-library rails or links — its home is **My Servers**.
 
 ### Adaptive Index Rail {#adaptive-index-rail}
 
@@ -135,7 +135,7 @@ stay hidden (rather than flashing in and then disappearing), and **Search** is a
 
 > [!NOTE]
 > These media-type pages, plus the **Security** (passkeys/WebAuthn) tab on **Settings**
-> (`/app/settings/security`), are served by the Vue SPA at `/app`. The Vue SPA is now the **only** web UI —
+> (`/app/settings/security`), are served by the Vue SPA at `/app`. The Vue SPA is now the **only** web portal —
 > the older server-rendered (Smarty) page equivalents have been removed, and any legacy page URL
 > (e.g. `/login`, `/library`, `/player/{id}`, `/music`, `/books`, `/audiobooks`, `/photo`) now redirects to
 > its `/app` counterpart.

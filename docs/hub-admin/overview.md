@@ -7,9 +7,9 @@ This page is the entry point: it explains the **web admin console** (the Vue sin
 manage the Hub from) and the **operational CLI reference** (the commands you run on the host). The
 rest of the section drills into install, capacity, tuning, monitoring, and policy.
 
-## The Hub web UI
+## The Hub web portal
 
-Once the Hub is running, its web UI is the **Vue single-page app** (built on the shared `@phlix/ui`
+Once the Hub is running, its web portal is the **Vue single-page app** (built on the shared `@phlix/ui`
 design system) served by the HTTP worker on the public port (default `8800`). The bare root
 **redirects into the app** — `GET /` → `/app/servers` — and the SPA is served at `/app` and every
 `/app/*` deep link; it handles its own sign-in. (The Hub's original server-rendered Smarty pages —

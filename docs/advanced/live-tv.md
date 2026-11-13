@@ -49,7 +49,7 @@ hdhomerun_config DEVICE_ID get /lineup/status
 
 You should see a list of channels with numbers and names. If the list is empty, the HDHomeRun may not have found antenna/cable channels — check your antenna placement or cable signal.
 
-4. In the Phlix web UI: go to **Settings → Live TV → Add Tuner → HDHomeRun**.
+4. In the Phlix web portal: go to **Settings → Live TV → Add Tuner → HDHomeRun**.
 5. The device IP is auto-detected if it is on the same LAN. Select it and confirm.
 6. Phlix scans and imports all detected channels.
 

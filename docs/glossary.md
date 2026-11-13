@@ -135,6 +135,9 @@ group of people watching the same title, with play/pause kept in sync. One perso
 the rest follow.
 See [Watch Together (SyncPlay)](advanced/syncplay.md).
 
+**Web portal** — the Phlix interface you open in a browser (the Vue app served at `/app`), on both a media server and the Hub. Docs use "web portal" everywhere instead of "web app", "web UI" or "web client".
+See [Web Portal](clients/web.md).
+
 **WebSocket** — a phone-call connection (the internet kind): unlike ordinary web
 requests that ask-and-hang-up, a WebSocket stays open both ways, which is how watch
 groups deliver "someone just paused" a quarter-second later instead of on page refresh.

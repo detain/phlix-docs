@@ -134,7 +134,7 @@ Named here so nobody re-derives the design plan and mistakes it for the code: th
 
 ## Related pages
 
-- [Privacy & security — how the web app stores tokens](/privacy-security)
+- [Privacy & security — how the web portal stores tokens](/privacy-security)
 - [Server architecture](/dev/architecture-server) · [Hub architecture](/dev/architecture-hub)
 - [Environment variables](/reference/env-vars) — `PHLIX_COOKIE_INSECURE`, `HUB_COOKIE_INSECURE` rows
 - [SyncPlay (advanced)](/advanced/syncplay) — watch-party surfaces

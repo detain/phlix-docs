@@ -330,7 +330,7 @@ Before accepting a claim request, the hub:
 
 ---
 
-## 5. Hub → User: Claim Flow (Web UI)
+## 5. Hub → User: Claim Flow (Web Portal)
 
 ### User Action
 

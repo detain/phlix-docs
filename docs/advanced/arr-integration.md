@@ -25,7 +25,7 @@ Phlix does not download or manage downloads — it only serves the media that th
 
 ### 1. Create a Phlix API key
 
-1. Open the Phlix web UI as an admin user.
+1. Open the Phlix web portal as an admin user.
 2. Go to **Admin → Server Settings → API Keys**.
 3. Create a new API key with a descriptive name (e.g. `Sonarr`).
 

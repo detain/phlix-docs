@@ -65,9 +65,9 @@ When traffic **is** relayed through the Hub, all of the above passes through the
 - Either way, the Hub **terminates** both connections, so relayed traffic exists in cleartext inside the Hub process. There is no application-layer encryption between client and server today — `phlix-hub/src/Relay/` performs no encryption or decryption of its own, and the proxy decodes each request and response body to forward it.
 - The Hub therefore sees connection metadata (IP address, timing) **plus** the proxied request and response content described above.
 
-## How the Web App Stores Tokens
+## How the Web Portal Stores Tokens
 
-Phlix's API authenticates with **JWTs** ([what's a bearer token?](/glossary)). Who *holds* the token depends on the client class. A same-origin browser session of the web app runs in **cookie custody**: on login the server (or hub) sets `HttpOnly` + `Secure` + `SameSite=Lax` session and refresh cookies alongside the JSON response, the app sends them with every same-origin call, and scripts on the page can read **neither** token — there is no `localStorage` copy to exfiltrate. Apps pointed at a cross-origin API base, and every non-browser client (TVs, phones, consoles, CLI), run in **bearer custody**: the token is held by the app and sent as an `Authorization: Bearer` header, which no browser will auto-attach.
+Phlix's API authenticates with **JWTs** ([what's a bearer token?](/glossary)). Who *holds* the token depends on the client class. A same-origin browser session of the web portal runs in **cookie custody**: on login the server (or hub) sets `HttpOnly` + `Secure` + `SameSite=Lax` session and refresh cookies alongside the JSON response, the app sends them with every same-origin call, and scripts on the page can read **neither** token — there is no `localStorage` copy to exfiltrate. Apps pointed at a cross-origin API base, and every non-browser client (TVs, phones, consoles, CLI), run in **bearer custody**: the token is held by the app and sent as an `Authorization: Bearer` header, which no browser will auto-attach.
 
 Be aware of the trade-offs this makes:
 
@@ -240,7 +240,7 @@ Or use iptables to log dropped egress:
 iptables -A OUTPUT -m limit --limit 5/min -j LOG --log-prefix "EGRESS BLOCKED: "
 ```
 
-> **Note — browser-side TMDB image fetches.** Separate from server egress, the web app's
+> **Note — browser-side TMDB image fetches.** Separate from server egress, the web portal's
 > Content-Security-Policy (`img-src`) allowlists the TMDB image CDN hosts `image.tmdb.org` and
 > `tmdb.org`. When poster/backdrop/cast artwork has not yet been cached on your own origin, the
 > **browser** loads it directly from TMDB — a client-side external connection to TMDB, not from the

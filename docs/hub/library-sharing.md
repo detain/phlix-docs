@@ -76,7 +76,7 @@ incoming share:
 └────────────────────────────────────────┘
 ```
 
-**Open Server** opens the media server's own web UI in a new tab, at the first
+**Open Server** opens the media server's own web portal in a new tab, at the first
 hostname that server has advertised. It is disabled when the server has not
 reported a reachable URL. **There is no in-hub browse view for a shared library** —
 the hub has no `/browse/:server/:library` route.

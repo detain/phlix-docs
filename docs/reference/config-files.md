@@ -14,7 +14,7 @@ Core server and worker settings.
 
 ```php
 'server' => [
-    'name' => 'Phlix Media Server',   // Displayed in the web UI header
+    'name' => 'Phlix Media Server',   // Displayed in the web portal header
     'host' => '0.0.0.0',               // Bind address — 0.0.0.0 = all interfaces
     'port' => 8096,                    // Main HTTP port
     'context' => [],                   // PHP stream context options (rarely needed)

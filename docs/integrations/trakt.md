@@ -48,7 +48,7 @@ You need a Trakt application with credentials:
 
 ### Connect Flow
 
-1. Open **Settings → Integrations → Trakt.tv** in the Phlix web UI
+1. Open **Settings → Integrations → Trakt.tv** in the Phlix web portal
 2. Click **Connect with Trakt**
 3. You are redirected to Trakt's authorization page — approve access
 4. Phlix receives the callback, exchanges the code for tokens, and stores them
@@ -129,7 +129,7 @@ The push direction (Phlix → Trakt) is triggered immediately on `PlaybackStoppe
 
 **Cause:** Either `client_id` / `client_secret` are empty in `config/scrobblers/trakt.php`, or the user has not connected their Trakt account in the UI.
 
-**Fix:** Verify the config file has valid credentials, then connect the account in the web UI.
+**Fix:** Verify the config file has valid credentials, then connect the account in the web portal.
 
 ### Token refresh fails with 401
 

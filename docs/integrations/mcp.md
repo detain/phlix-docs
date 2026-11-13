@@ -84,7 +84,7 @@ itself out.
 
 ### In the Hub UI
 
-Open **MCP Tokens** in the hub web app (`/app/mcp-tokens`). It is an ordinary
+Open **MCP Tokens** in the hub web portal (`/app/mcp-tokens`). It is an ordinary
 per-user page — not an admin one — because every hub user manages their own
 credentials.
 

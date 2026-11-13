@@ -253,7 +253,7 @@ Each user profile has a rating filter set in **Settings → Profiles**: G / PG /
 
 ## 7. Browsing Series, Seasons, and Episodes
 
-In the web app a series has its own **series page**: a hero with the show
+In the web portal a series has its own **series page**: a hero with the show
 artwork and details, plus a **season grid** — one card per season (with the
 season poster, "Season N" / "Specials" label, and episode count). Specials are
 grouped at the bottom of the grid.
@@ -261,7 +261,7 @@ grouped at the bottom of the grid.
 Clicking a season card opens a **per-season page** that lists that season's
 episodes, with a back link to the series page. Playing an episode opens the
 player, which provides **Previous / Next episode** buttons (see
-[Web App → Playback](../clients/web)).
+[Web Portal → Playback](../clients/web)).
 
 ## 8. Fixing a Wrong or Missing Match
 

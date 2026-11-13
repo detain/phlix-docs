@@ -411,7 +411,7 @@ The routes are `/app/music` (the combined artists → albums → tracks browser,
 `MusicLibraryPage.vue`) plus five standalone pages registered by the server's SPA
 entry point (`phlix-server/web-ui/src/main.ts:72-76`): `/app/music/artists`,
 `/app/music/artist/:name`, `/app/music/album/:name`, `/app/music/tracks` and
-`/app/music/player`. See the [web client page](/clients/web) for the full route
+`/app/music/player`. See the [web portal page](/clients/web) for the full route
 table.
 
 ## Configuration

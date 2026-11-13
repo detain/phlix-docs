@@ -1,6 +1,6 @@
 ---
 title: Phlix Windows Client
-description: The native Windows desktop app — an Electron shell over the Phlix web UI with tray and media-key integration
+description: The native Windows desktop app — an Electron shell over the Phlix web portal with tray and media-key integration
 ---
 
 # Phlix Windows Client

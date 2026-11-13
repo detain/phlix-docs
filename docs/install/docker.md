@@ -322,7 +322,7 @@ docker compose logs -f phlix
 curl -s http://127.0.0.1:32400/health
 # Expected: {"status":"ok",...} with HTTP 200
 
-# Access web UI — the browser opens the login page; the first account becomes the admin (no wizard)
+# Access web portal — the browser opens the login page; the first account becomes the admin (no wizard)
 xdg-open http://127.0.0.1:32400   # macOS: open
 ```
 

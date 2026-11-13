@@ -59,7 +59,7 @@ DLNA casting.
 
 ---
 
-## 2. Granting Access via the Hub Web App
+## 2. Granting Access via the Hub Web Portal
 
 1. Log into the hub at `https://hub.phlix.app` (or your self-hosted hub URL)
 2. Open **Invite Links** (`/app/invite-links`) from the top navigation
@@ -92,7 +92,7 @@ from the **Shares** page described in §2 above:
 - **Change** — not available in the UI. Use `PATCH /api/v1/me/shares/{id}`.
 
 Sharing state lives on the hub, not on the media server, so these actions are
-only available through the hub web app.
+only available through the hub web portal.
 
 ---
 

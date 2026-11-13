@@ -39,7 +39,7 @@ For the `plugins.json` format and the full plugin list, see the
 
 ---
 
-## 2. Browse and Install from the Web UI
+## 2. Browse and Install from the Web Portal
 
 1. Browse to **Settings → Plugins** (or `/admin/plugins`).
 2. The page renders a card per plugin across every configured catalog. Each

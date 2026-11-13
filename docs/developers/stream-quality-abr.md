@@ -486,4 +486,4 @@ fallback):
   guardrail above).
 - [Signed Media URLs](../security/signed-media-urls) — how `master_url`/each
   variant `url` are signed for player consumption without a Bearer header.
-- [Web App](../clients/web) — the player's quality menu from an end-user perspective.
+- [Web Portal](../clients/web) — the player's quality menu from an end-user perspective.

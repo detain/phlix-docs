@@ -62,7 +62,7 @@ You need a Last.fm API account:
 
 ### Connect Flow
 
-1. Open **Settings → Integrations → Last.fm** in the Phlix web UI
+1. Open **Settings → Integrations → Last.fm** in the Phlix web portal
 2. Click **Connect with Last.fm**
 3. You are redirected to Last.fm's authorization page — approve access
 4. Phlix receives the token, exchanges it for a long-lived session key via `auth.getSession`, and stores it

@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Phlix themes change how the web app looks. Three rules explain almost every "my theme did not change" report:
+Phlix themes change how the web portal looks. Three rules explain almost every "my theme did not change" report:
 
 1. **Enabled is not applied.** Enabling a theme plugin makes the theme *available*; it does not switch your account to it.
 2. **Picking a theme in Settings → Appearance is instant.** Clicking a card in the gallery applies it immediately. There is no Save button.

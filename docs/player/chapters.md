@@ -172,7 +172,7 @@ The player shows **Skip Intro** or **Skip Outro** buttons when:
 
 ## Player Integration
 
-### Web Client
+### Web Portal
 
 ```typescript
 // Check for available chapters

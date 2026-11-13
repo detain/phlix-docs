@@ -165,7 +165,7 @@ describe('VitePress Configuration', () => {
     expect(configContent).toContain("'/clients/'")
     expect(configContent).toContain("text: 'Clients'")
     expect(configContent).toContain("text: 'Mobile'")
-    expect(configContent).toContain("text: 'Web App'")
+    expect(configContent).toContain("text: 'Web Portal'")
   })
 
   it('sidebar has advanced section with hardware transcoding', () => {

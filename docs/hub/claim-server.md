@@ -38,7 +38,7 @@ Record the code and switch to your Hub dashboard. The countdown begins immediate
 
 ### 3 — Hub Dashboard: Claim the Server
 
-Open the Hub web app at `https://hub.phlix.example.com` (replace with your Hub's
+Open the Hub web portal at `https://hub.phlix.example.com` (replace with your Hub's
 actual URL). The hub opens on **My Servers** (`/app/servers`) — claiming happens
 right here.
 
@@ -89,7 +89,7 @@ Once paired, claim a `*.phlix.media` subdomain (if your hub offers one):
 php scripts/claim-subdomain.php
 ```
 
-To unclaim (disconnect the server from the Hub), use the Hub web app:
+To unclaim (disconnect the server from the Hub), use the Hub web portal:
 open **My Servers** (`/app/servers`), select the server, and choose
 **Unclaim Server** from its settings. There is no dedicated unclaim script.
 Removing the claim terminates the relay tunnel and shared libraries become

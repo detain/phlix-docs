@@ -200,7 +200,7 @@ export default defineConfig({
             { text: 'Samsung Tizen', link: '/clients/tizen' },
             { text: 'Roku', link: '/clients/roku' },
             { text: 'Windows App', link: '/clients/windows' },
-            { text: 'Web App', link: '/clients/web' },
+            { text: 'Web Portal', link: '/clients/web' },
             { text: 'DLNA / Play To', link: '/clients/dlna' },
             { text: 'Console', link: '/clients/console' },
           ]

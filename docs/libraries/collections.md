@@ -55,7 +55,7 @@ Rules-based **smart collections** exist on the server — a saved media query th
 attached to a collection — but nothing updates them by itself: the contents are
 re-evaluated only when something asks (request-driven, via the REST
 `POST /api/v1/collections/{id}/refresh`), and today's app has no screen to author the
-rules. In the web app's day-to-day sense, then, playlists do not auto-update — the
+rules. In the web portal's day-to-day sense, then, playlists do not auto-update — the
 engine is server-side and developer-facing. See
 [Smart Playlists](/developers/smart-playlists) for what is actually wired.
 

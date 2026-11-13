@@ -176,7 +176,7 @@ user row.
 **Migrations:** `002_servers.sql`, `007_server_claims_and_servers.sql`,
 `008_subdomain_allocation.sql`, `012_enrolled_at_and_last_frame_at.sql`
 
-One row per Phlix server claimed to the hub. The Hub does not store
+One row per Phlix server claimed to the Hub. The Hub does not store
 library or media data here — only what's needed for relay
 (`jwks_json`, `hostname_candidates_json`) and presence
 (`status`, `last_seen_at`).
@@ -211,7 +211,7 @@ list.
 
 **Migration:** `002_servers.sql`
 
-Pending or completed claim codes minted by the hub. The Hub mints a
+Pending or completed claim codes minted by the Hub. The Hub mints a
 short code (`claim_code`, e.g. `"ABCD-1234"`), the user enters it on
 the Hub UI to bind a server to their account, the Hub then promotes
 the claim to a row in `servers`.
@@ -281,7 +281,7 @@ not introspect the server's library tree.
 - `owner_user_id` `CHAR(36)` — FK → `users.id` (CASCADE).
 - `grantee_user_id` `CHAR(36)` — FK → `users.id` (CASCADE).
 - `server_id` `CHAR(36)` — FK → `servers.id` (CASCADE).
-- `library_id` `CHAR(36)` — opaque to the hub.
+- `library_id` `CHAR(36)` — opaque to the Hub.
 - `library_name` `VARCHAR(128)` — denormalized display label.
 - `created_at`, `revoked_at` `DATETIME` (`revoked_at` IS NULL
   means the grant is active).

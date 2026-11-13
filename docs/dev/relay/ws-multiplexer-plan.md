@@ -503,7 +503,7 @@ phlix-shared and phlix-server changes for Phase 0 land first.
 > be merged in phlix-shared. The server-side Phase 0s must also be merged
 > in phlix-server before Phase 1 can be complete. All three repos
 > (phlix-shared, phlix-server, phlix-hub) must have their Phase 0/0s
-> changes before any Phase 1 work can start on the hub.
+> changes before any Phase 1 work can start on the Hub.
 
 ---
 

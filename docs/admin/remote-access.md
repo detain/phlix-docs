@@ -378,7 +378,7 @@ HTTP/HTTPS endpoint, and its TLS is configured independently.
   builds, which always forced `wss://`+TLS and would silently hang against a
   plaintext hub relay port.
 - **To run the relay tunnel over TLS, enable it on both ends together:** set
-  `PHLIX_RELAY_TLS=1` on the server **and** `HUB_RELAY_TLS=true` on the hub. Only
+  `PHLIX_RELAY_TLS=1` on the server **and** `HUB_RELAY_TLS=true` on the Hub. Only
   then does the derived scheme become `wss://` and the tunnel open with TLS.
 - **Self-signed hub relay certificate:** set `PHLIX_RELAY_TLS_VERIFY=0` on the
   server to accept it (this turns off peer verification and allows self-signed

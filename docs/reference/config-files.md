@@ -320,7 +320,7 @@ The relay tunnel's TLS is **independent** of the server's public HTTP TLS and is
 **off by default** — the derived relay scheme is plaintext `ws://`, matching the
 hub's plaintext-by-default relay listener (`:8802`). A TLS relay tunnel requires
 `relay_tls`/`PHLIX_RELAY_TLS=1` on the server **together with** `HUB_RELAY_TLS=true`
-on the hub. An explicit `hub_relay_ws_url` (or `PHLIX_RELAY_HUB_WS_URL`) wins over
+on the Hub. An explicit `hub_relay_ws_url` (or `PHLIX_RELAY_HUB_WS_URL`) wins over
 the derived scheme; when it is a `wss://` URL, pair it with `PHLIX_RELAY_TLS=1`. See
 [Remote Access → Relay tunnel TLS](../admin/remote-access#relay-tunnel-tls).
 

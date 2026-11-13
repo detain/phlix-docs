@@ -114,7 +114,7 @@ echo "With headroom: ${headroom_mbps} Mbps"
 ### Tuning `HUB_MAX_RELAY_SESSIONS`
 
 ```bash
-# Monitor active relay sessions in the hub admin panel or via logs
+# Monitor active relay sessions in the Hub admin panel or via logs
 # If sessions hit the cap, users see connection failures or queueing
 # Increase HUB_MAX_RELAY_SESSIONS or scale horizontally to add a second hub
 
@@ -168,7 +168,7 @@ HUB_RELAY_RATE_LIMIT_PER_SESSION_Mbps=20  # 20 Mbps cap (1080p high quality)
 
 ```bash
 # Hub operators: monitor relay traffic per enrolled server
-# Query the hub's session logs for servers with >100 GB/month
+# Query the Hub's session logs for servers with >100 GB/month
 # Flag in admin panel; trigger review workflow
 SELECT server_id, SUM(bytes_transferred) AS total_gb
 FROM relay_session_logs

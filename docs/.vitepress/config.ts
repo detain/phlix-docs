@@ -344,7 +344,7 @@ export default defineConfig({
           text: 'Client App Build Guides',
           items: [
             { text: 'Mobile (iOS & Android)', link: '/dev/client-mobile' },
-            { text: 'Samsung Tizen App', link: '/dev/client-tizen' },
+            { text: 'Samsung Tizen', link: '/dev/client-tizen' },
             { text: 'Roku', link: '/dev/client-roku' },
             { text: 'Windows', link: '/dev/client-windows' },
             { text: 'Console Client Build', link: '/dev/client-console' },

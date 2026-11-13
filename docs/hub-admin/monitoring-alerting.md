@@ -29,7 +29,7 @@ The Hub does **not** expose a Prometheus `/metrics` endpoint and has no Promethe
 The Hub runs as a long-lived Workerman daemon (`php start.php start`). When supervised by systemd, follow its output with:
 
 ```bash
-# Live tail of the hub daemon
+# Live tail of the Hub daemon
 journalctl -u phlix-hub -f
 
 # Errors only, last hour

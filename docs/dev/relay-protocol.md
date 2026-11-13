@@ -151,7 +151,7 @@ $frame = $framer->parse($bytes);  // => RelayFrame|null
 
 ### `Phlix\Hub\RelayConsumer`
 
-Maintains the WSS connection to the hub. Receives frames, dispatches locally via `Router`, and sends responses.
+Maintains the WSS connection to the Hub. Receives frames, dispatches locally via `Router`, and sends responses.
 
 ```php
 $consumer = new RelayConsumer($config, $hubClient, $logger, $serverId);

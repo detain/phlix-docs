@@ -17,7 +17,7 @@ The Hub runs as a Workerman HTTP + WebSocket server:
 - **Sessions**: No in-memory sessions — all state in MySQL
 
 ```bash
-# Start the hub
+# Start the Hub
 php start.php start   # production (daemonize with `start -d`)
 php start.php status  # check worker status
 php start.php stop    # stop all workers
@@ -178,7 +178,7 @@ $auditLogger->log('login_failure', ['email' => $email, 'reason' => 'bad_password
 
 ## Pairing protocol internals
 
-Step-by-step flow for pairing a `phlix-server` instance with the hub.
+Step-by-step flow for pairing a `phlix-server` instance with the Hub.
 
 ### Step 1 — Server initiates claim
 
@@ -427,7 +427,7 @@ grep "550e8400-e29b-41d4-a716-446655440000" .logs/hub.log | grep relay
 # Server-side HubClient logs for claim initiation:
 grep "claim\|pairing" .logs/hub.log | tail -20
 
-# On the hub, check claim code status:
+# On the Hub, check claim code status:
 mysql -h hub-db -u phlix_hub -p phlix_hub \
   -e "SELECT claim_code, status, expires_at, created_at
       FROM server_claims
@@ -447,7 +447,7 @@ grep "claim\|server-claims" .logs/hub.log | tail -20
 
 **Diagnosis:**
 ```bash
-# On the hub, check the server's last_seen_at:
+# On the Hub, check the server's last_seen_at:
 mysql -h hub-db -u phlix_hub -p phlix_hub \
   -e "SELECT server_name, status, last_seen_at
       FROM servers WHERE server_name = 'Alice NAS';"
@@ -458,7 +458,7 @@ grep "heartbeat" .logs/hub.log | tail -50
 # Check if the enrollment JWT has expired (7-day TTL):
 cat config/hub-enrollment.json | grep enrolled_at
 
-# On the hub, find servers not seen in 2+ minutes:
+# On the Hub, find servers not seen in 2+ minutes:
 mysql -h hub-db -u phlix_hub -p phlix_hub \
   -e "SELECT id, server_name, last_seen_at
       FROM servers
@@ -475,7 +475,7 @@ mysql -h hub-db -u phlix_hub -p phlix_hub \
 
 **Diagnosis:**
 ```bash
-# On the hub, check relay session status:
+# On the Hub, check relay session status:
 mysql -h hub-db -u phlix_hub -p phlix_hub \
   -e "SELECT id, server_id, worker_node, bytes_in, bytes_out,
              opened_at, closed_at, close_reason

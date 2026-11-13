@@ -11,7 +11,7 @@ page at `/reference/api/hub-jwks.yaml` — it lives in the repo under
 
 **`GET /.well-known/jwks.json`**
 
-Served directly by the Phlix server — it is *not* proxied through the hub.
+Served directly by the Phlix server — it is *not* proxied through the Hub.
 No authentication is required; the document contains public key material only.
 
 ### Response — `200 OK`

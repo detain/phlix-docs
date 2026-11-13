@@ -61,7 +61,7 @@ See [Streaming protocols](developers/streaming-protocols.md).
 
 **Hub** — a separate, optional service that acts as your address book and remote door:
 you claim your servers on it, and it helps your devices find and reach them from outside
-your home. Your media never lives on the hub.
+your home. Your media never lives on the Hub.
 See [What is the Hub?](hub/what-is-the-hub.md).
 
 **Invite link** — a one-time URL you create on the Hub that lets one person join your

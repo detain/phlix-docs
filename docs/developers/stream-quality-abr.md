@@ -324,7 +324,7 @@ HEAD/BODY/END frame protocol end-to-end — nothing buffers a whole body anywher
    server's real `Content-Length`/`Content-Range`/`206` verbatim) when the server sent a
    `Content-Length` (every HLS/DASH segment and every direct-play `withFile()` response
    does, post-S3), or **chunked** transfer-encoding when the length is unknown. Range
-   seeking on `<video>` therefore keeps working straight through the hub. Hop-by-hop
+   seeking on `<video>` therefore keeps working straight through the Hub. Hop-by-hop
    headers (`connection`/`keep-alive`/`transfer-encoding`) are dropped; header
    names/values are CRLF-checked to prevent header injection.
 

@@ -362,7 +362,7 @@ What it removes when present:
 | 7 | Install dir | `/var/www/phlix` (or whatever path was used); system paths refused |
 | 8 | Data dirs | `/var/phlix`, `/var/log/phlix`, `/var/run/phlix` — `/var/phlix` only with `--purge` or interactive confirm |
 | 9 | `/etc/phlix/env` | env file |
-| 10 | Dedicated system user `phlix` | `userdel` — only with `--purge` or interactive confirm. Refuses shared OS accounts. Cross-detects phlix-hub's `User=` and refuses to remove a name that's still being used by the hub. |
+| 10 | Dedicated system user `phlix` | `userdel` — only with `--purge` or interactive confirm. Refuses shared OS accounts. Cross-detects phlix-hub's `User=` and refuses to remove a name that's still being used by the Hub. |
 
 System packages (`php-*`, `mysql-server`, `ffmpeg`, `haproxy`, `certbot`) and `ufw` rules are
 left alone — `sudo apt remove …` / `sudo ufw delete …` to remove them.

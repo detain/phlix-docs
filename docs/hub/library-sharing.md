@@ -176,7 +176,7 @@ All endpoints require authentication (`Authorization: Bearer <jwt>` or the `phli
 **Symptom:** `POST /api/v1/me/shares` returns `404 user_not_found` and the share is not created.
 
 **Reasons:**
-- The collaborator's email address is not registered on the hub.
+- The collaborator's email address is not registered on the Hub.
 - There is a typo in the email address.
 
 **Fix:** Ask the collaborator to create a hub account with the email address you want to share with, then try again.
@@ -187,7 +187,7 @@ All endpoints require authentication (`Authorization: Bearer <jwt>` or the `phli
 
 **Diagnosis:**
 ```bash
-# On the hub, check the share creation log line:
+# On the Hub, check the share creation log line:
 grep "Library shared" .logs/hub.log | tail -20
 ```
 

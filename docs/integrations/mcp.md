@@ -12,7 +12,7 @@ description: The Hub MCP endpoint letting AI clients reach your relayed media se
 ::: info Note
 MCP is a **hub** feature, not a media-server one. The endpoint lives on phlix-hub
 and reaches your media servers over the existing relay, so an MCP client only
-ever talks to the hub.
+ever talks to the Hub.
 :::
 
 ## Overview

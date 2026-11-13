@@ -8,7 +8,7 @@ description: Giving friends and family access through Hub invite links, and what
 ## TL;DR
 
 Hub sharing lets you grant access to your media library to friends and family
-through the hub. Create an **invite link** on `/app/invite-links` and send it to
+through the Hub. Create an **invite link** on `/app/invite-links` and send it to
 them. Recipients see your server under **Shared With Me** (`/app/shared-with-me`)
 in their hub account without needing to install anything or be on the same network.
 

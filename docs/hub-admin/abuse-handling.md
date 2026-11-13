@@ -150,7 +150,7 @@ viewable at `/app/admin/audit-logs` and via `GET /api/v1/me/audit-logs`.
 ### Data Retention: Relay Session Metadata
 
 - Relay session metadata in `relay_sessions` is **not** automatically purged on a
-  timer — there is no 90-day (or any) retention job in the hub.
+  timer — there is no 90-day (or any) retention job in the Hub.
 - It is removed when the owning server row is deleted (foreign-key cascade), which
   happens when the server is deregistered or the owning account is deleted.
 - To prune older relay-session rows for operational reasons, do it manually in
@@ -229,7 +229,7 @@ Document the coordination in your abuse queue.
 **Symptom:** You want to stop a server relaying temporarily while an abuse claim
 is investigated, but do not want to delete the account.
 
-**Cause:** There is no reversible "suspend" action in the hub.
+**Cause:** There is no reversible "suspend" action in the Hub.
 
 **Fix:** Contact the server owner and ask them to take the server offline (it stops
 relaying when it stops sending heartbeats / closes its tunnel). If immediate hub

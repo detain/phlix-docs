@@ -18,7 +18,7 @@ Instructions for getting started with Hub Admin after installation.
 
 ::: danger Register before you expose the domain
 Sign-ups are **open by default**: anyone who can reach `/signup` can register,
-and whichever account registers first owns the hub. The auto-promotion itself
+and whichever account registers first owns the Hub. The auto-promotion itself
 is race-proof (a first-admin election guard admits exactly one winner), but the
 ordering hazard is real — if DNS goes live before you have registered, the
 first stranger through the door becomes administrator. Do the **first sign-up

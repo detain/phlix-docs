@@ -9,7 +9,7 @@ description: Sharing a claimed server's libraries through links with permission 
 
 ## TL;DR
 
-Invite links let you share access to a library (or all libraries) on one of your claimed servers. You set the permission level, a maximum number of uses, and an expiry. The recipient opens the link, signs in to the Hub (creating a free hub account if they don't have one), taps **Accept Invite**, and the shared library appears under **Shared With Me** on the hub. The Hub itself sends no email — copying the URL and messaging it yourself *is* the invite.
+Invite links let you share access to a library (or all libraries) on one of your claimed servers. You set the permission level, a maximum number of uses, and an expiry. The recipient opens the link, signs in to the Hub (creating a free hub account if they don't have one), taps **Accept Invite**, and the shared library appears under **Shared With Me** on the Hub. The Hub itself sends no email — copying the URL and messaging it yourself *is* the invite.
 
 ---
 
@@ -65,7 +65,7 @@ Click **New Invite** in the top-right corner of the page to open the create moda
 | **Server** | Yes | Select one of your claimed servers from the dropdown. |
 | **Library** | No | Select a specific library on that server, or leave it on **All Libraries** to cover every library on the server. This dropdown populates after you select a server. |
 | **Permission** | No | **Read** (default) or **Read/Write**. Heads-up: the level is recorded but nothing enforces it yet — see [Share with Friends](./share-with-friends.md#two-permission-levels). |
-| **Max Uses** | No | How many times the link may be redeemed. Default: `1`. Any value below `1` is rounded up to `1` by the hub. |
+| **Max Uses** | No | How many times the link may be redeemed. Default: `1`. Any value below `1` is rounded up to `1` by the Hub. |
 | **Expires In** | No | How long the link works. Options: `7 days` (default), `30 days`, `90 days`, `1 year`, `Never`. After the selected period the link is automatically invalid. |
 
 Click **Create Invite** to generate the link. The modal switches to a one-time
@@ -119,7 +119,7 @@ All endpoints require authentication (`Authorization: Bearer <jwt>` or the `phli
 
 **Diagnosis:**
 ```bash
-# On the hub, check the redemption log line (the 'hub' channel writes to hub.log;
+# On the Hub, check the redemption log line (the 'hub' channel writes to hub.log;
 # there is no .logs/hub-audit.log):
 grep "Invite link redeemed" .logs/hub.log | tail -20
 ```

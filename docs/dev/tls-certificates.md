@@ -71,7 +71,7 @@ openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem -days 365 -node
 There is no certificate-path config to point at these files. The
 server's `config/hub.php` ships `tls_enabled` only; `tls_cert_path`
 and `tls_key_path` are read by nothing in server code — the only
-places those names appear are fields of the hub subdomain-allocation
+places those names appear are fields of the Hub subdomain-allocation
 wire response (`SubdomainResult`). In development, TLS terminates at
 your reverse proxy: configure the generated `cert.pem`/`key.pem` on
 the proxy frontend, and set `PHLIX_TLS_ENABLED` (default on when

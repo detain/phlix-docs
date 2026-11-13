@@ -126,7 +126,7 @@ Live TV is significantly more useful with guide data (EPG) showing program listi
 **Account setup:**
 
 1. Go to [schedulesdirect.org](https://www.schedulesdirect.org) and create an account (~$25/year).
-2. Log in and select your lineup (antenna channels by ZIP/postal code or your IPTV provider's channel lineup).
+2. Sign in and select your lineup (antenna channels by ZIP/postal code or your IPTV provider's channel lineup).
 3. Note your username and password for the next step.
 
 **In Phlix:**

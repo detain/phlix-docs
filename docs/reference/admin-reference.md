@@ -2,7 +2,7 @@
 
 **Since:** 0.18.0
 
-> **Scope:** this reference covers the **media server** (`phlix-server`) — its environment variables, `php bin/phlix` CLI, and `config/*.php` files. The **hub** (`phlix-hub`) is administered through its web console, not these CLIs/configs. Hub admins should use the [Hub Admin Console](../hub-admin/admin-console.md) and the `hub-admin/*` guides; see [Hub administration](#hub-administration) at the bottom of this page for the pointer and the hub's `/api/v1/admin/*` API summary.
+> **Scope:** this reference covers the **media server** (`phlix-server`) — its environment variables, `php bin/phlix` CLI, and `config/*.php` files. The **hub** (`phlix-hub`) is administered through its web console, not these CLIs/configs. Hub admins should use the [Hub Admin Console](../hub-admin/admin-console.md) and the `hub-admin/*` guides; see [Hub administration](#hub-administration) at the bottom of this page for the pointer and the Hub's `/api/v1/admin/*` API summary.
 
 ## TL;DR
 
@@ -271,7 +271,7 @@ openssl rand -hex 32
 # Add to systemd unit or environment file:
 Environment=JWT_SECRET=$(openssl rand -hex 32)
 ```
-Restart the server after changing `JWT_SECRET`. All existing sessions will be invalidated — users must log in again.
+Restart the server after changing `JWT_SECRET`. All existing sessions will be invalidated — users must sign in again.
 
 ## Hub administration
 
@@ -280,7 +280,7 @@ Everything above administers the **media server**. The **hub** (`phlix-hub`) is 
 - **Web console:** [Hub Admin Console](../hub-admin/admin-console.md) — Hub Dashboard, Users, Logs, Settings, and Audit Logs pages, visible only to admins. The first user to register on a hub is auto-promoted to admin.
 - **More hub-admin guides:** see the `hub-admin/*` section (install, network, TLS, audit log, backup/restore, …) for hub deployment and operations.
 
-The console is backed by the hub's JSON admin API under `/api/v1/admin/*` (all gated **auth + admin**):
+The console is backed by the Hub's JSON admin API under `/api/v1/admin/*` (all gated **auth + admin**):
 
 | Area | Endpoints |
 | --- | --- |

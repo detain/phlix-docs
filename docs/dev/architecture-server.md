@@ -122,7 +122,7 @@ package for its framework-neutral pieces:
 - `Phlix\Shared\Plugin\{LifecycleInterface, Manifest, ManifestType, ManifestValidationError, EventNameMap}`
 - `Phlix\Shared\Events\*` — the 12 PSR-14 event DTOs.
 - `Phlix\Shared\Auth\JwtClaims` — value object capturing the Phlix JWT shape.
-- `Phlix\Shared\Hub\*` — placeholder DTOs for the hub claim/heartbeat
+- `Phlix\Shared\Hub\*` — placeholder DTOs for the Hub claim/heartbeat
   protocol (Phase C).
 - `Phlix\Shared\Arr\*` — Sonarr / Radarr / Prowlarr / Bazarr API clients
   (exception to the zero-I/O policy). Full developer guide →

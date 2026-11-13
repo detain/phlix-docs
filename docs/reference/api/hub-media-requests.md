@@ -296,7 +296,7 @@ Returns requests for admin review. Defaults to pending-only.
 
 ### Admin: Approve Request
 
-Approves a pending request. On success, the hub calls Radarr (movie) or Sonarr (series) with the TMDB ID and transitions the request status to `approved`.
+Approves a pending request. On success, the Hub calls Radarr (movie) or Sonarr (series) with the TMDB ID and transitions the request status to `approved`.
 
 **Endpoint:** `POST /api/v1/admin/requests/{id}/approve`
 
@@ -410,4 +410,4 @@ pending  ──approve──▶  approved  ──import──▶  available
 - A user can only see and manage their own requests via `/me/requests` endpoints.
 - Only admins can view the full queue and approve/deny via `/admin/requests` endpoints.
 - Once a request is `approved` or `rejected`, it cannot be modified.
-- The `available` status is set by the hub when Arr reports the title has been imported. This may require a separate polling or webhook integration depending on the deployment.
+- The `available` status is set by the Hub when Arr reports the title has been imported. This may require a separate polling or webhook integration depending on the deployment.

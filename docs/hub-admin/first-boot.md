@@ -9,7 +9,7 @@ Instructions for getting started with Hub Admin after installation.
 
 ## Initial Setup
 
-1. **Open the hub** in a browser at the URL provided during installation. The
+1. **Open the Hub** in a browser at the URL provided during installation. The
    root path `/` redirects to the Vue web portal at **My Servers** (`/app/servers`).
 2. **Sign in.** The **first account registered becomes an admin automatically** —
    there is no separate `admin:create` step. (Additional admins are granted on

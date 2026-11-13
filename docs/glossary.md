@@ -87,7 +87,7 @@ ebook readers (Ubooquity, KyBook and friends) use to browse and download books o
 internet. Phlix's book library serves its shelves as an OPDS 1.2 feed.
 See [Books](libraries/books.md#opds-feed-url).
 
-**Relay** — the Hub's long-lived connection trick: your server dials *out* to the hub
+**Relay** — the Hub's long-lived connection trick: your server dials *out* to the Hub
 and keeps the line open, and remote browsing flows back over that already-open line.
 No ports opened on your router, no public IP needed.
 See [Remote access](hub/remote-access.md).

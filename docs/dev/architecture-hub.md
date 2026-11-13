@@ -8,7 +8,7 @@ The Hub is a Workerman HTTP + WebSocket server that holds server claim codes, va
 
 ## Process model
 
-The hub runs as a Workerman HTTP + WebSocket server:
+The Hub runs as a Workerman HTTP + WebSocket server:
 
 - **Address**: `HUB_HOST:HUB_PORT` (default `0.0.0.0:8800`)
 - **Workers**: `HUB_WORKERS` child processes managed by Workerman
@@ -29,7 +29,7 @@ php start.php stop    # stop all workers
 
 ## User interface (Vue SPA)
 
-The hub's primary UI is the shared **Vue 3 SPA** (the cross-repo `@phlix/ui` design system, consumed by `web-ui/` = `@phlix/hub-web-ui`). It is served by `SharedUiController` from the committed `public/assets/app/` bundle:
+The Hub's primary UI is the shared **Vue 3 SPA** (the cross-repo `@phlix/ui` design system, consumed by `web-ui/` = `@phlix/hub-web-ui`). It is served by `SharedUiController` from the committed `public/assets/app/` bundle:
 
 - `GET /` → redirects to `/app/servers` (the front door).
 - `GET /app` and `GET /app/{path}` serve the SPA shell — no server-side auth gate; the SPA handles its own auth.
@@ -38,7 +38,7 @@ The hub's primary UI is the shared **Vue 3 SPA** (the cross-repo `@phlix/ui` des
 
 The older SSR Smarty pages (`/login`, `/signup`, `/my-servers`, `/claim-server`, …) still resolve but are **legacy** — they are no longer the documented front door.
 
-> **Per-library Browse (media server only).** As of **`@phlix/ui` v0.21.0** the shared SPA's Browse home renders one rail per library (fetched from `GET /api/v1/libraries`, ordered by `display_order` then name), and each rail's **See all** opens a dedicated per-library page at **`/app/library/:id`** (route name `library`) — the full filterable, paginated grid scoped to one library. A consumer `MenuItem` can set `libraryLinks: true` to also render one nav link per library. The **media server** opts in (its **Browse** entry); the **hub does not** — the hub has no libraries, so its home stays `/app/servers` and it renders no per-library rails or links.
+> **Per-library Browse (media server only).** As of **`@phlix/ui` v0.21.0** the shared SPA's Browse home renders one rail per library (fetched from `GET /api/v1/libraries`, ordered by `display_order` then name), and each rail's **See all** opens a dedicated per-library page at **`/app/library/:id`** (route name `library`) — the full filterable, paginated grid scoped to one library. A consumer `MenuItem` can set `libraryLinks: true` to also render one nav link per library. The **media server** opts in (its **Browse** entry); the **hub does not** — the Hub has no libraries, so its home stays `/app/servers` and it renders no per-library rails or links.
 
 ---
 
@@ -90,7 +90,7 @@ Hub:    validate HS256 JWT (iss=phlix-hub, aud=hub)
 Hub → Browser: {libraries: [...]}
 ```
 
-Both auth cookies are `HttpOnly`, `SameSite=Lax`, and `Secure` unless the scheme law exempts it (HTTPS or an addressed `localhost` host, or an explicit `HUB_COOKIE_INSECURE` / `auth.cookie.insecure` opt-in). Same-origin SPA sessions authenticate through the jar; cross-origin clients send the `Authorization: Bearer` header, which the browser cannot auto-attach. Refresh rotation happens only for requests the hub classifies into cookie custody. Full law — custody split, classification, CSRF guard, WS carriers: [Auth architecture](/dev/auth-architecture).
+Both auth cookies are `HttpOnly`, `SameSite=Lax`, and `Secure` unless the scheme law exempts it (HTTPS or an addressed `localhost` host, or an explicit `HUB_COOKIE_INSECURE` / `auth.cookie.insecure` opt-in). Same-origin SPA sessions authenticate through the jar; cross-origin clients send the `Authorization: Bearer` header, which the browser cannot auto-attach. Refresh rotation happens only for requests the Hub classifies into cookie custody. Full law — custody split, classification, CSRF guard, WS carriers: [Auth architecture](/dev/auth-architecture).
 
 ### Logout
 
@@ -122,8 +122,8 @@ All hub JWTs follow `Phlix\Shared\Auth\JwtClaims::fromPayload()`:
 
 **Algorithms — two distinct token families:**
 
-- **User-session JWTs** (access + refresh, minted by `src/Auth/JwtHandler.php`) are **HS256** — symmetric HMAC-SHA256 signed with the hub's shared secret. The handler explicitly supports HS256 only (no RS256/ES256).
-- **Server enrollment JWTs** are **Ed25519** — asymmetric, minted by `EnrollmentJwtService` / `Ed25519KeyManager` and verified against the hub's public JWKS at `/.well-known/jwks.json`. These are a separate mechanism from user sessions; see the pairing protocol below.
+- **User-session JWTs** (access + refresh, minted by `src/Auth/JwtHandler.php`) are **HS256** — symmetric HMAC-SHA256 signed with the Hub's shared secret. The handler explicitly supports HS256 only (no RS256/ES256).
+- **Server enrollment JWTs** are **Ed25519** — asymmetric, minted by `EnrollmentJwtService` / `Ed25519KeyManager` and verified against the Hub's public JWKS at `/.well-known/jwks.json`. These are a separate mechanism from user sessions; see the pairing protocol below.
 
 ---
 
@@ -148,7 +148,7 @@ if ($this->countAll() === 1) {
 
 Cookie custody is protected by an **origin guard**, not a synchronizer token — `src/Http/Middleware/CsrfOriginGuard.php`, enforced before identity hydration:
 
-- Cookie-sourced state-changing requests — the exact verb list `POST/PUT/DELETE/PATCH` (no GET carve: the hub has no GET-logout route, unlike the server's single form-era path) — are guarded in two places that share this class: inside `AuthMiddleware` after a cookie-sourced token validates, and inside the two middleware-less auth routes that consume cookie lineage, `POST /auth/refresh` and `POST /auth/logout`. They must carry an `Origin` (or `Referer` fallback) naming the hub host; **neither header present → refused** (fail-closed), as is a cross-site `Sec-Fetch-Site` value (a belt the hub enforces; the server reads that header only as a classification signal).
+- Cookie-sourced state-changing requests — the exact verb list `POST/PUT/DELETE/PATCH` (no GET carve: the Hub has no GET-logout route, unlike the server's single form-era path) — are guarded in two places that share this class: inside `AuthMiddleware` after a cookie-sourced token validates, and inside the two middleware-less auth routes that consume cookie lineage, `POST /auth/refresh` and `POST /auth/logout`. They must carry an `Origin` (or `Referer` fallback) naming the Hub host; **neither header present → refused** (fail-closed), as is a cross-site `Sec-Fetch-Site` value (a belt the Hub enforces; the server reads that header only as a classification signal).
 - Refusal is `403` with `{"error":"CSRF validation failed","code":"csrf.invalid_origin"}` — byte-for-byte the server's ratified frame, code pre-registered in `openapi.yaml` and the vendored contracts fixture, zero new wire vocabulary — and, like the server's, it logs nothing: origin refusals are high-volume noise on a public relay front, and the frame itself is the observability.
 - Bearer-lineage requests are CSRF-immune by pinned law (a header the browser cannot auto-attach). Auth failure (`401`) answers **before** the guard, so guard responses cannot be used to probe whether a request carried a live cookie.
 - `SameSite=Lax` and exact-origin CORS remain the first line of defense; the guard is same-layer enforcement for anything that still arrives.
@@ -268,7 +268,7 @@ Authorization: Bearer {enrollment_jwt}
 ### Step 5 — Hub issues user-session JWTs
 
 - Hub validates the enrollment JWT (Ed25519, verifies against server's JWKS at `/.well-known/jwks.json`)
-- Hub issues **HS256 user-session JWTs** that server-side `HubClient` uses to authenticate remote user requests through the hub relay:
+- Hub issues **HS256 user-session JWTs** that server-side `HubClient` uses to authenticate remote user requests through the Hub relay:
 
 ```json
 {
@@ -291,7 +291,7 @@ The relay allows remote clients to access a server behind NAT — without openin
 1. Server connects **outbound** WebSocket to `wss://hub.example.com/relay/{server_id}` on startup (or on-demand when first remote client connects)
 2. Server sends `RelaySession::TYPE_HELLO` carrying its Ed25519 enrollment JWT for authentication
 3. Hub `TunnelManager` maps `server_id` → open `RelaySession`; authenticates server and opens a tunnel
-4. When a remote client connects to `wss://hub.example.com/client/{server_id}`, the hub **multiplexes** the client connection over the existing server-side tunnel
+4. When a remote client connects to `wss://hub.example.com/client/{server_id}`, the Hub **multiplexes** the client connection over the existing server-side tunnel
 5. `RelaySession` tracks: `worker_node` (which hub worker holds the WS), `bytes_in`, `bytes_out`, `opened_at`, `close_reason`
 6. If the server WS drops, `TunnelManager` marks `closed_at` and notifies pending clients with `RelaySession::TYPE_DISCONNECTED`
 7. Server re-connects automatically (HubClient retry loop with backoff); clients are notified and retry
@@ -333,7 +333,7 @@ Phlix\Shared\       — Types shared with phlix-server:
                       events (Phlix\Shared\Events\*)
 ```
 
-**Key split**: the hub repo never contains library scanning, transcoding, FFmpeg, HLS, DLNA, Live TV, or any `Phlix\Server\*` code. Those live exclusively in `phlix-server`.
+**Key split**: the Hub repo never contains library scanning, transcoding, FFmpeg, HLS, DLNA, Live TV, or any `Phlix\Server\*` code. Those live exclusively in `phlix-server`.
 
 ---
 
@@ -341,7 +341,7 @@ Phlix\Shared\       — Types shared with phlix-server:
 
 ### Enable debug logging
 
-The hub has **no log-level environment variable** (neither `HUB_LOG_LEVEL` nor
+The Hub has **no log-level environment variable** (neither `HUB_LOG_LEVEL` nor
 `PHLIX_LOG_LEVEL` is read anywhere in phlix-hub). Verbosity is fixed per handler
 in `config/logger.php` (file handlers default to `debug`/`error`/`info` levels
 per channel); edit that config to change it.
@@ -443,7 +443,7 @@ grep "claim\|server-claims" .logs/hub.log | tail -20
 
 ### Failure 2: Server heartbeat missed (3 consecutive)
 
-**Symptom:** Hub marks the server as `offline`. Users with shared library access see the server as unavailable in the hub dashboard. Remote relay connections fail.
+**Symptom:** Hub marks the server as `offline`. Users with shared library access see the server as unavailable in the Hub dashboard. Remote relay connections fail.
 
 **Diagnosis:**
 ```bash
@@ -471,7 +471,7 @@ mysql -h hub-db -u phlix_hub -p phlix_hub \
 
 ### Failure 3: Relay tunnel dropped
 
-**Symptom:** Remote client connects to the hub and authenticates, but the stream stalls or the WebSocket closes. Hub dashboard shows the server as `online` but no relay session is active.
+**Symptom:** Remote client connects to the Hub and authenticates, but the stream stalls or the WebSocket closes. Hub dashboard shows the server as `online` but no relay session is active.
 
 **Diagnosis:**
 ```bash

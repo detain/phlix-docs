@@ -7,13 +7,13 @@ description: Reaching your Phlix server from outside your network through the Hu
 
 The Hub's primary job is remote access: reaching your Phlix server from outside your
 home network **without configuring port forwarding or a VPN**. Your server dials *out*
-to the hub over a relay tunnel, so it works behind NAT as shipped — see
+to the Hub over a relay tunnel, so it works behind NAT as shipped — see
 [What Is the Hub?](what-is-the-hub.md) for the concept and
 [Claim your server](claim-server.md) to connect one.
 
-## How the hub chooses your connection
+## How the Hub chooses your connection
 
-A claimed server advertises **direct-connection candidates** to the hub in its
+A claimed server advertises **direct-connection candidates** to the Hub in its
 heartbeats: the LAN address, the `phlix.local` mDNS name, the machine hostname, and —
 when UPnP or STUN confirms the port is open — its public address. Clients are steered
 at the best candidate that actually answers; when none are reachable (you're away from
@@ -23,7 +23,7 @@ relay is the safety net: nothing about it requires router configuration.
 ::: tip The one port trap that breaks the candidates
 The advertised candidates are built from `port_forwarding.port`
 (`PHLIX_EXTERNAL_PORT`, default **32400**) — **not** from `server.port` (the listen
-port, `8096`). With both defaults left alone the hub is handed addresses on a port
+port, `8096`). With both defaults left alone the Hub is handed addresses on a port
 nothing listens on. If you want your direct candidates to be usable (e.g. on the LAN),
 set the two to agree — `PHLIX_EXTERNAL_PORT=8096`. This does not affect the relay
 tunnel, which works regardless. The mechanics live in
@@ -33,7 +33,7 @@ tunnel, which works regardless. The mechanics live in
 ## Do you need any of the alternatives?
 
 You do **not** need port forwarding, UPnP, or a reverse proxy to get remote access via
-the hub — those are the *self-managed* routes, useful when you want direct control,
+the Hub — those are the *self-managed* routes, useful when you want direct control,
 higher throughput, or no dependency on a hub relay at all:
 
 - **Direct access without the relay** (UPnP-IGD auto-mapping, manual port forwarding,

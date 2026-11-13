@@ -15,7 +15,7 @@ The server detail page shows everything about one of your claimed servers — ba
 
 ## The Server Detail Page
 
-Open **My Servers** (`/app/servers`) from the hub's top navigation, then click **View Details** on the server card you want to inspect. (The underlying detail route is `/servers/{id}`, which still resolves directly.)
+Open **My Servers** (`/app/servers`) from the Hub's top navigation, then click **View Details** on the server card you want to inspect. (The underlying detail route is `/servers/{id}`, which still resolves directly.)
 
 ### Server Info Section
 
@@ -64,7 +64,7 @@ Below the relay session card, a **Heartbeat History** section shows the last 20 
 - **Uptime** — how long the server's `phlix-server` process has been running, formatted as `Xd Xh Xm`.
 - **Active Sessions** — the number of concurrent streaming sessions the server is handling right now.
 - **Active Transcodes** — how many of those sessions are currently transcoding (e.g. converting a file to a different format or resolution).
-- **Received At** — absolute timestamp of when the hub received this heartbeat; shown as relative time with absolute tooltip on hover.
+- **Received At** — absolute timestamp of when the Hub received this heartbeat; shown as relative time with absolute tooltip on hover.
 
 The heartbeat history section is collapsible. Click **Show/Hide Heartbeat History** to expand or collapse it. It starts collapsed.
 
@@ -154,7 +154,7 @@ The server detail page is a client-side-rendered shell. Once loaded, the page fe
 
 **Symptom:** The server detail page shows an error instead of server data.
 
-**Reason:** The server ID in the URL does not exist in the hub database.
+**Reason:** The server ID in the URL does not exist in the Hub database.
 
 **Fix:** Go back to **My Servers** and click **View Details** on a server you have claimed. If you were given a direct URL, verify it is correct.
 
@@ -164,7 +164,7 @@ The server detail page is a client-side-rendered shell. Once loaded, the page fe
 
 **Reason:** The server exists but is owned by a different hub account.
 
-**Fix:** Only the hub account that claimed a server can view its detail page. Contact the owner if you need access.
+**Fix:** Only the Hub account that claimed a server can view its detail page. Contact the owner if you need access.
 
 ### 3. Server shows as offline
 
@@ -175,7 +175,7 @@ The server detail page is a client-side-rendered shell. Once loaded, the page fe
 2. Check the server's own logs for crashes or network issues.
 3. Check the **Heartbeat History** section — if entries have stopped arriving, the server process may have exited.
 
-**Fix:** Restart `phlix-server` on the machine. Verify the server can reach the hub's public URL over HTTPS.
+**Fix:** Restart `phlix-server` on the machine. Verify the server can reach the Hub's public URL over HTTPS.
 
 ### 4. No heartbeat history visible
 

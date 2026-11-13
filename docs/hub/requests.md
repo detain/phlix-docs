@@ -7,7 +7,7 @@ description: Requesting movies and shows through a Jellyseerr-class UI, with app
 
 ## TL;DR
 
-Hub's media request system lets users request movies and TV shows through a Jellyseerr-class UI. When an admin approves a request, the hub automatically adds the title to Radarr (movies) or Sonarr (series) for download and import into the library.
+Hub's media request system lets users request movies and TV shows through a Jellyseerr-class UI. When an admin approves a request, the Hub automatically adds the title to Radarr (movies) or Sonarr (series) for download and import into the library.
 
 Admin approval is the default, not a requirement: a hub can turn on [auto-approve](#skipping-approval-auto-approve) so new requests go to Radarr/Sonarr without waiting for an admin.
 
@@ -73,11 +73,11 @@ Radarr and Sonarr are configured via environment variables on the Hub. See [Hub 
 ### Generating API keys
 
 **Radarr:**
-1. Log into Radarr → **Settings → General**
+1. Sign in to Radarr → **Settings → General**
 2. Under **Security**, copy the **API Key**
 
 **Sonarr:**
-1. Log into Sonarr → **Settings → General**
+1. Sign in to Sonarr → **Settings → General**
 2. Under **Security**, copy the **API Key**
 
 ### Quick-start Docker Compose snippet
@@ -98,9 +98,9 @@ services:
 
 By default every request waits in the queue as `pending` until an admin approves or denies it — the workflow §3 describes. The `requests.auto_approve` hub setting (boolean, **default `false`**) removes that step:
 
-- **Where to set it.** At boot with `HUB_REQUESTS_AUTO_APPROVE` (`true`, `1`, `yes` or `on`), or at runtime from **Hub Admin → Settings** (`/app/admin/settings`, backed by `PUT /api/v1/admin/settings`) — see [Hub Admin Console → Settings](../hub-admin/admin-console.md#settings). The hub re-reads the setting for every new request, so a change applies without a restart.
-- **What changes.** Each new request is still stored as `pending` first; the hub then immediately runs the same approval as `POST /api/v1/admin/requests/{id}/approve` and sends the title to Radarr/Sonarr. When that succeeds, the create response already shows status `approved`.
-- **When it fails.** Auto-approval is best-effort. If the approval fails (Arr unreachable, integration disabled, wrong API key — see §6), the request simply stays `pending` in the admin queue for manual review, and the hub logs the underlying Arr warning (for example `Radarr addMovie failed` or `Cannot approve movie request: Radarr not configured`). Filing the request itself never fails because of it.
+- **Where to set it.** At boot with `HUB_REQUESTS_AUTO_APPROVE` (`true`, `1`, `yes` or `on`), or at runtime from **Hub Admin → Settings** (`/app/admin/settings`, backed by `PUT /api/v1/admin/settings`) — see [Hub Admin Console → Settings](../hub-admin/admin-console.md#settings). The Hub re-reads the setting for every new request, so a change applies without a restart.
+- **What changes.** Each new request is still stored as `pending` first; the Hub then immediately runs the same approval as `POST /api/v1/admin/requests/{id}/approve` and sends the title to Radarr/Sonarr. When that succeeds, the create response already shows status `approved`.
+- **When it fails.** Auto-approval is best-effort. If the approval fails (Arr unreachable, integration disabled, wrong API key — see §6), the request simply stays `pending` in the admin queue for manual review, and the Hub logs the underlying Arr warning (for example `Radarr addMovie failed` or `Cannot approve movie request: Radarr not configured`). Filing the request itself never fails because of it.
 - **Notifications.** The user gets the usual submission notification. The separate "approved" notification is sent only by the manual approve endpoint, so a user whose request was auto-approved does not receive it.
 
 > **Warning:** With auto-approve on, there is no admin review: any signed-in user's request is sent straight to Radarr/Sonarr and starts a download. Enable it only on a hub where you trust everyone who can file requests.
@@ -135,7 +135,7 @@ Or for a series:
 }
 ```
 
-The hub stores the request with status `pending` and returns the created request object. The user receives a confirmation notification.
+The Hub stores the request with status `pending` and returns the created request object. The user receives a confirmation notification.
 
 ### 3.2 Admin reviews the queue
 
@@ -150,11 +150,11 @@ Each request shows:
 
 ### 3.3 Admin approves or denies
 
-> If [auto-approve](#skipping-approval-auto-approve) is on, the hub runs this approval step itself as soon as a request is filed; only requests whose automatic approval failed are left here for an admin.
+> If [auto-approve](#skipping-approval-auto-approve) is on, the Hub runs this approval step itself as soon as a request is filed; only requests whose automatic approval failed are left here for an admin.
 
 **Approve** — `POST /api/v1/admin/requests/{id}/approve`
 
-The hub calls the appropriate Arr API:
+The Hub calls the appropriate Arr API:
 
 - **Movie** → `POST /api/v3/movie` on Radarr with the TMDB ID
 - **Series** → `POST /api/v3/series` on Sonarr with the TMDB ID
@@ -173,7 +173,7 @@ The request status transitions to `rejected` with the optional reason stored. Th
 
 ### 3.4 Arr imports the title
 
-Radarr or Sonarr downloads and imports the media. When the hub is notified (or polls) that the title is in the library, the request status transitions to `available`. The user receives an availability notification.
+Radarr or Sonarr downloads and imports the media. When the Hub is notified (or polls) that the title is in the library, the request status transitions to `available`. The user receives an availability notification.
 
 ---
 
@@ -253,9 +253,9 @@ curl -H "X-Api-Key: your-api-key" \
 
 ### No quality profiles or root folder in Arr
 
-**Symptom:** Approve succeeds in the hub but the title never appears in the library.
+**Symptom:** Approve succeeds in the Hub but the title never appears in the library.
 
-**Fix:** Log into Radarr or Sonarr, create at least one quality profile (e.g. "HD-1080p") and set a root folder (e.g. `/movies`). The hub uses the first available profile and root folder automatically.
+**Fix:** Sign in to Radarr or Sonarr, create at least one quality profile (e.g. "HD-1080p") and set a root folder (e.g. `/movies`). The Hub uses the first available profile and root folder automatically.
 
 ---
 

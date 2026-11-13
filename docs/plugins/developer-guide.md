@@ -1122,7 +1122,7 @@ class Plugin implements LifecycleInterface
 
 ### Provider-prefixed login
 
-When a user logs in with a provider prefix (e.g.
+When a user signs in with a provider prefix (e.g.
 `oidc:alice@example.com`), `ProviderManager` resolves `oidc` to the
 registered provider and calls `authenticate()`. On first login,
 `AuthManager::loginWithProvider()` automatically creates a local user

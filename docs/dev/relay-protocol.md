@@ -10,11 +10,11 @@
 
 The relay tunnel enables remote clients to reach a `phlix-server` instance that is behind a NAT or firewall without any port forwarding on the server side.
 
-The server opens a **persistent WSS connection** to the hub's relay endpoint. The hub multiplexes inbound HTTP requests from remote clients over this tunnel and proxies responses back.
+The server opens a **persistent WSS connection** to the Hub's relay endpoint. The Hub multiplexes inbound HTTP requests from remote clients over this tunnel and proxies responses back.
 
 This is the same pattern as `frp`, `ngrok`, or `cloudflared` but implemented in PHP/Workerman.
 
-**Key distinction from heartbeat:** The heartbeat connection is a periodic HTTPS POST call from the server to the hub (60-second interval). The relay tunnel is a persistent WebSocket connection initiated by the server to the hub, used to carry arbitrary HTTP traffic bidirectionally.
+**Key distinction from heartbeat:** The heartbeat connection is a periodic HTTPS POST call from the server to the Hub (60-second interval). The relay tunnel is a persistent WebSocket connection initiated by the server to the Hub, used to carry arbitrary HTTP traffic bidirectionally.
 
 ---
 

@@ -38,7 +38,7 @@ Conventions, with exceptions:
   `last_seen_at`, …) with `DEFAULT CURRENT_TIMESTAMP` and `ON UPDATE
   CURRENT_TIMESTAMP` where appropriate.
 
-The hub deployment is **single-primary** — Group Replication
+The Hub deployment is **single-primary** — Group Replication
 multi-primary mode is not supported because the schema relies on
 `ON DELETE CASCADE` foreign keys that multi-primary rejects.
 
@@ -176,7 +176,7 @@ user row.
 **Migrations:** `002_servers.sql`, `007_server_claims_and_servers.sql`,
 `008_subdomain_allocation.sql`, `012_enrolled_at_and_last_frame_at.sql`
 
-One row per Phlix server claimed to the hub. The hub does not store
+One row per Phlix server claimed to the hub. The Hub does not store
 library or media data here — only what's needed for relay
 (`jwks_json`, `hostname_candidates_json`) and presence
 (`status`, `last_seen_at`).
@@ -188,7 +188,7 @@ library or media data here — only what's needed for relay
 - `jwks_json` `TEXT` — the server's published JWKS, for verifying
   signed inbound requests.
 - `hostname_candidates_json` `TEXT` — JSON array of candidate
-  hostnames the hub may try to reach the server directly.
+  hostnames the Hub may try to reach the server directly.
 - `status` `ENUM('online','offline','claiming','disabled')`.
 - `last_seen_at` `DATETIME` — last heartbeat receipt.
 - `enrolled_at` `INT UNSIGNED NULL` — unix timestamp written when a
@@ -211,9 +211,9 @@ list.
 
 **Migration:** `002_servers.sql`
 
-Pending or completed claim codes minted by the hub. The hub mints a
+Pending or completed claim codes minted by the hub. The Hub mints a
 short code (`claim_code`, e.g. `"ABCD-1234"`), the user enters it on
-the hub UI to bind a server to their account, the hub then promotes
+the Hub UI to bind a server to their account, the Hub then promotes
 the claim to a row in `servers`.
 
 - `id` `CHAR(36)` — UUID, primary key (the opaque claim id).
@@ -274,7 +274,7 @@ dashboard analytics.
 **Migration:** `003_shared_libraries.sql`
 
 Grant rows: "owner X lets grantee Y read library L on server S".
-The `library_id` is the **server-side** library UUID — the hub does
+The `library_id` is the **server-side** library UUID — the Hub does
 not introspect the server's library tree.
 
 - `id` `CHAR(36)` — UUID.
@@ -302,7 +302,7 @@ unique `uk_shared_libraries (server_id, library_id, grantee_user_id)`;
 **Migrations:** `004_relay_sessions.sql`,
 `012_enrolled_at_and_last_frame_at.sql`
 
-Audit + dashboard rows for the WebSocket relay tunnel the hub
+Audit + dashboard rows for the WebSocket relay tunnel the Hub
 maintains with each server. One row per connection lifetime; byte
 counters tick during the session, `closed_at` + `close_reason`
 finalise it on disconnect.
@@ -335,7 +335,7 @@ dashboard bandwidth analytics.
 
 **Migration:** `005_webhooks.sql`
 
-User-defined HTTP callbacks the hub delivers when a subscribed
+User-defined HTTP callbacks the Hub delivers when a subscribed
 event alias fires. Event aliases are the `phlix.*` strings from
 `Phlix\Shared\Plugin\EventNameMap`.
 
@@ -382,7 +382,7 @@ dispatcher worker.
    skipped**, rows that predate the checksum column are backfilled
    without re-executing, and the checksum flush is deferred to the end
    of the run.
-5. Re-running is a no-op (idempotent). Unlike the server runner, the hub
+5. Re-running is a no-op (idempotent). Unlike the server runner, the Hub
    has **no idempotent-error-code squelch list** — the tracking table is
    the sole idempotency mechanism.
 

@@ -48,7 +48,7 @@ with the private key. The server verifies the signature using the public key.
 
 ## How to Register a Passkey
 
-1. Log in to Phlix with your existing username and password
+1. Sign in to Phlix with your existing username and password
 2. Navigate to **Account Settings** → **Passkeys**
 3. Click **Register New Passkey**
 4. Follow your browser's prompts to confirm
@@ -61,7 +61,7 @@ with the private key. The server verifies the signature using the public key.
 1. Go to the Phlix login page
 2. Enter your username
 3. When prompted, use your authenticator (Touch ID, Windows Hello, etc.)
-4. You're logged in!
+4. You're signed in!
 
 ### On a New Device
 
@@ -70,7 +70,7 @@ If you set up a roaming passkey on another device:
 1. Enter your username on the new device
 2. Connect your hardware key or use NFC
 3. Touch the key or confirm with biometrics
-4. You're logged in!
+4. You're signed in!
 
 ## Managing Passkeys
 

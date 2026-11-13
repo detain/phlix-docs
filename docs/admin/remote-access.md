@@ -254,7 +254,7 @@ Returns the real persisted tunnel state (flat JSON, no `data` wrapper):
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `connected` | `bool` | Whether the tunnel fork is currently connected to the hub |
+| `connected` | `bool` | Whether the tunnel fork is currently connected to the Hub |
 | `active` | `bool` | Whether the tunnel is actively relaying |
 | `reconnectAttempts` | `int` | Reconnect attempts since the last successful connect |
 | `activeSessions` | `int` | Relay sessions currently multiplexed over the tunnel |
@@ -373,7 +373,7 @@ The server↔hub relay tunnel is a separate connection from the server's public
 HTTP/HTTPS endpoint, and its TLS is configured independently.
 
 - **The default is plaintext `ws://`.** The relay scheme is derived from the
-  enrollment's hub base URL and defaults to **plaintext**, matching the hub's
+  enrollment's hub base URL and defaults to **plaintext**, matching the Hub's
   plaintext-by-default relay listener (`:8802`). This is a change from earlier
   builds, which always forced `wss://`+TLS and would silently hang against a
   plaintext hub relay port.
@@ -382,7 +382,7 @@ HTTP/HTTPS endpoint, and its TLS is configured independently.
   then does the derived scheme become `wss://` and the tunnel open with TLS.
 - **Self-signed hub relay certificate:** set `PHLIX_RELAY_TLS_VERIFY=0` on the
   server to accept it (this turns off peer verification and allows self-signed
-  certs, mirroring the hub's permissive relay context). Production should use a
+  certs, mirroring the Hub's permissive relay context). Production should use a
   CA-signed certificate and leave verification on. Use `PHLIX_RELAY_TLS_CAFILE`
   to point at a custom CA bundle (default: the system bundle at
   `/etc/ssl/certs/ca-certificates.crt`).
@@ -408,7 +408,7 @@ hang and which variables to set. These variables are listed in
 ## Network Health
 
 The admin **Network Health** panel and its two health endpoints report the state of
-the server↔hub link. Because the relay tunnel and the hub heartbeat run in
+the server↔hub link. Because the relay tunnel and the Hub heartbeat run in
 **separate forked processes** (`phlix-relay-tunnel`, `phlix-hub-heartbeat`) with no
 shared memory, these HTTP-worker endpoints read the **cross-process state files**
 those forks persist (`config/relay-tunnel.state.json`,
@@ -466,8 +466,8 @@ GET /api/v1/health/network
 This endpoint is **polled continuously** by the admin network-health indicator.
 
 **It is a cheap, side-effect-free probe.** Earlier builds fired a **real**
-`POST /api/v1/servers/{id}/heartbeat` to the hub on *every* poll — mutating hub-side
-state and hammering the hub as the poller ran. It now simply reads the latency/health
+`POST /api/v1/servers/{id}/heartbeat` to the Hub on *every* poll — mutating hub-side
+state and hammering the Hub as the poller ran. It now simply reads the latency/health
 snapshot the heartbeat fork already persists to `config/hub-heartbeat.state.json`.
 No outbound heartbeat, no blocking I/O, no side effects.
 

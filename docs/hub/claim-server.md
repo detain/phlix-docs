@@ -9,7 +9,7 @@ description: Connect your Phlix server to a Phlix Hub for remote access and mult
 
 ## TL;DR
 
-Claiming links your self-hosted Phlix server to a Phlix Hub account so you can access it remotely without configuring port forwarding or a VPN. As the server admin, you generate a short claim code from your server's Settings, paste it into the Hub dashboard, and the hub immediately gains access to your server's libraries and live streams.
+Claiming links your self-hosted Phlix server to a Phlix Hub account so you can access it remotely without configuring port forwarding or a VPN. As the server admin, you generate a short claim code from your server's Settings, paste it into the Hub dashboard, and the Hub immediately gains access to your server's libraries and live streams.
 
 <!-- screenshots TBD — text-first -->
 
@@ -19,7 +19,7 @@ Work through these steps on both your server and the Hub dashboard.
 
 ### 1 — Server Admin: Open Hub Settings
 
-On your Phlix server, log in as an administrator and navigate to:
+On your Phlix server, sign in as an administrator and navigate to:
 
 **Settings → Hub**
 
@@ -39,7 +39,7 @@ Record the code and switch to your Hub dashboard. The countdown begins immediate
 ### 3 — Hub Dashboard: Claim the Server
 
 Open the Hub web portal at `https://hub.phlix.example.com` (replace with your Hub's
-actual URL). The hub opens on **My Servers** (`/app/servers`) — claiming happens
+actual URL). The Hub opens on **My Servers** (`/app/servers`) — claiming happens
 right here.
 
 Enter the claim code from step 2 into the **Claim Code** field and click **Claim**.

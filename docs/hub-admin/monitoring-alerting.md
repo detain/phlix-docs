@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Phlix Hub exposes a single liveness endpoint, `GET /health`, that returns a small static JSON payload (status, service, version, phlixShared, timestamp). It does **not** ship a Prometheus `/metrics` endpoint. Monitor the hub by polling `/health` from an external uptime monitor, tailing the systemd journal (`journalctl -u phlix-hub`), querying the hub's MySQL/MariaDB tables, and reading fleet/relay/request/user counts from the admin dashboard summary (`GET /api/v1/admin/dashboard/summary`). Keep an audit trail of logins, server claims, suspensions, and deletions, and ship structured logs to Loki or your ELK stack.
+Phlix Hub exposes a single liveness endpoint, `GET /health`, that returns a small static JSON payload (status, service, version, phlixShared, timestamp). It does **not** ship a Prometheus `/metrics` endpoint. Monitor the Hub by polling `/health` from an external uptime monitor, tailing the systemd journal (`journalctl -u phlix-hub`), querying the Hub's MySQL/MariaDB tables, and reading fleet/relay/request/user counts from the admin dashboard summary (`GET /api/v1/admin/dashboard/summary`). Keep an audit trail of logins, server claims, suspensions, and deletions, and ship structured logs to Loki or your ELK stack.
 
 ```bash
 # Verify hub is healthy (static liveness JSON, no DB query)
@@ -18,7 +18,7 @@ curl -H "Authorization: Bearer $ADMIN_JWT" \
 
 ## What You Can Monitor
 
-The hub does **not** expose a Prometheus `/metrics` endpoint and has no Prometheus instrumentation. There are four practical signals you can monitor today:
+The Hub does **not** expose a Prometheus `/metrics` endpoint and has no Prometheus instrumentation. There are four practical signals you can monitor today:
 
 ### 1. `/health` liveness probe
 
@@ -26,7 +26,7 @@ The hub does **not** expose a Prometheus `/metrics` endpoint and has no Promethe
 
 ### 2. systemd / journal logs
 
-The hub runs as a long-lived Workerman daemon (`php start.php start`). When supervised by systemd, follow its output with:
+The Hub runs as a long-lived Workerman daemon (`php start.php start`). When supervised by systemd, follow its output with:
 
 ```bash
 # Live tail of the hub daemon
@@ -40,7 +40,7 @@ Ship these logs to Loki or ELK for retention and alerting (see [Log Aggregation]
 
 ### 3. MySQL/MariaDB queries
 
-The hub stores all persistent state (users, server registry, grants, relay session records, audit logs) in MySQL/MariaDB. Query the hub database directly for ad-hoc operational checks, for example:
+The Hub stores all persistent state (users, server registry, grants, relay session records, audit logs) in MySQL/MariaDB. Query the Hub database directly for ad-hoc operational checks, for example:
 
 ```sql
 -- Enrolled servers and how recently each checked in
@@ -73,7 +73,7 @@ Relay tunnel/session state lives in the in-process Workerman managers (`RelaySes
 
 ## Dashboards & Alerting
 
-The hub ships no Grafana dashboards and no Prometheus metrics, so there are no PromQL panels or `phlix_hub_*` alert rules to import. Build dashboards and alerts on the real signals instead: the admin dashboard summary endpoint, the hub's MySQL/MariaDB tables, the structured logs, and host-level metrics from a generic exporter such as `node_exporter`.
+The Hub ships no Grafana dashboards and no Prometheus metrics, so there are no PromQL panels or `phlix_hub_*` alert rules to import. Build dashboards and alerts on the real signals instead: the admin dashboard summary endpoint, the Hub's MySQL/MariaDB tables, the structured logs, and host-level metrics from a generic exporter such as `node_exporter`.
 
 ### Fleet & relay status
 
@@ -90,19 +90,19 @@ Because relay session state is held in-process per hub instance (`RelaySessionMa
 
 ### Suggested alert conditions
 
-You can express these conditions in any scheduler/alerting tool by querying the database or the summary endpoint; the hub does not evaluate them for you.
+You can express these conditions in any scheduler/alerting tool by querying the database or the summary endpoint; the Hub does not evaluate them for you.
 
 | Condition | Source signal | Threshold idea |
 |---|---|---|
 | Servers offline | `summary` online vs. total, or `last_seen_at` age in the `servers` table | > 20% offline for 10 min |
 | Relay sessions high | `summary` active relay sessions (per instance) | Approaching your configured relay cap |
 | Brute-force attempts | failed-login rows in `audit_logs` grouped by IP | > 10 failures from one IP in 5 min |
-| Disk space low | host `node_exporter` (filesystem free), not the hub itself | < 20% free on `/` |
+| Disk space low | host `node_exporter` (filesystem free), not the Hub itself | < 20% free on `/` |
 | Hub process down | `/health` not returning HTTP 200 | Any failed probe (see [Uptime Monitoring](#uptime-monitoring)) |
 
 ### Disk space (host-level)
 
-Disk pressure on the hub host is a host concern, not a hub metric. If you run `node_exporter` on the host, a standard Prometheus rule covers it:
+Disk pressure on the Hub host is a host concern, not a hub metric. If you run `node_exporter` on the host, a standard Prometheus rule covers it:
 
 ```yaml
 - alert: HubHostDiskSpaceLow
@@ -214,7 +214,7 @@ output.elasticsearch:
 
 ### Health Endpoint
 
-`GET /health` — returns the hub's liveness JSON. It is a static payload built without touching the database, so it confirms the process is up and which versions are running, but it does **not** compute subsystem health:
+`GET /health` — returns the Hub's liveness JSON. It is a static payload built without touching the database, so it confirms the process is up and which versions are running, but it does **not** compute subsystem health:
 
 ```bash
 curl https://hub.example.com/health
@@ -297,11 +297,11 @@ openssl s_client -connect hub.example.com:443 \
 
 ### Expecting a `/metrics` Endpoint (there isn't one)
 
-**Symptom:** Prometheus scrape of the hub fails; Grafana panels show "No data"; `curl .../metrics` returns 404.
+**Symptom:** Prometheus scrape of the Hub fails; Grafana panels show "No data"; `curl .../metrics` returns 404.
 
-**Cause:** The hub has no Prometheus instrumentation and no `/metrics` endpoint — only the static `/health` liveness route.
+**Cause:** The Hub has no Prometheus instrumentation and no `/metrics` endpoint — only the static `/health` liveness route.
 
-**Fix:** Don't scrape the hub for metrics. Drive dashboards and alerts off the real signals instead: the admin dashboard summary (`/api/v1/admin/dashboard/summary`), MySQL/MariaDB queries, structured logs, and host-level `node_exporter`. See [Dashboards & Alerting](#dashboards-alerting).
+**Fix:** Don't scrape the Hub for metrics. Drive dashboards and alerts off the real signals instead: the admin dashboard summary (`/api/v1/admin/dashboard/summary`), MySQL/MariaDB queries, structured logs, and host-level `node_exporter`. See [Dashboards & Alerting](#dashboards-alerting).
 
 ### Health Check Treated as a Health Verdict (false confidence)
 
@@ -309,7 +309,7 @@ openssl s_client -connect hub.example.com:443 \
 
 **Cause:** `/health` is a liveness probe — it returns a static `"ok"` and never queries the database or relay subsystem, so it cannot detect a degraded DB connection or an exhausted relay capacity.
 
-**Fix:** Treat `/health` as "the process is up", nothing more. Layer on DB-level checks (query the hub tables) and the admin summary endpoint (online server / relay-session counts) for real subsystem visibility, and alert on those.
+**Fix:** Treat `/health` as "the process is up", nothing more. Layer on DB-level checks (query the Hub tables) and the admin summary endpoint (online server / relay-session counts) for real subsystem visibility, and alert on those.
 
 ### Admin Endpoint Poll Returns 401/403 (missing admin JWT)
 
@@ -331,7 +331,7 @@ openssl s_client -connect hub.example.com:443 \
 
 ## Next Steps
 
-- [Hub claim and first boot](first-boot.md) — enrolling your first server with the hub
+- [Hub claim and first boot](first-boot.md) — enrolling your first server with the Hub
 - [Hub-admin install & first boot](install.md) — hub setup and admin account creation
 - [Relay tunnel deep-dive](relay-tuning.md) — how the WSS relay works
 - [Troubleshooting](../troubleshooting.md) — diagnose health-check failures, log gaps, and dashboard issues

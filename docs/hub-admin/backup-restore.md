@@ -62,7 +62,7 @@ The Hub tracks schema state in the `migrations` table, keyed by **filename plus 
    ```
 
 3. Restore `config/hub-signing-key.pem` to the path the app config names (default `config/hub-signing-key.pem`), parent directory `0700`, file `0600`.
-4. Restore the env file and verify `HUB_JWT_SECRET` is present and ≥ 32 bytes — a changed secret invalidates every session token the Hub issued; clients must log in again.
+4. Restore the env file and verify `HUB_JWT_SECRET` is present and ≥ 32 bytes — a changed secret invalidates every session token the Hub issued; clients must sign in again.
 5. Start the Hub and run the smoke checks below.
 
 ### Verify a restore

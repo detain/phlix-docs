@@ -11,11 +11,11 @@ Library sharing grants a hub user access to one of your libraries. In the curren
 UI the only way to create a share is an **invite link** — you pick a server,
 optionally a library, and a permission level, then send the recipient the URL. The
 `POST /api/v1/me/shares` API can also create a share directly from a collaborator's
-email, but no page in the hub calls it. The collaborator sees the library under
+email, but no page in the Hub calls it. The collaborator sees the library under
 **Shared With Me** as soon as the share exists.
 
 ::: warning Much of the UI this page used to describe has been removed
-The hub once had a full share-management UI — a "Share Library" modal, an expiry
+The Hub once had a full share-management UI — a "Share Library" modal, an expiry
 menu, and inline permission editing — built on the old server-rendered template
 stack. That stack was deleted and the Vue replacement re-implemented **list and
 revoke only**. The API endpoints for the rest still exist; the controls do not.
@@ -25,7 +25,7 @@ revoke only**. The API endpoints for the rest still exist; the controls do not.
 
 ## The Shares Page
 
-They are **two separate pages**, both in the hub's top navigation: **Shares**
+They are **two separate pages**, both in the Hub's top navigation: **Shares**
 (`/app/shares`) lists what you have shared out, and **Shared With Me**
 (`/app/shared-with-me`) lists what others have shared with you. (The legacy
 `/manage-shares` and `/shared-with-me` paths still resolve — they redirect to the
@@ -79,7 +79,7 @@ incoming share:
 **Open Server** opens the media server's own web portal in a new tab, at the first
 hostname that server has advertised. It is disabled when the server has not
 reported a reachable URL. **There is no in-hub browse view for a shared library** —
-the hub has no `/browse/:server/:library` route.
+the Hub has no `/browse/:server/:library` route.
 
 The card shows the sharer's display name only; their email address is not exposed.
 
@@ -124,7 +124,7 @@ with `{ "permission": "read" }` or `{ "permission": "readwrite" }`.
 There are **two** levels, `read` and `readwrite` — not three, and there is no
 separate download or DLNA tier. More importantly, nothing enforces either value.
 The level is validated on write, stored, returned by the API and rendered as a
-badge, but no code path consults it before permitting an action: the hub's
+badge, but no code path consults it before permitting an action: the Hub's
 `LibraryShare::canWrite()` and `SharedLibraryDto::canWrite()` have **zero production
 callers** — they are reachable only from their own unit tests.
 
@@ -162,7 +162,7 @@ All endpoints require authentication (`Authorization: Bearer <jwt>` or the `phli
 
 **Symptom:** You select a server on the **Invite Links** page but the Library dropdown shows no options.
 
-**Reason:** The dropdown reads the hub's snapshot of that server's libraries, which the server pushes to the hub over its relay heartbeats. A server that isn't currently reaching the hub — or has none configured — yields an empty list.
+**Reason:** The dropdown reads the Hub's snapshot of that server's libraries, which the server pushes to the Hub over its relay heartbeats. A server that isn't currently reaching the Hub — or has none configured — yields an empty list.
 
 **Fix:** Make sure the server is online with its hub relay connected, and that the server has at least one library configured. Then retry.
 

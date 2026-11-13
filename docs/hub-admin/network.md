@@ -151,7 +151,7 @@ LAN, front it with TLS first (danger box at the top of this page; see
 
 ## See Also
 
-- [Remote Access via the Hub](/hub/remote-access) — end-user guide for remote access through the hub
+- [Remote Access via the Hub](/hub/remote-access) — end-user guide for remote access through the Hub
 - [Remote Access Without the Hub](/advanced/remote-access-without-hub) — UPnP, manual mapping, and verification
 - [Relay Protocol](/dev/relay-protocol) — relay tunnel protocol reference
 - Port-mapping CLI: `php scripts/port-forward.php help` (lives in the

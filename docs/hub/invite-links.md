@@ -9,7 +9,7 @@ description: Sharing a claimed server's libraries through links with permission 
 
 ## TL;DR
 
-Invite links let you share access to a library (or all libraries) on one of your claimed servers. You set the permission level, a maximum number of uses, and an expiry. The recipient opens the link, signs in to the hub (creating a free hub account if they don't have one), taps **Accept Invite**, and the shared library appears under **Shared With Me** on the hub. The hub itself sends no email — copying the URL and messaging it yourself *is* the invite.
+Invite links let you share access to a library (or all libraries) on one of your claimed servers. You set the permission level, a maximum number of uses, and an expiry. The recipient opens the link, signs in to the Hub (creating a free hub account if they don't have one), taps **Accept Invite**, and the shared library appears under **Shared With Me** on the hub. The Hub itself sends no email — copying the URL and messaging it yourself *is* the invite.
 
 ---
 
@@ -47,7 +47,7 @@ Each card shows:
 - **Expires** — the date the link stops working; past that date redemptions fail.
 - **URL visibility** — the invite secret is shown **only once**, in the panel right
   after you create the link (**Copy URL** / **Copy Token** buttons there). Listed
-  cards show "URL shown only at creation" because the hub stores only a one-way
+  cards show "URL shown only at creation" because the Hub stores only a one-way
   hash of the token and can never reproduce the URL later.
 - **Revoke** — deletes the invite link immediately; the card disappears and the URL
   no longer works.
@@ -70,7 +70,7 @@ Click **New Invite** in the top-right corner of the page to open the create moda
 
 Click **Create Invite** to generate the link. The modal switches to a one-time
 result view showing the **Invite URL** (and the raw token) with **Copy** buttons —
-**copy it now and store it somewhere safe**: the hub keeps only a one-way hash of the
+**copy it now and store it somewhere safe**: the Hub keeps only a one-way hash of the
 secret, so once you close this dialog the URL can never be recovered or re-listed.
 Use **Cancel** (or click outside the modal) beforehand to close without creating a link.
 
@@ -109,9 +109,9 @@ All endpoints require authentication (`Authorization: Bearer <jwt>` or the `phli
 
 **Symptom:** You select a server in the create modal but the Library dropdown shows only "All Libraries" — no per-library options appear.
 
-**Reason:** The dropdown is populated from `GET /api/v1/me/libraries?server_id={id}`, and for a server you own that reads the hub's **`server_libraries` cache** — a snapshot your server pushes to the hub in its heartbeats. If that snapshot is still empty (freshly claimed server, or the server isn't reaching the hub), there are no per-library rows to offer.
+**Reason:** The dropdown is populated from `GET /api/v1/me/libraries?server_id={id}`, and for a server you own that reads the Hub's **`server_libraries` cache** — a snapshot your server pushes to the Hub in its heartbeats. If that snapshot is still empty (freshly claimed server, or the server isn't reaching the Hub), there are no per-library rows to offer.
 
-**Fix:** Make sure the server is online and its relay connection to the hub is established — the library snapshot refreshes with heartbeats. Confirm the server actually has libraries configured on it. As an interim step, an **All Libraries** link covers every library on the server anyway.
+**Fix:** Make sure the server is online and its relay connection to the Hub is established — the library snapshot refreshes with heartbeats. Confirm the server actually has libraries configured on it. As an interim step, an **All Libraries** link covers every library on the server anyway.
 
 ### 2. Invite link is accepted but the library does not appear
 
@@ -155,5 +155,5 @@ If no line appears, the redeem request never succeeded (see item 4 — the recip
 ## Next Steps
 
 - [Share with Friends](./share-with-friends.md) — the overview of link-based sharing: scopes, permission labels, and what is *not* enforced.
-- [Claim your server to the hub](./claim-server.md) — connect a server to the hub before you can create invite links for it.
+- [Claim your server to the Hub](./claim-server.md) — connect a server to the Hub before you can create invite links for it.
 - [What is the Hub?](./what-is-the-hub.md) — overview of all hub features and account management.

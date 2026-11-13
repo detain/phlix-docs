@@ -27,7 +27,7 @@ The sharing model is simple:
 
 - **You** (library owner) create an invite link on `/app/invite-links`
 - **Your friend** opens the link
-- **Your friend** logs into the hub and sees your server under **Shared With Me**
+- **Your friend** logs into the Hub and sees your server under **Shared With Me**
   (`/app/shared-with-me`)
 - **You** retain control — you can revoke at any time
 
@@ -51,7 +51,7 @@ The invite form's **Permission** dropdown offers exactly two choices — **Read*
 | **Read/Write** | `readwrite` |
 
 ::: danger The level is recorded, not enforced
-Nothing consults `permission_level` before permitting an action — the hub's
+Nothing consults `permission_level` before permitting an action — the Hub's
 `canWrite()` helpers have no production callers. There is also no download tier and
 no DLNA tier: neither concept exists in the sharing model, and no permission gates
 DLNA casting.
@@ -61,7 +61,7 @@ DLNA casting.
 
 ## 2. Granting Access via the Hub Web Portal
 
-1. Log into the hub at `https://hub.phlix.app` (or your self-hosted hub URL)
+1. Sign in to the Hub at `https://hub.phlix.app` (or your self-hosted hub URL)
 2. Open **Invite Links** (`/app/invite-links`) from the top navigation
 3. Click **New Invite**
 4. Choose the **server**, and optionally a **library** — leave it on **All Libraries**
@@ -91,16 +91,16 @@ from the **Shares** page described in §2 above:
 - **Revoke** — click **Revoke** on the row; it takes effect immediately.
 - **Change** — not available in the UI. Use `PATCH /api/v1/me/shares/{id}`.
 
-Sharing state lives on the hub, not on the media server, so these actions are
-only available through the hub web portal.
+Sharing state lives on the Hub, not on the media server, so these actions are
+only available through the Hub web portal.
 
 ---
 
 ## 4. Accepting a Share Invite
 
-There is one method: the shareable link. (The hub cannot send email.)
+There is one method: the shareable link. (The Hub cannot send email.)
 
-1. Click the link — if you're not logged in, sign in or create a hub account
+1. Click the link — if you're not signed in, sign in or create a hub account
 2. The shared library is immediately accessible under **Shared With Me**
    (`/app/shared-with-me`)
 
@@ -147,7 +147,7 @@ it cannot be redeemed again.
 
 ### 2. Shared library appears empty or doesn't appear
 
-**Symptom:** Friend accepts the invite and logs in, but the shared server shows no libraries or an empty library.
+**Symptom:** Friend accepts the invite and signs in, but the shared server shows no libraries or an empty library.
 
 **Diagnosis:**
 ```bash
@@ -162,13 +162,13 @@ curl -X POST http://localhost:8096/api/v1/libraries/{id}/rescan \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-**Fix:** Library sharing requires the library scan to be complete. If a scan is still in progress, wait for it to finish. If no scan is running, trigger one manually. The friend should refresh the hub page after the scan completes and verify the library contents.
+**Fix:** Library sharing requires the library scan to be complete. If a scan is still in progress, wait for it to finish. If no scan is running, trigger one manually. The friend should refresh the Hub page after the scan completes and verify the library contents.
 
 ---
 
 ### 3. Cannot cast to DLNA
 
-**Symptom:** Friend logs in, browses the shared library, but pressing **Cast** or **Play To** on a DLNA device does nothing or shows an error.
+**Symptom:** Friend signs in, browses the shared library, but pressing **Cast** or **Play To** on a DLNA device does nothing or shows an error.
 
 **This is not a permissions problem.** No share permission gates DLNA casting —
 there is no download or cast tier, and `permission_level` is not enforced anywhere.
@@ -179,7 +179,7 @@ setup on the media server instead; see [DLNA](/advanced/dlna).
 
 ## 7. Next Steps
 
-- [Claim your server to the hub](./claim-server.md) — connect your server to the hub before you can share libraries
-- [Hub: what is the hub?](./what-is-the-hub.md) — overview of all hub features and account management
-- [Self-host the hub](./self-host-the-hub.md) — run your own hub instance for full control
+- [Claim your server to the Hub](./claim-server.md) — connect your server to the Hub before you can share libraries
+- [Hub: what is the Hub?](./what-is-the-hub.md) — overview of all hub features and account management
+- [Self-host the Hub](./self-host-the-hub.md) — run your own hub instance for full control
 - [Troubleshooting](../troubleshooting.md) — if sharing issues persist after trying the fixes above

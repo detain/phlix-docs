@@ -227,7 +227,7 @@ php start.php start
 
 5. **Verify**
 
-Log in, check your library items are visible, confirm watch history is present.
+Sign in, check your library items are visible, confirm watch history is present.
 
 If *items* are missing, trigger a library rescan from the admin UI or via the API — it re-walks the tree and indexes every file at a path that is not yet in the catalog:
 

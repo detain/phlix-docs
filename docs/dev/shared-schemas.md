@@ -12,13 +12,13 @@
 
 `phlix-shared` (the `detain/phlix-shared` Composer package) bundles **six**
 machine-readable documents under its `schemas/` directory so that the server,
-the hub, the admin/portal SPAs, and the `@phlix/contracts` TypeScript package
+the Hub, the admin/portal SPAs, and the `@phlix/contracts` TypeScript package
 share a **single source of truth** instead of duplicating constants:
 
 | File | Kind | Purpose | Consumers |
 |------|------|---------|-----------|
 | `schemas/server-settings.schema.json` | JSON Schema (draft 2020-12) | Describes the editable server settings (84 keys) exposed by `/api/v1/admin/settings`. | phlix-server `AdminSettingsController`, admin settings UI |
-| `schemas/hub-settings.schema.json` | JSON Schema | Describes the hub's editable settings (18 keys). | phlix-hub `HubSettingsController` |
+| `schemas/hub-settings.schema.json` | JSON Schema | Describes the Hub's editable settings (18 keys). | phlix-hub `HubSettingsController` |
 | `schemas/media-item.schema.json` | JSON Schema | Canonical wire shape of a media item (23 properties). | phlix-server shapers, `phlix-contracts` `media.ts` |
 | `schemas/library-query.schema.json` | JSON Schema | Library query parameters (13 properties). | phlix-server `ItemRepository` / browse routes, `phlix-contracts` `library.ts` |
 | `schemas/manifest.schema.json` | JSON Schema | Plugin `plugin.json` manifest shape. | `Phlix\Shared\Plugin\ManifestType` (in-package validation) |

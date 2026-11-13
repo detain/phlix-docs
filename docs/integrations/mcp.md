@@ -17,12 +17,12 @@ ever talks to the hub.
 
 ## Overview
 
-The hub exposes a [Model Context Protocol](https://modelcontextprotocol.io)
+The Hub exposes a [Model Context Protocol](https://modelcontextprotocol.io)
 endpoint so an AI assistant — Claude Desktop, an SDK-based agent, or anything
 else that speaks MCP — can enumerate the media servers you have claimed, browse
 their libraries, and read metadata.
 
-It is an **MCP Streamable HTTP** endpoint served by the hub's ordinary HTTP
+It is an **MCP Streamable HTTP** endpoint served by the Hub's ordinary HTTP
 worker on the same port as the rest of the API. There is no sidecar process and
 no extra port to open.
 
@@ -31,7 +31,7 @@ no extra port to open.
 | `POST` | `/mcp` | Client → server JSON-RPC (`initialize`, `ping`, `tools/list`, `tools/call`) |
 | `GET` | `/mcp` | Server → client SSE channel |
 
-Every call runs as the hub account that minted the token, and can only reach
+Every call runs as the Hub account that minted the token, and can only reach
 servers that account has claimed. A token can be minted **narrower** than the
 account it belongs to, but never wider — see [Scopes](#scopes).
 
@@ -73,7 +73,7 @@ Three things are worth knowing before you wire a client up:
 
 Both `401`s carry `WWW-Authenticate: Bearer realm="phlix-hub-mcp"`.
 
-Authentication failures are rate-limited per client IP on the hub's shared
+Authentication failures are rate-limited per client IP on the Hub's shared
 login-grade limiter (bucket `mcp:auth:<ip>`). The counter is incremented **only
 on a failed** validation and cleared on success, so a busy agent cannot lock
 itself out.
@@ -84,7 +84,7 @@ itself out.
 
 ### In the Hub UI
 
-Open **MCP Tokens** in the hub web portal (`/app/mcp-tokens`). It is an ordinary
+Open **MCP Tokens** in the Hub web portal (`/app/mcp-tokens`). It is an ordinary
 per-user page — not an admin one — because every hub user manages their own
 credentials.
 
@@ -144,7 +144,7 @@ Notes on the mint body:
   left in it is a `400` (`mcp_token.no_valid_scopes`) rather than a token that
   authenticates but authorizes nothing.
 - **Any `scopes` value that is not a JSON array or object grants every scope**
-  the hub offers, including the write scope `mcp:playback:control`. The check is
+  the Hub offers, including the write scope `mcp:playback:control`. The check is
   `is_array($rawScopes)` in `McpTokenController::create()`, so omitting the key,
   sending `null`, a bare string, a number or a boolean all fall through to "all
   scopes" — `"scopes": "mcp:library:read"` asks for one scope and gets four.
@@ -154,7 +154,7 @@ Notes on the mint body:
   array itself fails **open**. Always send `"scopes": [ ... ]`.
 
   Any authenticated hub user can mint such a token — `POST /api/v1/me/mcp-tokens`
-  is gated by `AuthMiddleware` alone, not admin-only. The hub's own token UI
+  is gated by `AuthMiddleware` alone, not admin-only. The Hub's own token UI
   always sends an array, so the fail-open path is reachable only from a direct
   API call. An over-broad token is still bounded by ownership: scope is the
   second gate, and the first is that the account must already own the server.
@@ -171,7 +171,7 @@ A scope is a coarse capability label. It is the **second** of two independent
 gates on a tool call, and deliberately the weaker one:
 
 1. **Identity and ownership.** Every call re-derives the token's user and runs
-   through the hub's production server-proxy and server-list controllers, which
+   through the Hub's production server-proxy and server-list controllers, which
    enforce "the caller owns this server". **A token cannot widen this.**
 2. **Scope.** The gate below. It only ever *subtracts* from the first.
 
@@ -193,7 +193,7 @@ A `tools/call` for a tool whose scope the token does not hold returns a
 `403`-shaped tool result with `code: mcp.scope_denied`.
 
 ::: warning `mcp:playback:control` is offered — and pre-ticked — even when the tools are off
-`available_scopes` is built from the hub's full scope list **unconditionally**,
+`available_scopes` is built from the Hub's full scope list **unconditionally**,
 and the token UI seeds its selection from that list, so
 **`mcp:playback:control` appears in the create form and is ticked by default**.
 
@@ -241,7 +241,7 @@ ships behind an operator flag that is **off by default**:
 
 | Setting | Value |
 | ------- | ----- |
-| Config key | `mcp_playback_control_enabled` (in the hub's `config/server.php`) |
+| Config key | `mcp_playback_control_enabled` (in the Hub's `config/server.php`) |
 | Environment variable | `HUB_MCP_PLAYBACK_CONTROL` |
 | Default | `false` |
 
@@ -315,8 +315,8 @@ curl -N https://hub.example.com/mcp \
 ```
 
 ::: info The stream is deliberately quiet
-The hub's tool set is fixed at startup (`initialize` advertises
-`tools.listChanged: false` for exactly that reason) and the hub exposes no
+The Hub's tool set is fixed at startup (`initialize` advertises
+`tools.listChanged: false` for exactly that reason) and the Hub exposes no
 resources, prompts, subscriptions or progress — so it has nothing it can
 legitimately push. The stream carries only SSE **comments** and a `retry:` hint.
 It never fabricates a `data:` frame, which would be a protocol violation.
@@ -337,7 +337,7 @@ reconnects on the `retry:` hint (3000 ms), so it is invisible in practice.
 
 ### Sessions and resumability
 
-The hub keeps no per-session state. It issues no `Mcp-Session-Id` (minting one
+The Hub keeps no per-session state. It issues no `Mcp-Session-Id` (minting one
 would promise resumability it does not have) and does not support `Last-Event-ID`
 stream resumption.
 
@@ -354,7 +354,7 @@ integration.
 Revisions this build speaks, newest first: **`2025-06-18`** (the latest),
 `2025-03-26`, `2024-11-05`.
 
-**`initialize.protocolVersion` — negotiated.** The hub echoes the revision you
+**`initialize.protocolVersion` — negotiated.** The Hub echoes the revision you
 ask for when it supports it, and otherwise answers with `2025-06-18` instead. A
 mismatch here is a *downgrade, not an error*; you then decide whether to proceed.
 When the value is a substitute rather than an echo, the result carries a `_meta`
@@ -372,9 +372,9 @@ block saying so:
 ```
 
 **The `MCP-Protocol-Version` header — verified.** From revision `2025-06-18` a
-client stamps every subsequent request with the agreed revision. The hub checks
+client stamps every subsequent request with the agreed revision. The Hub checks
 it and answers `400` (`mcp.unsupported_protocol_version`, with the supported list
-in the body) if it names a revision the hub does not speak. It is **not**
+in the body) if it names a revision the Hub does not speak. It is **not**
 silently downgraded, because that would be re-negotiating behind your back
 mid-session.
 
@@ -387,7 +387,7 @@ request without it is assumed to be using `2025-03-26`.
 
 - **OAuth.** PAT auth is the only credential today; a full OAuth authorization
   server is separate future work.
-- **Resources, prompts, sampling, progress.** The hub implements tools only.
+- **Resources, prompts, sampling, progress.** The Hub implements tools only.
 
 ## See Also
 

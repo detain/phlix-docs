@@ -80,10 +80,10 @@ of env vars named for the surface. `<SURFACE>` ∈ `REGISTER`, `REFRESH`,
 | Variable                        | Default | Description |
 | ------------------------------- | ------- | ----------- |
 | `PHLIX_HUB_URL`                 | _unset_ | Base URL of the Phlix Hub to pair with (e.g. `https://hub.example.com`). When set, the server initiates pairing automatically on startup if enrolled. See `Phlix\Hub\HubClient` and `config/hub.php`. |
-| `PHLIX_HUB_JWKS_URL`            | _unset_ | URL of the hub's JWKS endpoint for validating hub-issued JWTs. Typically set automatically during enrollment. See `Phlix\Hub\HubJwtValidator` and `config/hub.php`. |
+| `PHLIX_HUB_JWKS_URL`            | _unset_ | URL of the Hub's JWKS endpoint for validating hub-issued JWTs. Typically set automatically during enrollment. See `Phlix\Hub\HubJwtValidator` and `config/hub.php`. |
 | `PHLIX_HUB_ENROLLMENT_TOKEN`    | _unset_ | **Documented but not implemented — do not set.** No code in phlix-server reads this variable. Enrollment state lives in the `hub-enrollment.json` file that `Phlix\Hub\HubClient::loadEnrollment()` reads — that loader takes **no env override**, contrary to what earlier revisions of this page claimed. Kept here only so existing scripts know the name is dead; slated for removal from this page. |
 | `PHLIX_HUB_HEARTBEAT_INTERVAL`  | `60`    | Interval in seconds between hub heartbeat calls. Must be between 30 and 3600. See `Phlix\Hub\HubClient::startHeartbeatLoop()` and `config/hub.php`. |
-| `PHLIX_SUBDOMAIN_AUTO_CLAIM`    | `1`     | When truthy (`1`, `true`, `yes`, `on`) automatically claims a *.phlix.media subdomain from the hub after enrollment. See `Phlix\Hub\SubdomainClient` and `config/hub.php`. |
+| `PHLIX_SUBDOMAIN_AUTO_CLAIM`    | `1`     | When truthy (`1`, `true`, `yes`, `on`) automatically claims a *.phlix.media subdomain from the Hub after enrollment. See `Phlix\Hub\SubdomainClient` and `config/hub.php`. |
 | `PHLIX_TLS_ENABLED`            | `1`     | When truthy enables TLS/HTTPS for the server's public hostname. Requires a subdomain to be allocated. See `config/hub.php`. |
 | `PHLIX_DOMAIN`                 | _unset_ (`config/hub.php` substitutes `phlix.media` for its own `hub.domain`) | This server's public **authority** — a host, optionally with a port (`media.example.com`, `media.example.com:8443`). No scheme, no path, no trailing dot. `scripts/install.sh --domain <domain>` writes it to the env file the systemd unit reads. Two jobs: (1) the base domain for server subdomains (e.g. `abc12345.phlix.media`) that `config/hub.php` composes into `hub.domain` / `hub.public_url`; (2) the **allowlist for deriving the OAuth2/OIDC `redirect_uri`** — see below. |
 
@@ -126,7 +126,7 @@ These environment variables apply when running `phlix-hub` itself (not when the 
 
 | Variable          | Default       | Description                                       |
 | ----------------- | ------------- | ------------------------------------------------- |
-| `HUB_DB_HOST`     | `127.0.0.1`   | MySQL host the hub connects to.                   |
+| `HUB_DB_HOST`     | `127.0.0.1`   | MySQL host the Hub connects to.                   |
 | `HUB_DB_PORT`     | `3306`        | MySQL port.                                       |
 | `HUB_DB_USER`     | `phlix_hub`   | MySQL username.                                   |
 | `HUB_DB_PASSWORD` | `phlix_hub`   | MySQL password. **Override in any non-dev env.**  |
@@ -141,17 +141,17 @@ These environment variables apply when running `phlix-hub` itself (not when the 
 | `HUB_JWT_REFRESH_TTL`  | `604800`  | Refresh-token lifetime in seconds (default 7 days).                                                                                          |
 | `HUB_COOKIE_INSECURE`  | _unset_   | Local-dev opt-out dropping the `Secure` flag from the `phlix_hub_token` / `phlix_hub_refresh` auth cookies for LAN-IP HTTP URLs. Exactly `1` or `true`; with the env unset the stored twin (hub setting `auth.cookie.insecure`) governs. Unlike the server, an active opt-in is honored **without** any production warning. Cookie emission itself is governed by the shared master switch `auth.cookie.enabled` (fail-open). See [Auth architecture](/dev/auth-architecture). |
 
-> When `HUB_JWT_SECRET` is unset the outcome depends on the environment: outside `dev`/`local` the hub **refuses to boot** — `AuthServicesProvider::resolveSecret()` throws `MissingJwtSecretException` before any token is minted. Only `dev`/`local` fall back to a random per-process secret (with a loud warning); its tokens die on every restart and break across workers. The Docker image sidesteps both paths: `docker/docker-entrypoint.sh` persists a generated key to `/var/phlix/config/hub_jwt_secret` when the var is unset. Always set this var explicitly.
+> When `HUB_JWT_SECRET` is unset the outcome depends on the environment: outside `dev`/`local` the Hub **refuses to boot** — `AuthServicesProvider::resolveSecret()` throws `MissingJwtSecretException` before any token is minted. Only `dev`/`local` fall back to a random per-process secret (with a loud warning); its tokens die on every restart and break across workers. The Docker image sidesteps both paths: `docker/docker-entrypoint.sh` persists a generated key to `/var/phlix/config/hub_jwt_secret` when the var is unset. Always set this var explicitly.
 
 ### Container caching
 
 | Variable                       | Default | Description                                                                                                                       |
 | ------------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `PHLIX_HUB_CONTAINER_COMPILE`  | unset   | Mechanically, truthy (`1`, `true`, `yes`, `on`) makes PHP-DI write compiled definitions to `var/cache/container/`. **Do not set:** the hub's providers still contain compiler-rejected `use`-capturing closures (e.g. in `HubServicesProvider`), so the compiled build cannot complete — the same limitation as `PHLIX_CONTAINER_COMPILE` above. |
+| `PHLIX_HUB_CONTAINER_COMPILE`  | unset   | Mechanically, truthy (`1`, `true`, `yes`, `on`) makes PHP-DI write compiled definitions to `var/cache/container/`. **Do not set:** the Hub's providers still contain compiler-rejected `use`-capturing closures (e.g. in `HubServicesProvider`), so the compiled build cannot complete — the same limitation as `PHLIX_CONTAINER_COMPILE` above. |
 
 ## Hub / Arr Integration
 
-Controls Radarr (movies) and Sonarr (series) connectivity for the Hub's media-request system. The hub uses these to push approved requests into the appropriate Arr instance. Both instances must be reachable from the Hub host and have API v3 enabled.
+Controls Radarr (movies) and Sonarr (series) connectivity for the Hub's media-request system. The Hub uses these to push approved requests into the appropriate Arr instance. Both instances must be reachable from the Hub host and have API v3 enabled.
 
 | Variable | Default | Description |
 | --- | --- | --- |
@@ -163,7 +163,7 @@ Controls Radarr (movies) and Sonarr (series) connectivity for the Hub's media-re
 | `HUB_SONARR_ENABLED` | `0` | When truthy (`1`, `true`, `yes`, `on`) enables Sonarr integration. When falsy, series approvals fail with `approve_failed`. |
 | `HUB_REQUESTS_AUTO_APPROVE` | `false` | When truthy (`1`, `true`, `yes`, `on`) approves every new media request automatically instead of queueing it for an admin. Boot default for the `requests.auto_approve` hub setting, which Hub Admin → Settings can override at runtime. See [Skipping approval](../hub/requests.md#skipping-approval-auto-approve). |
 
-> **Tip:** Both Arr instances must have at least one quality profile and root folder configured before requests can be approved. The hub uses the first available profile and root folder automatically.
+> **Tip:** Both Arr instances must have at least one quality profile and root folder configured before requests can be approved. The Hub uses the first available profile and root folder automatically.
 
 See [`docs/hub/requests.md`](../hub/requests.md) for the full media-request workflow.
 
@@ -172,16 +172,16 @@ See [`docs/hub/requests.md`](../hub/requests.md) for the full media-request work
 | Variable                       | Default                            | Description |
 | ------------------------------ | ---------------------------------- | ----------- |
 | `PHLIX_RELAY_ENABLED`          | `0`                                | When truthy (`1`, `true`, `yes`, `on`) enables the persistent relay tunnel to the hub. Requires the server to be enrolled. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
-| `PHLIX_RELAY_HUB_URL`          | `wss://hub.example.com/api/v1/servers/{id}/relay` | WebSocket URL of the hub relay endpoint. `{id}` is replaced with the server's UUID from enrollment. See `Phlix\Hub\RelayConsumer` and `config/relay.php`. |
+| `PHLIX_RELAY_HUB_URL`          | `wss://hub.example.com/api/v1/servers/{id}/relay` | WebSocket URL of the Hub relay endpoint. `{id}` is replaced with the server's UUID from enrollment. See `Phlix\Hub\RelayConsumer` and `config/relay.php`. |
 | `PHLIX_RELAY_HUB_WS_URL`       | _empty_ (derived from enrollment)  | Explicit hub server-tunnel WS endpoint (config key `relay.hub_relay_ws_url`). **Highest-precedence override** — when empty the URL is derived from the enrollment's `hub_base_url` at start time. The transport keys off the scheme: a `ws://` URL is plaintext, a `wss://` URL is TLS. If you set a `wss://` URL here, also set `PHLIX_RELAY_TLS=1` so the cert/verify vars apply. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
-| `PHLIX_RELAY_TLS`              | `false`                            | When truthy (`1`, `true`, `yes`, `on`) the *derived* relay scheme becomes `wss://` and the tunnel connects with TLS. **Default is `false` (plaintext `ws://`)**, mirroring the hub's `HUB_RELAY_TLS` default — the hub relay listener (`:8802`) is plaintext unless `HUB_RELAY_TLS=true` is set on the hub. A TLS relay deploy requires **both** `PHLIX_RELAY_TLS=1` here **and** `HUB_RELAY_TLS=true` on the hub. Independent of the server's public HTTP TLS. Config key `relay.relay_tls`. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
-| `PHLIX_RELAY_TLS_VERIFY`       | `true`                             | Whether to verify the hub's presented relay TLS certificate. Default is secure (on). Set to `0`/`false` to accept a self-signed hub relay cert (`verify_peer=false` + `allow_self_signed=true`, mirroring the hub's permissive relay server context). Production should use a CA-signed cert and leave verification on. Config key `relay.relay_tls_verify`. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
-| `PHLIX_RELAY_TLS_CAFILE`       | `/etc/ssl/certs/ca-certificates.crt` | CA bundle used to verify the hub's relay TLS certificate when `PHLIX_RELAY_TLS_VERIFY` is on. Config key `relay.relay_tls_cafile`. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
+| `PHLIX_RELAY_TLS`              | `false`                            | When truthy (`1`, `true`, `yes`, `on`) the *derived* relay scheme becomes `wss://` and the tunnel connects with TLS. **Default is `false` (plaintext `ws://`)**, mirroring the Hub's `HUB_RELAY_TLS` default — the Hub relay listener (`:8802`) is plaintext unless `HUB_RELAY_TLS=true` is set on the hub. A TLS relay deploy requires **both** `PHLIX_RELAY_TLS=1` here **and** `HUB_RELAY_TLS=true` on the hub. Independent of the server's public HTTP TLS. Config key `relay.relay_tls`. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
+| `PHLIX_RELAY_TLS_VERIFY`       | `true`                             | Whether to verify the Hub's presented relay TLS certificate. Default is secure (on). Set to `0`/`false` to accept a self-signed hub relay cert (`verify_peer=false` + `allow_self_signed=true`, mirroring the Hub's permissive relay server context). Production should use a CA-signed cert and leave verification on. Config key `relay.relay_tls_verify`. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
+| `PHLIX_RELAY_TLS_CAFILE`       | `/etc/ssl/certs/ca-certificates.crt` | CA bundle used to verify the Hub's relay TLS certificate when `PHLIX_RELAY_TLS_VERIFY` is on. Config key `relay.relay_tls_cafile`. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
 | `PHLIX_RELAY_TUNNEL_HOSTNAME`  | _empty_                            | Public hostname assigned to this server's relay tunnel (e.g. `my-server.phlix.media`). See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
 | `PHLIX_RELAY_RECONNECT_DELAY`  | `5`                                | Seconds to wait before attempting to reconnect after the relay tunnel is disconnected. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
 | `PHLIX_RELAY_PING_INTERVAL`    | `30`                               | Seconds between keep-alive ping frames sent over the relay tunnel. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
 | `PHLIX_RELAY_PING_TIMEOUT`     | `10`                               | Seconds to wait for a pong response before considering the relay connection dead. See `Phlix\Hub\RelayConfig` and `config/relay.php`. |
-| `PHLIX_RELAY_ALLOW_PLAINTEXT`  | `false`                            | When truthy, permits the hub tunnel to dial a plaintext `ws://` endpoint (warn-only posture). See `Phlix\Hub\RelayConfig`. |
+| `PHLIX_RELAY_ALLOW_PLAINTEXT`  | `false`                            | When truthy, permits the Hub tunnel to dial a plaintext `ws://` endpoint (warn-only posture). See `Phlix\Hub\RelayConfig`. |
 | `PHLIX_RELAY_REQUIRE_TLS`      | `false`                            | Hardening switch: when truthy (`1`, `true`, `yes`, `on`) the relay **refuses plaintext `ws://` hub dials at connect time** and fails closed instead of warning. Wins over `PHLIX_RELAY_ALLOW_PLAINTEXT`. Intended for hardened deployments; default off preserves current behavior. See `Phlix\Hub\RelayConfig` (added by SRV-HTTP). |
 
 ## Port forwarding / remote access

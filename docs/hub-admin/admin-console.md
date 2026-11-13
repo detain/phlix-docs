@@ -142,7 +142,7 @@ The console pages are thin clients over a JSON API. Every route below is gated
 
 ## How it's wired (for contributors)
 
-- **Frontend.** `web-ui/src/main.ts` mounts the hub SPA with
+- **Frontend.** `web-ui/src/main.ts` mounts the Hub SPA with
   `createPhlixApp({ app: 'hub', menu, extraRoutes })`. The admin section is added with
   `...buildHubAdminRoutes()` (from `@phlix/ui`), which contributes the five `/app/admin/*` routes;
   the gated `{ id: 'admin', label: 'Admin', to: '/app/admin/dashboard', requiresAdmin: true }` menu

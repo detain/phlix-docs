@@ -143,10 +143,10 @@ context and mis-target an ffmpeg encode group. The direct path
 additionally nulls its per-connection `onClose` only under an identity
 guard, so a pipelined sibling request's live hook is never clobbered.
 
-**Hub.** The hub threads per-request state on the `Request` object
+**Hub.** The Hub threads per-request state on the `Request` object
 (`Request::$userId`, plus claims / `oauthGrant`) — nothing ambient;
 `src/` there uses no `support\Context` at all today. Historically
-(step 0.2c, 2026-07) the hub mirrored the server shape:
+(step 0.2c, 2026-07) the Hub mirrored the server shape:
 `Phlix\Hub\Http\RequestContext` over a `phlix.hub.userId` key with the
 same four methods (`setUserId`, `getUserId`, `hasUserId`,
 `clearUserId`). That twin was **deleted 2026-10-02 at hub `7748d79`**:
@@ -157,7 +157,7 @@ posture strictly more true. The server-side copy had already diverged
 before that: SV-6 pruned its dead members and it grew the
 profile/cancel-group keys, so the two "identical wrappers" the original
 0.2b/0.2c text promised stopped being identical on the server well
-before the hub twin's retirement. If hub code ever genuinely needs
+before the Hub twin's retirement. If hub code ever genuinely needs
 per-request state that must not travel on `Request`, that is a new
 design decision, not a copy-paste of the server wrapper.
 
@@ -187,7 +187,7 @@ have to remember to clean up.
 The Fiber driver is what the PHPUnit test suite uses, so you can write
 isolation tests today without ext-swoole loaded (see
 `tests/Unit/Server/Coroutine/ContextIsolationTest.php` in the server and
-`tests/Unit/Coroutine/ContextIsolationTest.php` in the hub).
+`tests/Unit/Coroutine/ContextIsolationTest.php` in the Hub).
 
 ---
 
@@ -279,8 +279,8 @@ or `phlix-hub/src/Http/`:
   blast radius, not a comment beside the call.
 - [ ] If you add a new piece of per-request state, publish it via
   `Phlix\Server\Http\RequestContext` in the server (wrapping
-  `support\Context`) or thread it on the `Request` object in the hub
-  (the hub's former `RequestContext` wrapper was retired 2026-10-02 at
+  `support\Context`) or thread it on the `Request` object in the Hub
+  (the Hub's former `RequestContext` wrapper was retired 2026-10-02 at
   hub `7748d79`) — never on a `static` somewhere.
 
 ---

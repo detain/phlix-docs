@@ -130,14 +130,14 @@ phlix-server                      phlix-hub                     remote client
 | `TunnelManager` | `src/Relay/TunnelManager.php` | Owns all active tunnels; maps `server_id → Tunnel`; routes client connections to the right server tunnel |
 | `Tunnel` | `src/Relay/Tunnel.php` | Per-server-outbound WS state: server WS handle, client list, sequence, heartbeat timer, byte counters |
 | `ClientConnection` | `src/Relay/ClientConnection.php` | Per-client inbound WS: client WS handle, mount path, last-frame timestamp |
-| `Frame` | `src/Relay/Frame.php` | Hub-side immutable value object: wraps `Phlix\Shared\Relay\RelayFrame`, adds `toBytes()` / `parse()` using the hub's `FrameDecoder` codec |
+| `Frame` | `src/Relay/Frame.php` | Hub-side immutable value object: wraps `Phlix\Shared\Relay\RelayFrame`, adds `toBytes()` / `parse()` using the Hub's `FrameDecoder` codec |
 | `FrameDecoder` | `src/Relay/FrameDecoder.php` | Implements `Phlix\Shared\Relay\RelayWireCodec`. Stateful streaming parser; handles partial frames. Also handles JSON HELLO/HELLO_ACK text encoding |
 | `IdleReaper` | `src/Relay/IdleReaper.php` | Periodic timer: scans all tunnels, closes any with `last_frame_at` stale > 90 s |
 | `ClientMountController` | `src/Http/Controllers/ClientMountController.php` | WS upgrade for `GET /client/{server_id}`; delegates to `TunnelManager::acceptClient()` |
 | `HubServicesProvider` (modify) | `src/Common/Container/HubServicesProvider.php` | Register `TunnelManager`, `IdleReaper`, start heartbeat timer in `boot()` |
 
 > `RelayFrameType` and `RelayFrame` live in `phlix-shared` (`Phlix\Shared\Relay\`).
-> The hub imports them directly — no hub-side duplication of type constants.
+> The Hub imports them directly — no hub-side duplication of type constants.
 
 ### Components to modify
 
@@ -161,7 +161,7 @@ Server sends immediately after WS upgrade completes (before any binary frames):
 ← Hub:  {"type":"hello_ack","relay_session_id":"<uuid>","tunnel_id":"<uuid>"}
 ```
 
-If the JWT is invalid the hub closes the WS immediately with RFC 6455
+If the JWT is invalid the Hub closes the WS immediately with RFC 6455
 close code `1008` (Policy Violation).
 
 ### Binary data frames (after handshake)
@@ -182,17 +182,17 @@ repurposed as a per-client **channel id (uint32)** so that multiple concurrent
 remote clients are demultiplexed over one server tunnel. The binary header
 **layout is unchanged** — only the *semantics* of the leading field changed.
 
-- The hub assigns each `ClientConnection` a stable, monotonically increasing
+- The Hub assigns each `ClientConnection` a stable, monotonically increasing
   channel id (`1, 2, 3, …`) at `CLIENT_CONNECT` time and records a
   `channel → ClientConnection` map (`Tunnel::registerClient()`).
 - Client-scoped frames carry the channel id in the leading field:
   - `CLIENT_CONNECT` / `CLIENT_DISCONNECT` — channel id of the affected client.
-  - `DATA` (both directions) — channel id of the owning client. The hub
+  - `DATA` (both directions) — channel id of the owning client. The Hub
     re-tags client→server `DATA` with the client's channel
     (`Tunnel::sendClientData()`); the server tags its response `DATA` with the
     same channel (`RelayConsumer::sendDataFrame()`).
 - Routing:
-  - **server→client** `DATA`: the hub delivers to the single client owning the
+  - **server→client** `DATA`: the Hub delivers to the single client owning the
     frame's channel (`Tunnel::sendToClient(channelId, frame)`), replacing the
     old broadcast-to-all behavior.
   - **client→server** `DATA`: the server writes the bytes to the local
@@ -282,11 +282,11 @@ updated `src/Hub/RelayConsumer.php`
 ## Phase 1: Frame layer [PENDING]
 
 Implement the hub-side binary wire protocol using the shared codec
-interface. The hub's `Relay\FrameDecoder` implements `RelayWireCodec`.
+interface. The Hub's `Relay\FrameDecoder` implements `RelayWireCodec`.
 
 - [ ] **1.1** `Hub\Relay\RelayFrameType` — thin wrapper around
   `Phlix\Shared\Relay\RelayFrameType` for hub use (imports from shared,
-  re-exports for convenience). Alternatively, the hub code imports
+  re-exports for convenience). Alternatively, the Hub code imports
   `Phlix\Shared\Relay\RelayFrameType` directly and this wrapper is
   not needed — decide in review.
 - [ ] **1.2** `Hub\Relay\Frame` — hub-side immutable value object:
@@ -309,7 +309,7 @@ interface. The hub's `Relay\FrameDecoder` implements `RelayWireCodec`.
 `tests/Unit/Relay/FrameTest.php`, `tests/Unit/Relay/FrameDecoderTest.php`
 
 > **Note:** `RelayFrameType` and `RelayFrame` live in `phlix-shared`
-> (Phase 0). The hub imports them from there — no duplication.
+> (Phase 0). The Hub imports them from there — no duplication.
 
 ---
 

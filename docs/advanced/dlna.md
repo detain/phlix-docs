@@ -44,7 +44,7 @@ admin console — see [DLNA Server (admin)](../admin/dlna-server).
 
 ::: danger `cds_enabled` exposes the library with NO authentication
 DLNA/UPnP has no concept of credentials. Turning `cds_enabled` on lets **any** device on
-the local network browse and stream the entire library without logging in, deliberately
+the local network browse and stream the entire library without signing in, deliberately
 bypassing the auth gate. That is why it ships off — it is the right choice for a trusted
 home LAN and the wrong one for a shared or untrusted network.
 :::

@@ -11,7 +11,7 @@ Machine-readable **OpenAPI specs exist and are kept current**:
 - `phlix-server/openapi.yaml` — the server API (412 operations), machine-checked
   against the live router by `OpenapiSpecCurrencyTest` in CI, so it cannot
   silently drift.
-- `phlix-hub/openapi.yaml` — the hub API, linted with Redocly in hub CI.
+- `phlix-hub/openapi.yaml` — the Hub API, linted with Redocly in hub CI.
 
 This hand-maintained page remains the *narrative* reference (behavior notes,
 rate-limit semantics, gotchas) alongside those specs.
@@ -58,7 +58,7 @@ Register a new user account.
 
 **Signup mode matters:** the shipped default of `auth.signup_mode` is `approval`,
 so unless an admin has switched it to `open`, a new registration is created
-**pending** and receives **no tokens** — it cannot log in until an administrator
+**pending** and receives **no tokens** — it cannot sign in until an administrator
 approves it. (The first account ever created is always activated immediately as
 admin, regardless of mode, so a fresh install can bootstrap — see
 [User Management](/admin/user-management).)
@@ -657,7 +657,7 @@ media item. All routes require authentication (Bearer token). Favorites/ratings/
 are **account-level** (keyed on `user_id`, like user settings) — **not per-profile**.
 Each write returns a `{ "message": "..." }` envelope.
 
-> **Hub relay caveat:** when a server is browsed through the hub's relay proxy,
+> **Hub relay caveat:** when a server is browsed through the Hub's relay proxy,
 > all HTTP verbs are forwarded — `POST .../favorite`, `PUT .../rating`, and
 > `DELETE .../favorite` all reach the server normally. The relay proxy no longer
 > restrictively allowlists `GET`/`HEAD` only (phlix-hub `Application.php` lines 479–495).
@@ -1221,7 +1221,7 @@ Initiate the claim flow. Called by the **server** (not the user) to start pairin
 
 ### GET /api/v1/server-claims/`{claimId}`
 
-Poll claim status. Called by the **server** while it waits for the user to redeem the code; public, because the server still has no JWT — the `claimId` UUID is itself the bearer secret. A `claimed` response returns the one-time enrollment material (the Ed25519 enrollment JWT + the hub JWKS URL).
+Poll claim status. Called by the **server** while it waits for the user to redeem the code; public, because the server still has no JWT — the `claimId` UUID is itself the bearer secret. A `claimed` response returns the one-time enrollment material (the Ed25519 enrollment JWT + the Hub JWKS URL).
 
 **Auth:** None (the unguessable `claimId` in the path is the secret). `Accept-Phlix-Protocol: v1` required.
 
@@ -1330,7 +1330,7 @@ Unbind a claimed server from the authenticated Hub account. Returns 204 on succe
 
 ## Admin Endpoints (media server)
 
-> **Scope:** the endpoints in this section are served by the **media server** (`phlix-server`). The **hub** exposes a different `/api/v1/admin/*` surface — see [Hub admin API](#hub-admin-api) below. The hub has no plugin subsystem, so the `/admin/plugins` endpoints are server-only.
+> **Scope:** the endpoints in this section are served by the **media server** (`phlix-server`). The **hub** exposes a different `/api/v1/admin/*` surface — see [Hub admin API](#hub-admin-api) below. The Hub has no plugin subsystem, so the `/admin/plugins` endpoints are server-only.
 
 ### GET /api/v1/admin/users
 
@@ -1492,15 +1492,15 @@ editor.
 
 ## Hub admin API
 
-> **Scope:** these endpoints are served by the **hub** (`phlix-hub`), not the media server. They are the JSON backend for the hub's gated Admin console (the Vue SPA at `/app/admin/*`). All routes are gated by **auth + admin** middleware (`401` when unauthenticated, `403` when authenticated but not an admin). The first user to register is auto-promoted to admin.
+> **Scope:** these endpoints are served by the **hub** (`phlix-hub`), not the media server. They are the JSON backend for the Hub's gated Admin console (the Vue SPA at `/app/admin/*`). All routes are gated by **auth + admin** middleware (`401` when unauthenticated, `403` when authenticated but not an admin). The first user to register is auto-promoted to admin.
 
-The hub admin API is mounted under `/api/v1/admin/*`. Most read shapes follow the `{ success, data: … }` envelope used by the shared `@phlix/ui` admin pages.
+The Hub admin API is mounted under `/api/v1/admin/*`. Most read shapes follow the `{ success, data: … }` envelope used by the shared `@phlix/ui` admin pages.
 
 ### Logs
 
 | Method | Path | Description |
 | --- | --- | --- |
-| `GET` | `/api/v1/admin/logs` | List the hub's log files. |
+| `GET` | `/api/v1/admin/logs` | List the Hub's log files. |
 | `GET` | `/api/v1/admin/logs/tail` | Tail a single log file. |
 | `GET` | `/api/v1/admin/logs/tail-all` | Tail all log files merged into one chronological stream. |
 
@@ -1522,7 +1522,7 @@ The hub admin API is mounted under `/api/v1/admin/*`. Most read shapes follow th
 | `DELETE` | `/api/v1/admin/users/{id}` | Delete a user. |
 | `POST` | `/api/v1/admin/users/{id}/set-admin` | Grant/revoke admin. |
 | `POST` | `/api/v1/admin/users/{id}/reset-password` | Reset a user's password. |
-| `GET` | `/api/v1/admin/users/{id}/profiles` | Per-user profiles — always returns `[]` on the hub (no profiles subsystem; present for SPA parity). |
+| `GET` | `/api/v1/admin/users/{id}/profiles` | Per-user profiles — always returns `[]` on the Hub (no profiles subsystem; present for SPA parity). |
 | `GET` | `/api/v1/admin/users/{id}/bandwidth` | Read a user's current-period relay usage + caps (includes `throttle_bps`). |
 | `PUT` | `/api/v1/admin/users/{id}/quota` | Set a user's monthly byte caps + concurrent-stream cap (`0` = unlimited). |
 | `PUT` | `/api/v1/admin/users/{id}/throttle` | Set a user's durable relay bandwidth throttle (`throttle_bps`; `0` = Unlimited). |
@@ -1573,7 +1573,7 @@ Recent audit events as the dashboard activity feed. `limit` caps the number of r
 
 ### Media requests
 
-The hub also exposes an admin queue for member media requests at `/api/v1/admin/requests` (list) plus `/{id}/approve` and `/{id}/deny`. These are documented in full, with the member-facing `/api/v1/me/requests` surface, in [Hub media requests](./api/hub-media-requests.md).
+The Hub also exposes an admin queue for member media requests at `/api/v1/admin/requests` (list) plus `/{id}/approve` and `/{id}/deny`. These are documented in full, with the member-facing `/api/v1/me/requests` surface, in [Hub media requests](./api/hub-media-requests.md).
 
 ## Error Codes
 

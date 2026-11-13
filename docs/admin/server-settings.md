@@ -459,7 +459,7 @@ config-file default is **`approval`**):
 | Value | Behavior |
 |-------|-----------|
 | `open` | New registrations become **active** immediately and receive a session — the classic open-signup behavior. |
-| `approval` | New registrations are created with status **pending**: no session/token is issued, and the user cannot log in or browse media until an admin approves them. Registering returns a `202` with a "your account is awaiting administrator approval" message. **(default)** |
+| `approval` | New registrations are created with status **pending**: no session/token is issued, and the user cannot sign in or browse media until an admin approves them. Registering returns a `202` with a "your account is awaiting administrator approval" message. **(default)** |
 | `disabled` | New registrations are rejected with a `403` — no account is created. |
 
 Notes and caveats:

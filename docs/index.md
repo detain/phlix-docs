@@ -83,7 +83,7 @@ you've already heard?
 - **Remote access without opening ports.** The *optional* Hub keeps your media at home
   and still lets you reach it from anywhere: your server dials one outbound connection
   and the relay rides that open line — no port-forwarding, no public IP, and your media
-  never lives on the hub ([What is the Hub?](/hub/what-is-the-hub)).
+  never lives on the Hub ([What is the Hub?](/hub/what-is-the-hub)).
 - **Watch parties, built in.** Play/pause kept in sync across browsers, TVs, and phones
   in one shared room — a core feature, not a bolt-on plugin
   ([Watch Together (SyncPlay)](/advanced/syncplay)).
@@ -93,7 +93,7 @@ you've already heard?
 
 In short: Plex is the polished commercial option, but much of it routes through the
 vendor's cloud and account; Jellyfin shares Phlix's fully-local philosophy; Emby sits
-between them with some features behind a paid tier. Phlix's bet is that the hub relay,
+between them with some features behind a paid tier. Phlix's bet is that the Hub relay,
 watch-party sync, and TV-native clients belong **in** the product. It is also a younger
 project with a smaller [plugin ecosystem](/plugins/plugin-catalog) than any of the three — read the pages, weigh
 it honestly, and decide.

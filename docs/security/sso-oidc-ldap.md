@@ -160,7 +160,7 @@ Read the current values back with
 Users then sign in at
 `GET /auth/github/authorize?redirect_uri=/app` (the `redirect_uri` query
 parameter is the in-app page to land on afterwards and is **required** — see
-[How users log in](#how-users-log-in)), or link GitHub to an existing account with
+[How users sign in](#how-users-sign-in)), or link GitHub to an existing account with
 `GET /auth/identities/link/github` (see [Account linking](#account-linking)).
 
 ::: warning GitHub accounts are matched on the numeric id, never the e-mail
@@ -222,7 +222,7 @@ If neither yields a URL, the authorize endpoint **fails closed**.
 port — `media.example.com` or `media.example.com:8443`. No scheme, no path, no
 trailing dot. `scripts/install.sh --domain <domain>` writes it into the
 environment file the systemd unit reads, so a box installed with `--domain`
-already has it. It is the same value the hub integration turns into
+already has it. It is the same value the Hub integration turns into
 `hub.domain` / `hub.public_url`.
 
 It is used here as an **allowlist**, because `Host` is supplied by the client. Left
@@ -331,7 +331,7 @@ deploy, on an origin the new rule refuses, ends in the `503`; the retry succeeds
 It is bounded by the 600-second OAuth state TTL.
 :::
 
-## How users log in
+## How users sign in
 
 ### OIDC
 
@@ -402,7 +402,7 @@ mint a new session.
 
 ::: tip Linking is a full round-trip
 You can **link** an external identity, **list** what is linked, **unlink** one you
-no longer want, and **log in *via* a linked identity**. A freshly-linked identity
+no longer want, and **sign in *via* a linked identity**. A freshly-linked identity
 resolves to your **existing** account on the next OIDC / LDAP / GitHub login — it
 no longer creates a duplicate. Multiple *instances* of the same provider (e.g. two
 OIDC issuers) are supported at the platform level; an admin UI for configuring
@@ -464,7 +464,7 @@ Starts the OIDC authorization-code + PKCE flow with a server-side **link intent*
 The browser is redirected to your IdP; after you authenticate, the existing
 `GET /auth/oidc/callback` attaches the IdP-verified `sub` to your account and
 `302`s back to the same-origin app with a `?linked=oidc` marker. **No login session
-is minted** — you stay logged in as yourself.
+is minted** — you stay signed in as yourself.
 
 ### Link a GitHub identity
 
@@ -516,16 +516,16 @@ Two guards protect you:
   refused with **`409 last_sign_in_method`** so you can't lock yourself out. Set a
   local password, or keep at least one other identity, first.
 
-### Logging in with a linked identity
+### Signing in with a linked identity
 
-Once you've linked an identity you can **log in with it directly**. The next time
+Once you've linked an identity you can **sign in with it directly**. The next time
 you authenticate through that provider — the OIDC or GitHub flow, or an `ldap:`
-login (see [How users log in](#how-users-log-in)) — Phlix resolves the identity to
+login (see [How users sign in](#how-users-sign-in)) — Phlix resolves the identity to
 your **existing** account instead of creating a new one: the login read path looks
 the identity up in the `user_identities` store first. No extra step is needed;
 linking and logging-in target the same account.
 
-Existing and legacy external users keep logging in exactly as before.
+Existing and legacy external users keep signing in exactly as before.
 
 ### Conflicts and idempotency
 
@@ -614,7 +614,7 @@ link attempts resolve to exactly one row (a genuine server error is surfaced as 
   runner on upgrade — **no manual step**. As of S47 the login read path resolves
   the owning account through this table first (falling back to `users.provider` /
   `users.external_id` for any un-backfilled row), which is what makes a linked
-  identity usable for login; existing and legacy external users log in unchanged.
+  identity usable for login; existing and legacy external users sign in unchanged.
 - **Multiple providers of the same family.** The auth provider registry can hold
   more than one instance of the same family (e.g. two OIDC issuers) without a
   name collision — the platform foundation for configuring multiple OIDC/OAuth

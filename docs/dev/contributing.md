@@ -76,7 +76,7 @@ composer install
 php start.php start            # starts the hub on 0.0.0.0:8800
 ```
 
-The hub holds server claim codes, runs heartbeat loops, multiplexes relay tunnels, and issues HS256 user-session JWTs. See [`docs/dev/architecture-hub.md`](architecture-hub.md) for internals.
+The Hub holds server claim codes, runs heartbeat loops, multiplexes relay tunnels, and issues HS256 user-session JWTs. See [`docs/dev/architecture-hub.md`](architecture-hub.md) for internals.
 
 ::: warning Dev servers bind all interfaces
 Both `php start.php start` commands listen on `0.0.0.0` by default, and on a fresh database the first account registered becomes admin (see [first boot](/hub-admin/first-boot)). On an untrusted network, bind to loopback instead: `PHLIX_HTTP_HOST=127.0.0.1` for the server, `HUB_HOST=127.0.0.1` for the hub.
@@ -315,7 +315,7 @@ There is **no programmatic activation path**. The Codecov v2 REST API
 returns 404 or 405 for `PATCH`, `PUT`, and `POST` against
 `/api/v2/{service}/{owner}/repos/{repo}/` — there is no `/activate`
 endpoint and no `activated` field on the repo PATCH body. Do not spend
-time trying to script this; just log in to Codecov once per account
+time trying to script this; just sign in to Codecov once per account
 sync.
 
 When you activate a repo, no workflow change is required: the same

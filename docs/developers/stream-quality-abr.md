@@ -268,11 +268,11 @@ concrete rungs.
 
 ## Hub relay: streaming pass-through (D1–D3s)
 
-The hub's relay browse-proxy (`ServerProxyController`) was extended in three steps:
+The Hub's relay browse-proxy (`ServerProxyController`) was extended in three steps:
 
 1. **D1 — allowlist streaming GET/HEAD.** `BROWSE_SCOPE_ALLOWLIST` gained `/hls`,
    `/dash`, `/media`, and `/api/v1/transcode` prefixes (GET+HEAD), so a signed-in owner
-   can *play* a paired server's media through the hub relay, not just browse its
+   can *play* a paired server's media through the Hub relay, not just browse its
    catalog. Ownership (`server.not_found`/`server.not_owned`), relay-online
    (`server.relay_unavailable`/`server.offline`), and path-traversal
    (`hasTraversalSegment()`) gates all run **before** the widened allowlist is
@@ -285,7 +285,7 @@ The hub's relay browse-proxy (`ServerProxyController`) was extended in three ste
 
 ### Why streaming pass-through, and why it had to wait for S3
 
-Originally the hub browse-proxy buffered every response body **twice**: the relay-ws
+Originally the Hub browse-proxy buffered every response body **twice**: the relay-ws
 worker reassembled every `HTTP_RESPONSE` BODY frame into one blob before publishing it
 on `END`, and the HTTP worker then base64-decoded that whole blob in `buildResponse()`.
 For a multi-MB HLS/DASH segment (× concurrent viewers, through one relay worker) that's
@@ -301,7 +301,7 @@ HEAD/BODY/END frame protocol end-to-end — nothing buffers a whole body anywher
    /media]` + `isStreamingPath()`: GET/HEAD under those byte-serving families stream;
    JSON browse, transcode-status polling, and the transcode-start `POST` stay on the
    original simple buffered path. This is a **path-based** heuristic (not a size
-   threshold) — the hub can't know a body's size before the first frame arrives, and the
+   threshold) — the Hub can't know a body's size before the first frame arrives, and the
    route already tells it which families serve bytes. Tiny playlists match the prefix
    too, but streaming a one- or two-fragment body is harmless.
 2. **Deferred producer (`Response`/`Application`).** A streaming request returns
@@ -342,7 +342,7 @@ transfer, so it changed to two phases:
   and only a genuine mid-transfer stall trips it.
 
 This also fixes a latent bug: `/media/{id}/stream` (large, un-ranged direct-play through
-the hub) used to truncate at a 30-second **total**-transfer timeout; it's now
+the Hub) used to truncate at a 30-second **total**-transfer timeout; it's now
 first-byte + inactivity, and direct-play's first byte is effectively instant (server
 `withFile()`), so the truncation is gone.
 

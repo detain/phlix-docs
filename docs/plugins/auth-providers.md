@@ -291,7 +291,7 @@ The callback verifies the state before processing the authorization code.
 On first login via OIDC, a local user account is automatically created
 with:
 - `external_id` = `oidc.{provider_sub}`
-- `password_hash` = `NULL` (cannot log in with password)
+- `password_hash` = `NULL` (cannot sign in with password)
 - Profile info synced from the ID token claims
 
 On subsequent logins, the existing local account is looked up by

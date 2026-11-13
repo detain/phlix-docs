@@ -9,18 +9,18 @@ description: Reaching your Phlix server from outside your network without the Hu
 
 ## TL;DR
 
-You can access your Phlix server from outside your home network without using the hub relay. Three methods are available: **Cloudflare Tunnel** (recommended — no open ports, free, reliable), **WireGuard VPN** (full traffic tunnel, higher security), and **Tailscale VPN** (simplest managed VPN, handles NAT traversal automatically). Port forwarding is documented as a last resort but has significant limitations (carrier-grade NAT, dynamic IPs, security exposure). The hub relay remains the easiest option — these alternatives give you full control but require more configuration.
+You can access your Phlix server from outside your home network without using the Hub relay. Three methods are available: **Cloudflare Tunnel** (recommended — no open ports, free, reliable), **WireGuard VPN** (full traffic tunnel, higher security), and **Tailscale VPN** (simplest managed VPN, handles NAT traversal automatically). Port forwarding is documented as a last resort but has significant limitations (carrier-grade NAT, dynamic IPs, security exposure). The Hub relay remains the easiest option — these alternatives give you full control but require more configuration.
 
 ---
 
 ## 1. Why Access Without the Hub?
 
 - **Privacy**: All traffic stays between you and your server; nothing routes through Phlix's relay infrastructure
-- **No third-party relay**: Removes the hub from the connection path entirely
+- **No third-party relay**: Removes the Hub from the connection path entirely
 - **Avoid subscription fees**: Hub relay may have usage limits; self-hosted alternatives are free
 - **Lower latency**: Direct connection can be faster than relay for geographically close clients
 
-The hub relay ([Remote Access via the Hub](../hub/remote-access.md)) remains the easiest setup. These alternatives require more configuration but give you full control.
+The Hub relay ([Remote Access via the Hub](../hub/remote-access.md)) remains the easiest setup. These alternatives require more configuration but give you full control.
 
 ---
 
@@ -272,7 +272,7 @@ php scripts/check-connectivity.php
 hostname -I | awk '{print $1}'
 ```
 
-2. Log into your router (typically `http://192.168.1.1` or `http://192.168.0.1`)
+2. Sign in to your router (typically `http://192.168.1.1` or `http://192.168.0.1`)
 3. Find the port forwarding / NAT / firewall section
 4. Add a forward: external port `8096` → `<your-server-lan-ip>:8096` (TCP)
 5. Save and apply
@@ -427,7 +427,7 @@ curl ifconfig.me
 
 ## 7. Next Steps
 
-- [Remote Access via the Hub](../hub/remote-access.md) — the easiest remote access option using the hub relay
+- [Remote Access via the Hub](../hub/remote-access.md) — the easiest remote access option using the Hub relay
 - [Claim Your Server's Public Hostname](../hub/claim-server.md) — set up `*.phlix.media` subdomain for your server
 - [Self-Host the Hub](../hub/self-host-the-hub.md) — run your own hub instance for full control
 - [Reverse proxy](reverse-proxy.md) — verify your server is correctly exposed for remote access

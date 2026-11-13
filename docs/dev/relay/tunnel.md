@@ -2,7 +2,7 @@
 
 **Applies to:** Hub (phlix-hub)
 
-High-level relay management for bidirectional WebSocket tunnels between the hub and servers, and the client connections multiplexed through them.
+High-level relay management for bidirectional WebSocket tunnels between the Hub and servers, and the client connections multiplexed through them.
 
 ## Overview
 
@@ -45,7 +45,7 @@ PENDING → ACTIVE → CLOSING → CLOSED
 
 `Phlix\Hub\Relay\Tunnel`
 
-Represents a bidirectional WebSocket tunnel between the hub and a server. Manages the server-side connection, all client connections multiplexed through this tunnel, frame sequencing, and session lifecycle.
+Represents a bidirectional WebSocket tunnel between the Hub and a server. Manages the server-side connection, all client connections multiplexed through this tunnel, frame sequencing, and session lifecycle.
 
 ### Tunnel Construction
 
@@ -162,7 +162,7 @@ if ($tunnel->isStale(90)) {
 
 `Phlix\Hub\Relay\TunnelManager`
 
-Manages all active relay tunnels between the hub and servers. Provides registration of new server tunnels, lookup by server ID, client connection routing, and tunnel lifecycle management.
+Manages all active relay tunnels between the Hub and servers. Provides registration of new server tunnels, lookup by server ID, client connection routing, and tunnel lifecycle management.
 
 ### TunnelManager Construction
 
@@ -279,7 +279,7 @@ $count = $manager->getActiveTunnelCount();
 
 `Phlix\Hub\Relay\ClientConnection`
 
-Represents a single client WebSocket connection multiplexed through a tunnel. Each remote client connects to the hub via WSS and is tracked as a `ClientConnection` attached to a specific server `Tunnel`.
+Represents a single client WebSocket connection multiplexed through a tunnel. Each remote client connects to the Hub via WSS and is tracked as a `ClientConnection` attached to a specific server `Tunnel`.
 
 ### ClientConnection Construction
 
@@ -300,7 +300,7 @@ $client = new ClientConnection(
 
 | Property | Type | Description |
 |---|---|---|
-| `clientId` | `string` | Client UUID (assigned by the hub). |
+| `clientId` | `string` | Client UUID (assigned by the Hub). |
 | `serverId` | `string` | Server UUID this client is connected through. |
 | `sessionId` | `string` | Optional relay session ID for this client. |
 | `clientWs` | `TcpConnection` | Workerman connection to the client. |

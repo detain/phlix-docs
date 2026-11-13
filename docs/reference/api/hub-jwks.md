@@ -1,6 +1,6 @@
 # JWKS API
 
-The server publishes its Ed25519 **public** key(s) as a JWKS document so the hub
+The server publishes its Ed25519 **public** key(s) as a JWKS document so the Hub
 can verify JWTs the server signed.
 
 The machine-readable OpenAPI spec for this endpoint is served alongside this

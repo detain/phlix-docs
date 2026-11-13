@@ -85,7 +85,7 @@ unset (the default).
 
 ## What has NOT shipped
 
-- A curated allowlist published by the hub and signed with a
+- A curated allowlist published by the Hub and signed with a
   long-lived maintainers' key. The in-product catalog
   ([Install from Catalog](install-from-catalog.md)) is a
   *distribution* source (`plugins.json` in a git repo, by default

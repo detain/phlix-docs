@@ -15,9 +15,9 @@ Every user has a `status`:
 
 | Status | Meaning |
 |--------|---------|
-| **pending** | Created via signup while the server is in `approval` mode. The user has **no session/token** and cannot log in or browse media until an admin approves them. |
+| **pending** | Created via signup while the server is in `approval` mode. The user has **no session/token** and cannot sign in or browse media until an admin approves them. |
 | **active** | A normal, full-access account. |
-| **disabled** | Access revoked. The user cannot log in, and an existing live session is revoked on its next request. |
+| **disabled** | Access revoked. The user cannot sign in, and an existing live session is revoked on its next request. |
 
 A status badge is shown per row (pending = warning, active = success, disabled =
 neutral). Accounts created before this feature, or via paths that don't set a
@@ -37,7 +37,7 @@ When one or more users are pending, the Users page shows a prominent **Pending
 approval** section above the main table, with a count badge and per-row
 **Approve** / **Reject** actions:
 
-- **Approve** sets the user to `active` — they can now log in and browse.
+- **Approve** sets the user to `active` — they can now sign in and browse.
 - **Reject** deletes the pending account (after a confirmation prompt). Reject
   only applies to accounts still in the `pending` state.
 

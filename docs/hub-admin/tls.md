@@ -1,7 +1,7 @@
 # TLS Certificates for Server Subdomains (Operator Runbook)
 
 This runbook describes how TLS certificates are provisioned for the
-per-server subdomains (`*.phlix.media`) that the hub allocates when a
+per-server subdomains (`*.phlix.media`) that the Hub allocates when a
 server enrolls.
 
 ## Important: automated ACME provisioning is NOT implemented
@@ -42,7 +42,7 @@ action" rather than a failure.
 
 ## Provisioning certificates out-of-band
 
-The hub reads certificate material from on disk only — it never issues
+The Hub reads certificate material from on disk only — it never issues
 it. The read-side helpers (`getCertificatePath()`,
 `getPrivateKeyPath()`, `isProvisioned()`, `needsRenewal()`) report the
 truth from these files.
@@ -50,7 +50,7 @@ truth from these files.
 ### Expected layout
 
 For a server allocated the subdomain `abc12345`, the FQDN is
-`abc12345.phlix.media` and the hub expects two files:
+`abc12345.phlix.media` and the Hub expects two files:
 
 ```text
 <tls_certs_dir>/abc12345.phlix.media/fullchain.pem
@@ -109,7 +109,7 @@ site's [install guides](/hub-admin/install).
 shells out (via `proc_open` with an argv array, no shell) to
 `openssl x509 -noout -enddate` and returns `true` when the cert is
 missing or expires within 60 days. Wire it into a cron/monitoring
-script if you want renewal alerts; the hub itself does not renew.
+script if you want renewal alerts; the Hub itself does not renew.
 
 ## When ACME lands
 

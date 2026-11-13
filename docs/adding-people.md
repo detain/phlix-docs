@@ -56,7 +56,7 @@ Three doors exist:
    3+ characters, password of 8+ characters). What happens next is governed by
    **Admin → Settings → "New user signup mode"**, which has three settings: **open**
    (accounts work immediately), **approval** (the default — the account lands in a
-   *Pending* queue at the top of **Admin → Users** and can't log in until you approve
+   *Pending* queue at the top of **Admin → Users** and can't sign in until you approve
    it), or **disabled** (registration is refused outright). Either way, the *first*
    account ever created on a fresh server becomes the admin automatically — that's how
    you bootstrap.

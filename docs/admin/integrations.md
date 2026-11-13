@@ -95,7 +95,7 @@ than an optional setter with a null guard. See
 
 ## Auth providers
 
-The Auth providers section (`/admin/integrations#auth-providers`) lets admins configure external authentication backends — **OIDC** (OpenID Connect) and **LDAP** — so users can log in with their corporate or identity-provider credentials instead of local Phlix accounts. A third provider, **GitHub** (plain OAuth 2.0), is available over the admin API but has **no card in this UI yet**.
+The Auth providers section (`/admin/integrations#auth-providers`) lets admins configure external authentication backends — **OIDC** (OpenID Connect) and **LDAP** — so users can sign in with their corporate or identity-provider credentials instead of local Phlix accounts. A third provider, **GitHub** (plain OAuth 2.0), is available over the admin API but has **no card in this UI yet**.
 
 ::: tip Full SSO guide
 This page covers the admin **configuration** UI. For the end-to-end login flow, the

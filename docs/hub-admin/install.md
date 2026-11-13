@@ -149,7 +149,7 @@ remove them yourself with `apt remove` / `ufw delete` if you no longer need them
 | `--purge` | With `--uninstall`, also drop the DB, delete the Let's Encrypt cert, remove the system user |
 | `-y` / `--interactive` | Override interactivity detection |
 
-> Default service user changed from `www-data` to `phlix-hub` so the hub runs as its own
+> Default service user changed from `www-data` to `phlix-hub` so the Hub runs as its own
 > dedicated system account, isolated from the apache/nginx-owned `www-data`. Existing
 > installs that were created with `www-data` keep running on `www-data` — `--update` reads
 > `User=` from the systemd unit rather than rewriting it.
@@ -406,7 +406,7 @@ Verify pairing works end-to-end:
    media are visible.
 
 > [!NOTE]
-> Pairing traffic is budget-guarded on the hub: every `/api/v1/server-claims/*`
+> Pairing traffic is budget-guarded on the Hub: every `/api/v1/server-claims/*`
 > endpoint is rate-limited per client IP and per action (60 requests / 60 s per hub
 > worker); tripped buckets answer `429` with `Retry-After`, and one
 > `claim_code_rate_limited` audit row is written per over-budget transition.

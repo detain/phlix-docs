@@ -82,7 +82,7 @@ Via Hub mode routes the app's traffic through the Hub relay, so the server itsel
 
 ## Next Steps
 
-- [Web client](./web.md) — access from any browser without installing software
+- [Web portal](./web.md) — access from any browser without installing software
 - [Roku](./roku.md) — living room streaming on Roku devices
 - [Tizen](./tizen.md) — Samsung Smart TV app
 - [Mobile client build guide](../dev/client-mobile.md) — for developers building these apps

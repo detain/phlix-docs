@@ -7,7 +7,7 @@
 
 ## Overview
 
-The HLS relay enables remote clients to watch Live TV by relaying HLS streams through the hub's `RelayConsumer` WebSocket tunnel. When a remote client connects to a hub URL, the hub fetches the local HLS stream (variant playlist + `.ts` segments) and proxies it over the WebSocket tunnel to the remote client.
+The HLS relay enables remote clients to watch Live TV by relaying HLS streams through the Hub's `RelayConsumer` WebSocket tunnel. When a remote client connects to a hub URL, the Hub fetches the local HLS stream (variant playlist + `.ts` segments) and proxies it over the WebSocket tunnel to the remote client.
 
 ## Architecture
 
@@ -55,7 +55,7 @@ $variantPlaylistUrl = $session->getVariantPlaylistUrl();
 
 ### HlsRelayManager
 
-Orchestrates relay sessions and the hub WebSocket tunnel.
+Orchestrates relay sessions and the Hub WebSocket tunnel.
 
 ```php
 // Start a relay session
@@ -195,7 +195,7 @@ Remote clients access the relayed stream at:
 https://{hub-url}/relay/live/{sessionId}/playlist.m3u8
 ```
 
-The hub proxies the HLS stream over its WSS tunnel to the remote client, which plays it as a standard HLS stream.
+The Hub proxies the HLS stream over its WSS tunnel to the remote client, which plays it as a standard HLS stream.
 
 ## Error Handling
 

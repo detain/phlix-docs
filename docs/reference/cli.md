@@ -327,24 +327,24 @@ available.
 | --- | --- | --- |
 | `migrate` | — | Apply database migrations (`migrations/*.sql`). |
 | `smoke:jwt` | — | Smoke-test the JWT create-validate round-trip. |
-| `user:create` | `{username}` `--email=` `[--password=]` `[--display-name=]` `[--json]` | Create a new hub user account. Omit `--password` to be prompted (hidden input) or, when not interactive, to read the password from one stdin line — either keeps it off argv. The hub has no `--password-file` option. |
+| `user:create` | `{username}` `--email=` `[--password=]` `[--display-name=]` `[--json]` | Create a new hub user account. Omit `--password` to be prompted (hidden input) or, when not interactive, to read the password from one stdin line — either keeps it off argv. The Hub has no `--password-file` option. |
 | `user:list` | `[--json]` | List hub user accounts. |
 | `user:promote` | `{user}` `[--revoke]` `[--json]` | Promote a hub user to admin, or demote with `--revoke`. |
 | `user:delete` | `{user}` `[--force]` `[--json]` | Delete a hub user account (last admin is protected). |
-| `oauth:client:register` | `{client-id}` `{name}` `--redirect-uri=` `--scope=` `[--confidential]` `[--secret=]` | Register (or re-provision) an OAuth 2.0 client in the hub client registry. |
+| `oauth:client:register` | `{client-id}` `{name}` `--redirect-uri=` `--scope=` `[--confidential]` `[--secret=]` | Register (or re-provision) an OAuth 2.0 client in the Hub client registry. |
 | `oauth:client:list` | — | List every registered OAuth 2.0 client, including disabled and unusable rows. |
 | `oauth:client:disable` | `{client-id}` `[--revoke-tokens]` | Disable an OAuth 2.0 client so it can obtain no further grants (`--revoke-tokens` also kills live tokens). |
 
 ### Hub `migrate`
 
-Applies the hub's pending `migrations/*.sql`. Like the server, the hub keeps a
+Applies the Hub's pending `migrations/*.sql`. Like the server, the Hub keeps a
 real migration-tracking table (`migrations`, managed by
 `Phlix\Hub\Common\Database\MigrationRunner`), so already-applied migrations are
 skipped by filename. Since HB-4.11 the table also carries a checksum column
 (added by `041_migrations_checksum.sql`): a recorded file whose (comment-
 normalized) checksum diverges from the on-disk file is surfaced rather than
 silently skipped, and pre-checksum rows are backfilled without re-executing
-them. Unlike the server, the hub has no idempotent-error-code squelch list —
+them. Unlike the server, the Hub has no idempotent-error-code squelch list —
 the tracking table is its sole idempotency mechanism, and every hub migration
 ships `CREATE TABLE IF NOT EXISTS` as a belt-and-braces guard. It is the
 supported equivalent of `php scripts/run-migrations.php`.
@@ -384,8 +384,8 @@ Initiates pairing between this server and a Phlix Hub instance.
 
 | Argument       | Description                                      |
 | -------------- | ------------------------------------------------ |
-| `hub-url`     | Base URL of the hub (e.g. `https://hub.example.com`). |
-| `server-name` | Human-readable name shown on the hub dashboard.  |
+| `hub-url`     | Base URL of the Hub (e.g. `https://hub.example.com`). |
+| `server-name` | Human-readable name shown on the Hub dashboard.  |
 
 **Example:**
 
@@ -410,7 +410,7 @@ Heartbeat loop has been started in the background.
 
 1. Generates (or loads existing) Ed25519 keypair from `config/hub-server-key.pem`.
 2. Sends a claim request to `POST <hub-url>/api/v1/server-claims/new`.
-3. Displays the returned claim code for the operator to enter on the hub's web portal.
+3. Displays the returned claim code for the operator to enter on the Hub's web portal.
 4. Polls `GET <hub-url>/api/v1/server-claims/{claimId}` every 2 seconds.
 5. On successful claim, stores enrollment JWT to `config/hub-enrollment.json`.
 6. Starts the background heartbeat loop.

@@ -68,15 +68,15 @@ HUB_MAX_USERS=10000                  # max hub users
 
 ### Connection Topology
 
-- Each enrolled server opens one persistent WSS connection to the hub (always-on, not per-session)
-- The hub multiplexes inbound client requests over that single WSS using HTTP-framed messages
+- Each enrolled server opens one persistent WSS connection to the Hub (always-on, not per-session)
+- The Hub multiplexes inbound client requests over that single WSS using HTTP-framed messages
 - Each relay session = one virtual WS channel within the server's persistent connection
-- Bandwidth at the hub = sum of all active relay session bitrates (not one connection per session)
+- Bandwidth at the Hub = sum of all active relay session bitrates (not one connection per session)
 
 ### Latency Overhead
 
 - Relay adds ~1–3 RTT overhead vs. a direct LAN connection
-- For geographically distant servers, deploy the hub in the region closest to the majority of users
+- For geographically distant servers, deploy the Hub in the region closest to the majority of users
 - WSS persistent connection eliminates connection setup latency per relay session
 
 ### Bandwidth Math
@@ -96,7 +96,7 @@ echo "With headroom: ${headroom_mbps} Mbps"
 ### Direct LAN vs Relay
 
 - Streams on the same LAN go directly server → client (no hub involvement, no bandwidth cost)
-- Only remote streams (client not on LAN) traverse the hub relay
+- Only remote streams (client not on LAN) traverse the Hub relay
 - This means hub bandwidth cost scales with remote viewership, not total viewership
 
 ---
@@ -141,7 +141,7 @@ HUB_RELAY_RATE_LIMIT_PER_SESSION_Mbps=50  # 4K HDR streams
 ### Anonymous / Unclaimed Servers
 
 - Anonymous users cannot use relay (must claim a server and accept Terms of Service)
-- Enforced via `HUB_RELAY_ENABLED=false` for unclaimed sessions at the hub layer
+- Enforced via `HUB_RELAY_ENABLED=false` for unclaimed sessions at the Hub layer
 
 ### Free Tier
 
@@ -209,8 +209,8 @@ HAVING total_gb > 100;
 
 ## Next Steps
 
-- [Hub claim and first boot](first-boot.md) — enrolling your first server with the hub
+- [Hub claim and first boot](first-boot.md) — enrolling your first server with the Hub
 - [Relay tunnel deep-dive](relay-tuning.md) — how the WSS relay actually works
-- [Hub monitoring & alerting](monitoring-alerting.md) — configuring and monitoring the hub
+- [Hub monitoring & alerting](monitoring-alerting.md) — configuring and monitoring the Hub
 - [Hub sharing and access control](../hub/share-with-friends.md) — managing user access to your hub
 - [Troubleshooting](../troubleshooting.md) — diagnose relay, bandwidth, and connection issues

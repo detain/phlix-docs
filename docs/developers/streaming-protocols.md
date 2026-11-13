@@ -10,7 +10,7 @@ Phlix Media Server supports two adaptive streaming protocols: **HLS** (HTTP Live
 > `.ts` (not the shared CMAF `.m4s`). See
 > [Stream Quality / ABR](./stream-quality-abr) for the current, authoritative
 > description of that pipeline — including the real segment/playlist naming, the
-> per-variant dedup/cap/cache-sweep behavior, the hub relay's streaming pass-through,
+> per-variant dedup/cap/cache-sweep behavior, the Hub relay's streaming pass-through,
 > and client (web/native) ABR support.
 >
 > **DASH is not currently produced or served on demand.** The single-CMAF-job

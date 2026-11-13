@@ -3,7 +3,7 @@
 ## TL;DR
 
 Hub operators receive DMCA notices at `abuse@yourhub.com` and act through the
-hub's [Admin Console](./admin-console.md) and the admin JSON API. The hub only
+hub's [Admin Console](./admin-console.md) and the admin JSON API. The Hub only
 relays for media servers it does not own, so it cannot remove content from a
 server — it can forward the notice to the server owner and remove the offending
 account or its server enrollment. The real moderation surface is the admin
@@ -16,7 +16,7 @@ webhooks. Admin actions are recorded to the audit log (`audit_logs`), which is
 viewable at `/app/admin/audit-logs` and via `GET /api/v1/me/audit-logs`.
 
 > [!IMPORTANT]
-> There is **no `bin/hub.php` CLI**. The hub has exactly two entry points:
+> There is **no `bin/hub.php` CLI**. The Hub has exactly two entry points:
 > the resident daemon `php start.php {start|stop|restart|reload|status}`, and the
 > one-shot tool `php bin/phlix <cmd>` whose only commands are `migrate` and
 > `smoke:jwt`. All moderation is done through the Admin Console or the
@@ -29,7 +29,7 @@ viewable at `/app/admin/audit-logs` and via `GET /api/v1/me/audit-logs`.
 ### Receiving the Notice
 
 - Hub operators receive DMCA notices at `abuse@yourhub.com`
-- Forward the notice text to the hub operator's internal abuse queue
+- Forward the notice text to the Hub operator's internal abuse queue
 - Log receipt: timestamp, sender email, notice text (store securely, not in shared logs)
 
 ### Locating the Server and User
@@ -37,7 +37,7 @@ viewable at `/app/admin/audit-logs` and via `GET /api/v1/me/audit-logs`.
 - Use the Admin Console to identify the account and server. The **Users** page
   (`/app/admin/users`) lists every account; `GET /api/v1/admin/users` returns the
   same data as JSON.
-- Cross-reference the `server_id` named in the DMCA notice against the hub's
+- Cross-reference the `server_id` named in the DMCA notice against the Hub's
   server registry (the **Dashboard** / server views) before acting, so you act on
   the correct account.
 - Review the user's recorded activity in the audit log: open **Audit Logs**
@@ -48,7 +48,7 @@ viewable at `/app/admin/audit-logs` and via `GET /api/v1/me/audit-logs`.
 
 **1. Forward to the server owner (primary action)**
 
-- The hub only relays connections; it does **not** store media and cannot delete
+- The Hub only relays connections; it does **not** store media and cannot delete
   files on a server.
 - Notify the registered owner by email with the full DMCA notice text and require
   written confirmation that the infringing content has been removed.
@@ -65,8 +65,8 @@ viewable at `/app/admin/audit-logs` and via `GET /api/v1/me/audit-logs`.
 
 **3. Remove a server's enrollment**
 
-- The hub does not have an operator "suspend server" switch. The ways a server
-  leaves the hub are:
+- The Hub does not have an operator "suspend server" switch. The ways a server
+  leaves the Hub are:
   - the owner removes it from their account —
     `DELETE /api/v1/me/servers/{id}` (owner-scoped);
   - the server itself deregisters — `DELETE /api/v1/servers/{id}` (presented with
@@ -85,7 +85,7 @@ viewable at `/app/admin/audit-logs` and via `GET /api/v1/me/audit-logs`.
 ### Audit Logging
 
 - Every admin mutation (user create/update/delete, set-admin, password reset,
-  request approve/deny) is recorded via the hub's audit logger into the
+  request approve/deny) is recorded via the Hub's audit logger into the
   `audit_logs` table.
 - Review it from the **Audit Logs** page (`/app/admin/audit-logs`) or
   `GET /api/v1/me/audit-logs`. The API accepts filters such as `user_id`,
@@ -98,7 +98,7 @@ viewable at `/app/admin/audit-logs` and via `GET /api/v1/me/audit-logs`.
 ## GDPR Data Handling
 
 > [!IMPORTANT]
-> The hub has **no built-in GDPR tooling** — there is no data-export command or
+> The Hub has **no built-in GDPR tooling** — there is no data-export command or
 > endpoint and no automated "right to be forgotten" workflow. What exists is:
 > a user can read their **own** recorded activity via `GET /api/v1/me/audit-logs`,
 > and an admin can delete an account (with the cascade described below). A full
@@ -128,7 +128,7 @@ viewable at `/app/admin/audit-logs` and via `GET /api/v1/me/audit-logs`.
 - A user can retrieve their **own** recorded activity through
   `GET /api/v1/me/audit-logs`.
 - To assemble a full per-user export, the operator must query the MySQL tables
-  listed above directly (filtering by the user's `id`). The hub holds no media
+  listed above directly (filtering by the user's `id`). The Hub holds no media
   data, so an export covers only the directory/relay metadata above.
 
 ### Data Deletion (right to erasure)
@@ -144,7 +144,7 @@ viewable at `/app/admin/audit-logs` and via `GET /api/v1/me/audit-logs`.
   deleted user's audit-log rows are **retained** (the `user_id` becomes a
   dangling reference). If a request requires erasing audit history too, trim
   those rows manually in MySQL.
-- The hub cannot delete data on the user's own media server — that is the server
+- The Hub cannot delete data on the user's own media server — that is the server
   owner's responsibility; coordinate the server-side deletion separately.
 
 ### Data Retention: Relay Session Metadata
@@ -160,7 +160,7 @@ viewable at `/app/admin/audit-logs` and via `GET /api/v1/me/audit-logs`.
 
 ## Removing a Server
 
-There is no operator "suspend"/"unsuspend" toggle. To take a server off the hub:
+There is no operator "suspend"/"unsuspend" toggle. To take a server off the Hub:
 
 - **Owner removes it:** `DELETE /api/v1/me/servers/{id}` — owner-scoped (returns
   403 `server.not_owned` for anyone else, 404 `server.not_found` if it does not
@@ -207,7 +207,7 @@ GET /api/v1/me/audit-logs?event=admin_action&from=<unix-ts>&to=<unix-ts>
 **Cause:** The `server_id` in the DMCA notice did not match the claimed server, or
 the wrong account was selected in the Admin Console.
 
-**Fix:** Always cross-reference the `server_id` in the notice against the hub's
+**Fix:** Always cross-reference the `server_id` in the notice against the Hub's
 server registry and the owning account before deleting anything. Because account
 deletion is permanent and cascades, verify identity first. If you removed the
 wrong account, restore it from a database backup — there is no in-app undo.
@@ -217,7 +217,7 @@ wrong account, restore it from a database backup — there is no in-app undo.
 **Symptom:** The user's hub-side data is gone but their data on their own media
 server remains.
 
-**Cause:** The hub only controls hub-side rows; server-side data is under the
+**Cause:** The Hub only controls hub-side rows; server-side data is under the
 server owner's control. Additionally, `audit_logs` rows are retained by design.
 
 **Fix:** Coordinate with the server owner to delete server-side data, and — if the

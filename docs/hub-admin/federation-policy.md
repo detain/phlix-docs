@@ -57,8 +57,8 @@ A single Phlix Hub instance handles, on its own:
 
 - Any number of user accounts (no cap enforced by default)
 - Any number of claimed servers (no cap enforced by default; the two optional `server.max_*` settings above let an operator clamp them)
-- Library sharing within the hub
-- Server relay and streaming through the hub
+- Library sharing within the Hub
+- Server relay and streaming through the Hub
 
 For the vast majority of deployments this is sufficient, and you may never need a second hub. Federation exists for genuinely multi-hub topologies (separate organizations, regions, or trust domains that want to cooperate), not as a workaround for capacity.
 
@@ -94,7 +94,7 @@ Leaf hubs connect to the master over a persistent **WebSocket** tunnel served by
 
 > **8805, not 8804.** `8804` is the **SyncPlay** relay worker. The two are easy to
 > transpose — `FederationWorker`'s own docblock carried exactly this error from the
-> file's introduction until S66, and this page carried it until S270. The hub's
+> file's introduction until S66, and this page carried it until S270. The Hub's
 > port map is in `phlix-hub/docs/websockets.md`: `8802` relay, `8803` client relay,
 > `8804` SyncPlay, `8805` hub federation.
 
@@ -200,7 +200,7 @@ DELETE /api/v1/me/federation/admin-delegations/{id}   # revoke a delegation
 
 ### Where to manage it
 
-The federation UI is the **Federation page** at `/app/federation` (`FederationPage`), reachable from the hub's top navigation. A legacy server-rendered page also exists at `/federation` (and `/federation/shares`). For automation, use the `/api/v1/me/federation/*` API directly.
+The federation UI is the **Federation page** at `/app/federation` (`FederationPage`), reachable from the Hub's top navigation. A legacy server-rendered page also exists at `/federation` (and `/federation/shares`). For automation, use the `/api/v1/me/federation/*` API directly.
 
 The master hub additionally accepts hub-to-hub WebSocket connections at `/relay/federation/{hub_id}` (handled by `FederationWorker` on port 8805). That endpoint is for hub-to-hub traffic, not for operator or browser use.
 
@@ -216,7 +216,7 @@ Before peering with another operator, publish:
 
 - The public URL of your hub (e.g. `https://hub.example.com`)
 - A terms of service document covering content policy, acceptable use, and DMCA procedures
-- A privacy policy covering what user data the hub collects and how it is handled
+- A privacy policy covering what user data the Hub collects and how it is handled
 
 A prospective peer will want this before they add you.
 
@@ -304,7 +304,7 @@ Federating two hubs does **not** merge their user accounts. There is no cross-hu
 
 **Cause:** A server can only be claimed to one hub at a time. The first hub to receive and persist the claim owns the server relationship. Subsequent claims to other hubs are rejected.
 
-**Fix:** If the server was claimed to the wrong hub unintentionally, contact the operator of the hub that currently holds the claim and ask them to release it from their hub's server management, then claim the server to the correct hub. Releasing a claim does not delete media or data on the server — it only removes the relay association with that hub.
+**Fix:** If the server was claimed to the wrong hub unintentionally, contact the operator of the Hub that currently holds the claim and ask them to release it from their hub's server management, then claim the server to the correct hub. Releasing a claim does not delete media or data on the server — it only removes the relay association with that hub.
 
 ---
 

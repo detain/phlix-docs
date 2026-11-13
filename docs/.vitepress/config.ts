@@ -47,9 +47,11 @@ export default defineConfig({
   title: 'Phlix',
   description: 'Phlix Media Server documentation — end-user, developer, and hub-admin guides',
   base: '/phlix-docs/',
+  lastUpdated: true,
+  appearance: true, // light/dark toggle (VitePress default; replaces the non-existent themeConfig.darkModeSwitch)
   head: [['link', { rel: 'icon', type: 'image/svg+xml', href: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><text y=%2224%22 font-size=%2224%22>📺</text></svg>' }]],
   themeConfig: {
-    lastUpdated: true,
+    lastUpdated: { text: 'Last updated' },
     // Thirteen direct entries plus one "Help" dropdown = fourteen top-level
     // items. The dropdown is deliberate: the default theme wraps/clips an
     // over-long nav on narrow desktop widths, so FAQ and Reference are folded
@@ -454,7 +456,6 @@ export default defineConfig({
       message: 'BSD-3-Clause',
       copyright: 'Copyright 2026 Phlix contributors'
     },
-    darkModeSwitch: true,
     search: {
       provider: 'local'
     }

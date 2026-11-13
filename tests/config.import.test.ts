@@ -9,13 +9,13 @@ import { describe, it, expect } from 'vitest'
 describe('Config Module Loading', () => {
   it('should be able to import config module', async () => {
     // Dynamic import to verify the config module structure is valid
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule).toBeDefined()
     expect(configModule.default).toBeDefined()
   })
 
   it('should export a config object with required properties', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     const config = configModule.default
 
     // Verify required VitePress config properties
@@ -26,48 +26,48 @@ describe('Config Module Loading', () => {
   })
 
   it('should have valid title', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule.default.title).toBe('Phlix')
   })
 
   it('should have valid base path', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule.default.base).toBe('/phlix-docs/')
   })
 
   it('should have themeConfig with nav', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule.default.themeConfig).toHaveProperty('nav')
     expect(Array.isArray(configModule.default.themeConfig.nav)).toBe(true)
     expect(configModule.default.themeConfig.nav.length).toBeGreaterThan(0)
   })
 
   it('should have themeConfig with sidebar', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule.default.themeConfig).toHaveProperty('sidebar')
     expect(typeof configModule.default.themeConfig.sidebar).toBe('object')
   })
 
   it('should have themeConfig with socialLinks', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule.default.themeConfig).toHaveProperty('socialLinks')
     expect(Array.isArray(configModule.default.themeConfig.socialLinks)).toBe(true)
   })
 
   it('should have themeConfig with footer', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule.default.themeConfig).toHaveProperty('footer')
     expect(configModule.default.themeConfig.footer).toHaveProperty('message')
     expect(configModule.default.themeConfig.footer).toHaveProperty('copyright')
   })
 
   it('should have markdown configuration with theme', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule.default.markdown).toHaveProperty('theme')
   })
 
   it('should have markdown configuration with language aliases', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule.default.markdown).toHaveProperty('languageAlias')
     const aliases = configModule.default.markdown.languageAlias
     expect(aliases.env).toBe('dotenv')
@@ -77,13 +77,13 @@ describe('Config Module Loading', () => {
   })
 
   it('should have cleanUrls set to false', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule.default).toHaveProperty('cleanUrls')
     expect(configModule.default.cleanUrls).toBe(false)
   })
 
   it('should have ignoreDeadLinks set to false', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule.default).toHaveProperty('ignoreDeadLinks')
     expect(configModule.default.ignoreDeadLinks).toBe(false)
   })
@@ -93,26 +93,25 @@ describe('Config Module Loading', () => {
   // the explanatory comment sitting directly above the option, so it could not
   // tell a live setting apart from a description of one.
   it('should exclude docs/old from the build via srcExclude', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule.default).toHaveProperty('srcExclude')
     expect(configModule.default.srcExclude).toEqual(['old/**'])
   })
 
   it('should have dark mode enabled', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
-    expect(configModule.default.themeConfig).toHaveProperty('darkModeSwitch')
-    expect(configModule.default.themeConfig.darkModeSwitch).toBe(true)
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
+    expect(configModule.default.appearance).toBe(true)
   })
 
   it('should have local search provider', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     expect(configModule.default.themeConfig).toHaveProperty('search')
     expect(configModule.default.themeConfig.search).toHaveProperty('provider')
     expect(configModule.default.themeConfig.search.provider).toBe('local')
   })
 
   it('should have nav items with text and link properties', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     // Locally mirror the two shapes VitePress accepts (bare-tsc does not
     // narrow the exported NavItem union through Array.isArray, so pinning
     // the shape here keeps this file's assertions type-clean): a direct
@@ -140,7 +139,7 @@ describe('Config Module Loading', () => {
   })
 
   it('should have valid sidebar sections', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     const sidebar = configModule.default.themeConfig.sidebar
 
     // Verify sidebar has expected section keys
@@ -153,7 +152,7 @@ describe('Config Module Loading', () => {
   })
 
   it('should have valid footer copyright', async () => {
-    const configModule = await import('../docs/.vitepress/config.ts')
+    const configModule = (await import('../docs/.vitepress/config.ts')) as any
     const footer = configModule.default.themeConfig.footer
     expect(footer.copyright).toContain('2026')
     expect(footer.message).toBe('BSD-3-Clause')

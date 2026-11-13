@@ -75,7 +75,7 @@ describe('VitePress Configuration', () => {
 
   it('config has dark mode switch enabled', () => {
     const configContent = readFileSync(configPath, 'utf-8')
-    expect(configContent).toContain('darkModeSwitch: true')
+    expect(configContent).toContain('appearance: true')
   })
 
   it('config has local search provider', () => {

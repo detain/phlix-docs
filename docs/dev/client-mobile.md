@@ -3,6 +3,10 @@
 > Developer build spec for the Phlix mobile apps — React Native 0.76+ with native modules (Kotlin/Swift).
 > For end-user install and setup, see [Mobile](/clients/mobile).
 
+::: info Reference guide
+This page is a long reference meant to be searched or jumped into, not read top to bottom. Use the [table of contents](#table-of-contents) below to go straight to the section you need.
+:::
+
 ## Table of Contents
 
 1. [Overview](#_1-overview)

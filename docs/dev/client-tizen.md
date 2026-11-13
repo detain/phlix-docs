@@ -3,6 +3,10 @@
 > Developer build spec for the Phlix Samsung Smart TV app — HTML5/JavaScript, Tizen Web API.
 > For end-user install and setup, see [Samsung Tizen](/clients/tizen).
 
+::: info Reference guide
+This page is a long reference meant to be searched or jumped into, not read top to bottom. Use the [table of contents](#table-of-contents) below to go straight to the section you need.
+:::
+
 ## Table of Contents
 
 1. [Overview](#_1-overview)

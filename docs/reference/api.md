@@ -2,6 +2,10 @@
 
 **Since:** 0.18.0
 
+::: info Reference guide
+This page is a long reference meant to be searched or jumped into, not read top to bottom. Use the on-page outline or your browser's search to find the endpoint you need.
+:::
+
 ## Overview
 
 Phlix exposes a REST API at `/api/v1/` returning JSON. Authentication uses JWT Bearer tokens. Most `/api/v1/auth/*` sign-in endpoints (register/login/refresh and the provider authorize/callback flows) are public — but not all of them: the account-linking routes (`/api/v1/auth/identities*`) **require** a Bearer JWT (see [SSO, OIDC & LDAP](/security/sso-oidc-ldap)). Check each operation's auth note below.

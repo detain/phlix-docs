@@ -1,9 +1,9 @@
 ---
-title: Movies Library Setup
+title: Movies Library
 description: Naming, matching, and artwork for movie libraries, from folder layout to cross-device watch progress
 ---
 
-# Movies Library Setup
+# Movies Library
 
 **Since:** 0.14.0
 

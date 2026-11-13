@@ -1,9 +1,9 @@
 ---
-title: Samsung Tizen TV App
+title: Samsung Tizen App
 description: The Phlix app for 2018-and-newer Samsung Smart TVs, sideloaded as a .wgt package
 ---
 
-# Samsung Tizen TV App
+# Samsung Tizen App
 
 **Since:** 0.18.0
 

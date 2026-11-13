@@ -427,7 +427,7 @@ in a `DataTable`:
 
 The server clamps `limit` to `[1, 100]` and defaults to `20`; the UI uses the default.
 
-## Browse Filesystem
+## Browse filesystem {#browse-filesystem}
 
 The admin UI's [PathPicker](#the-pathpicker) is the canonical consumer of this endpoint.
 The contract below documents the wire format for that picker and for any future tooling.
@@ -515,7 +515,7 @@ jail** — otherwise `null` (so the picker stops at a root):
 The checks run in the order `404` → `400` → `403`, so a non-existent or
 non-directory path reports the more specific `404`/`400` rather than `403`.
 
-## Scanning a Library
+## Scanning a library {#scanning-a-library}
 
 Scanning indexes a library's filesystem for media and updates the catalog. As of
 **Phase 1.1b the scan runs asynchronously** — off the HTTP request. The scan and
@@ -864,7 +864,7 @@ Returns recent scan jobs for the library, **newest first**. `limit` defaults to
 
 Each entry has the same shape as the `scan_status` job row above.
 
-## Allowed Roots
+## Allowed roots {#allowed-roots}
 
 Directory listing is jailed to the roots declared in `config/filesystem.php`:
 
@@ -887,7 +887,7 @@ stays explicit and auditable in code. Each root is canonicalised with
 `realpath()` at startup; a configured root that does not resolve on the host is
 silently dropped (it can never be browsed).
 
-### The Traversal Jail
+### The traversal jail {#the-traversal-jail}
 
 Every candidate `path` is canonicalised with `realpath()` before any check.
 Because `realpath()` collapses `..` segments **and** resolves symlinks to their

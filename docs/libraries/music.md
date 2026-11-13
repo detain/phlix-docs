@@ -1,9 +1,9 @@
 ---
-title: Music Library Documentation
+title: Music Library
 description: The Artist / Album / Track index, the music scanner, and the API behind the web player's Music pages
 ---
 
-# Music Library Documentation
+# Music Library
 
 **Since:** 0.14.0
 

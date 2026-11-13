@@ -332,7 +332,7 @@ Test restores periodically (e.g. monthly) in a staging environment. A backup tha
 
 ---
 
-### Failure 2 — JWT Secret Mismatch (Users Can't Log In)
+### Failure 2 — JWT Secret Mismatch (Users Can't Sign In)
 
 **Symptom:** Database restored, but all login attempts fail with auth errors.
 

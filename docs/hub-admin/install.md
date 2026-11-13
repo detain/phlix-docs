@@ -259,7 +259,7 @@ services:
     environment:
       MYSQL_DATABASE: phlix_hub
       MYSQL_USER: phlix_hub
-      MYSQL_PASSWORD: "${HUB_DB_PASSWORD}"   # interpolated — same variable the hub container gets below
+      MYSQL_PASSWORD: "${HUB_DB_PASSWORD}"   # interpolated — same variable the Hub container gets below
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
     volumes:
       - hub-db:/var/lib/mysql

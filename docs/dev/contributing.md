@@ -73,7 +73,7 @@ The server uses `Workerman\MySQL\Connection` (never PDO or mysqli). All DB acces
 ```bash
 cd phlix-hub
 composer install
-php start.php start            # starts the hub on 0.0.0.0:8800
+php start.php start            # starts the Hub on 0.0.0.0:8800
 ```
 
 The Hub holds server claim codes, runs heartbeat loops, multiplexes relay tunnels, and issues HS256 user-session JWTs. See [`docs/dev/architecture-hub.md`](architecture-hub.md) for internals.

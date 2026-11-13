@@ -62,7 +62,7 @@ Implements `ArrClientInterface`. Wraps the Sonarr v3 API through the `ArrTranspo
 | `getSeriesById(int $sonarrSeriesId)` | Single series |
 | `getEpisodeFile(int $episodeId)` | Episode file metadata |
 | `getWantedMissing(int? $startSeason)` | Missing episodes (wanted) |
-| `addSeries(int\|array $tvdbId, int $qualityProfileId, int $rootFolder, ?string $monitor)` | Add series to Sonarr |
+| `addSeries(int $tvdbId, int $qualityProfileId, string $rootFolder, ?string $monitor = 'all', ?string $title = null)` | Add one series to Sonarr. POSTs the v3 resource shape: `rootFolderPath`, `monitored`, `addOptions.monitor`, `addOptions.searchForMissingEpisodes`, optional `title` |
 | `triggerDownload(int $episodeId): bool` | Force search for a specific episode |
 | `testConnection(): bool` | Returns `true` if `/api/v3/system/status` returns a `version` key |
 
@@ -84,7 +84,7 @@ Implements `ArrClientInterface`. Wraps the Radarr v3 API through the `ArrTranspo
 | `deleteCustomFormat(int $id): bool` | Delete a custom format |
 | `createQualityProfile(array $payload): int` | Create a quality profile |
 | `updateQualityProfile(int $id, array $payload): bool` | Update a quality profile |
-| `addMovie(int\|array $tmdbId, int $qualityProfileId, string $rootFolder, bool $monitored)` | Add movie to Radarr |
+| `addMovie(int $tmdbId, int $qualityProfileId, string $rootFolder, bool $monitored = true, ?string $title = null)` | Add one movie to Radarr. POSTs the v3 resource shape: `rootFolderPath`, `monitored`, `addOptions.monitor` (`movieOnly`/`none`), `addOptions.searchForMovie`, optional `title` |
 | `triggerDownload(int $movieId): bool` | Force search for a specific movie |
 | `testConnection(): bool` | Returns `true` if `/api/v3/system/status` returns a `version` key |
 
